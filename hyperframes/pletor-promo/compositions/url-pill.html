@@ -1,0 +1,120 @@
+<template id="url-pill-template">
+  <div data-composition-id="url-pill" data-width="1920" data-height="1080" data-duration="3.1">
+    <div id="pill">
+      <div id="pill-inner">
+        <div id="flash-pink" class="flash"></div>
+        <div id="flash-purple" class="flash"></div>
+        <div id="flash-yellow" class="flash"></div>
+        <div id="pill-text">
+          <span id="pill-chars"></span>
+          <span id="pill-color" class="gtext">Pletor.ai</span>
+        </div>
+      </div>
+    </div>
+    <svg id="cursor" viewBox="0 0 104 104" aria-hidden="true">
+      <path d="M14 12 L90 44 Q98 48 90 52 L58 62 L46 94 Q42 102 37 94 Z" fill="#7458f4" stroke="#e7e0ff" stroke-width="5" stroke-linejoin="round" />
+    </svg>
+
+    <style>
+      #pill {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 576px;
+        height: 192px;
+        margin: -96px 0 0 -288px;
+        border-radius: 96px;
+        padding: 3px;
+        background: linear-gradient(90deg, #ee5b26 0%, #ea5b6e 45%, #e05cb4 80%, #d861c8 100%);
+        box-shadow: 0 18px 40px rgba(230, 90, 120, 0.16), 0 4px 10px rgba(230, 90, 120, 0.1);
+      }
+      #pill-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 93px;
+        background: #ffffff;
+        overflow: hidden;
+      }
+      [data-composition-id="url-pill"] .flash {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+      }
+      #flash-pink {
+        background: radial-gradient(120% 140% at 50% 50%, #fde6ef 0%, #f3a3c4 60%, #e66da0 100%);
+      }
+      #flash-purple {
+        background: radial-gradient(120% 160% at 50% 40%, #d6b0ea 0%, #c78fdc 55%, #b46fd3 100%);
+      }
+      #flash-yellow {
+        background: radial-gradient(120% 160% at 50% 50%, #fff4d6 0%, #f9dc8e 60%, #f5c862 100%);
+      }
+      #pill-text {
+        position: absolute;
+        left: 74px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 104px;
+        font-weight: 420;
+        letter-spacing: -0.005em;
+        line-height: 1.1;
+        white-space: nowrap;
+        color: #121016;
+      }
+      #pill-color {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        background-size: 100% 100%;
+        background-image: linear-gradient(90deg, #d84a9a 0%, #9b2f9e 30%, #6c15a8 50%, #4a0f7c 70%, #1d0a26 100%);
+      }
+      #cursor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 190px;
+        height: 190px;
+        filter: drop-shadow(0 6px 10px rgba(80, 50, 200, 0.25));
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+
+        // Typed URL: one span per character, revealed in sequence.
+        const chars = document.getElementById("pill-chars");
+        chars.innerHTML = [..."Pletor.ai"].map((c) => `<span>${c}</span>`).join("");
+
+        tl.fromTo("#pill", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.14, ease: "power2.out" }, 0);
+        chars.querySelectorAll("span").forEach((ch, i) => {
+          tl.fromTo(ch, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, 0.07 + i * 0.04);
+        });
+
+        // Cursor glides in from the lower right, clicks, then drifts off up-left.
+        tl.fromTo("#cursor", { x: 1400, y: 900, opacity: 0, scale: 0.8 }, { x: 1080, y: 560, opacity: 1, scale: 1, duration: 0.42, ease: "power3.out" }, 0.25);
+        tl.to("#cursor", { scale: 0.82, duration: 0.07, ease: "power2.in" }, 0.68);
+        tl.to("#cursor", { scale: 1, duration: 0.12, ease: "power2.out" }, 0.75);
+        tl.to("#cursor", { x: 780, y: 120, opacity: 0, scale: 0.7, duration: 0.5, ease: "power2.in" }, 0.88);
+
+        // Click: the pill dips, then the fill flashes pink -> lilac -> gold and back to white.
+        tl.to("#pill", { scale: 0.97, duration: 0.07, ease: "power2.in" }, 0.68);
+        tl.to("#pill", { scale: 1, duration: 0.3, ease: "back.out(3)" }, 0.75);
+        tl.to("#flash-pink", { opacity: 1, duration: 0.06, ease: "none" }, 0.68);
+        tl.to("#flash-purple", { opacity: 1, duration: 0.08, ease: "none" }, 0.77);
+        tl.to("#flash-pink", { opacity: 0, duration: 0.01 }, 0.85);
+        tl.to("#flash-yellow", { opacity: 1, duration: 0.08, ease: "none" }, 0.85);
+        tl.to("#flash-purple", { opacity: 0, duration: 0.01 }, 0.93);
+        tl.to("#flash-yellow", { opacity: 0, duration: 0.4, ease: "power1.out" }, 0.95);
+        // Text swaps from ink to the brand gradient.
+        tl.to("#pill-color", { opacity: 1, duration: 0.16, ease: "none" }, 0.77);
+        tl.to("#pill-chars", { opacity: 0, duration: 0.16, ease: "none" }, 0.77);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["url-pill"] = tl;
+      })();
+    </script>
+  </div>
+</template>

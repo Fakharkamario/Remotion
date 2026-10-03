@@ -1,0 +1,88 @@
+<template id="brand-ring-template">
+  <div data-composition-id="brand-ring" data-width="1920" data-height="1080" data-duration="2.6">
+    <div class="stage"><div class="world" id="ring-world"></div></div>
+    <div id="ring-while" class="center" data-layout-allow-overlap>While staying on your</div>
+    <div id="ring-brand" class="center gtext" data-layout-allow-overlap>brand</div>
+
+    <style>
+      #ring-while {
+        top: 440px;
+        font-size: 46px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: #2a0b16;
+      }
+      #ring-brand {
+        top: 488px;
+        font-size: 168px;
+        font-weight: 450;
+        line-height: 1.05;
+        letter-spacing: -0.01em;
+        background-image: linear-gradient(90deg, #fbe08a 0%, #f7c24d 20%, #f39a45 42%, #ec5aa8 64%, #e64bb0 82%, #e64bb0 100%);
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const { makeCard, keys } = window.PletorCards;
+        const deg = Math.PI / 180;
+        const DUR = 2.6;
+
+        // Two staggered elliptical rings of cards circling the headline.
+        const rings = [
+          { n: 22, rx: 900, ry: 410, z: 0, w: 196, h: 250, off: 0 },
+          { n: 22, rx: 860, ry: 380, z: -200, w: 176, h: 224, off: 360 / 44 },
+        ];
+        const steps = 26;
+        // Ring angle in degrees: steady spin that accelerates on the way out.
+        const spin = (t) => 34 * t + 60 * Math.pow(Math.max(0, t - 2.0), 2);
+        // Card yaw from its position on the ring: frontal at the sides, edge-on at top/bottom.
+        const yaw = (th) => th / deg - 26 * Math.sin(2 * th);
+
+        const world = document.getElementById("ring-world");
+        const cards = [];
+        let artIdx = 0;
+        rings.forEach((ring) => {
+          for (let i = 0; i < ring.n; i++) {
+            const el = makeCard(world, keys[(artIdx++ * 5) % keys.length], ring.w, ring.h, { twoSided: true });
+            const base = (i / ring.n) * 360 + ring.off;
+            // Sample the circular path into linear keyframes (seek-safe; no onUpdate needed).
+            const kf = { x: [], y: [], z: [], rotationY: [] };
+            let prevYaw = null;
+            for (let s = 0; s <= steps; s++) {
+              const th = (base + spin((DUR * s) / steps)) * deg;
+              kf.x.push(-ring.rx * Math.cos(th));
+              kf.y.push(-ring.ry * Math.sin(th));
+              kf.z.push(ring.z - 220 * Math.abs(Math.sin(th)));
+              // keep yaw continuous so interpolation never swings the long way round
+              let yv = yaw(th);
+              if (prevYaw !== null) yv += 360 * Math.round((prevYaw - yv) / 360);
+              prevYaw = yv;
+              kf.rotationY.push(yv);
+            }
+            gsap.set(el, { x: kf.x[0], y: kf.y[0], z: kf.z[0], rotationY: kf.rotationY[0] });
+            tl.to(el, { keyframes: { ...kf, easeEach: "none" }, duration: DUR, ease: "none" }, 0);
+            cards.push(el);
+          }
+        });
+
+        // Ring rushes in from the vanishing point, then flies past the camera.
+        tl.fromTo(world, { z: -2600 }, { z: 0, duration: 0.65, ease: "expo.out" }, 0.05);
+        tl.to(world, { z: 700, duration: 0.5, ease: "power2.in" }, 2.03);
+        cards.forEach((el, i) => {
+          tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.05 + (i % 7) * 0.015);
+          tl.to(el, { opacity: 0, filter: "blur(10px)", duration: 0.32, ease: "power1.in" }, 2.1 + (i % 9) * 0.02);
+        });
+
+        const text = ["#ring-while", "#ring-brand"];
+        tl.fromTo(text, { opacity: 0, filter: "blur(14px)", y: 12 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.4, ease: "power2.out", stagger: 0.05 }, 0.13);
+        tl.fromTo("#ring-brand", { backgroundPosition: "0% 0%" }, { backgroundPosition: "100% 0%", duration: 0.9, ease: "power1.inOut", immediateRender: false }, 0.15);
+        tl.to(text, { opacity: 0, filter: "blur(12px)", duration: 0.28, ease: "power1.in" }, 1.91);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["brand-ring"] = tl;
+      })();
+    </script>
+  </div>
+</template>

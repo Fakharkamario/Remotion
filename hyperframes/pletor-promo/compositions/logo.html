@@ -1,0 +1,72 @@
+<template id="logo-template">
+  <div data-composition-id="logo" data-width="1920" data-height="1080" data-duration="2.6">
+    <div id="logo-lockup">
+      <div id="logo-word">
+        <span>plet</span>
+        <svg id="logo-o" viewBox="0 0 100 130" aria-hidden="true">
+          <g id="logo-o-fill" fill="#f9d24c">
+            <path fill-rule="evenodd" d="M50 4a38 38 0 1 1 0 76a38 38 0 1 1 0-76zm0 18a20 20 0 1 0 0 40a20 20 0 1 0 0-40z" />
+            <path d="M4 88h20a26 17 0 0 0 52 0h20c0 24-21 40-46 40S4 112 4 88z" />
+          </g>
+        </svg>
+        <span>r</span>
+      </div>
+    </div>
+    <div id="logo-tagline" class="center gtext">The creative system for Commerce</div>
+
+    <style>
+      #logo-lockup {
+        position: absolute;
+        left: 50%;
+        top: 430px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: flex-end;
+        font-size: 150px;
+        font-weight: 800;
+        letter-spacing: -0.06em;
+        line-height: 1;
+      }
+      #logo-word {
+        display: flex;
+        align-items: baseline;
+        color: #f9d24c;
+      }
+      #logo-o {
+        width: 108px;
+        height: 140px;
+        margin: 0 0 0 2px;
+        transform: translateY(30px);
+      }
+      #logo-tagline {
+        top: 622px;
+        font-size: 46px;
+        font-weight: 400;
+        letter-spacing: 0.005em;
+        background-image: linear-gradient(90deg, #f9d24c 0%, #f2864a 16%, #e2569f 32%, #a53cc8 48%, #5a1270 60%, #1c1022 72%, #1c1022 100%);
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+
+        // Wordmark resolves out of the "brand" crossfade, sweeping yellow -> purple -> ink.
+        tl.fromTo("#logo-lockup", { opacity: 0, filter: "blur(14px)", scale: 1.04 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.35, ease: "power2.out" }, 0.04);
+        const inkSweep = ["#f9d24c", "#f29a4c", "#b34fdc", "#7a3bd6", "#15121a"];
+        tl.to("#logo-word", { keyframes: { color: inkSweep, easeEach: "none" }, duration: 0.6, ease: "power1.inOut" }, 0.06);
+        // The SVG "O" follows the same sweep through its fill.
+        tl.to("#logo-o-fill", { keyframes: { fill: inkSweep, easeEach: "none" }, duration: 0.6, ease: "power1.inOut" }, 0.06);
+
+        // Tagline wipes on left-to-right, then settles from the gradient to ink.
+        tl.fromTo("#logo-tagline", { clipPath: "inset(0% 100% 0% 0%)", opacity: 0.6, backgroundPosition: "0% 0%" }, { clipPath: "inset(0% 0% 0% 0%)", opacity: 1, duration: 0.32, ease: "power2.out" }, 0.54);
+        tl.to("#logo-tagline", { backgroundPosition: "100% 0%", duration: 0.85, ease: "power1.inOut" }, 0.56);
+
+        tl.to(["#logo-lockup", "#logo-tagline"], { opacity: 0, duration: 0.08, ease: "none" }, 2.5);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["logo"] = tl;
+      })();
+    </script>
+  </div>
+</template>

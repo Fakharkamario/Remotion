@@ -1,0 +1,58 @@
+<template id="speed-lines-template">
+  <div data-composition-id="speed-lines" data-width="1920" data-height="1080" data-duration="3.1">
+    <svg id="speed-lines-svg" viewBox="0 0 1920 1080" aria-hidden="true"></svg>
+
+    <style>
+      #speed-lines-svg {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const rand = window.PletorCards.prng(11);
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.getElementById("speed-lines-svg");
+        const colors = ["#f7c948", "#f39a4a", "#ec7fb3", "#d9d4d6", "#f7d77a"];
+
+        // A ring of short radial dashes that bursts outward on each scene change.
+        function burst(count) {
+          const g = document.createElementNS(NS, "g");
+          g.setAttribute("opacity", "0");
+          for (let i = 0; i < count; i++) {
+            const a = (i / count) * Math.PI * 2 + rand() * 0.05;
+            const r1 = 520 + rand() * 140;
+            const r2 = r1 + 60 + rand() * 110;
+            const ln = document.createElementNS(NS, "line");
+            ln.setAttribute("x1", 960 + Math.cos(a) * r1 * 1.25);
+            ln.setAttribute("y1", 540 + Math.sin(a) * r1 * 0.85);
+            ln.setAttribute("x2", 960 + Math.cos(a) * r2 * 1.25);
+            ln.setAttribute("y2", 540 + Math.sin(a) * r2 * 0.85);
+            ln.setAttribute("stroke", colors[i % colors.length]);
+            ln.setAttribute("stroke-width", 3 + rand() * 3);
+            ln.setAttribute("stroke-linecap", "round");
+            g.appendChild(ln);
+          }
+          svg.appendChild(g);
+          return g;
+        }
+
+        // "Scale Up" -> ring, and ring -> logo.
+        [0.08, 2.42].forEach((t) => {
+          const g = burst(72);
+          gsap.set(g, { svgOrigin: "960 540" });
+          tl.fromTo(g, { scale: 0.55 }, { scale: 1.35, duration: 0.6, ease: "power2.out" }, t);
+          tl.to(g, { opacity: 1, duration: 0.12, ease: "none" }, t);
+          tl.to(g, { opacity: 0, duration: 0.35, ease: "power1.in" }, t + 0.25);
+        });
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["speed-lines"] = tl;
+      })();
+    </script>
+  </div>
+</template>

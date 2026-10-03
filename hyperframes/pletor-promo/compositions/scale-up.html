@@ -1,0 +1,88 @@
+<template id="scale-up-template">
+  <div data-composition-id="scale-up" data-width="1920" data-height="1080" data-duration="2.15">
+    <div class="stage"><div class="world" id="field-world"></div></div>
+    <div class="fade-bottom"></div>
+    <div id="scale-up-title" class="center gtext">Scale Up</div>
+
+    <style>
+      [data-composition-id="scale-up"] .fade-bottom {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 420px;
+        background: linear-gradient(to bottom, rgba(245, 243, 242, 0), #f5f3f2 85%);
+      }
+      #scale-up-title {
+        top: 425px;
+        font-size: 178px;
+        font-weight: 420;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        background-image: linear-gradient(90deg, #f8d24a 0%, #f3a14a 20%, #ea5aa3 40%, #a23fc2 60%, #1a0f22 78%, #1a0f22 100%);
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const P = 1200; // matches .stage perspective
+        const { makeCard } = window.PletorCards;
+
+        // [art, screenX, screenY, width, height, z] — screen coords relative to centre, as seen at camera z = 0
+        const field = [
+          ["pinkJump", -757, -400, 172, 250, 60],
+          ["tees", 256, -398, 200, 270, 0],
+          ["blueRun", 682, -300, 248, 300, 40],
+          ["portrait", 860, -150, 210, 410, 160],
+          ["flowerSky", -346, -88, 140, 186, -220],
+          ["firstDay", -846, 225, 224, 326, 90],
+          ["skyStar", -357, 352, 210, 236, -40],
+          ["skyStar", 290, 340, 136, 180, -260],
+          ["green", 836, 384, 250, 310, 120],
+          ["notGoing", -470, -430, 130, 170, -700],
+          ["runners", 70, -250, 150, 190, -800],
+          ["street", 560, 70, 150, 190, -760],
+          ["hoodie", -150, 300, 160, 200, -820],
+          ["laundry", -640, -40, 160, 200, -900],
+          ["greenOne", 420, -150, 150, 190, -950],
+        ];
+        // Pastel tiles the cards "develop" out of during the fly-in.
+        const pastels = [
+          "linear-gradient(160deg,#b9a6f5,#e7b8e8)",
+          "linear-gradient(170deg,#a68cf2,#f6d27a)",
+          "linear-gradient(160deg,#f6d27a,#f4b8d2)",
+          "linear-gradient(170deg,#c4a8f4,#fbe2a0)",
+        ];
+        const world = document.getElementById("field-world");
+        const cards = field.map(([art, sx, sy, w, h, z], i) => {
+          const el = makeCard(world, art, w, h, { placeholder: pastels[i % pastels.length] });
+          const k = (P - z) / P; // un-project so the card lands on (sx, sy)
+          gsap.set(el, { x: sx * k, y: sy * k, z, rotationY: sx > 700 ? -8 : sx < -700 ? 8 : 0 });
+          return el;
+        });
+
+        // Camera: fly in from depth, slow dolly, then rush through the field.
+        tl.fromTo(world, { z: -1500 }, { z: 0, duration: 0.7, ease: "power3.out" }, 0);
+        tl.to(world, { z: 200, duration: 0.85, ease: "none" }, 0.7);
+        tl.to(world, { z: 980, duration: 0.5, ease: "power2.in" }, 1.55);
+
+        cards.forEach((el, i) => {
+          const d = (i % 6) * 0.04;
+          tl.fromTo(el, { opacity: 0, filter: "blur(14px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "power2.out" }, d);
+          tl.to(el.querySelector(".ph"), { opacity: 0, duration: 0.3, ease: "power1.inOut" }, 0.18 + d * 1.5);
+          tl.to(el, { filter: "blur(16px)", opacity: 0, duration: 0.42, ease: "power2.in" }, 1.6 + (i % 4) * 0.02);
+        });
+
+        // Title: blur in, sweep through the warm gradient to near-black, then blur out.
+        const title = "#scale-up-title";
+        tl.fromTo(title, { opacity: 0, filter: "blur(18px)", scale: 0.94, backgroundPosition: "0% 0%" }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.5, ease: "power2.out" }, 0.08);
+        tl.to(title, { backgroundPosition: "100% 0%", duration: 1.05, ease: "power1.inOut" }, 0.1);
+        tl.to(title, { opacity: 0, filter: "blur(16px)", scale: 1.08, duration: 0.35, ease: "power2.in" }, 1.62);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["scale-up"] = tl;
+      })();
+    </script>
+  </div>
+</template>

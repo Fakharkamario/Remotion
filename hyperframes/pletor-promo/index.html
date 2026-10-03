@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Pletor Promo</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/cards.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin-wght.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f5f3f2;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #f5f3f2;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        color: #14101a;
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* Shared by the card scenes (scale-up, brand-ring) */
+      .stage {
+        position: absolute;
+        inset: 0;
+        perspective: 1200px;
+        perspective-origin: 50% 50%;
+      }
+      .world {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        transform-style: preserve-3d;
+      }
+      .card {
+        position: absolute;
+        transform-style: preserve-3d;
+      }
+      .face {
+        position: absolute;
+        inset: 0;
+        border-radius: 14px;
+        overflow: hidden;
+        backface-visibility: hidden;
+        box-shadow: 0 10px 24px rgba(40, 20, 50, 0.12);
+      }
+      .face img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .face.back {
+        transform: rotateY(180deg);
+      }
+      .ph {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* Text filled with a wide gradient; tweening background-position sweeps the colour. */
+      .gtext {
+        background-size: 500% 100%;
+        background-repeat: no-repeat;
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+      .center {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="9.3"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="scale-up-comp"
+        class="clip"
+        data-composition-id="scale-up"
+        data-composition-src="compositions/scale-up.html"
+        data-start="0"
+        data-duration="2.15"
+        data-track-index="0"
+      ></div>
+      <div
+        id="brand-ring-comp"
+        class="clip"
+        data-composition-id="brand-ring"
+        data-composition-src="compositions/brand-ring.html"
+        data-start="1.85"
+        data-duration="2.6"
+        data-track-index="1"
+      ></div>
+      <div
+        id="logo-comp"
+        class="clip"
+        data-composition-id="logo"
+        data-composition-src="compositions/logo.html"
+        data-start="3.7"
+        data-duration="2.6"
+        data-track-index="2"
+      ></div>
+      <div
+        id="url-pill-comp"
+        class="clip"
+        data-composition-id="url-pill"
+        data-composition-src="compositions/url-pill.html"
+        data-start="6.2"
+        data-duration="3.1"
+        data-track-index="3"
+      ></div>
+      <div
+        id="speed-lines-comp"
+        class="clip"
+        data-composition-id="speed-lines"
+        data-composition-src="compositions/speed-lines.html"
+        data-start="1.6"
+        data-duration="3.1"
+        data-track-index="4"
+      ></div>
+
+      <audio
+        id="soundtrack"
+        src="assets/audio.m4a"
+        data-start="0"
+        data-duration="9.3"
+        data-track-index="5"
+        data-volume="1"
+      ></audio>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 9.3);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
