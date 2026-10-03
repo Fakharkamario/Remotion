@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3f2f5;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        #intro-line {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          font-size: 116px;
+          letter-spacing: -0.055em;
+          color: #1e3a1f;
+          white-space: nowrap;
+        }
+        #intro-drift,
+        #intro-zoom {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        #intro-line .w {
+          display: inline-block;
+          font-weight: 500;
+          will-change: transform, filter, opacity;
+        }
+        #intro-dead,
+        #intro-plant {
+          margin-left: 0.24em;
+        }
+        #intro-tiles {
+          position: absolute;
+          inset: 0;
+        }
+        .intro-tile {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 220px;
+          height: 220px;
+          margin: -110px 0 0 -110px;
+          border-radius: 40px;
+          overflow: hidden;
+          background: #c9c6a9;
+          box-shadow: 0 18px 34px rgba(30, 40, 30, 0.22);
+          will-change: transform;
+        }
+        .intro-tile img {
+          position: absolute;
+          display: block;
+          width: 700px;
+          height: 394px;
+        }
+      </style>
+
+      <div data-hf-id="hf-ypfn" id="root" data-composition-id="intro" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-h85s" id="intro-line">
+          <div id="intro-drift">
+            <div id="intro-zoom">
+              <span data-hf-id="hf-kha1" id="intro-another" class="w">Another</span>
+              <span data-hf-id="hf-j6r5" id="intro-dead" class="w">dead</span>
+              <span data-hf-id="hf-b8ce" id="intro-plant" class="w">plant?</span>
+            </div>
+          </div>
+        </div>
+        <div data-hf-id="hf-9y25" id="intro-tiles"></div>
+      </div>
+
+      <script>
+        (() => {
+          const ROOMS = [
+            ["assets/art/room-living-dying.svg", 960, 560],
+            ["assets/art/room-bedroom-dying.svg", 1040, 600],
+            ["assets/art/room-corner-dying.svg", 960, 560],
+          ];
+          const N = 8;
+          const holder = document.getElementById("intro-tiles");
+          const tiles = [];
+          for (let i = 0; i < N; i++) {
+            const [src, cx, cy] = ROOMS[i % 3];
+            const el = document.createElement("div");
+            el.className = "intro-tile";
+            el.id = "intro-tile-" + i;
+            const img = document.createElement("img");
+            img.src = src;
+            img.alt = "";
+            // Crop each room around its plant (room drawn at 1920x1080, shown at 700px wide).
+            const k = 700 / 1920;
+            const jitter = ((i * 37) % 5) * 14 - 28;
+            img.style.left = 110 - cx * k + jitter + "px";
+            img.style.top = 110 - cy * k + 30 + "px";
+            el.appendChild(img);
+            holder.appendChild(el);
+            tiles.push(el);
+          }
+
+          // ---- deterministic orbit, parameterised by scene time t (seconds) ----
+          const lerp = (a, b, p) => a + (b - a) * p;
+          const clamp01 = (v) => Math.max(0, Math.min(1, v));
+          // piecewise-linear keyframes, smoothed with a cosine so velocity has no kinks
+          const track = (t, keys) => {
+            if (t <= keys[0][0]) return keys[0][1];
+            for (let i = 0; i < keys.length - 1; i++) {
+              const [t0, v0] = keys[i];
+              const [t1, v1] = keys[i + 1];
+              if (t <= t1) {
+                const p = (t - t0) / (t1 - t0);
+                return lerp(v0, v1, p);
+              }
+            }
+            return keys[keys.length - 1][1];
+          };
+          const easeOut = (p) => 1 - Math.pow(1 - p, 3);
+          const easeInOut2 = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+          const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+
+          // Lead tile angle (deg, screen space, 0 = right, -90 = top). Tiles travel counter-clockwise.
+          const LEAD = [[0, -30], [0.2, -120], [0.4, -160], [0.8, -210], [1.2, -240], [1.45, -258]];
+          const SPACING = [[0, 30], [0.4, 28], [0.8, 26], [1.2, 21], [1.45, 17]];
+          const RX = [[0, 1150], [0.2, 800], [0.4, 720], [1.0, 690], [1.45, 660]];
+          const RY = [[0, 620], [0.2, 430], [0.4, 390], [1.0, 350], [1.45, 330]];
+          const SIZE = [[0, 1.1], [0.2, 0.85], [0.4, 0.7], [0.8, 0.58], [1.2, 0.5], [1.45, 0.46]];
+          const CX = 900;
+          const CY = 545;
+          // Gap that opens between "Another" and "dead" where the stack lands.
+          const GAP_X = 870;
+          const GAP_Y = 548;
+
+          // "Another" slams in oversized + smeared, settles, then drifts left as the line grows.
+          // Written straight to style from the clock so frame 0 is exact.
+          const zoomEl = document.getElementById("intro-zoom");
+          const driftEl = document.getElementById("intro-drift");
+          // Scale via font-size and offset via `left` (layout, not compositor) so the very first
+          // captured frame is exact. "Another" stays the zoom pivot: its centre sits 303.5px
+          // left of the phrase centre at 1x (measured: 400px word in a 1007px phrase).
+          const BASE_FONT = 116;
+          const expoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+          function placeText(t) {
+            const a = clamp01(t / 0.2);
+            const b = easeInOut2(clamp01((t - 0.2) / 1.15));
+            const scale = t < 0.2 ? lerp(2.8, 1.3, expoOut(a)) : lerp(1.3, 1.0, b);
+            const blur = t < 0.2 ? 14 * (1 - expoOut(a)) : 0;
+            const d = easeInOut2(clamp01((t - 0.18) / 1.05));
+            const drift = lerp(300, 0, d) + 303.5 * (scale - 1);
+            zoomEl.style.fontSize = (BASE_FONT * scale).toFixed(3) + "px";
+            zoomEl.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
+            driftEl.style.left = drift.toFixed(2) + "px";
+          }
+
+          function place(t) {
+            placeText(t);
+            const lead = track(t, LEAD);
+            const sp = track(t, SPACING);
+            const rx = track(t, RX);
+            const ry = track(t, RY);
+            const s = track(t, SIZE);
+            // collapse: 1.38s → 1.7s, tiles slide along the bottom into the gap
+            const c = easeInOut(clamp01((t - 1.48) / 0.18));
+            for (let i = 0; i < N; i++) {
+              const a = ((lead + i * sp) * Math.PI) / 180;
+              let x = CX + Math.cos(a) * rx;
+              let y = CY + Math.sin(a) * ry;
+              // trailing tiles enter a touch later at the very start
+              const enter = clamp01((t - i * 0.018) / 0.12);
+              const rowX = GAP_X - 520 + i * 70;
+              const rowY = GAP_Y + 210 - i * 4;
+              const pre = easeOut(clamp01((t - 1.3) / 0.2));
+              x = lerp(x, rowX, pre * 0.85);
+              y = lerp(y, rowY, pre * 0.85);
+              x = lerp(x, GAP_X + (i - 3.5) * 6, c);
+              y = lerp(y, GAP_Y, c);
+              let sc = s * enter * (1 + clamp01((t - 1.56) / 0.12) * 0.55);
+              const stretch = 1 + clamp01((t - 1.6) / 0.1) * 1.6;
+              const blur = clamp01(1 - t / 0.16) * 10 + clamp01((t - 1.6) / 0.1) * 8;
+              const tile = tiles[i];
+              tile.style.transform =
+                "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px) scale(" + sc.toFixed(4) + "," + (sc * stretch).toFixed(4) + ")";
+              tile.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
+              tile.style.zIndex = String(N - i);
+            }
+          }
+
+          const tl = gsap.timeline({ paused: true });
+          const clock = { t: 0 };
+          place(0);
+          tl.to(clock, { t: 1.7, duration: 1.7, ease: "none", onUpdate: () => place(clock.t) }, 0);
+
+          // "Another" slams in oversized + smeared, settles, then drifts left as the line grows.
+
+          // "dead" and "plant?" fade up in green, then cool to ink.
+          tl.fromTo(
+            "#intro-dead",
+            { opacity: 0, y: 26, filter: "blur(10px)", color: "#4cc24a" },
+            { opacity: 1, y: 6, filter: "blur(0px)", duration: 0.24, ease: "power3.out" },
+            0.8
+          );
+          tl.to("#intro-dead", { y: 0, duration: 0.36, ease: "power2.inOut" }, 1.04);
+          tl.to("#intro-dead", { color: "#1e3a1f", duration: 0.26, ease: "power1.inOut" }, 1.04);
+          tl.fromTo(
+            "#intro-plant",
+            { opacity: 0, y: 30, filter: "blur(10px)", color: "#4cc24a" },
+            { opacity: 1, y: 8, filter: "blur(0px)", duration: 0.24, ease: "power3.out" },
+            0.9
+          );
+          tl.to("#intro-plant", { y: 0, duration: 0.24, ease: "power2.inOut" }, 1.145);
+          tl.to("#intro-plant", { color: "#1e3a1f", duration: 0.22, ease: "power1.inOut" }, 1.145);
+
+          // Gap opens for the tile stack.
+          tl.to("#intro-another", { x: -85, duration: 0.2, ease: "power2.out" }, 1.45);
+          tl.to(["#intro-dead", "#intro-plant"], { x: 85, duration: 0.2, ease: "power2.out" }, 1.45);
+
+          window.__timelines["intro"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

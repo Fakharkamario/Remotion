@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3f2f5;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        #diag-line {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 110px;
+          letter-spacing: -0.055em;
+          white-space: nowrap;
+        }
+        #diag-a {
+          display: inline-block;
+          font-weight: 500;
+        }
+        #diag-b {
+          display: inline-block;
+          font-weight: 700;
+          margin-left: 0.22em;
+        }
+      </style>
+
+      <div data-hf-id="hf-zay8" id="root" data-composition-id="diagnosis" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-kvrg" id="diag-line" data-layout-allow-overflow="">
+          <span data-hf-id="hf-ugii" id="diag-a">Diagnosis</span>
+          <span data-hf-id="hf-gfa9" id="diag-b">ready</span>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          // Lands soft and slightly large, then drifts up-right while the green cools to ink.
+          tl.fromTo(
+            "#diag-line",
+            { scale: 1.08, x: 0, y: 40, filter: "blur(8px)" },
+            { scale: 1.0, x: 20, y: 28, filter: "blur(0px)", duration: 0.16, ease: "power3.out" },
+            0
+          );
+          tl.to("#diag-line", { scale: 0.95, x: 110, y: -70, duration: 0.78, ease: "sine.inOut" }, 0.16);
+          tl.fromTo("#diag-a", { color: "#57c24a" }, { color: "#1e3a1f", duration: 0.5, ease: "power1.inOut" }, 0.1);
+          tl.fromTo("#diag-b", { color: "#3fb13a" }, { color: "#1e3a1f", duration: 0.55, ease: "power1.inOut" }, 0.2);
+          window.__timelines["diagnosis"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3f2f5;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        #pan-strip {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 7680px;
+          height: 1080px;
+          will-change: transform;
+        }
+        #pan-rooms {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 5760px;
+          height: 1080px;
+        }
+        #pan-rooms img {
+          position: absolute;
+          top: 0;
+          width: 1920px;
+          height: 1080px;
+        }
+        #pan-panel {
+          position: absolute;
+          left: 5760px;
+          top: 0;
+          width: 1920px;
+          height: 1080px;
+          background: #f3f2f5;
+          box-shadow: -30px 0 60px rgba(30, 30, 20, 0.18);
+        }
+        #pan-line {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 114px;
+          letter-spacing: -0.055em;
+          color: #1e3a1f;
+          white-space: nowrap;
+        }
+        #pan-keep {
+          display: inline-block;
+          font-weight: 500;
+        }
+        #pan-alive {
+          display: inline-block;
+          font-weight: 700;
+          margin-left: 0.22em;
+        }
+      </style>
+
+      <div data-hf-id="hf-syb6" id="root" data-composition-id="rooms-tagline" data-width="1920" data-height="1080">
+        <svg data-hf-id="hf-6o47" width="0" height="0" style="position: absolute">
+          <filter data-hf-id="hf-q9l3" id="pan-mb" x="-5%" y="0" width="110%" height="100%">
+            <fegaussianblur data-hf-id="hf-4mcj" id="pan-mb-blur" stdDeviation="0 0" />
+          </filter>
+        </svg>
+        <div data-hf-id="hf-j37c" id="pan-strip" data-layout-allow-overflow="">
+          <div data-hf-id="hf-fj8t" id="pan-rooms">
+            <img data-hf-id="hf-dwno" src="assets/art/room-living-healthy.svg" alt="" style="left: 0">
+            <img data-hf-id="hf-fq1h" src="assets/art/room-bedroom-healthy.svg" alt="" style="left: 1920px">
+            <img data-hf-id="hf-cbdt" src="assets/art/room-corner-healthy.svg" alt="" style="left: 3840px">
+          </div>
+          <div data-hf-id="hf-qoyr" id="pan-panel">
+            <div data-hf-id="hf-1361" id="pan-line">
+              <span data-hf-id="hf-ekzh" id="pan-keep">Keep your plants</span>
+              <span data-hf-id="hf-cpl4" id="pan-alive">alive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+
+          // Whip pan through the healthy rooms; the tagline panel rides in at the end of the strip.
+          // Camera position (in screen widths) sampled from the reference whip, joined with a
+          // monotone cubic so velocity stays smooth; motion blur follows the velocity.
+          const KEYS = [[0, 0], [0.2, 0.22], [0.37, 0.75], [0.57, 1.5], [0.77, 2.05], [0.97, 2.45], [1.17, 2.78], [1.4, 2.97], [1.6, 3.0]];
+          const n = KEYS.length;
+          const dx = [], m = [];
+          for (let i = 0; i < n - 1; i++) dx.push((KEYS[i + 1][1] - KEYS[i][1]) / (KEYS[i + 1][0] - KEYS[i][0]));
+          m.push(dx[0]);
+          for (let i = 1; i < n - 1; i++) m.push(dx[i - 1] * dx[i] <= 0 ? 0 : (dx[i - 1] + dx[i]) / 2);
+          m.push(0);
+          m[0] = 0;
+          const pos = (t) => {
+            if (t <= 0) return 0;
+            if (t >= KEYS[n - 1][0]) return KEYS[n - 1][1];
+            let i = 0;
+            while (t > KEYS[i + 1][0]) i++;
+            const [t0, p0] = KEYS[i];
+            const [t1, p1] = KEYS[i + 1];
+            const h = t1 - t0;
+            const u = (t - t0) / h;
+            const h00 = 2 * u * u * u - 3 * u * u + 1, h10 = u * u * u - 2 * u * u + u;
+            const h01 = -2 * u * u * u + 3 * u * u, h11 = u * u * u - u * u;
+            return h00 * p0 + h10 * h * m[i] + h01 * p1 + h11 * h * m[i + 1];
+          };
+          const strip = document.getElementById("pan-strip");
+          const blurEl = document.getElementById("pan-mb-blur");
+          const rooms = document.getElementById("pan-rooms");
+          const cam = { t: 0 };
+          const applyCam = () => {
+            const x = -pos(cam.t) * 1920;
+            strip.style.transform = "translate3d(" + x.toFixed(2) + "px,0,0)";
+            const v = Math.abs(pos(cam.t + 1 / 60) - pos(cam.t - 1 / 60)) * 1920 * 30; // px/s
+            const blur = Math.min(40, v / 260);
+            blurEl.setAttribute("stdDeviation", blur.toFixed(2) + " 0");
+            rooms.style.filter = blur > 0.3 ? "url(#pan-mb)" : "none";
+          };
+          applyCam();
+          tl.to(cam, { t: 2.0334, duration: 2.0334, ease: "none", onUpdate: applyCam }, 0);
+
+          // Tagline: settles as the panel lands, "alive" blooms in green then cools to ink.
+          tl.fromTo("#pan-line", { scale: 1.04, x: 60 }, { scale: 0.975, x: 0, duration: 2.0334, ease: "sine.out" }, 0);
+          tl.fromTo(
+            "#pan-alive",
+            { opacity: 0, filter: "blur(10px)", color: "#3fd236" },
+            { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" },
+            1.13
+          );
+          tl.to("#pan-alive", { color: "#1e3a1f", duration: 0.5, ease: "power1.inOut" }, 1.35);
+
+          window.__timelines["rooms-tagline"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

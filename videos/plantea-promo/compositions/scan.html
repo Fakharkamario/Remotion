@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3f2f5;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        }
+        #scan-card {
+          position: absolute;
+          left: 620px;
+          top: 200px;
+          width: 680px;
+          height: 680px;
+          border-radius: 96px;
+          background: #ebeaee;
+          box-shadow: 0 30px 60px rgba(40, 44, 40, 0.1), inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+          overflow: hidden;
+          will-change: transform, filter;
+        }
+        .scan-plant {
+          position: absolute;
+          left: 60px;
+          top: 92px;
+          width: 560px;
+          height: 548px;
+        }
+        #scan-wire {
+          clip-path: inset(100% 0 0 0);
+        }
+        .scan-corner {
+          position: absolute;
+          width: 96px;
+          height: 96px;
+          border: 0 solid #a9d39c;
+          border-radius: 6px;
+        }
+        #scan-c-tl { left: 70px; top: 70px; border-top-width: 14px; border-left-width: 14px; border-top-left-radius: 34px; }
+        #scan-c-tr { right: 70px; top: 70px; border-top-width: 14px; border-right-width: 14px; border-top-right-radius: 34px; }
+        #scan-c-bl { left: 70px; bottom: 70px; border-bottom-width: 14px; border-left-width: 14px; border-bottom-left-radius: 34px; }
+        #scan-c-br { right: 70px; bottom: 70px; border-bottom-width: 14px; border-right-width: 14px; border-bottom-right-radius: 34px; }
+        #scan-line {
+          position: absolute;
+          left: 84px;
+          top: 0;
+          width: 512px;
+          height: 12px;
+          margin-top: -6px;
+          border-radius: 6px;
+          background: #b9e6ab;
+          box-shadow: 0 0 24px 6px rgba(150, 230, 130, 0.55);
+        }
+        #scan-text {
+          position: absolute;
+          left: 1130px;
+          top: 500px;
+          height: 80px;
+          display: flex;
+          align-items: center;
+          font-size: 64px;
+          letter-spacing: -0.035em;
+          color: #1e3a1f;
+          white-space: nowrap;
+        }
+        #scan-spin {
+          position: relative;
+          width: 40px;
+          height: 40px;
+          margin-right: 20px;
+          flex: none;
+        }
+        .scan-dot {
+          position: absolute;
+          left: 16px;
+          top: 16px;
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: #1e3a1f;
+        }
+        #scan-word span {
+          display: inline-block;
+          font-weight: 400;
+        }
+        #scan-plantword {
+          display: inline-block;
+          margin-left: 16px;
+          font-weight: 400;
+        }
+        .scan-bit {
+          position: absolute;
+          background: #1f3320;
+          opacity: 0;
+        }
+      </style>
+
+      <div data-hf-id="hf-dp5u" id="root" data-composition-id="scan" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-ij0x" id="scan-card">
+          <img data-hf-id="hf-5c3e" class="scan-plant" id="scan-natural" src="assets/art/plant-dying.svg" alt="">
+          <img data-hf-id="hf-zdty" class="scan-plant" id="scan-wire" src="assets/art/plant-scan.svg" alt="">
+          <div data-hf-id="hf-e6cb" id="scan-c-tl" class="scan-corner"></div>
+          <div data-hf-id="hf-1rb9" id="scan-c-tr" class="scan-corner"></div>
+          <div data-hf-id="hf-h43h" id="scan-c-bl" class="scan-corner"></div>
+          <div data-hf-id="hf-gcbn" id="scan-c-br" class="scan-corner"></div>
+          <div data-hf-id="hf-6j9l" id="scan-line"></div>
+        </div>
+        <div data-hf-id="hf-dm2b" id="scan-bit-sq" class="scan-bit" style="left: 1740px; top: 310px; width: 58px; height: 58px"></div>
+        <div data-hf-id="hf-94e9" id="scan-bit-bar" class="scan-bit" style="left: 1300px; top: 580px; width: 290px; height: 60px"></div>
+        <div data-hf-id="hf-0lce" id="scan-text">
+          <div data-hf-id="hf-8oxj" id="scan-spin"></div>
+          <div data-hf-id="hf-l5ln" id="scan-word"><span data-hf-id="hf-fmnq">S</span><span data-hf-id="hf-ypd2">c</span><span data-hf-id="hf-zhz4">a</span><span data-hf-id="hf-tjdp">n</span><span data-hf-id="hf-mult">n</span><span data-hf-id="hf-wbiw">i</span><span data-hf-id="hf-o1iw">n</span><span data-hf-id="hf-x44y">g</span></div>
+          <div data-hf-id="hf-2nlz" id="scan-plantword">plant…</div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+
+          // ---- card: arrives oversized + soft, settles, then slides left ----
+          tl.fromTo(
+            "#scan-card",
+            { scale: 1.45, x: 0, filter: "blur(10px)" },
+            { scale: 1.12, x: -40, filter: "blur(0px)", duration: 0.2, ease: "power3.out" },
+            0
+          );
+          tl.to("#scan-card", { scale: 1.0, x: -250, duration: 0.45, ease: "power2.inOut" }, 0.2);
+          tl.to("#scan-card", { scale: 0.98, x: -326, duration: 0.85, ease: "sine.out" }, 0.65);
+
+          // ---- scan line: up (reveals the wireframe), hold, back down (restores colour) ----
+          const H = 680;
+          const scan = { y: 0.86 };
+          const applyScan = () => {
+            const y = scan.y * H;
+            document.getElementById("scan-line").style.top = y.toFixed(1) + "px";
+            document.getElementById("scan-wire").style.clipPath = "inset(" + ((y - 92) / 548 * 100).toFixed(2) + "% 0 0 0)";
+          };
+          applyScan();
+          tl.to(scan, { y: 0.13, duration: 0.55, ease: "power2.inOut", onUpdate: applyScan }, 0.06);
+          tl.to(scan, { y: 0.6, duration: 0.42, ease: "power2.inOut", onUpdate: applyScan }, 1.06);
+
+          // ---- spinner dots fly in from the top-right and lock into a ring ----
+          const spin = document.getElementById("scan-spin");
+          const DOTS = 8;
+          for (let i = 0; i < DOTS; i++) {
+            const d = document.createElement("div");
+            d.className = "scan-dot";
+            d.id = "scan-dot-" + i;
+            spin.appendChild(d);
+            const a = (i / DOTS) * Math.PI * 2;
+            const rx = Math.cos(a) * 16;
+            const ry = Math.sin(a) * 16;
+            // scattered start positions, deterministic
+            const sx = 180 + ((i * 53) % 7) * 34;
+            const sy = -260 + ((i * 29) % 5) * 44;
+            tl.fromTo(
+              d,
+              { x: sx, y: sy, scale: 2.2, opacity: 0 },
+              { x: sx * 0.4, y: sy * 0.4, scale: 1.4, opacity: 0.8, duration: 0.18, ease: "power1.out" },
+              0.3 + i * 0.012
+            );
+            tl.to(d, { x: rx, y: ry, scale: 1 - i * 0.07, opacity: 1, duration: 0.24, ease: "power3.out" }, 0.48 + i * 0.012);
+          }
+          tl.fromTo("#scan-spin", { rotation: 0 }, { rotation: 300, duration: 0.8, ease: "none" }, 0.7);
+
+          // ---- "Scanning" rises into line ----
+          tl.fromTo(
+            "#scan-word",
+            { opacity: 0, x: 60, y: 250, filter: "blur(6px)" },
+            { opacity: 1, x: 50, y: 240, filter: "blur(0px)", duration: 0.14, ease: "power2.out" },
+            0.33
+          );
+          tl.to("#scan-word", { x: 0, y: 0, duration: 0.38, ease: "power3.inOut" }, 0.475);
+
+          // stray dark blocks collapse into the "plant…" token
+          tl.to("#scan-bit-sq", { opacity: 1, duration: 0.02 }, 0.5);
+          tl.to("#scan-bit-bar", { opacity: 1, duration: 0.02 }, 0.5);
+          tl.to("#scan-bit-sq", { scale: 0.2, x: -40, y: 80, opacity: 0, duration: 0.1, ease: "power2.in" }, 0.63);
+          tl.to("#scan-bit-bar", { scaleX: 0.1, x: 160, y: -60, opacity: 0, duration: 0.1, ease: "power2.in" }, 0.6);
+          tl.fromTo(
+            "#scan-plantword",
+            { opacity: 0, x: 330, y: -150, scale: 0.4, filter: "blur(0px)" },
+            { opacity: 1, duration: 0.05 },
+            0.67
+          );
+          tl.to("#scan-plantword", { x: 0, y: 0, scale: 1, duration: 0.3, ease: "expo.inOut" }, 0.8);
+          tl.to("#scan-plantword", { filter: "blur(4px)", duration: 0.12, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0.82);
+
+          // weight wave across "Scanning"
+          tl.to("#scan-word span", { fontWeight: 700, duration: 0.08, stagger: 0.022, ease: "power1.out" }, 0.8);
+          tl.to("#scan-word span", { fontWeight: 400, duration: 0.12, stagger: 0.022, ease: "power1.in" }, 0.9);
+
+          window.__timelines["scan"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

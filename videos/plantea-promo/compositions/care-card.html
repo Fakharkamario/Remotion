@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          background: #f3f2f5;
+          font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+          color: #1e3a1f;
+        }
+        #care-group {
+          position: absolute;
+          inset: 0;
+        }
+        .care-panel {
+          position: absolute;
+          background: #fbfbfc;
+          border-radius: 44px;
+          box-shadow: 0 24px 50px rgba(40, 44, 40, 0.08);
+        }
+        #care-plant-card {
+          left: 270px;
+          top: 178px;
+          width: 640px;
+          height: 718px;
+          overflow: hidden;
+        }
+        #care-plant-well {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 640px;
+          height: 470px;
+          background: linear-gradient(180deg, #ecebee 0%, #e4e3e7 100%);
+        }
+        #care-plant-img {
+          position: absolute;
+          left: -10px;
+          top: -50px;
+          width: 560px;
+          height: 548px;
+        }
+        .care-chip {
+          position: absolute;
+          left: 488px;
+          width: 120px;
+          height: 104px;
+          border-radius: 26px;
+          background: #ffffff;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-size: 18px;
+          font-weight: 500;
+          color: #3c4a3d;
+        }
+        #care-badge {
+          position: absolute;
+          left: 352px;
+          top: 520px;
+          height: 46px;
+          padding: 0 22px;
+          border-radius: 23px;
+          background: #8e2b2b;
+          color: #fbeaea;
+          font-size: 22px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+        }
+        #care-name {
+          position: absolute;
+          left: 76px;
+          top: 590px;
+          font-size: 62px;
+          font-weight: 500;
+          letter-spacing: -0.05em;
+          white-space: nowrap;
+        }
+        #care-name span {
+          display: inline-block;
+        }
+        #care-upcoming {
+          left: 940px;
+          top: 222px;
+          width: 790px;
+          height: 236px;
+        }
+        #care-temp {
+          left: 940px;
+          top: 486px;
+          width: 790px;
+          height: 410px;
+        }
+        .care-h {
+          position: absolute;
+          left: 46px;
+          top: 36px;
+          font-size: 36px;
+          font-weight: 600;
+          letter-spacing: -0.04em;
+        }
+        .care-task {
+          position: absolute;
+          top: 112px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .care-ico {
+          width: 76px;
+          height: 76px;
+          border-radius: 22px;
+          background: #b9dda9;
+          display: grid;
+          place-items: center;
+        }
+        .care-task b {
+          display: block;
+          font-size: 22px;
+          font-weight: 600;
+        }
+        .care-task i {
+          display: block;
+          font-style: normal;
+          font-size: 19px;
+          color: #5a665b;
+        }
+        .care-row {
+          position: absolute;
+          left: 46px;
+          width: 698px;
+        }
+        .care-label {
+          font-size: 19px;
+          color: #5a665b;
+          margin-bottom: 6px;
+        }
+        .care-scale {
+          display: flex;
+          justify-content: space-between;
+          font-size: 21px;
+          font-weight: 500;
+          margin-bottom: 10px;
+        }
+        .care-track {
+          position: relative;
+          height: 40px;
+          border-radius: 20px;
+          background: #ecebef;
+        }
+        .care-range {
+          position: absolute;
+          top: 0;
+          height: 40px;
+          border-radius: 20px;
+          background: #9ccf88;
+          color: #183019;
+          font-size: 18px;
+          font-weight: 600;
+          display: grid;
+          place-items: center;
+        }
+      </style>
+
+      <div data-hf-id="hf-o0un" id="root" data-composition-id="care-card" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-oid1" id="care-group" data-layout-allow-overflow="">
+          <div data-hf-id="hf-ukhm" id="care-plant-card" class="care-panel">
+            <div data-hf-id="hf-6kxr" id="care-plant-well"></div>
+            <img data-hf-id="hf-dfz7" id="care-plant-img" data-layout-allow-overflow="" src="assets/art/plant-dying.svg" alt="">
+            <div data-hf-id="hf-uuzi" class="care-chip" style="top: 36px">
+              <svg data-hf-id="hf-gkqi" width="30" height="30" viewBox="0 0 30 30"><path data-hf-id="hf-kyva" d="M15 26 C15 16 8 12 3 12 C5 20 10 24 15 26 Z M15 26 C15 16 22 12 27 12 C25 20 20 24 15 26 Z M15 24 L15 6" stroke="#2f4a30" stroke-width="2.4" fill="none" stroke-linejoin="round" /></svg>
+              Expert
+            </div>
+            <div data-hf-id="hf-ieaf" class="care-chip" style="top: 156px">
+              <svg data-hf-id="hf-5126" width="30" height="30" viewBox="0 0 30 30"><circle data-hf-id="hf-mhiv" cx="15" cy="15" r="6" fill="#2f4a30" /><g data-hf-id="hf-9ter" stroke="#2f4a30" stroke-width="2.4" stroke-linecap="round"><line data-hf-id="hf-vfui" x1="15" y1="2" x2="15" y2="6" /><line data-hf-id="hf-yq1q" x1="15" y1="24" x2="15" y2="28" /><line data-hf-id="hf-j36o" x1="2" y1="15" x2="6" y2="15" /><line data-hf-id="hf-76ke" x1="24" y1="15" x2="28" y2="15" /><line data-hf-id="hf-j83g" x1="6" y1="6" x2="8.5" y2="8.5" /><line data-hf-id="hf-7cm2" x1="21.5" y1="21.5" x2="24" y2="24" /><line data-hf-id="hf-2fz1" x1="24" y1="6" x2="21.5" y2="8.5" /><line data-hf-id="hf-5j6h" x1="8.5" y1="21.5" x2="6" y2="24" /></g></svg>
+              Bright light
+            </div>
+            <div data-hf-id="hf-ks7z" class="care-chip" style="top: 276px">
+              <svg data-hf-id="hf-5fd7" width="30" height="30" viewBox="0 0 30 30"><path data-hf-id="hf-hzbh" d="M15 4 C15 4 6 14 6 19 A9 9 0 0 0 24 19 C24 14 15 4 15 4 Z" fill="#2f4a30" /></svg>
+              Moderate
+            </div>
+            <div data-hf-id="hf-4m5z" id="care-badge">Needs attention</div>
+            <div data-hf-id="hf-n5qe" id="care-name"><span data-hf-id="hf-vt6u">Bird</span> <span data-hf-id="hf-ah8k">of</span> <span data-hf-id="hf-5vpw">Paradise</span></div>
+          </div>
+
+          <div data-hf-id="hf-mgsu" id="care-upcoming" class="care-panel">
+            <div data-hf-id="hf-ip34" class="care-h">Coming up</div>
+            <div data-hf-id="hf-de7q" class="care-task" style="left: 46px">
+              <div data-hf-id="hf-yf43" class="care-ico"><svg data-hf-id="hf-hrrm" width="34" height="34" viewBox="0 0 30 30"><path data-hf-id="hf-tnzx" d="M15 4 C15 4 6 14 6 19 A9 9 0 0 0 24 19 C24 14 15 4 15 4 Z" fill="#f4fbf0" /></svg></div>
+              <div data-hf-id="hf-yeow"><b data-hf-id="hf-wjyo">Water</b><i data-hf-id="hf-78n8">in 2 days</i></div>
+            </div>
+            <div data-hf-id="hf-n8fz" class="care-task" style="left: 300px">
+              <div data-hf-id="hf-iwlf" class="care-ico"><svg data-hf-id="hf-9hjq" width="34" height="34" viewBox="0 0 30 30"><path data-hf-id="hf-m6ez" d="M15 5 L15 21 M8 15 L15 22 L22 15" stroke="#f4fbf0" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg></div>
+              <div data-hf-id="hf-y7yw"><b data-hf-id="hf-vhgl">Feed</b><i data-hf-id="hf-u5mm">in 11 days</i></div>
+            </div>
+            <div data-hf-id="hf-h9x1" class="care-task" style="left: 540px">
+              <div data-hf-id="hf-iiae" class="care-ico"><svg data-hf-id="hf-9vur" width="34" height="34" viewBox="0 0 30 30"><path data-hf-id="hf-hd2a" d="M7 12 L23 12 L21 26 L9 26 Z" fill="#f4fbf0" /><rect data-hf-id="hf-lmjs" x="5" y="8" width="20" height="5" rx="2" fill="#f4fbf0" /></svg></div>
+              <div data-hf-id="hf-x11t"><b data-hf-id="hf-iv9n">Repot</b><i data-hf-id="hf-9bfv">4 March</i></div>
+            </div>
+          </div>
+
+          <div data-hf-id="hf-k54a" id="care-temp" class="care-panel">
+            <div data-hf-id="hf-jc3r" class="care-h">Ideal temperature</div>
+            <div data-hf-id="hf-tfc9" class="care-row" style="top: 116px">
+              <div data-hf-id="hf-qyh9" class="care-label">Daytime</div>
+              <div data-hf-id="hf-my2q" class="care-scale"><span data-hf-id="hf-gzum">0°C</span><span data-hf-id="hf-cfkq">15°C</span><span data-hf-id="hf-5sm7">30°C</span></div>
+              <div data-hf-id="hf-m67d" class="care-track"><div data-hf-id="hf-g539" class="care-range" style="left: 41%; width: 22%">18–24°C</div></div>
+            </div>
+            <div data-hf-id="hf-3ndf" class="care-row" style="top: 262px">
+              <div data-hf-id="hf-fd5s" class="care-label">Night</div>
+              <div data-hf-id="hf-n4h2" class="care-scale"><span data-hf-id="hf-9en6">0°C</span><span data-hf-id="hf-vnjy">15°C</span><span data-hf-id="hf-jdzz">30°C</span></div>
+              <div data-hf-id="hf-8uzh" class="care-track"><div data-hf-id="hf-8y3z" class="care-range" style="left: 22%; width: 22%">10–18°C</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (() => {
+          const tl = gsap.timeline({ paused: true });
+          // Rack-focus in: the plant card sharpens first, the info panels follow.
+          tl.fromTo("#care-group", { scale: 1.04, y: 18 }, { scale: 0.985, y: -14, duration: 1.0333, ease: "sine.out" }, 0);
+          tl.fromTo(
+            "#care-plant-card",
+            { opacity: 0.8, filter: "blur(10px)" },
+            { opacity: 1, filter: "blur(0px)", duration: 0.1, ease: "power2.out" },
+            0
+          );
+          tl.fromTo(
+            ["#care-upcoming", "#care-temp"],
+            { opacity: 0.5, filter: "blur(18px)" },
+            { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out", stagger: 0.04 },
+            0.04
+          );
+          tl.fromTo(
+            "#care-name span",
+            { opacity: 0, y: 14, filter: "blur(6px)" },
+            { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.16, stagger: 0.06, ease: "power2.out" },
+            0.04
+          );
+          tl.fromTo("#care-badge", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "back.out(2)" }, 0.05);
+          tl.fromTo(".care-range", { scaleX: 0.3, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.3, stagger: 0.06, ease: "power3.out" }, 0.18);
+          window.__timelines["care-card"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>
