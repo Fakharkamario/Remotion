@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Pets Thriving</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin-wght.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f6f3f7;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #f6f3f7;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+      }
+      .abs {
+        position: absolute;
+        display: block;
+      }
+      .hide {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      /* ================= Scene 1: photo wipes =================
+       * Every photo is pinned to the screen; each new one is revealed by a hard vertical
+       * edge sweeping right -> left (clip-path inset), exactly like the reference. */
+      .layer {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      .layer img {
+        position: absolute;
+        left: -18px;
+        top: 0;
+        width: 1956px;
+        height: 1080px;
+        object-fit: cover;
+      }
+      /* The first photo pans left ~200px, so it gets a little more width to play with */
+      #L0 img {
+        left: 0;
+        top: -45px;
+        width: 2170px;
+        height: 1170px;
+      }
+      .wipe {
+        clip-path: inset(0px 0px 0px 1920px);
+      }
+
+      /* ================= Scene 2: headline panel ================= */
+      #panel {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        background: #f6f3f7;
+      }
+      #line {
+        left: 6px;
+        top: 451px;
+        width: 1920px;
+        text-align: center;
+        white-space: nowrap;
+        font-size: 120px;
+        line-height: 160px;
+        font-weight: 420;
+        letter-spacing: -0.06em;
+        word-spacing: -0.07em;
+        color: #24301f;
+        filter: url(#blur-line);
+      }
+      /* The last word rises out of a mask at its descender line, bright green, then the
+       * dark fill pours in from the top. */
+      #wclip {
+        display: inline-block;
+        vertical-align: top;
+        height: 160px;
+        clip-path: inset(-40px -80px 0px -80px);
+      }
+      #word {
+        display: inline-block;
+        font-weight: 700;
+        letter-spacing: -0.055em;
+        color: transparent;
+        background-image: linear-gradient(
+          180deg,
+          #1f3a1d 0%,
+          #1f3a1d 36%,
+          #36b62c 48%,
+          #4fee3a 58%,
+          #63f350 100%
+        );
+        background-size: 100% 300%;
+        background-position: 0% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        filter: url(#blur-word);
+        padding: 0 0.04em;
+      }
+
+      /* ================= Scene 3: brand ================= */
+      #brand {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        background: #1f331d;
+      }
+      #name {
+        left: 0;
+        top: 461px;
+        width: 1920px;
+        text-align: center;
+        font-size: 120px;
+        line-height: 160px;
+        font-weight: 600;
+        letter-spacing: -0.04em;
+        color: #e3f9d3;
+        filter: url(#blur-name);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="2.6"
+      data-width="1920"
+      data-height="1080"
+    >
+      <svg width="0" height="0" style="position: absolute">
+        <filter id="blur-line" x="-10%" y="-50%" width="120%" height="200%">
+          <feGaussianBlur id="fb-line" stdDeviation="0 0" />
+        </filter>
+        <filter id="blur-word" x="-30%" y="-50%" width="160%" height="200%">
+          <feGaussianBlur id="fb-word" stdDeviation="0 0" />
+        </filter>
+        <filter id="blur-name" x="-20%" y="-50%" width="140%" height="200%">
+          <feGaussianBlur id="fb-name" stdDeviation="0 0" />
+        </filter>
+      </svg>
+
+      <!-- ============ Scene 1: photo wipes ============ -->
+      <div id="L0" class="abs layer"><img id="i0" data-layout-allow-overflow src="assets/dog-lying.jpg" alt="" /></div>
+      <div id="L1" class="abs layer wipe"><img data-layout-allow-overflow src="assets/cat-looking.jpg" alt="" /></div>
+      <div id="L2" class="abs layer wipe"><img data-layout-allow-overflow src="assets/dog-sitting.jpg" alt="" /></div>
+      <div id="L3" class="abs layer wipe"><img data-layout-allow-overflow src="assets/cat-sitting.jpg" alt="" /></div>
+
+      <!-- ============ Scene 2: headline ============ -->
+      <div id="panel" class="abs wipe">
+        <div id="line" class="abs">Keep your pets <span id="wclip"><span id="word">thriving</span></span></div>
+      </div>
+
+      <!-- ============ Scene 3: brand ============ -->
+      <div id="brand" class="abs hide">
+        <div id="name" class="abs">Animala</div>
+      </div>
+
+      <audio
+        id="soundtrack"
+        src="assets/audio.m4a"
+        data-start="0"
+        data-duration="2.6"
+        data-track-index="0"
+        data-volume="1"
+      ></audio>
+    </div>
+
+    <script>
+      (function () {
+        const F = (n) => n / 30;
+        const tl = gsap.timeline({ paused: true });
+
+        // Dense per-frame keys -> linear tweens between consecutive frames (smooth at any fps).
+        function track(target, keys, ease) {
+          tl.set(target, keys[0][1], F(keys[0][0]));
+          for (let i = 1; i < keys.length; i++) {
+            const [n0] = keys[i - 1];
+            const [n1, props] = keys[i];
+            tl.to(target, { ...props, duration: F(n1 - n0), ease: ease || "none" }, F(n0));
+          }
+        }
+        const clip = (x) => ({ clipPath: `inset(0px 0px 0px ${x}px)` });
+        const hblur = (v) => ({ attr: { stdDeviation: `${v} 0` } });
+        const vblur = (v) => ({ attr: { stdDeviation: `0 ${v}` } });
+
+        // ---- Scene 1: first photo drifts left, then four wipes sweep in (left edge x per frame,
+        //      tracked from the reference). Photo content stays pinned to the screen.
+        track("#i0", [
+          [0, { x: 0 }], [1, { x: -42 }], [2, { x: -62 }], [3, { x: -78 }], [4, { x: -90 }],
+          [5, { x: -98 }], [6, { x: -106 }], [7, { x: -114 }], [8, { x: -122 }], [29, { x: -206 }],
+        ]);
+        const WIPES = {
+          "#L1": [[2, 1920], [3, 1905], [4, 1880], [5, 1840], [6, 1808], [7, 1768], [8, 1720], [9, 1664],
+            [10, 1600], [11, 1524], [12, 1440], [13, 1344], [14, 1236], [15, 1120], [16, 1004], [17, 888],
+            [18, 764], [19, 652], [20, 556], [21, 460], [22, 372], [23, 300], [24, 232], [25, 172],
+            [26, 120], [27, 76], [28, 32], [29, 0]],
+          "#L2": [[17, 1920], [18, 1704], [19, 1496], [20, 1308], [21, 1136], [22, 988], [23, 848],
+            [24, 728], [25, 624], [26, 520], [27, 432], [28, 352], [29, 284], [30, 224], [31, 172],
+            [32, 128], [33, 92], [34, 56], [35, 28], [36, 10], [37, 0]],
+          "#L3": [[22, 1920], [23, 1808], [24, 1600], [25, 1400], [26, 1224], [27, 1060], [28, 916],
+            [29, 808], [30, 700], [31, 590], [32, 490], [33, 400], [34, 320], [35, 254], [36, 198],
+            [37, 150], [38, 108], [39, 74], [40, 46], [41, 24], [42, 10], [43, 0]],
+          "#panel": [[28, 1920], [29, 1715], [30, 1525], [31, 1340], [32, 1150], [33, 1012], [34, 853],
+            [35, 731], [36, 620], [37, 520], [38, 431], [39, 355], [40, 287], [41, 226], [42, 174],
+            [43, 129], [44, 94], [45, 60], [46, 31], [47, 7], [48, 0]],
+        };
+        for (const [sel, keys] of Object.entries(WIPES)) track(sel, keys.map(([n, x]) => [n, clip(x)]));
+
+        // ---- Scene 2: headline glides in from the right and settles (exponential ease),
+        //      then lifts off just before the cut.
+        const TX = [
+          [28, 410], [29, 355], [30, 305], [31, 260], [32, 221], [33, 190], [34, 164], [35, 142],
+          [36, 123], [37, 106], [38, 91], [39, 78], [40, 67], [41, 57], [42, 48], [43, 40], [44, 33],
+          [45, 27], [46, 22], [47, 18], [48, 14], [49, 11], [50, 8], [51, 6], [52, 4], [53, 3],
+          [54, 2], [55, 1], [57, 0],
+        ];
+        track("#line", TX.map(([n, x]) => [n, { x }]));
+        const TY = [
+          [43, 0], [44, -1], [46, -2], [48, -3], [50, -4], [51, -5], [52, -7], [53, -9], [54, -12],
+          [55, -15], [56, -18], [57, -21], [58, -27], [59, -35], [60, -48],
+        ];
+        track("#line", TY.map(([n, y]) => [n, { y }]));
+        track("#fb-line", [[29, hblur(8)], [31, hblur(6)], [33, hblur(3)], [35, hblur(1)], [37, hblur(0)]]);
+
+        // Last word: rises from below, motion-blurred, bright green -> dark green
+        const WY = [
+          [35, 125], [36, 100], [37, 82], [38, 67], [39, 54], [40, 43], [41, 32], [42, 24], [43, 18],
+          [44, 13], [45, 8], [46, 5], [47, 3], [48, 0],
+        ];
+        track("#word", WY.map(([n, y]) => [n, { y }]));
+        track("#fb-word", [[35, hblur(16)], [36, hblur(14)], [37, hblur(12)], [38, hblur(9)], [39, hblur(5)],
+          [40, hblur(3)], [41, hblur(1.5)], [42, hblur(0)]]);
+        tl.set("#word", { y: 125, backgroundPosition: "0% 100%" }, 0);
+        tl.to("#word", { backgroundPosition: "0% 0%", duration: F(12), ease: "power1.out" }, F(40));
+
+        // ---- Scene 3: hard cut to the brand; name rises and de-blurs
+        tl.set("#brand", { autoAlpha: 1 }, F(61));
+        const NY = [
+          [61, 85], [62, 54], [63, 40], [64, 31], [65, 24], [66, 19], [67, 15], [68, 11], [69, 8],
+          [70, 6], [71, 4], [72, 3], [73, 2], [74, 1], [75, 0],
+        ];
+        track("#name", NY.map(([n, y]) => [n, { y }]));
+        track("#fb-name", [[61, vblur(4)], [62, vblur(1.5)], [63, vblur(0)]]);
+        tl.set({}, {}, 2.6);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>
