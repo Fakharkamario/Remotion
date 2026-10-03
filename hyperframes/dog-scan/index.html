@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dog Scan</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin-wght.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f6f3f7;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #f6f3f7;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        color: #1f2b1b;
+      }
+      .abs {
+        position: absolute;
+        display: block;
+      }
+      .hide {
+        visibility: hidden;
+        opacity: 0;
+      }
+
+      /* ================= Scene 1: scan card =================
+       * #sc sits at the card centre; GSAP drives x/y/scale per frame (tracked from the
+       * reference). Card is 708px square at scale 1, bracket box 547px inside it. */
+      #sc {
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 0;
+      }
+      #card {
+        left: -354px;
+        top: -354px;
+        width: 708px;
+        height: 708px;
+        border-radius: 104px;
+        background: #edeaee;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.75), 0 22px 60px rgba(40, 30, 50, 0.05);
+      }
+      #box {
+        --ly: 487;
+        left: 80.5px;
+        top: 80.5px;
+        width: 547px;
+        height: 547px;
+      }
+      .br {
+        position: absolute;
+        width: 106px;
+        height: 106px;
+        border: 0 solid #b3c6a6;
+      }
+      .br.tl {
+        left: 0;
+        top: 0;
+        border-top-width: 22px;
+        border-left-width: 22px;
+        border-top-left-radius: 40px;
+      }
+      .br.tr {
+        right: 0;
+        top: 0;
+        border-top-width: 22px;
+        border-right-width: 22px;
+        border-top-right-radius: 40px;
+      }
+      .br.bl {
+        left: 0;
+        bottom: 0;
+        border-bottom-width: 22px;
+        border-left-width: 22px;
+        border-bottom-left-radius: 40px;
+      }
+      .br.brr {
+        right: 0;
+        bottom: 0;
+        border-bottom-width: 22px;
+        border-right-width: 22px;
+        border-bottom-right-radius: 40px;
+      }
+      /* Dog placement inside the bracket box (content ~500px tall, feet near the bottom bracket) */
+      .sdog {
+        left: -4px;
+        top: 22px;
+        width: 524px;
+        height: 513px;
+      }
+      /* Above the scan line: the real photo. Below: the green mesh. */
+      #orig-clip {
+        position: absolute;
+        inset: 0;
+        clip-path: polygon(-300px -300px, 847px -300px, 847px calc(var(--ly) * 1px), -300px calc(var(--ly) * 1px));
+      }
+      #green-clip {
+        position: absolute;
+        inset: 0;
+        clip-path: polygon(-300px calc(var(--ly) * 1px), 847px calc(var(--ly) * 1px), 847px 847px, -300px 847px);
+      }
+      #green {
+        filter: drop-shadow(0 0 9px rgba(128, 232, 92, 0.85)) drop-shadow(0 0 26px rgba(150, 236, 110, 0.55));
+      }
+      #gdog {
+        filter: grayscale(1) brightness(1.7) contrast(0.62) sepia(1) hue-rotate(38deg) saturate(1.9) brightness(1.06);
+      }
+      #ggrid {
+        background:
+          linear-gradient(90deg, rgba(84, 166, 56, 0.42) 1.6px, transparent 1.6px) 0 0 / 6.5px 6.5px,
+          linear-gradient(0deg, rgba(84, 166, 56, 0.42) 1.6px, transparent 1.6px) 0 0 / 6.5px 6.5px;
+        -webkit-mask-image: url("assets/dog.png");
+        -webkit-mask-size: 100% 100%;
+        mask-image: url("assets/dog.png");
+        mask-size: 100% 100%;
+      }
+      #sline {
+        left: 17px;
+        width: 513px;
+        height: 20px;
+        top: calc(var(--ly) * 1px - 10px);
+        border-radius: 10px;
+        background: #b3c6a6;
+        box-shadow: 0 0 18px rgba(170, 225, 150, 0.55);
+      }
+
+      /* ================= Scene 1: status text ================= */
+      .stxt {
+        font-size: 74px;
+        font-weight: 400;
+        letter-spacing: -0.075em;
+        line-height: 1;
+        white-space: pre;
+        color: #1f2b1b;
+      }
+      #status {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      #st {
+        left: 1213px;
+        top: 488px;
+      }
+      #st span {
+        font-weight: 400;
+      }
+      #spin {
+        left: 1167px;
+        top: 525px;
+        width: 0;
+        height: 0;
+      }
+      .sd,
+      .pd {
+        position: absolute;
+        border-radius: 50%;
+        background: #1f2b1b;
+      }
+      #early {
+        left: 0;
+        top: 0;
+        transform-origin: 0 50%;
+      }
+      .blk {
+        background: #1f2f1b;
+      }
+      #sx-cond {
+        left: 1724px;
+        top: 368px;
+        font-size: 48px;
+        letter-spacing: -0.06em;
+        transform: scaleX(0.5);
+        transform-origin: 0 0;
+      }
+      #sx-wide {
+        left: 1540px;
+        top: 444px;
+        font-size: 26px;
+        letter-spacing: 0.22em;
+      }
+
+      /* ================= Scene 2: Diagnosis ready ================= */
+      #dg {
+        --t: -100;
+        --h: 155;
+        left: 0;
+        top: 0;
+        font-size: 110px;
+        font-weight: 400;
+        letter-spacing: -0.07em;
+        line-height: 1;
+        white-space: pre;
+        color: transparent;
+        background-image: linear-gradient(
+          90deg,
+          #22311d calc(var(--t) * 1px - 50px),
+          #4fb63a calc(var(--t) * 1px + 30px),
+          #4fb63a calc(var(--h) * 1px - 40px),
+          #22311d calc(var(--h) * 1px + 40px)
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        padding: 0 4px 0.3em 0;
+      }
+      #dg b {
+        font-weight: 650;
+      }
+
+      /* ================= Scene 3: pet dashboard ================= */
+      #dash {
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: 176px 176px;
+      }
+      .panel {
+        background: #fbfafc;
+        border-radius: 56px;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9), 0 18px 50px rgba(40, 30, 50, 0.045);
+      }
+      #lc {
+        left: 178px;
+        top: 178px;
+        width: 607px;
+        height: 717px;
+        border-radius: 64px;
+        background: #ebe9ed;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7), 0 18px 50px rgba(40, 30, 50, 0.045);
+      }
+      #lcw {
+        left: 0;
+        top: 457px;
+        width: 607px;
+        height: 260px;
+        background: #fbfafc;
+        border-radius: 60px 60px 0 0;
+      }
+      #ddog {
+        left: 70px;
+        top: 106px;
+        width: 618px;
+        height: 605px;
+        filter: drop-shadow(0 14px 18px rgba(60, 40, 20, 0.12));
+      }
+      .chip {
+        left: 625px;
+        width: 117px;
+        height: 105px;
+        border-radius: 26px;
+        background: #fbfafc;
+        box-shadow: 0 6px 18px rgba(40, 30, 50, 0.04);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        font-size: 19px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: #6b6d69;
+      }
+      .chip svg {
+        width: 26px;
+        height: 26px;
+      }
+      #badge {
+        right: calc(1920px - 718px);
+        top: 720px;
+        height: 48px;
+        padding: 0 20px;
+        border-radius: 24px;
+        background: #8e2430;
+        color: #fbe9ea;
+        font-size: 30px;
+        font-weight: 450;
+        letter-spacing: -0.045em;
+        line-height: 48px;
+        white-space: pre;
+      }
+      #title {
+        right: calc(1920px - 718px);
+        top: 768px;
+        font-size: 68px;
+        font-weight: 650;
+        letter-spacing: -0.07em;
+        line-height: 1;
+        white-space: pre;
+        color: #22331d;
+      }
+      #title span {
+        display: inline-block;
+      }
+      .h2 {
+        font-size: 45px;
+        font-weight: 600;
+        letter-spacing: -0.06em;
+        line-height: 1;
+        color: #22331d;
+        white-space: pre;
+      }
+      #uc {
+        left: 818px;
+        top: 180px;
+        width: 800px;
+        height: 228px;
+      }
+      #tc {
+        left: 818px;
+        top: 435px;
+        width: 800px;
+        height: 460px;
+      }
+      .item {
+        top: 109px;
+        height: 84px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .ico {
+        width: 84px;
+        height: 84px;
+        border-radius: 22px;
+        background: #a9c69c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .ico svg {
+        width: 44px;
+        height: 44px;
+      }
+      .lbl {
+        font-size: 29px;
+        line-height: 30px;
+        letter-spacing: -0.05em;
+        white-space: pre;
+      }
+      .lbl b {
+        font-weight: 550;
+        color: #22331d;
+      }
+      .lbl span {
+        color: #3b4538;
+      }
+      .season {
+        font-size: 27px;
+        letter-spacing: -0.04em;
+        color: #c9c8cc;
+        line-height: 1;
+      }
+      .tick {
+        font-size: 29px;
+        letter-spacing: -0.06em;
+        color: #22331d;
+        line-height: 1;
+      }
+      .track {
+        left: 50px;
+        width: 692px;
+        height: 52px;
+        border-radius: 26px;
+        background: #ebe9ed;
+      }
+      .range {
+        top: 0;
+        height: 52px;
+        border-radius: 26px;
+        background: #a9c69c;
+        color: #f4faf1;
+        font-size: 29px;
+        letter-spacing: -0.05em;
+        line-height: 52px;
+        text-align: center;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="3.4333"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- ============ Scene 1: scan card ============ -->
+      <div id="sc" class="abs">
+        <div id="card" class="abs">
+          <div id="box" class="abs">
+            <div id="orig-clip">
+              <img id="sdog" class="abs sdog" src="assets/dog.png" alt="" />
+            </div>
+            <div id="green-clip">
+              <div id="green" class="abs sdog">
+                <img id="gdog" class="abs" style="inset: 0; width: 100%; height: 100%" src="assets/dog.png" alt="" />
+                <div id="ggrid" class="abs" style="inset: 0"></div>
+              </div>
+            </div>
+            <div class="br tl"></div>
+            <div class="br tr"></div>
+            <div class="br bl"></div>
+            <div class="br brr"></div>
+            <div id="sline" class="abs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- glitch blocks / particles / early label (screen space, traced from the reference) -->
+      <div id="early" class="abs stxt hide">Scanning</div>
+      <div id="blk-rect" class="abs blk hide" style="left: 1332px; top: 610px; width: 294px; height: 80px"></div>
+      <div id="blk-sq" class="abs blk hide" style="left: 1808px; top: 344px; width: 88px; height: 86px"></div>
+      <div id="sx-cond" class="abs stxt hide">pet...</div>
+      <div id="sx-wide" class="abs stxt hide">pet...</div>
+      <div id="sx-bar" class="abs blk hide" style="left: 1520px; top: 522px; width: 180px; height: 24px"></div>
+      <div id="parts"></div>
+
+      <div id="status" class="abs hide">
+        <div id="spin" class="abs"></div>
+        <div id="st" class="abs stxt"><span id="w-scan">Scan</span><span id="w-ning">ning</span><span id="w-pet"> pet...</span></div>
+      </div>
+
+      <!-- ============ Scene 2 ============ -->
+      <div id="dg" class="abs hide">Diagnosis <b>ready</b></div>
+
+      <!-- ============ Scene 3: pet dashboard ============ -->
+      <div id="dash" class="abs hide">
+        <div id="lc" class="abs">
+          <div id="lcw" class="abs"></div>
+        </div>
+        <img id="ddog" class="abs" src="assets/dog.png" alt="" />
+        <div id="chip1" class="abs chip" style="top: 218px">
+          <svg viewBox="0 0 24 24" fill="#3e4a3a">
+            <ellipse cx="12" cy="16" rx="5" ry="4.2" />
+            <ellipse cx="5.2" cy="10.6" rx="2.1" ry="2.6" />
+            <ellipse cx="9.2" cy="6.6" rx="2.1" ry="2.7" />
+            <ellipse cx="14.8" cy="6.6" rx="2.1" ry="2.7" />
+            <ellipse cx="18.8" cy="10.6" rx="2.1" ry="2.6" />
+          </svg>
+          <span>Large</span>
+        </div>
+        <div id="chip2" class="abs chip" style="top: 347px">
+          <svg viewBox="0 0 24 24" fill="#3e4a3a"><path d="M13.5 2 5 13.5h5.6L9.5 22 19 9.8h-5.7z" /></svg>
+          <span>Active</span>
+        </div>
+        <div id="chip3" class="abs chip" style="top: 476px">
+          <svg viewBox="0 0 24 24" fill="#3e4a3a">
+            <path d="M12 20.5s-7.8-4.6-7.8-10.3A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.8 2.6c0 5.7-7.8 10.3-7.8 10.3z" />
+          </svg>
+          <span>Friendly</span>
+        </div>
+        <div id="badge" class="abs">Checkup due</div>
+        <div id="title" class="abs"><span id="t1">Golden</span> <span id="t2">Retriever</span></div>
+
+        <div id="uc" class="abs panel"></div>
+        <div id="ucc" class="abs" style="left: 818px; top: 180px; width: 800px; height: 228px">
+          <div class="abs h2" style="left: 50px; top: 37px">Upcoming</div>
+          <div class="abs item" style="left: 44px">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="#ffffff">
+                <ellipse cx="12" cy="16" rx="5" ry="4.2" />
+                <ellipse cx="5.2" cy="10.6" rx="2.1" ry="2.6" />
+                <ellipse cx="9.2" cy="6.6" rx="2.1" ry="2.7" />
+                <ellipse cx="14.8" cy="6.6" rx="2.1" ry="2.7" />
+                <ellipse cx="18.8" cy="10.6" rx="2.1" ry="2.6" />
+              </svg>
+            </div>
+            <div class="lbl"><b>Walk</b><br /><span>in 2 hours</span></div>
+          </div>
+          <div class="abs item" style="left: 290px">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3l4 4M19 5l-3 3M15.5 6.5l2 2L9 17l-3.5.5L6 14z" />
+                <path d="M11 9.5l1.5 1.5M8.5 12l1.5 1.5M5.5 17.5L3 20" />
+              </svg>
+            </div>
+            <div class="lbl"><b>Vaccine</b><br /><span>in 11 days</span></div>
+          </div>
+          <div class="abs item" style="left: 552px">
+            <div class="ico">
+              <svg viewBox="0 0 24 24" fill="#ffffff">
+                <path d="M3 11h18v2.2c0 3.2-2.6 5.8-5.8 5.8H8.8C5.6 19 3 16.4 3 13.2z" />
+                <path d="M7 19l-1 2.2M17 19l1 2.2" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+                <path d="M5.5 11V6.2A2.7 2.7 0 0 1 10.6 5" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" />
+                <circle cx="13" cy="7.5" r="1.3" />
+                <circle cx="16.2" cy="5.6" r="1" />
+                <circle cx="16.6" cy="8.8" r="0.9" />
+              </svg>
+            </div>
+            <div class="lbl"><b>Bath</b><br /><span>March 4</span></div>
+          </div>
+        </div>
+
+        <div id="tc" class="abs panel"></div>
+        <div id="tcc" class="abs" style="left: 818px; top: 435px; width: 800px; height: 460px">
+          <div class="abs h2" style="left: 50px; top: 43px">Ideal Temperature</div>
+          <div class="abs season" style="left: 50px; top: 112px">Summer</div>
+          <div class="abs tick" style="left: 50px; top: 146px">0°C</div>
+          <div class="abs tick" style="left: 364px; top: 146px">15°C</div>
+          <div class="abs tick" style="right: 58px; top: 146px">30°C</div>
+          <div class="abs track" style="top: 191px">
+            <div class="abs range" style="left: 400px; width: 192px">18°C–24°C</div>
+          </div>
+          <div class="abs season" style="left: 50px; top: 279px">Winter</div>
+          <div class="abs tick" style="left: 50px; top: 313px">0°C</div>
+          <div class="abs tick" style="left: 364px; top: 313px">15°C</div>
+          <div class="abs tick" style="right: 58px; top: 313px">30°C</div>
+          <div class="abs track" style="top: 358px">
+            <div class="abs range" style="left: 224px; width: 193px">10°C–18°C</div>
+          </div>
+        </div>
+      </div>
+
+      <audio
+        id="soundtrack"
+        src="assets/audio.m4a"
+        data-start="0"
+        data-duration="3.4333"
+        data-track-index="0"
+        data-volume="1"
+      ></audio>
+    </div>
+
+    <script>
+      (function () {
+        // Reference is 30 fps / 103 frames. Every number below is a frame index n (0-based)
+        // or a value tracked from that frame of the reference clip.
+        const F = (n) => n / 30;
+        const tl = gsap.timeline({ paused: true });
+        const $ = (s) => document.querySelector(s);
+
+        // Dense per-frame keys -> linear tweens between consecutive frames (smooth at any fps).
+        function track(target, keys, ease) {
+          tl.set(target, keys[0][1], F(keys[0][0]));
+          for (let i = 1; i < keys.length; i++) {
+            const [n0] = keys[i - 1];
+            const [n1, props] = keys[i];
+            tl.to(target, { ...props, duration: F(n1 - n0), ease: ease || "none" }, F(n0));
+          }
+        }
+        const show = (sel, a, b) => {
+          tl.set(sel, { autoAlpha: 1 }, F(a));
+          if (b != null) tl.set(sel, { autoAlpha: 0 }, F(b));
+        };
+
+        // ================= Scene 1 (n0-44): scan card =================
+        // Bracket-box width (px) -> scale, card centre x/y, scan line position (fraction of box).
+        const BW = [1103, 937, 843, 781, 733, 699, 673, 653, 633, 619, 605, 593, 585, 577, 571, 565, 559, 555, 551, 549, 547];
+        const CX = [957.5, 954.5, 953.5, 950.5, 944.5, 937.5, 928.5, 916.5, 900.5, 879.5, 854.5, 828.5, 804.5, 784.5, 767.5, 754.5, 741.5, 731.5, 721.5, 713.5, 705.5, 700.5, 694.5, 689.5, 685.5, 681.5, 678, 675, 672, 669.5, 667.5, 664, 661.5, 659.5, 657.5, 656, 655, 654, 653, 652, 651, 650.5, 650, 649.5, 649.5];
+        const CY = [536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536.5, 536, 535, 534.2, 533.6, 533.1, 532.5, 531.8, 531.4, 531, 530.3, 529.5, 528, 526, 524, 521.5, 518.5, 515.5, 511.5, 505.5, 498, 484];
+        const LY = [0.89, 0.9, 0.91, 0.905, 0.897, 0.87, 0.834, 0.79, 0.739, 0.675, 0.604, 0.53, 0.457, 0.389, 0.328, 0.274, 0.228, 0.19, 0.159, 0.129, 0.107, 0.089, 0.075, 0.066, 0.059, 0.055, 0.053, 0.052, 0.054, 0.059, 0.066, 0.074, 0.085, 0.103, 0.122, 0.149, 0.181, 0.218, 0.264, 0.32, 0.382, 0.454, 0.535, 0.618, 0.698];
+        const BLUR = [7, 3.5, 1.4, 0.4, 0];
+        const scKeys = [];
+        const boxKeys = [];
+        for (let n = 0; n <= 44; n++) {
+          const s = (BW[n] || 547) / 547;
+          scKeys.push([n, { x: CX[n], y: CY[n], scale: s, filter: `blur(${BLUR[n] || 0}px)` }]);
+          boxKeys.push([n, { "--ly": LY[n] * 547 }]);
+        }
+        tl.set("#sc", { transformOrigin: "0 0" }, 0);
+        track("#sc", scKeys);
+        track("#box", boxKeys);
+        show("#sc", 0, 45);
+
+        // ---- Early "Scanning" label: slides in large (n10-14), then again mid-size (n18-23).
+        //      [n, left x, centre y, scale, opacity, blur]
+        const EARLY = [
+          [10, 1330, 780, 1.14, 0.55, 2],
+          [11, 1296, 779, 1.14, 0.85, 1],
+          [12, 1264, 777, 1.14, 1, 0.6],
+          [13, 1240, 772, 1.14, 1, 0.3],
+          [14, 1220, 770, 1.14, 1, 0],
+        ];
+        const EARLY2 = [
+          [18, 1294, 644, 1.17],
+          [19, 1284, 644, 1.17],
+          [20, 1274, 644, 1.17],
+          [21, 1266, 644, 1.17],
+          [22, 1258, 644, 1.17],
+          [23, 1250, 644, 1.17],
+        ];
+        const EH = 74 / 2; // half line height of .stxt at scale 1
+        track("#early", EARLY.map(([n, x, y, s, o, b]) => [n, { x, y: y - EH, scale: s, opacity: o, filter: `blur(${b}px)` }]));
+        tl.set("#early", { visibility: "visible" }, F(10));
+        tl.set("#early", { visibility: "hidden" }, F(15));
+        tl.set("#early", { visibility: "visible", opacity: 1, filter: "blur(0px)" }, F(18));
+        track("#early", EARLY2.map(([n, x, y, s]) => [n, { x, y: y - EH, scale: s }]));
+        tl.set("#early", { visibility: "hidden" }, F(24));
+
+        // ---- Glitch blocks / "pet..." fragments (hard cuts, as in the reference)
+        show("#blk-rect", 15, 18);
+        tl.set("#blk-rect", { x: -32 }, F(17));
+        show("#blk-sq", 15, 20);
+        tl.set("#blk-sq", { x: -38, y: 3 }, F(17));
+        show("#sx-cond", 20, 23);
+        tl.set("#sx-cond", { x: -12 }, F(21));
+        show("#sx-wide", 23, 27);
+        show("#sx-bar", 27, 29);
+
+        // ---- Particles: blurry grey dots fly in from the upper right and gather into the spinner.
+        const RING_C = [1167, 525];
+        const RING_R = 23;
+        const ringPos = (i) => [RING_C[0] + RING_R * Math.cos((i * Math.PI) / 4 - Math.PI / 2), RING_C[1] + RING_R * Math.sin((i * Math.PI) / 4 - Math.PI / 2)];
+        const DOTSZ = [14, 13, 12, 11, 10, 11, 12, 13];
+        const PATHS = [
+          { 12: [1600, 300], 13: [1250, 340], 14: [1184, 490], 15: [1200, 486], 16: [1208, 486], 17: [1208, 490], 18: [1206, 494], 21: [1194, 500], 23: [1186, 506] },
+          { 12: [1720, 320], 13: [1550, 370], 14: [1304, 376], 15: [1320, 426], 16: [1316, 462], 17: [1300, 486], 18: [1288, 506], 21: [1244, 530], 23: [1222, 528] },
+          { 12: [1820, 420], 13: [1690, 450], 14: [1480, 470], 15: [1426, 390], 16: [1392, 444], 17: [1360, 474], 18: [1332, 494], 21: [1272, 520], 23: [1238, 512] },
+          { 12: [1800, 640], 13: [1670, 610], 14: [1530, 540], 15: [1414, 516], 16: [1360, 534], 17: [1320, 536], 18: [1292, 534], 21: [1208, 546], 23: [1196, 540] },
+          { 14: [1516, 650], 15: [1416, 570], 16: [1344, 574], 17: [1296, 570], 18: [1264, 564], 21: [1212, 580], 23: [1200, 562] },
+          { 16: [1330, 650], 17: [1296, 622], 18: [1262, 610], 21: [1232, 588], 23: [1214, 566] },
+        ];
+        const parts = $("#parts");
+        PATHS.forEach((path, i) => {
+          const el = document.createElement("div");
+          el.className = "pd hide";
+          parts.appendChild(el);
+          const ns = Object.keys(path).map(Number);
+          const end = ringPos(i);
+          const keys = ns.map((n) => {
+            const fuzzy = n <= 15;
+            const sz = fuzzy ? 36 : 14;
+            return [n, { x: path[n][0] - sz / 2, y: path[n][1] - sz / 2, width: sz, height: sz, filter: `blur(${fuzzy ? 5 : 0}px)`, backgroundColor: fuzzy ? "#a3a3a6" : "#2a3426" }];
+          });
+          keys.push([24, { x: end[0] - DOTSZ[i] / 2, y: end[1] - DOTSZ[i] / 2, width: DOTSZ[i], height: DOTSZ[i], filter: "blur(0px)", backgroundColor: "#1f2b1b" }]);
+          track(el, keys);
+          show(el, ns[0], 24);
+        });
+
+        // ---- Spinner + "Scanning pet..." line (n24 onward)
+        const spin = $("#spin");
+        for (let i = 0; i < 8; i++) {
+          const d = document.createElement("div");
+          d.className = "sd";
+          const [px, py] = ringPos(i);
+          const sz = DOTSZ[i];
+          d.style.cssText = `left:${px - RING_C[0] - sz / 2}px;top:${py - RING_C[1] - sz / 2}px;width:${sz}px;height:${sz}px`;
+          spin.appendChild(d);
+        }
+        show("#status", 24, 45);
+        tl.to("#spin", { rotation: 240, duration: F(21), ease: "none" }, F(24));
+        // Line settles left (n24-34), then rides up with the card as it exits.
+        const ST_DX = { 24: 33, 25: 27, 26: 23, 27: 19, 28: 15, 29: 11, 30: 7, 31: 5, 32: 3, 33: 1, 34: 0 };
+        const stKeys = Object.entries(ST_DX).map(([n, dx]) => [+n, { x: dx, y: 0 }]);
+        for (let n = 35; n <= 44; n++) stKeys.push([n, { x: 0.75 * (CX[n] - CX[34]), y: CY[n] - CY[34] }]);
+        track("#status", stKeys);
+        // Bold wave through the word, "pet..." held back until n29.
+        tl.set("#w-scan", { fontWeight: 700 }, F(24));
+        tl.set("#w-pet", { visibility: "hidden" }, F(24));
+        tl.set("#w-scan", { fontWeight: 400 }, F(27));
+        tl.set("#w-ning", { fontWeight: 700 }, F(27));
+        tl.set("#w-pet", { visibility: "visible" }, F(29));
+        tl.set("#w-ning", { fontWeight: 400 }, F(30));
+
+        // ================= Scene 2 (n45-71): Diagnosis ready =================
+        // Ink box (left, top) per frame + green highlight tail/head in text-local px.
+        const DG_X = [596, 596, 596, 596, 596, 595, 595, 595, 595, 595, 594, 594, 594, 593, 592, 592, 591, 590, 588, 587, 585, 582, 579, 575, 570, 562, 548];
+        const DG_Y = [613, 584, 565, 551, 540, 531, 523, 517, 511, 506, 502, 498, 494, 491, 488, 486, 483, 480, 478, 475, 472, 469, 465, 460, 454, 445, 429];
+        const DG_T = [-140, -130, -120, -110, -100, -80, -50, 0, 61, 131, 214, 284, 334, 421, 464, 496, 553, 584, 614, 651, 663, 674, 677, 705, 720, 745, 770];
+        const DG_H = [155, 159, 195, 215, 221, 275, 303, 385, 427, 507, 573, 663, 705, 760, 800, 840, 870, 900, 930, 960, 990, 1010, 1030, 1050, 1070, 1090, 1110];
+        const DG_OX = 10; // ink offset of the "D" stem from the element box
+        const DG_OY = 12; // ink offset of the "D" top from the element box
+        track(
+          "#dg",
+          DG_X.map((x, i) => [45 + i, { x: x - DG_OX, y: DG_Y[i] - DG_OY, "--t": DG_T[i], "--h": DG_H[i] }]),
+        );
+        show("#dg", 45, 72);
+
+        // ================= Scene 3 (n72-102): pet dashboard =================
+        const DL = [273, 270, 268, 266, 263, 262, 260, 259, 257, 257, 256, 254, 254, 253, 251, 250, 250, 248, 246, 244, 242, 239, 235, 232, 227, 224, 218, 211, 202, 192, 176];
+        const DS = [1.027, 1.021, 1.019, 1.017, 1.015, 1.013, 1.012, 1.01, 1.009, 1.008, 1.007, 1.006, 1.005, 1.0045, 1.004, 1.003, 1.0028, 1.002, 1.0014, 1.001, 1];
+        track("#dash", DL.map((l, i) => [72 + i, { x: l - 176, scale: DS[i] || 1 }]));
+        show("#dash", 72);
+
+        // Staggered rise + de-blur. C = normalised settle curve measured on the temperature card.
+        const C = [1, 0.674, 0.504, 0.4, 0.333, 0.274, 0.23, 0.178, 0.148, 0.119, 0.104, 0.074, 0.044, 0.037, 0.03, 0.022, 0.015, 0.008, 0];
+        function enter(sel, n0, dy0, blur0, s0) {
+          const keys = [];
+          for (let k = 0; k < C.length; k++) {
+            const c = C[k];
+            keys.push([n0 + k, { y: dy0 * c, filter: `blur(${(blur0 * Math.pow(c, 0.8)).toFixed(2)}px)`, opacity: k === 0 ? 0.7 : k === 1 ? 0.9 : 1, scale: s0 ? 1 - (1 - s0) * c : 1 }]);
+          }
+          tl.set(sel, { opacity: 0 }, 0);
+          track(sel, keys);
+        }
+        enter("#lc", 70, 18, 7);
+        enter("#ddog", 70, 14, 2);
+        enter("#badge", 71, 26, 10);
+        enter("#uc", 68, 135, 8);
+        enter("#ucc", 72, 135, 11);
+        enter("#chip1", 73, 34, 8, 0.9);
+        enter("#chip2", 75, 34, 8, 0.9);
+        enter("#chip3", 77, 34, 8, 0.9);
+        enter("#t1", 74, 18, 10);
+        enter("#t2", 77, 18, 12);
+        enter("#tc", 74, 135, 9);
+        enter("#tcc", 74, 135, 12);
+
+        tl.set({}, {}, 3.4333);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+        tl.seek(F(1));
+        tl.seek(0);
+      })();
+    </script>
+  </body>
+</html>
