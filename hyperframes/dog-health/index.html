@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Dog Health Check</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin-wght.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #1a140d;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1a140d;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+      }
+
+      /* Camera: everything in world space (room pixels) lives in #cam. */
+      #cam {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        transform-origin: 0 0;
+      }
+      .abs {
+        position: absolute;
+        display: block;
+      }
+
+      /* Room + dog + ball get the lighting grade; glow layers sit above it ungraded. */
+      #scene {
+        position: absolute;
+        inset: 0;
+        --b: 1;
+        --s: 1;
+        --c: 1;
+        filter: brightness(var(--b)) saturate(var(--s)) contrast(var(--c));
+      }
+      #room {
+        left: -15px;
+        top: 0;
+        width: 1951px;
+        height: 1080px;
+      }
+      .dog {
+        left: 650px;
+        top: 381px;
+        width: 604px;
+        height: 591px;
+      }
+      .dogbg {
+        background: url("assets/dog.png") center / 100% 100% no-repeat;
+      }
+      #dog-shadow {
+        left: 700px;
+        top: 925px;
+        width: 500px;
+        height: 70px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(45, 26, 10, 0.55), rgba(45, 26, 10, 0.25) 60%, rgba(45, 26, 10, 0));
+        filter: blur(6px);
+      }
+      #ball {
+        left: 888px;
+        top: 935px;
+        width: 86px;
+        height: 86px;
+        filter: drop-shadow(-6px 6px 6px rgba(40, 24, 10, 0.35));
+      }
+
+      /* Green scan tint that creeps up from the floor during the glitch. */
+      #dog-tint {
+        opacity: 0;
+        filter: sepia(1) saturate(2.6) hue-rotate(48deg) brightness(0.9);
+        -webkit-mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 55%);
+        mask-image: linear-gradient(to top, #000 0%, #000 22%, transparent 55%);
+      }
+      /* Luminous band that sweeps bottom -> top over the dog. --lo/--hi are % from the bottom. */
+      #dog-glow {
+        --lo: -40;
+        --hi: 0;
+        filter: sepia(0.55) saturate(1.25) hue-rotate(14deg) brightness(1.32) contrast(0.95) drop-shadow(0 0 14px rgba(255, 240, 140, 0.6));
+        -webkit-mask-image: linear-gradient(
+          to top,
+          transparent calc(var(--lo) * 1%),
+          #000 calc(var(--lo) * 1% + 18%),
+          #000 calc(var(--hi) * 1% - 18%),
+          transparent calc(var(--hi) * 1%)
+        );
+        mask-image: linear-gradient(
+          to top,
+          transparent calc(var(--lo) * 1%),
+          #000 calc(var(--lo) * 1% + 18%),
+          #000 calc(var(--hi) * 1% - 18%),
+          transparent calc(var(--hi) * 1%)
+        );
+      }
+
+      #vignette {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        background: radial-gradient(120% 95% at 58% 55%, rgba(0, 0, 0, 0) 42%, rgba(12, 9, 4, 0.55) 100%);
+        pointer-events: none;
+      }
+
+      /* Glitch fragments */
+      .g {
+        position: absolute;
+        visibility: hidden;
+      }
+      .gblock {
+        background: #8af7a2;
+        border-radius: 3px;
+        box-shadow: 0 0 10px 2px rgba(90, 255, 130, 0.75), 0 0 26px 6px rgba(70, 230, 110, 0.35);
+        opacity: 0.92;
+      }
+      .gtxt {
+        font-weight: 600;
+        line-height: 1;
+        letter-spacing: -0.01em;
+        color: #8dfaa6;
+        text-shadow: 0 0 6px rgba(90, 255, 130, 0.95), 0 0 18px rgba(70, 230, 110, 0.6);
+        -webkit-text-stroke: 1.5px rgba(200, 255, 215, 0.7);
+        white-space: nowrap;
+      }
+
+      /* Button: frosted outer capsule + white pill */
+      #pill-wrap {
+        --pb: 0;
+        --pa: 0.3;
+        position: absolute;
+        left: 1106px;
+        top: 649px;
+        padding: 19px 26px 19px 14px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+        box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.32), 0 10px 30px rgba(20, 14, 6, 0.18);
+        filter: blur(calc(var(--pb) * 1px));
+        opacity: 0;
+        transform-origin: 30% 50%;
+      }
+      #pill {
+        position: relative;
+        width: 318px;
+        height: 70px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: linear-gradient(180deg, rgba(255, 255, 255, var(--pa)), rgba(246, 245, 238, var(--pa)));
+        box-shadow: 0 4px 14px rgba(30, 22, 10, 0.18);
+        transform-origin: 40% 50%;
+      }
+      #pill-fill {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        background: linear-gradient(90deg, #6fd97d 0%, #9ae9a3 42%, #d4f6d6 78%, #f1fcf1 100%);
+      }
+      #icon {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #2f4626;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #icon svg {
+        width: 26px;
+        height: 26px;
+      }
+      #label {
+        position: absolute;
+        left: 72px;
+        top: 50%;
+        transform: translateY(-52%);
+        font-size: 36px;
+        font-weight: 500;
+        letter-spacing: -0.015em;
+        line-height: 1;
+        white-space: pre;
+        color: #22251c;
+      }
+      #label span {
+        visibility: hidden;
+      }
+      #touch {
+        position: absolute;
+        left: 95px;
+        top: 6px;
+        width: 128px;
+        height: 128px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.3) 58%, rgba(255, 255, 255, 0.12) 68%, rgba(255, 255, 255, 0) 72%);
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="2.4333"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="cam">
+        <div id="scene">
+          <img id="room" class="abs" src="assets/room.jpg" alt="" />
+          <div id="dog-shadow" class="abs"></div>
+          <img id="dog" class="abs dog" src="assets/dog.png" alt="" />
+          <img id="ball" class="abs" src="assets/ball.png" alt="" />
+        </div>
+        <div id="dog-tint" class="abs dog dogbg"></div>
+        <div id="dog-glow" class="abs dog dogbg"></div>
+
+        <!-- glitch fragments that assemble into the button -->
+        <div id="g-bar" class="g gblock" style="left: 1021px; top: 829px; width: 159px; height: 18px"></div>
+        <div id="g-sq" class="g gblock" style="left: 1530px; top: 784px; width: 40px; height: 56px"></div>
+        <div id="g-vbar" class="g gblock" style="left: 1256px; top: 509px; width: 24px; height: 92px"></div>
+        <div id="g-block" class="g gblock" style="left: 1480px; top: 677px; width: 88px; height: 60px"></div>
+        <div id="g-ch" class="g gtxt" style="left: 1178px; top: 802px; font-size: 62px">Ch</div>
+        <div id="g-e" class="g gtxt" style="left: 1372px; top: 492px; font-size: 56px; transform: rotate(180deg)">e</div>
+        <div id="g-lth" class="g gtxt" style="left: 1536px; top: 770px; font-size: 46px; transform: rotate(-90deg); transform-origin: 0 0">lth</div>
+
+        <div id="pill-wrap">
+          <div id="pill">
+            <div id="pill-fill"></div>
+            <div id="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round">
+                <circle cx="10.5" cy="10.5" r="6" />
+                <path d="M15 15 L20 20" />
+              </svg>
+            </div>
+            <div id="label"></div>
+          </div>
+          <div id="touch"></div>
+        </div>
+      </div>
+      <div id="vignette"></div>
+
+      <audio
+        id="soundtrack"
+        src="assets/audio.m4a"
+        data-start="0"
+        data-duration="2.4333"
+        data-track-index="0"
+        data-volume="1"
+      ></audio>
+    </div>
+
+    <script>
+      (function () {
+        const F = (n) => n / 30; // reference is 30 fps; timings below are frame numbers
+        const tl = gsap.timeline({ paused: true });
+
+        // ---- Camera: slow push, then a hard punch-in on the button at frame 44 ----
+        tl.set("#cam", { x: 0, y: 0, scale: 1 }, 0);
+        tl.to("#cam", { x: -86, y: -52, scale: 1.075, duration: F(44), ease: "none" }, 0);
+        tl.set("#cam", { x: -1055, y: -533, scale: 1.74 }, F(44));
+        tl.to("#cam", { x: -1178, y: -604, scale: 1.82, duration: F(29), ease: "none" }, F(44));
+
+        // ---- Lighting: warm daylight drops to a moody low light as the scan starts ----
+        tl.to("#scene", { "--b": 0.6, "--s": 0.82, "--c": 1.06, duration: F(10), ease: "power2.out" }, F(15));
+        tl.to("#vignette", { opacity: 1, duration: F(10), ease: "power2.out" }, F(15));
+        tl.set("#scene", { "--b": 0.66, "--s": 0.86 }, F(44));
+
+        // ---- Ghost flicker on the dog right before the glitch ----
+        tl.set("#dog", { opacity: 0.55 }, F(13));
+        tl.set("#dog", { opacity: 0.4 }, F(14));
+        tl.set("#dog", { opacity: 0.62 }, F(15));
+        tl.set("#dog", { opacity: 0.85 }, F(16));
+        tl.set("#dog", { opacity: 1 }, F(17));
+
+        // ---- Green scan tint from the floor, then the luminous band sweeps up ----
+        tl.set("#dog-tint", { opacity: 0.28 }, F(15));
+        tl.to("#dog-tint", { opacity: 0.55, duration: F(4), ease: "none" }, F(16));
+        tl.to("#dog-tint", { opacity: 0, duration: F(5), ease: "power1.in" }, F(21));
+        tl.to("#dog-glow", { "--hi": 140, duration: F(11), ease: "power1.inOut" }, F(19));
+        tl.to("#dog-glow", { "--lo": 78, duration: F(19), ease: "sine.inOut" }, F(25));
+        tl.to("#dog-glow", { opacity: 0.45, duration: F(8), ease: "none" }, F(36));
+        tl.set("#dog-glow", { opacity: 0 }, F(44));
+
+        // ---- Glitch fragments: hard on/off flicker ----
+        const show = (sel, a, b) => {
+          tl.set(sel, { visibility: "visible" }, F(a));
+          tl.set(sel, { visibility: "hidden" }, F(b));
+        };
+        show("#g-bar", 16, 21);
+        tl.set("#g-bar", { x: 197, width: 100 }, F(18));
+        show("#g-sq", 18, 21);
+        show("#g-e", 19, 22);
+        show("#g-lth", 19, 22);
+        show("#g-ch", 20, 24);
+        show("#g-vbar", 22, 28);
+        show("#g-block", 23, 27);
+        tl.set("#g-ch", { opacity: 0.6 }, F(21));
+        tl.set("#g-ch", { opacity: 1 }, F(22));
+        tl.set("#g-block", { opacity: 0.6 }, F(24));
+        tl.set("#g-block", { opacity: 0.92 }, F(25));
+
+        // ---- Button assembles: frosted shell -> icon -> text decodes in green ----
+        tl.fromTo("#pill-wrap", { opacity: 0, scale: 0.96, "--pb": 3 }, { opacity: 1, scale: 1, "--pb": 0, duration: F(4), ease: "power2.out" }, F(19));
+        tl.to("#pill-wrap", { "--pa": 1, duration: F(6), ease: "power1.in" }, F(19));
+        tl.set("#icon", { opacity: 0.3 }, F(20));
+        tl.set("#icon", { opacity: 0.7 }, F(22));
+        tl.set("#icon", { opacity: 1 }, F(23));
+
+        const label = document.getElementById("label");
+        const text = "Check health";
+        label.innerHTML = [...text].map((c) => `<span>${c}</span>`).join("");
+        const ch = [...label.querySelectorAll("span")];
+        const LOOK = {
+          green: { color: "#63d677", textShadow: "0 0 8px rgba(110,240,140,0.55)" },
+          fade: { color: "#8fd59b", textShadow: "0 0 0px rgba(110,240,140,0)" },
+          "": { color: "inherit", textShadow: "0 0 0px rgba(110,240,140,0)" },
+        };
+        const state = (idx, f, vis, look) =>
+          idx.forEach((i) => tl.set(ch[i], { visibility: vis, ...LOOK[look] }, F(f)));
+        const all = ch.map((_, i) => i);
+        const range = (a, b) => all.filter((i) => i >= a && i <= b);
+        state([0, 1], 24, "visible", "green");
+        state([0, 1], 25, "visible", "");
+        state(range(3, 11), 26, "visible", "green"); // "ck health" with the "e" still missing
+        state([2], 27, "visible", "green");
+        state(range(2, 11), 28, "visible", "fade");
+        state(range(3, 11), 29, "visible", "");
+        state([2], 30, "visible", "");
+
+        // ---- Punch-in: motion smear on the button ----
+        tl.set("#pill-wrap", { "--pb": 6, x: -14 }, F(44));
+        tl.to("#pill-wrap", { "--pb": 0, x: 0, duration: F(3), ease: "power2.out" }, F(44));
+
+        // ---- Tap: touch blob, pill dips and floods green, then releases ----
+        tl.fromTo("#touch", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: F(2), ease: "power2.out" }, F(55));
+        tl.to("#pill", { scale: 0.965, duration: F(2), ease: "power2.in" }, F(55));
+        tl.to("#pill-fill", { opacity: 1, duration: F(2), ease: "none" }, F(55));
+        tl.to("#label", { color: "#5b8a58", duration: F(2), ease: "none" }, F(55));
+        tl.to("#icon", { backgroundColor: "#3d7a3a", duration: F(2), ease: "none" }, F(55));
+        tl.to("#pill", { scale: 1, duration: F(6), ease: "back.out(2.5)" }, F(63));
+        tl.to("#pill-fill", { opacity: 0, duration: F(5), ease: "power1.out" }, F(63));
+        tl.to("#label", { color: "#22251c", duration: F(5), ease: "power1.out" }, F(63));
+        tl.to("#icon", { backgroundColor: "#2f4626", duration: F(5), ease: "power1.out" }, F(63));
+        tl.to("#touch", { opacity: 0, scale: 1.08, duration: F(7), ease: "power1.out" }, F(63));
+
+        tl.set({}, {}, 2.4333);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+        tl.seek(0);
+      })();
+    </script>
+  </body>
+</html>
