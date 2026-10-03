@@ -1,5 +1,6 @@
 import React from 'react';
 import {AbsoluteFill, Sequence} from 'remotion';
+import {SoundDesign} from './audio/SoundDesign';
 import {Analyze} from './scenes/Analyze';
 import {Diagnosis} from './scenes/Diagnosis';
 import {Intro} from './scenes/Intro';
@@ -25,6 +26,7 @@ export const PROMO_DURATION = 370;
 export const PlanteaPromo: React.FC = () => {
 	return (
 		<AbsoluteFill style={{backgroundColor: COLORS.paper}}>
+			<SoundDesign />
 			<Sequence {...seq('intro')} name="Intro: Another dead plant?">
 				<Intro />
 			</Sequence>
