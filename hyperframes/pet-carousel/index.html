@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Pet Carousel</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/inter-latin-wght.woff2") format("woff2");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #f6f3f7;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #f6f3f7;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+      }
+
+      /* The camera: everything lives in world units around the screen centre and is
+         scaled as one piece, so the opening zoom-out carries text and cards together. */
+      #world {
+        position: absolute;
+        left: 960px;
+        top: 540px;
+        width: 0;
+        height: 0;
+      }
+
+      #line {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 0;
+        height: 0;
+      }
+      .word {
+        position: absolute;
+        top: -59px; /* line-height 1 puts the cap-height centre at 0.5em */
+        font-size: 118px;
+        font-weight: 460;
+        line-height: 1;
+        letter-spacing: -0.045em;
+        white-space: pre;
+        color: #17291c;
+      }
+
+      .card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 12%;
+        overflow: hidden;
+        background: #d9cfc4;
+        box-shadow: 0 8px 18px rgba(46, 32, 20, 0.18);
+      }
+      .card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="2.2"
+      data-width="1920"
+      data-height="1080"
+    >
+      <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+        <defs id="blur-defs">
+          <filter id="zoom-blur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur id="zoom-blur-fe" stdDeviation="0 0" />
+          </filter>
+        </defs>
+      </svg>
+
+      <div id="world">
+        <div id="cards"></div>
+        <div id="line">
+          <span id="w-lead" class="word">Is your</span>
+          <span id="w-1" class="word">pet</span>
+          <span id="w-2" class="word">feeling off?</span>
+        </div>
+      </div>
+
+      <audio
+        id="soundtrack"
+        src="assets/audio.m4a"
+        data-start="0"
+        data-duration="1.7"
+        data-track-index="1"
+        data-volume="1"
+      ></audio>
+    </div>
+
+    <script>
+      (function () {
+        const DUR = 2.2;
+        const FPS = 60; // sampling rate for the path-driven keyframes
+        const steps = Math.round(DUR * FPS);
+        const tl = gsap.timeline({ paused: true });
+
+        // ---------- helpers ----------
+        // Monotone cubic (Fritsch-Carlson) through [t, v] keys; flat outside the range.
+        function monotone(keys) {
+          const n = keys.length;
+          const xs = keys.map((k) => k[0]);
+          const ys = keys.map((k) => k[1]);
+          const d = [];
+          for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+          const m = [d[0]];
+          for (let i = 1; i < n - 1; i++) m.push(d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
+          m.push(d[n - 2]);
+          for (let i = 0; i < n - 1; i++) {
+            if (d[i] === 0) {
+              m[i] = m[i + 1] = 0;
+              continue;
+            }
+            const a = m[i] / d[i];
+            const b = m[i + 1] / d[i];
+            const h = a * a + b * b;
+            if (h > 9) {
+              const s = 3 / Math.sqrt(h);
+              m[i] = s * a * d[i];
+              m[i + 1] = s * b * d[i];
+            }
+          }
+          return (x) => {
+            if (x <= xs[0]) return ys[0];
+            if (x >= xs[n - 1]) return ys[n - 1];
+            let i = 0;
+            while (x > xs[i + 1]) i++;
+            const hh = xs[i + 1] - xs[i];
+            const t = (x - xs[i]) / hh;
+            const t2 = t * t;
+            const t3 = t2 * t;
+            return (
+              (2 * t3 - 3 * t2 + 1) * ys[i] +
+              (t3 - 2 * t2 + t) * hh * m[i] +
+              (-2 * t3 + 3 * t2) * ys[i + 1] +
+              (t3 - t2) * hh * m[i + 1]
+            );
+          };
+        }
+
+        // ---------- layout (world px, origin = screen centre / cap-height centre) ----------
+        const W_LEAD = 343; // "Is your" @118px
+        const W_SPACE = 27;
+        const W_1 = 166; // "pet"
+        const GAP_X = -113; // centre of the slot the lead card lands in
+        const GAP_CLOSED = 40;
+        const GAP_OPEN = 250;
+
+        const wLead = document.getElementById("w-lead");
+        const w1 = document.getElementById("w-1");
+        const w2 = document.getElementById("w-2");
+        // Final (pre-gap) resting positions; x tweens below are offsets from these.
+        const leadLeft = GAP_X - GAP_CLOSED / 2 - W_LEAD;
+        const w1Left = GAP_X + GAP_CLOSED / 2;
+        gsap.set(wLead, { left: leadLeft });
+        gsap.set(w1, { left: w1Left });
+        gsap.set(w2, { left: w1Left + W_1 + W_SPACE });
+
+        // ---------- camera: fast zoom-out that settles by ~1.2s ----------
+        const camScale = (t) => 1 + 3.0 * Math.exp(-30 * t) + 1.4 * Math.exp(-3.2 * t);
+        const camVel = (t) => -90 * Math.exp(-30 * t) - 4.48 * Math.exp(-3.2 * t);
+        const world = document.getElementById("world");
+        {
+          const kf = { scale: [] };
+          const blur = [];
+          for (let s = 0; s <= steps; s++) {
+            const t = s / FPS;
+            const S = camScale(t);
+            kf.scale.push(S);
+            // horizontal zoom streak on the text, strongest on the first frames
+            const rel = Math.abs(camVel(t)) / S;
+            const screenBlur = 46 * Math.pow(Math.min(rel / 17.5, 1), 2.2);
+            blur.push(`${(screenBlur / S).toFixed(2)} ${(screenBlur * 0.06 / S).toFixed(2)}`);
+          }
+          gsap.set(world, { scale: kf.scale[0] });
+          tl.to(world, { keyframes: { ...kf, easeEach: "none" }, duration: DUR, ease: "none" }, 0);
+          const sub = blur.slice(0, 25);
+          gsap.set("#zoom-blur-fe", { attr: { stdDeviation: sub[0] } });
+          tl.to("#zoom-blur-fe", { keyframes: sub.slice(1).map((v) => ({ attr: { stdDeviation: v }, duration: 1 / FPS, ease: "none" })) }, 0);
+          gsap.set("#line", { filter: "url(#zoom-blur)" });
+          tl.set("#line", { filter: "none" }, (sub.length - 1) / FPS);
+        }
+
+        // ---------- text ----------
+        // "Is your" starts centred on its own, then slides left to make room for the rest.
+        gsap.set(wLead, { x: -W_LEAD / 2 - leadLeft });
+        tl.to(wLead, { x: 0, duration: 0.9, ease: "power2.out" }, 0.5);
+
+        // Following words rise in from below, blurred and light green, then darken to ink.
+        [
+          [w1, 0.83],
+          [w2, 0.97],
+        ].forEach(([el, at]) => {
+          gsap.set(el, { opacity: 0, y: 70, filter: "blur(12px)", color: "#6dbd6a" });
+          tl.to(el, { opacity: 1, duration: 0.16, ease: "none" }, at);
+          tl.to(el, { y: 0, duration: 0.5, ease: "power3.out" }, at);
+          tl.to(el, { filter: "blur(0px)", duration: 0.38, ease: "power2.out" }, at);
+          tl.to(el, { color: "#17291c", duration: 0.46, ease: "power1.inOut" }, at + 0.02);
+        });
+
+        // A slot opens between "Is your" and "pet" for the lead card to land in.
+        const half = (GAP_OPEN - GAP_CLOSED) / 2;
+        tl.to(wLead, { x: -half, duration: 0.32, ease: "power2.inOut" }, 1.42);
+        tl.to([w1, w2], { x: half, duration: 0.32, ease: "power2.inOut" }, 1.42);
+
+        // ---------- card train ----------
+        // Path the cards ride: up the right side, over the top, down around the left of
+        // "Is your", along the bottom, then up into the slot.
+        const P = [
+          [700, 760], [610, 300], [555, 80], [470, -90], [330, -205], [140, -265],
+          [-60, -280], [-300, -275], [-520, -215], [-680, -90], [-745, 60], [-690, 190],
+          [-530, 258], [-350, 268], [-215, 260], [-125, 165], [GAP_X, 0],
+        ];
+        const catmull = (u) => {
+          const n = P.length - 1;
+          const uc = Math.max(0, Math.min(n, u));
+          const i = Math.min(n - 1, Math.floor(uc));
+          const f = uc - i;
+          const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(n, i + 2)];
+          const c = (a, b, cc, dd) =>
+            0.5 * (2 * b + (-a + cc) * f + (2 * a - 5 * b + 4 * cc - dd) * f * f + (-a + 3 * b - 3 * cc + dd) * f * f * f);
+          return [c(p0[0], p1[0], p2[0], p3[0]), c(p0[1], p1[1], p2[1], p3[1])];
+        };
+        // Arc-length table so cards can keep even spacing along the curve.
+        const RES = 40;
+        const arcU = [0];
+        const arcS = [0];
+        let prev = catmull(0);
+        for (let k = 1; k <= (P.length - 1) * RES; k++) {
+          const u = k / RES;
+          const p = catmull(u);
+          arcU.push(u);
+          arcS.push(arcS[arcS.length - 1] + Math.hypot(p[0] - prev[0], p[1] - prev[1]));
+          prev = p;
+        }
+        const S_END = arcS[arcS.length - 1];
+        const sOfU = (u) => {
+          const k = Math.max(0, Math.min(arcU.length - 2, Math.floor(u * RES)));
+          const f = u * RES - k;
+          return arcS[k] + (arcS[k + 1] - arcS[k]) * f;
+        };
+        const posAt = (s) => {
+          if (s <= 0) {
+            // before the path: continue straight down-right, off screen
+            const d = s;
+            return [P[0][0] - d * 0.19, P[0][1] - d * 0.98];
+          }
+          if (s >= S_END) return P[P.length - 1].slice();
+          let lo = 0, hi = arcS.length - 1;
+          while (hi - lo > 1) {
+            const mid = (lo + hi) >> 1;
+            if (arcS[mid] < s) lo = mid;
+            else hi = mid;
+          }
+          const f = (s - arcS[lo]) / (arcS[hi] - arcS[lo]);
+          return catmull(arcU[lo] + (arcU[hi] - arcU[lo]) * f);
+        };
+
+        // Lead card's progress along the path (keys as path-point index), and the gap
+        // between consecutive cards, which tightens as the train bunches up at the end.
+        const leadS = monotone(
+          [
+            [0, 2.6], [0.067, 4.0], [0.267, 6.0], [0.533, 7.8], [0.867, 10.6],
+            [1.133, 12.2], [1.467, 14.2], [1.6, 15.35], [1.7, 16],
+          ].map(([t, u]) => [t, sOfU(u)])
+        );
+        const spacing = monotone([[0, 240], [1.0, 235], [1.467, 178], [1.6, 112], [1.7, 48], [1.86, 0]]);
+
+        const photos = ["pet-1", "pet-2", "pet-3", "pet-4", "pet-2", "pet-3", "pet-4"];
+        const sizes = [186, 176, 166, 154, 142, 128, 112];
+        const cardsEl = document.getElementById("cards");
+        const defs = document.getElementById("blur-defs");
+        const SVGNS = "http://www.w3.org/2000/svg";
+
+        photos.forEach((photo, i) => {
+          const size = sizes[i];
+          const el = document.createElement("div");
+          el.className = "card";
+          el.setAttribute("data-layout-allow-overflow", "");
+          el.style.width = el.style.height = size + "px";
+          el.style.zIndex = String(photos.length - i); // lead card on top
+          el.innerHTML = `<img src="assets/photos/${photo}.jpg" alt="" />`;
+          cardsEl.appendChild(el);
+
+          // Per-card directional motion blur (axis-aligned approximation).
+          const filter = document.createElementNS(SVGNS, "filter");
+          filter.setAttribute("id", `card-blur-${i}`);
+          filter.setAttribute("x", "-60%");
+          filter.setAttribute("y", "-60%");
+          filter.setAttribute("width", "220%");
+          filter.setAttribute("height", "220%");
+          const fe = document.createElementNS(SVGNS, "feGaussianBlur");
+          fe.setAttribute("stdDeviation", "0 0");
+          filter.appendChild(fe);
+          defs.appendChild(filter);
+          el.style.filter = `url(#card-blur-${i})`;
+
+          const where = (t) => posAt(leadS(t) - i * spacing(t));
+          const kf = { x: [], y: [] };
+          const blur = [];
+          for (let s = 0; s <= steps; s++) {
+            const t = s / FPS;
+            const p = where(t);
+            kf.x.push(p[0] - size / 2);
+            kf.y.push(p[1] - size / 2);
+            // screen-space velocity = camera scale * world velocity + zoom drift
+            const dt = 1 / 120;
+            const a = where(Math.max(0, t - dt));
+            const b = where(t + dt);
+            const S = camScale(t);
+            const dS = camVel(t);
+            const vx = (S * (b[0] - a[0])) / (2 * dt) + dS * p[0];
+            const vy = (S * (b[1] - a[1])) / (2 * dt) + dS * p[1];
+            const bx = Math.min(34, Math.max(0, Math.abs(vx) - 2800) * 0.009) / S;
+            const by = Math.min(34, Math.max(0, Math.abs(vy) - 2800) * 0.009) / S;
+            blur.push(`${bx.toFixed(2)} ${by.toFixed(2)}`);
+          }
+          gsap.set(el, { x: kf.x[0], y: kf.y[0] });
+          tl.to(el, { keyframes: { ...kf, easeEach: "none" }, duration: DUR, ease: "none" }, 0);
+          gsap.set(fe, { attr: { stdDeviation: blur[0] } });
+          tl.to(fe, { keyframes: blur.slice(1).map((v) => ({ attr: { stdDeviation: v }, duration: 1 / FPS, ease: "none" })) }, 0);
+        });
+
+        // Lead card settles into the slot with a soft pop.
+        const leadCard = cardsEl.firstElementChild;
+        tl.fromTo(leadCard, { scale: 1 }, { keyframes: { scale: [1, 1.06, 0.98, 1], easeEach: "sine.inOut" }, duration: 0.36, ease: "none", immediateRender: false }, 1.68);
+
+        tl.set({}, {}, DUR);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+        tl.seek(0);
+      })();
+    </script>
+  </body>
+</html>
