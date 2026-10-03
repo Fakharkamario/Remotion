@@ -1,0 +1,292 @@
+<template id="typography-template">
+  <div data-composition-id="typography" data-width="1920" data-height="1080" data-duration="23.45">
+    <!-- A: words + typed pill, lead words slide off left -->
+    <div class="beat" id="beat-a">
+      <div class="line" id="a-line">
+        <span class="lead" id="a-lead"></span>
+        <span class="w" id="a-pillw"><span class="wi pill"><span class="pt">one second.</span></span></span>
+      </div>
+    </div>
+    <!-- B: two-word pop with a wobble -->
+    <div class="beat" id="beat-b"><div class="line" id="b-line"></div></div>
+    <!-- C: typed line scatters, new line assembles -->
+    <div class="beat" id="beat-c">
+      <div class="line" id="c-typed"></div>
+      <div class="line" id="c-new"></div>
+    </div>
+    <!-- D: typed word, then two bouncing words -->
+    <div class="beat" id="beat-d"><div class="line" id="d-line"><span class="typed" id="d-typed"></span></div></div>
+    <!-- E: words over a rising photo card -->
+    <div class="beat" id="beat-e">
+      <div id="e-card" class="card"></div>
+      <div class="line" id="e-line"></div>
+    </div>
+    <!-- F: words part around a flipping card stack -->
+    <div class="beat" id="beat-f">
+      <div id="f-stack">
+        <div class="card f-card" id="f-card1"></div>
+        <div class="card f-card" id="f-card2"></div>
+        <div class="card f-card" id="f-card3"></div>
+      </div>
+      <div class="line" id="f-line">
+        <span class="w" id="f-left"><span class="wi" style="margin-left: 0">changed</span></span>
+        <span id="f-gap"></span>
+        <span class="w" id="f-right"><span class="wi">everything?</span></span>
+      </div>
+    </div>
+    <!-- G: staggered baseline words + bouncing ellipsis -->
+    <div class="beat" id="beat-g">
+      <div class="line" id="g-line">
+        <span id="g-words" class="group"></span>
+        <span class="w" id="g-dotsw"><span class="wi"><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></span></span>
+      </div>
+    </div>
+    <!-- H: words + typed tail, breaks apart into the reel -->
+    <div class="beat" id="beat-h">
+      <div class="line" id="h-line">
+        <span id="h-words" class="group"></span>
+        <span class="typed" id="h-typed"></span>
+      </div>
+    </div>
+
+    <style>
+      [data-composition-id="typography"] .group {
+        display: inline-flex;
+        align-items: baseline;
+      }
+      [data-composition-id="typography"] .typed {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      #a-line,
+      #b-line {
+        font-size: 46px;
+      }
+      #a-lead {
+        display: inline-flex;
+        justify-content: flex-end;
+        align-items: baseline;
+        min-width: 0;
+        overflow: visible;
+      }
+      #beat-a .pill {
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #dccfc1;
+        border-radius: 999px;
+        background: #fbf7f1;
+        padding: 0.06em 0.5em 0.1em;
+        box-shadow: 0 3px 10px rgba(80, 50, 20, 0.06);
+        vertical-align: baseline;
+      }
+      #beat-a .pt {
+        display: inline-block;
+      }
+      #c-typed,
+      #c-new {
+        font-size: 50px;
+      }
+      #c-typed .tw {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      #d-line {
+        font-size: 48px;
+      }
+      #e-line {
+        font-size: 44px;
+        top: 236px;
+      }
+      [data-composition-id="typography"] .card {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 6px;
+        box-shadow: 0 24px 50px rgba(60, 40, 20, 0.16), 0 4px 12px rgba(60, 40, 20, 0.08);
+        background: #f4f4f3;
+      }
+      #e-card {
+        left: 475px;
+        top: 352px;
+        width: 970px;
+        height: 760px;
+      }
+      #f-line {
+        font-size: 46px;
+      }
+      #f-gap {
+        display: inline-block;
+        width: 0;
+      }
+      #f-stack {
+        position: absolute;
+        left: 960px;
+        top: 540px;
+        width: 0;
+        height: 0;
+      }
+      #beat-f .f-card {
+        left: -232px;
+        top: -262px;
+        width: 464px;
+        height: 524px;
+        opacity: 0;
+      }
+      #g-line {
+        font-size: 38px;
+      }
+      #g-line .dot {
+        display: inline-block;
+        margin-right: 0.08em;
+      }
+      #h-line {
+        font-size: 46px;
+      }
+      #h-typed {
+        margin-left: 0.26em;
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const q = (s) => document.querySelector(s);
+        const show = (sel, a, b) => {
+          tl.set(sel, { visibility: "visible" }, a);
+          tl.set(sel, { visibility: "hidden" }, b);
+        };
+
+        // ---------------------------------------------------------------- A 0.00–2.97
+        show("#beat-a", 0, 2.97);
+        const aLead = q("#a-lead");
+        const aw = LX.buildLine(aLead, ["Hold", "up,", "just"]);
+        LX.pop(tl, aw[0], 0.08, { dy: "0.1em" });
+        LX.pop(tl, aw[1], 0.2, { dy: "0.32em", dx: "0.05em", settle: 0.26 });
+        LX.pop(tl, aw[2], 0.62, { dy: "0.36em", settle: 0.24 });
+        const pillW = q("#a-pillw");
+        LX.pop(tl, pillW, 1.18, { dy: "0.18em", s: 0.96, grow: 0.2 });
+        tl.fromTo("#beat-a .pt", { yPercent: 115 }, { yPercent: 0, duration: 0.22, ease: "power3.out" }, 1.2);
+        // Lead words collapse to the left so the pill glides to centre.
+        tl.fromTo(aLead, { maxWidth: () => aLead.offsetWidth + "px" }, { maxWidth: 0, duration: 0.7, ease: "power2.inOut", immediateRender: false }, 1.42);
+        tl.to(aLead, { opacity: 0, filter: "blur(2px)", duration: 0.55, ease: "power1.in" }, 1.5);
+        tl.to("#a-line", { y: -16, scale: 1.04, duration: 0.85, ease: "sine.inOut" }, 2.1);
+
+        // ---------------------------------------------------------------- B 3.00–4.27
+        show("#beat-b", 3.0, 4.27);
+        const bw = LX.buildLine(q("#b-line"), ["Look", "around."]);
+        LX.pop(tl, bw[0], 3.0, { dy: "0.05em" });
+        LX.pop(tl, bw[1], 3.1, { dy: "-0.28em", dx: "0.12em", settle: 0.22 });
+        // A little double-take wobble.
+        tl.to(bw[0].firstElementChild, { y: "0.2em", duration: 0.05, ease: "none" }, 3.38);
+        tl.to(bw[1].firstElementChild, { y: "-0.18em", duration: 0.05, ease: "none" }, 3.38);
+        tl.to([bw[0].firstElementChild, bw[1].firstElementChild], { y: 0, duration: 0.2, ease: "back.out(2)" }, 3.46);
+
+        // ---------------------------------------------------------------- C 4.30–9.08
+        show("#beat-c", 4.3, 9.08);
+        const cText = "after the sun goes down";
+        const cTyped = q("#c-typed");
+        cTyped.innerHTML = cText
+          .split(" ")
+          .map((word, i) => `<span class="tw">${i ? '<span class="ch">&nbsp;</span>' : ""}${Array.from(word).map((c) => `<span class="ch">${c}</span>`).join("")}</span>`)
+          .join("");
+        const cChars = Array.from(cTyped.querySelectorAll(".ch"));
+        cChars.slice(0, 5).forEach((c) => tl.set(c, { display: "inline" }, 4.3));
+        LX.type(tl, cChars.slice(5), 5.0, 22, true);
+        tl.fromTo(cTyped, { y: "0.3em" }, { y: 0, duration: 0.2, ease: "back.out(2)" }, 4.32);
+
+        // Scatter: typed words drift apart, shrink and dissolve...
+        const rc = LX.rng(42);
+        const cWords = Array.from(cTyped.querySelectorAll(".tw"));
+        cWords.forEach((w, i) => {
+          tl.to(w, { x: (rc() - 0.5) * 900, y: (rc() - 0.5) * 420, scale: 0.62 + rc() * 0.2, rotation: (rc() - 0.5) * 8, duration: 0.7, ease: "power2.out" }, 6.2 + i * 0.03);
+          tl.to(w, { opacity: 0, duration: 0.25, ease: "power1.in" }, 6.8 + rc() * 0.2);
+        });
+        // ...while the new line's words arrive from the scatter and lock into place.
+        const cNew = LX.buildLine(q("#c-new"), ["every", "corner", "goes", "grey."]);
+        cNew.forEach((w, i) => {
+          const inner = w.firstElementChild;
+          tl.set(w, { maxWidth: "none" }, 6.45);
+          tl.fromTo(
+            inner,
+            { opacity: 0, x: (rc() - 0.5) * 1100, y: (rc() - 0.5) * 460, scale: 0.6 },
+            { opacity: 1, duration: 0.18, ease: "none", immediateRender: false },
+            6.5 + i * 0.07
+          );
+          tl.to(inner, { x: 0, y: 0, scale: 1, duration: 0.5, ease: "power3.inOut" }, 6.95 + i * 0.06);
+        });
+        tl.to(Array.from(q("#c-new").querySelectorAll(".wi")).reverse(), { opacity: 0, duration: 0.12, stagger: 0.035, ease: "none" }, 8.85);
+
+        // ---------------------------------------------------------------- D 9.10–11.95
+        show("#beat-d", 9.1, 11.95);
+        const dLine = q("#d-line");
+        LX.type(tl, LX.buildTyped(q("#d-typed"), "Flat."), 9.1, 38);
+        dLine.insertAdjacentHTML("beforeend", '<span class="w"><span class="wi">and</span></span><span class="w"><span class="wi">lifeless.</span></span>');
+        const dw = dLine.querySelectorAll(".w");
+        LX.pop(tl, dw[0], 10.2, { dy: "0.45em", dx: "0.08em", settle: 0.32, ease: "power3.out", hold: 0.1 });
+        LX.pop(tl, dw[1], 10.52, { dy: "0.55em", settle: 0.34, ease: "power3.out", hold: 0.12 });
+        tl.to(dLine, { y: -12, duration: 2.8, ease: "none" }, 9.15);
+
+        // ---------------------------------------------------------------- E 12.00–13.07
+        show("#beat-e", 12.0, 13.07);
+        q("#e-card").innerHTML = LX.scene("orbRoom", "360 120 1200 940");
+        const ew = LX.buildLine(q("#e-line"), ["what", "if", "one", "lamp"]);
+        [12.0, 12.16, 12.28, 12.4].forEach((t, i) => LX.pop(tl, ew[i], t, { dy: "0.28em" }));
+        tl.fromTo("#e-card", { y: 130 }, { y: 0, duration: 0.32, ease: "power3.out" }, 12.0);
+        tl.fromTo("#e-line", { y: 24 }, { y: 0, duration: 0.32, ease: "power3.out" }, 12.0);
+        tl.to("#e-card", { y: 150, duration: 0.12, ease: "power2.in" }, 12.95);
+        tl.to("#e-line", { y: -10, duration: 0.12, ease: "power2.in" }, 12.95);
+
+        // ---------------------------------------------------------------- F 13.08–15.07
+        show("#beat-f", 13.08, 15.07);
+        q("#f-card1").innerHTML = LX.scene("twinCard", "715 560 520 590");
+        q("#f-card2").innerHTML = LX.scene("pillarCard", "715 400 520 590");
+        q("#f-card3").innerHTML = LX.scene("arcCard", "705 410 520 590");
+        LX.pop(tl, q("#f-left"), 13.08, { dy: "0.06em" });
+        LX.pop(tl, q("#f-right"), 13.14, { dy: "0.3em", settle: 0.22 });
+        tl.to("#f-gap", { width: 600, duration: 0.3, ease: "power3.inOut" }, 13.44);
+        tl.fromTo("#f-card1", { opacity: 0, scale: 0.55, rotation: -26 }, { opacity: 1, scale: 1, rotation: -13, duration: 0.2, ease: "back.out(1.8)" }, 13.66);
+        tl.set("#f-card2", { opacity: 1, scale: 1.04, rotation: 3 }, 13.88);
+        tl.to("#f-card2", { scale: 1, rotation: 1, duration: 0.15, ease: "power2.out" }, 13.88);
+        tl.to("#f-card1", { rotation: 9, x: 26, y: -6, duration: 0.16, ease: "power2.out" }, 13.88);
+        tl.set("#f-card3", { opacity: 1, scale: 1.05, rotation: -12 }, 14.18);
+        tl.to("#f-card3", { scale: 1, rotation: -9, duration: 0.16, ease: "power2.out" }, 14.18);
+        tl.to("#f-card2", { rotation: 7, x: 22, y: -10, duration: 0.16, ease: "power2.out" }, 14.18);
+        tl.to("#f-card1", { rotation: 14, x: 40, opacity: 0.0, duration: 0.16, ease: "power2.out" }, 14.18);
+        tl.to("#f-stack", { y: -8, duration: 0.85, ease: "sine.inOut" }, 14.2);
+
+        // ---------------------------------------------------------------- G 15.10–19.27
+        show("#beat-g", 15.1, 19.27);
+        const gw = LX.buildLine(q("#g-words"), ["imagine", "it", "for", "a", "moment"]);
+        LX.pop(tl, gw[0], 15.1, { dy: "0.08em" });
+        [
+          [15.72, "0.4em"],
+          [15.82, "0.6em"],
+          [15.92, "0.36em"],
+          [16.02, "0.55em"],
+        ].forEach(([t, dy], i) => LX.pop(tl, gw[i + 1], t, { dy, settle: 0.24, hold: 0.12, ease: "power3.out" }));
+        LX.pop(tl, q("#g-dotsw"), 16.62, { dy: "0.1em" });
+        const dots = Array.from(document.querySelectorAll("#g-line .dot"));
+        for (let c = 16.75; c < 19.1; c += 0.7) {
+          dots.forEach((d, i) => {
+            tl.to(d, { y: "-0.22em", duration: 0.12, ease: "power2.out" }, c + i * 0.1);
+            tl.to(d, { y: 0, duration: 0.16, ease: "power2.in" }, c + i * 0.1 + 0.12);
+          });
+        }
+
+        // ---------------------------------------------------------------- H 19.30–23.45
+        show("#beat-h", 19.3, 23.45);
+        const hw = LX.buildLine(q("#h-words"), ["you", "deserve"]);
+        LX.pop(tl, hw[0], 19.3, { dy: "0.06em" });
+        LX.pop(tl, hw[1], 19.42, { dy: "0.2em" });
+        LX.type(tl, LX.buildTyped(q("#h-typed"), "a warmer evening."), 21.05, 13, true);
+        // As the reel fades up behind, the line comes apart.
+        tl.to(hw[0].firstElementChild, { y: "0.3em", x: -14, opacity: 0, duration: 0.22, ease: "power2.in" }, 23.08);
+        tl.to(hw[1].firstElementChild, { y: "-0.2em", x: -6, opacity: 0, duration: 0.22, ease: "power2.in" }, 23.12);
+        tl.to("#h-typed", { y: "-0.1em", duration: 0.15, ease: "power2.out" }, 23.12);
+        tl.to("#h-typed", { opacity: 0, filter: "blur(4px)", duration: 0.12, ease: "none" }, 23.3);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["typography"] = tl;
+      })();
+    </script>
+  </div>
+</template>

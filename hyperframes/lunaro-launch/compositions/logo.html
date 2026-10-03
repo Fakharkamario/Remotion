@@ -1,0 +1,69 @@
+<template id="logo-template">
+  <!-- Local time 0 = global 33.05. -->
+  <div data-composition-id="logo" data-width="1920" data-height="1080" data-duration="4.6">
+    <div id="l-frame">
+      <div class="scene" id="l-scene"></div>
+      <div class="l-word">LUNARO</div>
+    </div>
+    <div id="l-slices"></div>
+
+    <style>
+      #l-frame,
+      #l-slices {
+        position: absolute;
+        inset: 0;
+      }
+      #l-frame {
+        visibility: hidden;
+      }
+      #l-scene {
+        transform-origin: 960px 520px;
+      }
+      [data-composition-id="logo"] .l-word {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 540px;
+        margin-top: -0.55em;
+        text-align: center;
+        font-size: 210px;
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        line-height: 1.1;
+        color: #0b0b0b;
+      }
+      [data-composition-id="logo"] .zoom {
+        position: absolute;
+        inset: 0;
+        transform-origin: 960px 520px;
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const L = (g) => +(g - 33.05).toFixed(3);
+        const q = (s) => document.querySelector(s);
+        q("#l-scene").innerHTML = LX.scene("dune");
+
+        const ZOOM = 2.25;
+        const frameAt = (z, y) => () =>
+          `<div class="zoom" style="transform: translateY(${y}px) scale(${z})">${LX.scene("dune")}</div><div class="l-word">LUNARO</div>`;
+
+        // Slice in over the last product.
+        LX.slices(tl, q("#l-slices"), frameAt(1, 0), L(33.1), { seed: 21, bands: 6, spread: 340 });
+        tl.set("#l-frame", { visibility: "visible" }, L(33.3));
+
+        // Slow push into the linen shade, accelerating toward the end.
+        tl.fromTo("#l-scene", { scale: 1, y: 0 }, { scale: ZOOM, y: -40, duration: 4.0, ease: "power1.in" }, L(33.32));
+
+        // Slice out to cream.
+        LX.slices(tl, q("#l-slices"), frameAt(ZOOM, -40), L(37.33), { seed: 34, bands: 5, spread: 300, hold: 0.2 });
+        tl.set("#l-frame", { visibility: "hidden" }, L(37.4));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["logo"] = tl;
+      })();
+    </script>
+  </div>
+</template>

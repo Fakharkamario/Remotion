@@ -1,0 +1,118 @@
+<template id="reel-template">
+  <!-- Local time 0 = global 22.40. Times below are written as G(global seconds). -->
+  <div data-composition-id="reel" data-width="1920" data-height="1080" data-duration="10.85">
+    <div id="r-all">
+      <div id="r-cam">
+        <div class="scene" id="r-orb"></div>
+        <div class="scene" id="r-twin" style="visibility: hidden"></div>
+        <div class="scene" id="r-arc" style="visibility: hidden"></div>
+        <div class="scene" id="r-pillar" style="visibility: hidden"></div>
+        <div id="r-slices"></div>
+      </div>
+      <div id="r-words">
+        <div class="rw left" id="rw-light"><span>light</span></div>
+        <div class="rw right" id="rw-that"><span>that</span></div>
+        <div class="rw left" id="rw-feels"><span>feels</span></div>
+        <div class="rw right" id="rw-alive"><span>alive.</span></div>
+      </div>
+    </div>
+
+    <style>
+      #r-all,
+      #r-cam,
+      #r-slices,
+      #r-words {
+        position: absolute;
+        inset: 0;
+      }
+      #r-all {
+        opacity: 0;
+        background: #e8e9e7;
+      }
+      #r-cam {
+        transform-origin: 960px 700px;
+      }
+      #r-orb {
+        transform-origin: 960px 486px;
+      }
+      [data-composition-id="reel"] .rw {
+        position: absolute;
+        top: 470px;
+        font-size: 92px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        white-space: nowrap;
+        visibility: hidden;
+      }
+      [data-composition-id="reel"] .rw span {
+        display: inline-block;
+      }
+      [data-composition-id="reel"] .rw.left {
+        left: 300px;
+        transform: translateX(-50%);
+      }
+      [data-composition-id="reel"] .rw.right {
+        left: 1610px;
+        transform: translateX(-50%);
+      }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const G = (g) => +(g - 22.4).toFixed(3);
+        const q = (s) => document.querySelector(s);
+
+        q("#r-orb").innerHTML = LX.scene("orb");
+        q("#r-twin").innerHTML = LX.scene("twin");
+        q("#r-arc").innerHTML = LX.scene("arc");
+        q("#r-pillar").innerHTML = LX.scene("pillar");
+
+        // Cream dissolves into a soft-focus studio wall.
+        tl.to("#r-all", { opacity: 1, duration: 1.0, ease: "power1.inOut" }, G(22.4));
+
+        // Blurred push-in: the globe rises out of the bottom of frame and the
+        // camera racks focus as it pulls back to the full table.
+        tl.fromTo("#r-orb", { scale: 3.2, x: -260, y: 780, filter: "blur(34px)" }, { scale: 1, x: 0, y: 0, duration: 3.1, ease: "power2.inOut" }, G(24.35));
+        tl.to("#r-orb", { filter: "blur(0px)", duration: 1.9, ease: "power1.inOut" }, G(24.6));
+        tl.set("#r-orb", { filter: "none" }, G(26.55));
+        tl.to("#r-cam", { scale: 1.05, duration: 5.7, ease: "none" }, G(27.5));
+
+        // First word pair slides in from the edges.
+        tl.set(["#rw-light", "#rw-that"], { visibility: "visible" }, G(26.9));
+        tl.fromTo("#rw-light span", { x: -420, filter: "blur(6px)" }, { x: 0, filter: "blur(0px)", duration: 0.32, ease: "power3.out" }, G(26.9));
+        tl.fromTo("#rw-that span", { x: 260, y: 90 }, { x: 0, y: 0, duration: 0.36, ease: "back.out(1.6)" }, G(27.02));
+        tl.to("#rw-light span", { x: 18, duration: 2.2, ease: "none" }, G(27.25));
+        tl.to("#rw-that span", { x: -14, duration: 2.2, ease: "none" }, G(27.4));
+
+        // Product swaps via sliced, blocky cuts.
+        const swap = (from, to, name, g, seed) => {
+          LX.slices(tl, q("#r-slices"), () => LX.scene(name), G(g), { seed });
+          tl.set(to, { visibility: "visible" }, G(g) + 0.2);
+          tl.set(from, { visibility: "hidden" }, G(g) + 0.2);
+        };
+        swap("#r-orb", "#r-twin", "twin", 27.55, 3);
+        tl.to("#r-twin .lit", { opacity: 1, duration: 0.6, ease: "power2.inOut", stagger: 0.12 }, G(28.3));
+        swap("#r-twin", "#r-arc", "arc", 29.2, 8);
+
+        // Second pair pops in place.
+        tl.set(["#rw-light", "#rw-that"], { visibility: "hidden" }, G(29.92));
+        tl.set("#rw-feels", { visibility: "visible" }, G(29.95));
+        tl.fromTo("#rw-feels span", { y: 26, scale: 0.94 }, { y: 0, scale: 1, duration: 0.2, ease: "back.out(2)" }, G(29.95));
+        tl.set("#rw-alive", { visibility: "visible" }, G(30.18));
+        tl.fromTo("#rw-alive span", { y: 52, x: 10 }, { y: 0, x: 0, duration: 0.3, ease: "power3.out" }, G(30.24));
+
+        swap("#r-arc", "#r-pillar", "pillar", 30.7, 13);
+        // The frame finish runs walnut -> oak.
+        tl.to("#r-pillar .wood", { keyframes: { fill: ["#4f3322", "#7b4f2e", "#a8733f", "#c4925c"], easeEach: "none" }, duration: 0.9, ease: "power1.inOut" }, G(31.25));
+
+        // Words glitch out under the logo cut.
+        tl.to("#r-words span", { x: (i) => (i % 2 ? 40 : -40), filter: "blur(5px)", opacity: 0.4, duration: 0.08, ease: "steps(2)" }, G(33.06));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["reel"] = tl;
+      })();
+    </script>
+  </div>
+</template>
