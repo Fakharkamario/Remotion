@@ -111,7 +111,7 @@
         tl.to("#r-words span", { x: (i) => (i % 2 ? 40 : -40), filter: "blur(5px)", opacity: 0.4, duration: 0.08, ease: "steps(2)" }, G(33.06));
 
         // Clear the reel as the logo slices out, so the film ends on cream.
-        tl.set("#r-all", { visibility: "hidden" }, G(37.4));
+        tl.set("#r-all", { opacity: 0 }, G(37.4));
 
         window.__timelines = window.__timelines || {};
         window.__timelines["reel"] = tl;
