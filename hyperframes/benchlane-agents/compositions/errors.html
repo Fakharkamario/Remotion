@@ -1,0 +1,130 @@
+<template id="errors-template">
+  <div data-composition-id="errors" data-width="1920" data-height="1080" data-duration="2.7">
+    <div class="full dark"></div>
+    <div id="er-line"><span class="w">and</span><span class="w">the</span><span class="w serif">autopilots</span></div>
+    <div id="er-grp" class="full">
+      <div id="er-term">
+        <div class="bar">forge-cli</div>
+        <div class="body"><div id="er-log"></div></div>
+        <div class="input"><span>&gt;</span></div>
+      </div>
+      <div id="er-chips"></div>
+    </div>
+
+    <style>
+      #er-line { position: absolute; left: 0; right: 0; top: 497px; height: 72px; line-height: 72px; display: flex; justify-content: center; gap: 0.26em;
+        font-size: 72px; color: #fff; letter-spacing: -0.012em; white-space: nowrap; }
+      #er-line .serif { font-size: 1.08em; }
+      #er-grp { opacity: 0; }
+      #er-term { position: absolute; left: 0; top: 149px; width: 778px; height: 802px; border-radius: 22px; background: #16110e;
+        border: 2px solid rgba(255, 255, 255, 0.1); overflow: hidden; }
+      #er-term .bar { height: 50px; text-align: center; font: 20px/50px "Inter", sans-serif; color: #a59a92; border-bottom: 1.5px solid rgba(255, 255, 255, 0.08); }
+      #er-term .body { position: absolute; left: 0; right: 0; top: 52px; height: 640px; overflow: hidden; }
+      #er-log { position: absolute; left: 0; right: 0; top: 0; }
+      #er-log > div { position: absolute; left: 86px; right: 30px; height: 39px; font: 20px/39px "JetBrains Mono", monospace; color: #8f857d; white-space: nowrap; }
+      #er-log > div::before { position: absolute; left: -26px; }
+      #er-log .y::before { content: "\25CF"; color: #e6d23c; }
+      #er-log .g::before { content: "\25CF"; color: #63c76a; }
+      #er-log .t::before { content: "\25CF"; color: #8a817a; }
+      #er-log .p::before { content: ">"; color: #e5533f; }
+      #er-log .r::before { content: "\2715"; color: #e2554f; }
+      #er-log .y, #er-log .g, #er-log .r { color: #8f857d; }
+      #er-log .txt { left: 60px; }
+      #er-log .sub { font-size: 17px; color: #6f655e; }
+      #er-log b { color: #f1e9e2; font-weight: 500; }
+      #er-term .input { position: absolute; left: 46px; right: 46px; bottom: 38px; height: 64px; border: 1.5px solid rgba(255, 255, 255, 0.11); border-radius: 8px;
+        font: 20px/62px "JetBrains Mono", monospace; color: #b3a9a1; padding-left: 26px; }
+      .er-chip { position: absolute; left: 0; top: 0; height: 110px; padding: 0 40px 0 34px; border-radius: 14px; white-space: nowrap; display: flex; align-items: center; gap: 18px;
+        font: 36px/1 "JetBrains Mono", monospace; letter-spacing: 0.02em; color: #e0283f; background: rgba(120, 12, 28, 0.62); border: 2px solid rgba(226, 44, 66, 0.55);
+        box-shadow: 0 0 34px rgba(200, 20, 45, 0.22), inset 0 0 24px rgba(255, 40, 70, 0.08); opacity: 0; }
+      .er-chip svg { width: 44px; height: 44px; flex: none; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const F = (n) => n / 30;
+        const C = FX.C;
+
+        // ---- "and the autopilots": one word per frame in accent, settles to white; line drifts left.
+        // All timings are reference frames counted from the cut (30 fps).
+        const words = Array.from(document.querySelectorAll("#er-line .w"));
+        [[0, 4], [1, 5], [4, 8]].forEach(([on, ink], i) => {
+          tl.set(words[i], { opacity: 0, color: C.orange }, 0);
+          tl.set(words[i], { opacity: 1 }, F(on));
+          tl.set(words[i], { color: "#fff" }, F(ink));
+        });
+        const drift = [0, -17, -17, -25, -31, -35, -39, -39, -43, -46, -48, -51, -51, -53, -55, -58, -60, -60, -63, -66, -70, -75, -75, -83, -99];
+        drift.forEach((d, f) => tl.set("#er-line", { x: 81 + d }, F(f)));
+        tl.set("#er-line", { opacity: 0 }, F(25));
+
+        // ---- terminal log (fixed 39px rows so the stepped scroll is exact)
+        const L = [
+          ["y", "Read <b>(api/handlers.ts)</b>"], ["y", "Read <b>(db/schema.sql)</b>"], ["y", "Update <b>(db/migrations/007_idx.sql)</b>"], ["sub", "added 9 lines, removed 2"],
+          ["txt", "Added an index on the two slowest lookups."], ["", ""], ["p", "[pasted 214 lines] <b>this is broken in prod</b>"], ["t", "Thinking"],
+          ["y", "Read <b>(services/cart.ts)</b>"], ["y", "Update <b>(services/cart.ts)</b>"], ["sub", "added 3 lines, removed 1"], ["txt", "Wrapped the null branch in a guard."], ["", ""],
+          ["p", "<b>why is memory still going up</b>"], ["t", "Thinking"], ["y", "Read <b>(workers/queue.ts)</b>"], ["y", "Read <b>(workers/queue.ts)</b>"], ["sub", "added 6 lines, removed 4"],
+          ["txt", "Cleared a listener that was never removed."], ["", ""], ["p", "[pasted 380 lines] <b>still failing</b>"], ["t", "Thinking"], ["y", "Read <b>(lib/cache.ts)</b>"],
+          ["y", "Update <b>(lib/cache.ts)</b>"], ["sub", "bumped TTL, disabled invalidation"], ["r", "<b>tests failed (4)</b>"], ["", ""], ["p", "<b>just make it pass</b>"], ["t", "Thinking"],
+          ["y", "Update <b>(tests/cart.test.ts)</b>"], ["sub", "skipped 4 tests"], ["g", "<b>tests passed</b>"],
+        ];
+        const log = document.getElementById("er-log");
+        const rows = L.map(([c, t], k) => {
+          const d = document.createElement("div");
+          d.className = c;
+          d.style.top = 28 + k * 39 + "px";
+          // tool calls: verb bright, path dim (as in the reference terminal)
+          d.innerHTML = (c === "y" || c === "g" || c === "r" || c === "t") && t ? t.replace(/^(\w+) <b>(.*)<\/b>$/, "<b>$1</b> $2") : t || "&nbsp;";
+          log.appendChild(d);
+          return d;
+        });
+        // stepped scroll: the agent appends a chunk, the view jumps to keep the newest line in sight
+        const steps = [[25, 0], [31, -94], [40, -132], [45, -170], [50, -283], [56, -336], [61, -416], [69, -488], [74, -574], [80, -646]];
+        steps.forEach(([f, y]) => {
+          tl.set(log, { y: y }, F(f));
+          rows.forEach((r, k) => tl.set(r, { opacity: 28 + k * 39 + y <= 548 ? 1 : 0 }, F(f)));
+        });
+
+        // terminal slides in from the right, holds, then eases back out as the cut approaches
+        tl.set("#er-grp", { opacity: 1 }, F(25));
+        const TX = { 25: 612, 26: 596, 27: 596, 28: 589, 29: 585, 30: 584, 31: 578, 32: 578, 33: 574, 34: 573, 35: 571, 36: 570, 37: 570, 38: 569, 39: 568,
+          72: 568, 73: 570, 74: 571, 75: 574, 76: 577, 77: 577, 78: 582, 79: 589, 80: 608 };
+        Object.keys(TX).forEach((f) => tl.set("#er-term", { x: TX[f] }, F(+f)));
+
+        // ---- error chips: each pops on at a measured frame, lifts, drifts, and is removed on a later frame
+        const warn = `<svg viewBox="0 0 24 24" fill="none" stroke="#e0283f" stroke-width="1.7" stroke-linejoin="round"><path d="M8.2 2.8h7.6l5.4 5.4v7.6l-5.4 5.4H8.2l-5.4-5.4V8.2z"/><path d="M12 7.4v6" stroke-linecap="round"/><circle cx="12" cy="16.6" r="0.6" fill="#e0283f"/></svg>`;
+        const chips = [
+          ["OOM again", 1042, 955, 30, 48],
+          ["tests failing", 1360, 862, 39, 56],
+          ["still flaky", 1503, 727, 46, 70],
+          ["latency spiking", 1560, 494, 54, 70],
+          ["builds timing out", 1436, 228, 60, 74],
+          ["red again", 760, 118, 65, 75],
+          ["just fix it", 416, 281, 69, 78],
+          ["502s everywhere", 355, 554, 71, 79],
+          ["pool exhausted", 543, 850, 74, 99],
+        ];
+        const lift = [0, -10, -10, -14, -15, -17, -18, -18, -19];
+        const exitX = { 75: -2, 76: -4, 77: -4, 78: -8, 79: -15, 80: -35 };
+        const host = document.getElementById("er-chips");
+        chips.forEach(([t, cx, cy, on, off]) => {
+          const d = document.createElement("div");
+          d.className = "er-chip";
+          d.innerHTML = warn + `<span>${t}</span>`;
+          host.appendChild(d);
+          tl.set(d, { xPercent: -50, yPercent: -50, x: cx, y: cy, opacity: 0 }, 0);
+          tl.set(d, { opacity: 1 }, F(on));
+          for (let f = on; f <= Math.min(off - 1, 80); f++) {
+            const k = f - on;
+            const dy = k < lift.length ? lift[k] : lift[lift.length - 1] - 0.2 * (k - lift.length + 1);
+            tl.set(d, { y: cy + dy, x: cx + (exitX[f] || 0) }, F(f));
+          }
+          if (off <= 80) tl.set(d, { opacity: 0 }, F(off));
+        });
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["errors"] = tl;
+      })();
+    </script>
+  </div>
+</template>

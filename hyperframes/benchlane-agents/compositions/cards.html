@@ -1,0 +1,93 @@
+<template id="cards-template">
+  <div data-composition-id="cards" data-width="1920" data-height="1080" data-duration="1.5333">
+    <div id="cd-photo" class="full"><img src="assets/backdrop.jpg" alt="" /></div>
+    <div id="cd-wash" class="full"></div>
+    <div id="cd-scan" class="full"></div>
+    <div id="cd-warm" class="full"></div>
+    <div id="cd-list" class="full"></div>
+
+    <style>
+      #cd-photo { overflow: hidden; }
+      #cd-photo img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; filter: blur(3px) saturate(0.85) brightness(1.08);
+        transform-origin: 55% 45%; }
+      /* duotone wash: the photo starts drowned in orange, then a gradient scanner sweeps the colour off it */
+      #cd-wash { background: #f0a283; }
+      #cd-scan { background: linear-gradient(115deg, rgba(239, 140, 105, 0) 0%, rgba(239, 140, 105, 0) 38%, rgba(255, 214, 190, 0.5) 45%,
+          rgba(239, 140, 105, 0.7) 52%, rgba(239, 140, 105, 0.7) 100%);
+        background-size: 300% 100%; }
+      #cd-warm { background: radial-gradient(80% 90% at 30% 70%, rgba(214, 120, 84, 0.28), rgba(214, 120, 84, 0.1) 70%); mix-blend-mode: multiply; }
+      .cd-card { position: absolute; left: 0; top: 0; width: 1088px; height: 196px; border-radius: 34px; background: #fbf4ec;
+        box-shadow: 0 14px 34px rgba(90, 40, 20, 0.14); will-change: transform; }
+      .cd-card .ico { position: absolute; left: 44px; top: 54px; width: 46px; height: 46px; }
+      .cd-card .ico svg { width: 100%; height: 100%; display: block; }
+      .cd-card .t { position: absolute; left: 117px; top: 50px; font-size: 35.5px; font-weight: 420; color: #1b1612; letter-spacing: -0.012em; white-space: nowrap; }
+      .cd-card .c { position: absolute; left: 117px; top: 110px; font-size: 28px; color: #b8aca3; white-space: nowrap; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const F = (n) => n / 30;
+        const ic = {
+          check: `<svg viewBox="0 0 24 24" fill="none" stroke="#7cc04f" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.6-3 8.4-7 10-4-1.6-7-5.4-7-10V6z"/><path d="M8.6 12.2l2.4 2.4 4.4-4.6"/></svg>`,
+          layers: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a6cf0" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/></svg>`,
+          chat: `<svg viewBox="0 0 24 24" fill="none" stroke="#ea5e39" stroke-width="1.8" stroke-linejoin="round"><path d="M4 4h11v8H9l-3 3v-3H4z"/><path d="M15 8h5v8h-2v3l-3-3h-4v-2"/></svg>`,
+          target: `<svg viewBox="0 0 24 24" fill="none" stroke="#e0603f" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z" stroke-linejoin="round"/></svg>`,
+          book: `<svg viewBox="0 0 24 24" fill="none" stroke="#5a7bf0" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></svg>`,
+          bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="#e7a73c" stroke-width="1.8" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>`,
+        };
+        const items = [
+          ["bolt", "Debounced search so the API stops getting hammered", "Performance Tuning"],
+          ["layers", "Added a cache layer with invalidation on profile edits", "Full-Stack Execution"],
+          ["chat", "Rejected an agent patch that faked passing tests", "Agent Oversight"],
+          ["check", "Added retry with backoff that the agent skipped", "Reliability &amp; Shipping"],
+          ["target", "Sketched the data model before letting agents code", "System Design"],
+          ["book", "Removed stale feature flags the agent left behind", "Codebase Hygiene"],
+          ["check", "Spotted an unbounded query the agent wrote", "Reliability &amp; Shipping"],
+          ["chat", "Stopped a refactor that duplicated an existing helper", "Agent Oversight"],
+          ["layers", "Made the webhook handler safe to replay", "Full-Stack Execution"],
+          ["target", "Compared three queue options before picking one", "System Design"],
+          ["bolt", "Cut cold-start time by lazy-loading the SDK", "Performance Tuning"],
+        ];
+        const list = document.getElementById("cd-list");
+        const cards = items.map(([k, t, c]) => {
+          const d = document.createElement("div");
+          d.className = "cd-card";
+          d.innerHTML = `<div class="ico">${ic[k]}</div><div class="t">${t}</div><div class="c">${c}</div>`;
+          list.appendChild(d);
+          return d;
+        });
+
+        // ---- Per-frame card slots, measured off the reference (30 fps frames 0-45).
+        // S: index of the card in the top slot (the list steps one card at a time),
+        // T: top of each of the five visible slots, X: left edge of each slot (the staircase shear).
+        const S = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5];
+        const T = [[9, 220, 441, 662, 874], [-2, 217, 441, 666, 884], [-6, 216, 441, 668, 889], [-6, 216, 441, 668, 889], [-9, 214, 441, 669, 892], [-11, 213, 441, 670, 895], [-13, 213, 441, 670, 897], [-15, 212, 441, 670, 898], [-15, 212, 441, 670, 898], [-16, 212, 441, 671, 900], [-17, 211, 441, 672, 901], [-18, 211, 441, 672, 902], [-9, 221, 452, 682, 915], [-9, 221, 452, 682, 915], [-13, 218, 448, 679, 912], [-15, 216, 447, 678, 910], [-16, 216, 447, 678, 910], [-16, 215, 446, 677, 909], [-16, 215, 446, 677, 909], [-17, 214, 446, 677, 908], [-17, 214, 445, 677, 908], [-17, 214, 445, 676, 908], [-18, 214, 445, 676, 907], [-17, 214, 445, 676, 907], [-18, 214, 445, 676, 907], [-18, 213, 444, 676, 907], [-18, 213, 444, 676, 907], [-15, 216, 447, 678, 910], [-15, 216, 447, 678, 910], [-19, 212, 443, 674, 906], [-21, 210, 441, 673, 904], [-22, 209, 441, 672, 903], [-23, 208, 440, 671, 903], [-23, 208, 440, 671, 903], [-23, 208, 439, 671, 902], [-24, 208, 439, 670, 901], [-24, 207, 438, 670, 901], [-24, 207, 438, 670, 901], [-24, 207, 438, 670, 901], [-19, 212, 444, 675, 906], [-19, 212, 443, 674, 906], [-22, 209, 441, 672, 903], [-22, 210, 441, 672, 903], [-22, 210, 441, 672, 903], [-22, 209, 440, 671, 903], [-22, 209, 440, 671, 903]];
+        const X = [[415, 416, 450, 415, 415], [415, 415, 435, 415, 415], [415, 415, 429, 415, 415], [415, 415, 429, 415, 415], [415, 415, 426, 415, 415], [415, 415, 422, 415, 415], [415, 415, 420, 415, 415], [415, 415, 419, 415, 415], [415, 415, 419, 415, 415], [415, 415, 418, 415, 415], [415, 415, 416, 415, 415], [415, 415, 416, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [415, 415, 415, 415, 415], [375, 395, 415, 435, 455], [375, 395, 415, 435, 455], [375, 395, 415, 435, 455], [375, 395, 415, 435, 455], [375, 394, 415, 435, 455], [375, 394, 414, 435, 455], [375, 394, 414, 435, 455], [375, 394, 414, 435, 455], [375, 394, 414, 434, 455], [375, 395, 413, 432, 454], [375, 395, 410, 428, 452], [375, 395, 410, 428, 452], [355, 388, 401, 448, 495], [355, 383, 391, 444, 495], [196, 279, 396, 535, 653], [187, 260, 387, 535, 663], [187, 260, 387, 535, 663], [12, 213, 414, 638, 820], [-64, 175, 414, 675, 895]];
+
+        for (let f = 0; f < S.length; f++) {
+          const t = T[f], x = X[f];
+          const pitch = (t[4] - t[0]) / 4, shear = (x[4] - x[0]) / 4;
+          cards.forEach((cd, i) => {
+            const j = i - S[f];
+            let y, xx;
+            if (j >= 0 && j <= 4) { y = t[j]; xx = x[j]; }
+            else if (j < 0) { y = t[0] + j * pitch; xx = x[0] + j * shear; }
+            else { y = t[4] + (j - 4) * pitch; xx = x[4] + (j - 4) * shear; }
+            tl.set(cd, { x: xx, y: y }, F(f));
+          });
+        }
+
+        // ---- Backdrop: slow push-in on the photo, orange wash lifts, gradient scanner sweeps across.
+        tl.fromTo("#cd-photo img", { scale: 1.06, x: 0, y: 0 }, { scale: 1.13, x: -26, y: -10, duration: F(46), ease: "none" }, 0);
+        tl.fromTo("#cd-wash", { opacity: 0.8 }, { opacity: 0.4, duration: F(30), ease: "power1.inOut" }, F(2));
+        tl.fromTo("#cd-scan", { backgroundPosition: "100% 0%" }, { backgroundPosition: "0% 0%", duration: F(34), ease: "sine.inOut" }, 0);
+        tl.fromTo("#cd-warm", { opacity: 0 }, { opacity: 1, duration: F(20), ease: "none" }, F(16));
+        tl.to(["#cd-scan", "#cd-warm"], { opacity: 0.55, duration: F(4), ease: "none" }, F(42));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["cards"] = tl;
+      })();
+    </script>
+  </div>
+</template>
