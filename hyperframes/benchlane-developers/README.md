@@ -6,7 +6,7 @@ beat is retimed frame by frame against the "Engineers" reference cut.
 
 | frames  | time (s)     | composition | beat |
 |---------|--------------|-------------|------|
-| 0–53    | 0.00–1.79    | `intro`     | "Teams now build *differently*", stepped camera pull-back, pink pixel noise |
+| 0–53    | 0.00–1.79    | `intro`     | "Teams now build *differently*", continuous camera zoom-out and pan, pink pixel noise |
 | 54–134  | 1.79–4.50    | `icons`     | orange tiles land streaky, step into icon tiles, field sweeps clockwise around "alongside AI" |
 | 135–319 | 4.50–10.67   | `words`     | glyph scramble → "Yet interviews still live in 2015." → words drop out → "Old-school coding quizzes" + code confetti → "< can't reveal how >" → dot grid "developers *truly* build now" → pixel ring burst → "Meet" corners |
 | 320–379 | 10.67–12.67  | `logo-dark` | corners snap into the mark, wordmark types in → "Find the real *builders*" |
