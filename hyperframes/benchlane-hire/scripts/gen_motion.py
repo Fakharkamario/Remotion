@@ -2,8 +2,8 @@
 
 The card field is an original layout (benchlane names, seeded) seen by a camera that orbits a pivot at
 mid-depth: near cards sweep one way and far cards the other, as in the reference. The orbit's yaw and
-pitch per frame (ORBIT, 0-based 30 fps frames, held frames of the 24 fps cadence included) come from
-feature tracks on the reference cut. The pull-back into the "and … hire" cluster is a zoom-out sized per
+pitch per frame (ORBIT, 0-based 30 fps frames) come from feature tracks on the reference cut and are
+smoothed so every frame moves (no 24 fps holds). The pull-back into the "and … hire" cluster is a zoom-out sized per
 frame to the reference's measured card extents (BOX).
 
     python3 scripts/gen_motion.py
@@ -35,9 +35,11 @@ BOX = [[45, 118, 1705, 19, 1070], [47, 165, 1659, 28, 1073], [48, 210, 1634, 66,
        [64, 641, 1370, 242, 853], [65, 651, 1343, 255, 836], [67, 658, 1320, 265, 824], [68, 669, 1305, 275, 819], [69, 672, 1299, 289, 812],
        [70, 680, 1281, 302, 801], [72, 695, 1251, 317, 781], [73, 718, 1222, 338, 767], [74, 759, 1157, 390, 707]]
 
-HELD = {1, 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71}  # 24 fps cadence: repeats the previous frame
 
 CARD_W, CARD_H = 315.0, 110.0  # card size at scale 1 (depth F)
+# motion-blur strength (blur px per px/frame of speed) through the scene: the opening whip smears, the steady
+# sweep only softens the fastest cards, the cards stay crisp while they gather, then smear again before the cut
+BLUR = [(0, 0.09), (11, 0.09), (20, 0.03), (44, 0.03), (48, 0.02), (60, 0.02), (66, 0.05), (74, 0.05)]
 N_INNER, N_OUTER = 18, 18  # cards in the sweep; cards waiting just off frame for the pull-back
 
 
@@ -51,14 +53,23 @@ def rotm(rv_deg):
     return np.eye(3) + math.sin(th) * K + (1 - math.cos(th)) * K @ K
 
 
+def _smooth(v, sigma):
+    """Gaussian smoothing with the ends held (edge padded)."""
+    r = int(math.ceil(sigma * 3))
+    k = np.exp(-0.5 * (np.arange(-r, r + 1) / sigma) ** 2)
+    k /= k.sum()
+    return np.convolve(np.pad(v, r, mode="edge"), k, mode="valid")
+
+
+_G = np.arange(0, 45)
+_ORB = np.array(ORBIT, float)
+_YAW = _smooth(np.interp(_G, _ORB[:, 0], _ORB[:, 1]), 0.8)
+_PITCH = _smooth(np.interp(_G, _ORB[:, 0], _ORB[:, 2]), 1.5)
+
+
 def _keyed(g):
-    keys = {r[0]: r[1:] for r in ORBIT}
-    if g in keys:
-        return keys[g]
-    lo = max(k for k in keys if k < g)
-    hi = min(k for k in keys if k > g)
-    t = (g - lo) / (hi - lo)
-    return [keys[lo][i] + (keys[hi][i] - keys[lo][i]) * t for i in range(2)]
+    g = min(max(g, 0), 44)
+    return [float(np.interp(g, _G, _YAW)), float(np.interp(g, _G, _PITCH))]
 
 
 # yaw speed (deg/frame) after the opening whip: the orbit keeps turning the same way, slower, then picks up
@@ -180,12 +191,7 @@ def main():
     inner = np.array([not c["outer"] for c in cards])
     frames = []
     for g in range(N_FRAMES):
-        src = g - 1 if g in HELD else g
-        x, y, s = project(X, src)
-        frames.append([x, y, s])
-    for g in range(N_FRAMES):
-        if g in HELD:
-            frames[g] = frames[g - 1]
+        frames.append(list(project(X, g)))
     # a card the orbit swings behind or right up against the lens is dropped for that frame
     gone = [(f[2] <= 0) | (f[2] > 3.2) for f in frames]
 
@@ -197,7 +203,10 @@ def main():
     vis = inner & (s > 0) & (x > -200) & (x < 2120) & (y > -150) & (y < 1230)
     _, (sx0, sx1, sy0, sy1) = coverage(x[vis], y[vis], s[vis])
     W0, H0, scx, scy = sx1 - sx0, sy1 - sy0, (sx0 + sx1) / 2, (sy0 + sy1) / 2
-    box = {r[0]: r[1:] for r in BOX}
+    bx = np.array(BOX, float)
+    gg = np.arange(45, N_FRAMES)
+    ext = np.stack([_smooth(np.interp(gg, bx[:, 0], bx[:, c]), 1.0) for c in range(1, 5)], 1)
+    box = {int(g): ext[i] for i, g in enumerate(gg)}
 
     x, y, s = frames[52]
     u, v = (x - scx) / (W0 / 2), (y - scy) / (H0 / 2)
@@ -211,9 +220,8 @@ def main():
     ut, vt = r_t * np.cos(th), r_t * np.sin(th)
 
     for g in range(45, N_FRAMES):
-        src = g - 1 if g in HELD else g
-        rx0, rx1, ry0, ry1 = box[src]
-        w = min(1.0, (src - 45) / 10)
+        rx0, rx1, ry0, ry1 = box[g]
+        w = min(1.0, (g - 45) / 10)
         w = w * w * (3 - 2 * w)
         x, y, s = frames[g]
         u, v = (x - scx) / (W0 / 2), (y - scy) / (H0 / 2)
@@ -223,26 +231,24 @@ def main():
         s = np.where(s > 0, np.abs(s) ** (1 - 0.6 * w), s)
         frames[g] = [(rx0 + rx1) / 2 + (rx1 - rx0) / 2 * uu, (ry0 + ry1) / 2 + (ry1 - ry0) / 2 * vv, s * k * (1 + 0.4 * w)]
 
-    # per-card tracks: x, y, scale, motion blur (px), shown
+    # per-card tracks: x, y, scale, blur along x and along y (px), shown
     out = []
     for i, c in enumerate(cards):
         tr = []
         for g in range(N_FRAMES):
             x, y, s = (frames[g][0][i], frames[g][1][i], frames[g][2][i])
-            pg = g - 1
-            while pg in HELD:
-                pg -= 1
-            if pg >= 0:
-                vx = x - frames[pg][0][i]
-                vy = y - frames[pg][1][i]
-                sp = math.hypot(vx, vy)
-            else:
-                sp = 0
+            a, b = frames[max(g - 1, 0)], frames[min(g + 1, N_FRAMES - 1)]
+            span = min(g + 1, N_FRAMES - 1) - max(g - 1, 0)
+            vx = (b[0][i] - a[0][i]) / span
+            vy = (b[1][i] - a[1][i]) / span
             w, h = CARD_W * s, CARD_H * s
             on = (g >= 45 or not c["outer"]) and not gone[g][i] and s > 0 and x + w / 2 > -40 and x - w / 2 < 1960 and y + h / 2 > -40 and y - h / 2 < 1120
-            # motion blur from screen speed, plus a little softness on the nearest cards
-            blur = min(4.5, sp * 0.022) + max(0.0, (s - 2.0) * 1.5)
-            tr.append([round(float(x), 1), round(float(y), 1), round(float(s), 4), round(float(blur), 2), 1 if on else 0])
+            # each card smears along its own motion, lightly, so only the fast ones read as blurred; the nearest are a touch soft
+            dof = max(0.0, (s - 2.8) * 1.0)
+            kb = float(np.interp(g, *zip(*BLUR)))
+            bxx = min(8.0, abs(vx) * kb) + dof
+            byy = min(5.0, abs(vy) * kb) + dof
+            tr.append([round(float(x), 1), round(float(y), 1), round(float(s), 4), round(float(bxx), 2), round(float(byy), 2), 1 if on else 0])
         out.append({"t": c["t"], "tm": c["tm"], "c": c["c"], "z": round(float(F / np.median([f[2][i] for f in frames[:45]])), 1), "tr": tr})
 
     # report coverage against the reference (16-23 %)
@@ -255,7 +261,7 @@ def main():
     path = os.path.join(here, "..", "assets", "motion.js")
     with open(path, "w") as fh:
         fh.write("// Generated by scripts/gen_motion.py: card-field tracks for the calendar scene, one entry per 30 fps frame.\n")
-        fh.write("// card: t title, tm time, c colour (p purple / o orange), z depth; tr[frame] = [x, y, scale, blur px, on].\n")
+        fh.write("// card: t title, tm time, c colour (p purple / o orange), z depth; tr[frame] = [x, y, scale, blur x px, blur y px, on].\n")
         fh.write("window.MOTION = " + json.dumps({"cards": out}, separators=(",", ":")) + ";\n")
     print("wrote", os.path.normpath(path), len(out), "cards")
 

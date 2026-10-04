@@ -10,7 +10,7 @@
       /* outline centred on y 539.5, 118 px tall; text baseline at y 554.5 */
       #be-pill { position: absolute; left: 0; top: 480.5px; height: 118px; }
       #be-svg { position: absolute; left: 0; top: 0; width: 2000px; height: 118px; overflow: visible; }
-      #be-svg path { stroke-linecap: butt; stroke-linejoin: round; }
+      #be-svg path { stroke-linecap: round; stroke-linejoin: round; }
       #be-line { position: absolute; top: 24.8px; font-size: 57px; letter-spacing: -0.005em; }
     </style>
 
@@ -37,51 +37,51 @@
           return { d: `M${m} ${y0}` + loop + loop, P };
         };
         const dash = (P, segs) => {
-          // segs sorted, in perimeter fractions on the doubled path
           let s = "", pos = 0;
-          segs.forEach(([a, b]) => {
+          segs.filter(([a, b]) => b > a + 1e-4).forEach(([a, b]) => {
             s += `${((a - pos) * P).toFixed(2)} ${((b - a) * P).toFixed(2)} `;
             pos = b;
           });
-          return segs.length ? `0 ${s}${(2 * P).toFixed(0)}` : `0 ${(2 * P).toFixed(0)}`;
+          return s ? `0 ${s}${(2 * P).toFixed(0)}` : `0 ${(2 * P).toFixed(0)}`;
         };
 
-        // ---- per-frame state, measured off the reference (perimeter positions in 96ths, clockwise from top centre)
-        // pad: inner padding while the first word lands; words: how many are shown; off: re-centring after a word lands
-        const pad = { 75: 23.5, 76: 23.5, 77: 41.5, 78: 45.5, 79: 47.5 };
-        const offHard = { 82: 0.32, 83: 0.106, 84: 0.035, 85: 0.018, 86: 0.018 };
-        const offEv = { 88: 0.43, 89: 0.2, 90: 0.108, 91: 0.108, 92: 0.05, 93: 0.025, 94: 0.017 };
-        // dark stroke [tail, head] while it draws round the orange outline
-        const draw = { 78: [21, 23], 79: [21, 24], 80: [22, 27], 81: [22, 27], 82: [23, 30], 83: [24, 35], 84: [25, 40], 85: [26, 47], 86: [26, 47], 87: [27, 54], 88: [30, 65],
-          89: [32, 76], 90: [34, 87], 91: [34, 87], 92: [36, 98], 93: [37, 107], 94: [39, 115], 95: [40, 122], 96: [40, 122], 97: [41, 128] };
-        // from 98 the outline is one stroke [tail, head] that chases itself round; an orange sliver [o0, o1] is left until 102
-        const snake = { 98: [34.3, 129.75], 99: [35.3, 129.75], 100: [36.8, 129.75], 101: [36.8, 129.75], 102: [39.1, 129.8], 103: [42.3, 130], 104: [46.5, 130.3], 105: [51.6, 130.7],
-          106: [51.6, 130.7], 107: [57.2, 131.2], 108: [62.5, 131.8], 109: [68, 132.7], 110: [71, 133.8], 111: [73, 133.8], 112: [77.5, 135.2], 113: [79.6, 136.9], 114: [83, 139.1],
-          115: [86.8, 141.9], 116: [86.8, 141.9], 117: [93.2, 146.6] };
-        const sliver = { 98: [36, 42], 99: [36, 42], 100: [39, 42], 101: [41, 42], 102: [41, 42] };
-        // exit: outline fades from ink to tan while its right end pulls in (px, scaled to this pill's width)
-        const strokeCol = { 103: C.ink, 104: "#241f1a", 105: "#312a23", 106: "#423930", 107: "#423930", 108: "#6c564c", 109: "#9c7666", 110: "#9f7967", 111: "#a08070", 112: "#a88573",
-          113: "#b08a78", 114: "#a87f6c", 115: "#a07a66", 116: "#a07a66", 117: "#9a7562" };
-        const shrinkR = { 108: 0.5, 109: 3, 110: 5.5, 111: 9, 112: 12, 113: 18.5, 114: 29.5, 115: 49, 116: 49, 117: 93.5 };
-        const shrinkL = { 109: 1, 110: 3, 111: 6, 112: 6, 113: 6, 114: 6, 115: 6, 116: 6, 117: 6 };
-        // word fades on the way out: [frame, opacity, colour]
+        // ---- measured off the reference, as smooth curves over every frame
+        // (perimeter positions in 96ths, clockwise from top centre)
+        const pad = FX.curve([[75, 23.5], [77, 41.5], [78, 45.5], [79, 47.5], [80, 51]]);
+        const offHard = FX.curve([[82, 0.32], [83, 0.106], [84, 0.035], [85, 0.018], [87, 0]]);
+        const offEv = FX.curve([[88, 0.43], [89, 0.2], [90, 0.108], [92, 0.05], [93, 0.025], [94, 0.017], [95, 0]]);
+        // dark stroke [tail, head] drawing round the orange outline
+        const draw = FX.curve([[77, 21, 21], [78, 21, 23], [79, 21, 24], [80, 22, 27], [82, 23, 30], [83, 24, 35], [84, 25, 40], [85, 26, 47], [87, 27, 54],
+          [88, 30, 65], [89, 32, 76], [90, 34, 87], [92, 36, 98], [93, 37, 107], [94, 39, 115], [95, 40, 122], [97, 41, 128]]);
+        // from 98 the outline is one stroke [tail, head] chasing itself round, with an orange sliver left until 102
+        const snake = FX.curve([[98, 34.3, 129.75], [99, 35.3, 129.75], [100, 36.8, 129.75], [102, 39.1, 129.8], [103, 42.3, 130], [104, 46.5, 130.3],
+          [105, 51.6, 130.7], [107, 57.2, 131.2], [108, 62.5, 131.8], [109, 68, 132.7], [110, 71, 133.8], [112, 77.5, 135.2], [113, 79.6, 136.9],
+          [114, 83, 139.1], [115, 86.8, 141.9], [117, 93.2, 146.6]]);
+        const sliver = FX.curve([[98, 36, 42], [99, 36, 42], [100, 39, 42], [102, 41.6, 42], [103, 42, 42]]);
+        // exit: outline fades from ink to tan while its ends pull in (px, scaled to this pill's width)
+        const strokeCol = FX.colors([[103, C.ink], [104, "#241f1a"], [105, "#312a23"], [107, "#423930"], [108, "#6c564c"], [109, "#9c7666"], [110, "#9f7967"],
+          [112, "#a88573"], [113, "#b08a78"], [114, "#a87f6c"], [115, "#a07a66"], [117, "#9a7562"]]);
+        const shrink = FX.curve([[107, 0, 0], [108, 0.5, 0], [109, 3, 1], [110, 5.5, 3], [112, 12, 6], [113, 18.5, 6], [114, 29.5, 6], [115, 49, 6], [117, 93.5, 6]]);
+        // word fades on the way out (opacity), and the last word's tint
         const fade = [
-          [[108, 0.55], [109, 0.4], [110, 0.3], [112, 0]],
-          [[109, 0.85], [110, 0.75], [112, 0.5], [113, 0.3], [114, 0]],
-          [[110, 1, "#6b4a3f"], [112, 0.75, "#a5776a"], [113, 0.6], [114, 0.45], [115, 0.3], [117, 0]],
+          FX.curve([[107, 1], [108, 0.55], [109, 0.4], [110, 0.3], [112, 0]]),
+          FX.curve([[108, 1], [109, 0.85], [110, 0.75], [112, 0.5], [113, 0.3], [114, 0]]),
+          FX.curve([[109, 1], [110, 1], [112, 0.75], [113, 0.6], [114, 0.45], [115, 0.3], [117, 0]]),
         ];
+        const lastTint = FX.colors([[109, C.ink], [110, "#6b4a3f"], [112, "#a5776a"]]);
 
         const Wfull = text(3) + 102; // final pill width (51 px padding each side)
         const kR = (Wfull / 2 + CX - 1088.5) / 93.5; // pull the right end in to where the reference's bracket ends
         for (let g = 75; g <= 117; g++) {
           const n = g < 82 ? 1 : g < 88 ? 2 : 3;
-          const p = pad[g] != null ? pad[g] : 51;
+          const p = pad(g)[0];
           let W = text(n) + 2 * p;
           let off = 0;
-          if (offHard[g] != null) off = offHard[g] * (SP + WW[1]) / 2;
-          if (offEv[g] != null) off = offEv[g] * (SP + WW[2]) / 2;
+          if (g >= 82 && g < 88) off = offHard(g)[0] * (SP + WW[1]) / 2;
+          if (g >= 88) off = offEv(g)[0] * (SP + WW[2]) / 2;
           let left = CX - W / 2 + off;
-          const sl = (shrinkL[g] || 0) * kR, sr = (shrinkR[g] || 0) * kR;
+          const [srr, sll] = g >= 107 ? shrink(g) : [0, 0];
+          const sl = sll * kR, sr = srr * kR;
           left += sl;
           W -= sl + sr;
           const { d, P } = geo(W);
@@ -91,24 +91,23 @@
           FX.put(tl, base, { attr: { d } }, t);
           FX.put(tl, dark, { attr: { d } }, t);
           if (g < 98) {
+            const seg = g >= 78 ? [draw(g).map((v) => v / 96)] : [];
             FX.put(tl, base, { attr: { stroke: C.stroke, "stroke-dasharray": dash(P, [[0, 1]]) } }, t);
-            FX.put(tl, dark, { attr: { stroke: C.ink, "stroke-dasharray": dash(P, draw[g] ? [draw[g].map((v) => v / 96)] : []) } }, t);
+            FX.put(tl, dark, { attr: { stroke: C.ink, "stroke-dasharray": dash(P, seg) } }, t);
           } else {
-            const [a, b] = snake[g].map((v) => v / 96);
-            const sv = sliver[g] && sliver[g].map((v) => v / 96);
-            const col = strokeCol[g] || C.ink;
+            const [a, b] = snake(g).map((v) => v / 96);
+            const sv = g <= 102 ? sliver(g).map((v) => v / 96) : null;
             FX.put(tl, base, { attr: { stroke: C.stroke, "stroke-dasharray": dash(P, sv ? [sv] : []) } }, t);
-            FX.put(tl, dark, { attr: { stroke: col, "stroke-dasharray": dash(P, sv ? [[a, sv[0]], [sv[1], b]] : [[a, b]]) } }, t);
+            FX.put(tl, dark, { attr: { stroke: g >= 103 ? strokeCol(g) : C.ink, "stroke-dasharray": dash(P, sv ? [[a, sv[0]], [sv[1], b]] : [[a, b]]) } }, t);
           }
+          if (g >= 107) fade.forEach((fc, i) => FX.put(tl, words[i], { opacity: fc(g)[0] }, t));
+          if (g >= 109) FX.put(tl, words[2], { color: lastTint(g) }, t);
         }
 
-        // words: the first lands in the accent and inks; the others land in ink
-        words.forEach((el, i) => FX.put(tl, el, { opacity: 0, color: i === 0 ? C.text : C.ink }, 0));
-        FX.put(tl, words[0], { opacity: 1 }, at(75));
-        FX.put(tl, words[0], { color: C.ink }, at(80));
-        FX.put(tl, words[1], { opacity: 1 }, at(82));
-        FX.put(tl, words[2], { opacity: 1 }, at(88));
-        fade.forEach((rows, i) => rows.forEach(([g, o, c]) => FX.put(tl, words[i], Object.assign({ opacity: o }, c ? { color: c } : {}), at(g))));
+        // words: the first lands in the accent and blends to ink; the others land in ink
+        FX.land(tl, words[0], 75, 80, CUT, { rise: 0.04 });
+        FX.land(tl, words[1], 82, null, CUT, { from: C.ink, rise: 0.04 });
+        FX.land(tl, words[2], 88, null, CUT, { from: C.ink, rise: 0.04 });
 
         tl.set({}, {}, 1.4333);
         window.__timelines = window.__timelines || {};

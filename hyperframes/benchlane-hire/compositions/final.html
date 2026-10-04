@@ -18,18 +18,17 @@
         const root = document.getElementById("fi-line").parentElement.parentElement;
         const $ = (s) => root.querySelector(s);
 
-        // three beats: "Hire" · "on proof," · "not puzzles", each lands in the accent and inks a few frames later
+        // three beats: "Hire" · "on proof," · "not puzzles", each lands in the accent and blends to ink a few frames later
         const w = FX.words($("#fi-line"), ["Hire", "on", { t: "proof,", cls: "serif" }, "not", "puzzles"]);
-        const beats = [[[0], 165, 170], [[1, 2], 167, 172], [[3, 4], 168, 173]];
-        beats.forEach(([ids, on, ink]) => ids.forEach((i) => {
-          FX.put(tl, w[i], { opacity: 0, color: C.text }, 0);
-          FX.put(tl, w[i], { opacity: 1 }, at(on));
-          FX.put(tl, w[i], { color: C.ink }, at(ink));
-        }));
+        [[[0], 165, 170], [[1, 2], 167, 172], [[3, 4], 168, 173]].forEach(([ids, on, ink]) => ids.forEach((i) => FX.land(tl, w[i], on, ink, CUT)));
 
-        // the line arrives a touch large and right of centre, then settles (measured offset px, scale)
-        FX.track(tl, $("#fi-row"), [[165, 70, 1.06], [167, 46, 1.055], [168, 34, 1.049], [169, 19.5, 1.024], [170, 13, 1.013], [172, 7.5, 1.006], [173, 6, 1.006], [174, 4, 1.005],
-          [175, 1.5, 1.004], [177, 0.5, 1.003], [178, 0, 1.0]], CUT, ([x, s]) => ({ x, scale: s }));
+        // the line arrives a touch large and right of centre, then settles (measured offset px, scale), on a smooth curve
+        const settle = FX.curve([[165, 70, 1.06], [167, 46, 1.055], [168, 34, 1.049], [169, 19.5, 1.024], [170, 13, 1.013], [172, 7.5, 1.006], [174, 4, 1.005],
+          [175, 1.5, 1.004], [177, 0.5, 1.003], [179, 0, 1.0]]);
+        for (let g = 165; g <= 180; g++) {
+          const [x, sc] = settle(g);
+          FX.put(tl, $("#fi-row"), { x, scale: sc }, at(g));
+        }
 
         FX.put(tl, $("#fi-black"), { opacity: 0 }, 0);
         FX.put(tl, $("#fi-black"), { opacity: 1 }, at(242));
