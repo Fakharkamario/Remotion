@@ -1,26 +1,30 @@
 # benchlane developers (HyperFrames)
 
-A 12.67 s, 1920x1080 / 30 fps HyperFrames teaser. Its content comes from the benchlane
+A 12.67 s, 1920x1080 / 30 fps (24 fps motion cadence) HyperFrames teaser. Its content comes from the benchlane
 "developers" cut (copy, original icon glyphs, benchlane mark, synthesized soundtrack). Every motion
 beat is retimed frame by frame against the "Engineers" reference cut.
 
 | frames  | time (s)     | composition | beat |
 |---------|--------------|-------------|------|
-| 0–53    | 0.00–1.80    | `intro`     | "Teams now build *differently*", stepped camera pull-back, pink pixel noise |
-| 54–134  | 1.80–4.50    | `icons`     | orange tiles land streaky, step into icon tiles, field sweeps clockwise around "alongside AI" |
+| 0–53    | 0.00–1.79    | `intro`     | "Teams now build *differently*", stepped camera pull-back, pink pixel noise |
+| 54–134  | 1.79–4.50    | `icons`     | orange tiles land streaky, step into icon tiles, field sweeps clockwise around "alongside AI" |
 | 135–319 | 4.50–10.67   | `words`     | glyph scramble → "Yet interviews still live in 2015." → words drop out → "Old-school coding quizzes" + code confetti → "< can't reveal how >" → dot grid "developers *truly* build now" → pixel ring burst → "Meet" corners |
 | 320–379 | 10.67–12.67  | `logo-dark` | corners snap into the mark, wordmark types in → "Find the real *builders*" |
 
-What was retuned against the reference:
+How the motion is matched:
 
-- **Icon field:** every tile follows a Catmull-Rom path through positions sampled from the reference
-  (`P` in `icons.html`). The path is written as one `set` per frame, so the sweep is fast as the
-  tiles land, slow mid-way, and accelerating out. Per-tile resolve times are in `FLIP`.
-- **Cuts and word hits** are aligned to the reference frame numbers: "differently", the
-  "< can't reveal how >" line, the wordmark cut, and the closing line.
-- **Closing line:** words land in place with no lift, so they never overlap mid-entry.
-- **First frames:** each timeline is primed with `tl.seek(0.001).seek(0)`. A fresh GSAP timeline
-  seeked to 0 skips its zero-time `set`s, which made each scene's first frame flash its unset state.
+- **Measured, not eased.** Every move (camera zoom/pan/rise in the intro, each word's drop-in and
+  long settle, line re-centring, bracket pushes, exits, ring growth, the "Meet" corners, the
+  wordmark build and squeeze, the closing pan) was measured off the reference frame by frame and is
+  replayed with `FX.curve`: a monotone cubic through the measured keys, written out as one `set` per
+  frame. Keys are written as reference frame numbers.
+- **24 fps cadence.** The reference is 24 fps footage in a 30 fps file (every fifth frame repeats).
+  `FX.f(n)` maps reference frame `n` to its source frame (`floor(n * 0.8) / 24`) and curves are
+  sampled on that 24 fps grid, so the 30 fps render repeats the same frames the reference does.
+- **Icon field:** tile paths are Catmull-Rom splines through sampled positions (`P` in `icons.html`).
+- **Reveals:** words fade up in the accent colour over two source frames, then settle to ink.
+- **First frames:** each timeline is primed with `tl.seek(0.001).seek(0)`, because a fresh GSAP
+  timeline seeked to 0 skips its zero-time `set`s.
 
 ```
 index.html            root: mounts the four scenes + soundtrack

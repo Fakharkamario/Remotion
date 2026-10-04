@@ -14,8 +14,8 @@
       #ld-lock { position: absolute; left: 0; right: 0; top: 488px; height: 104px; display: flex; justify-content: center; align-items: center; color: #fff; }
       #ld-mark { width: 104px; height: 104px; position: relative; flex: none; }
       #ld-mark svg { width: 100%; height: 100%; overflow: visible; display: block; }
-      #ld-word { display: flex; font-size: 104px; font-weight: 500; letter-spacing: -0.035em; line-height: 1; margin-left: 40px; }
-      #ld-word .slot > .w { padding-right: 0; }
+      #ld-word { display: flex; white-space: pre; font-size: 104px; font-weight: 500; letter-spacing: -0.035em; line-height: 1; margin-left: 40px; }
+      #ld-word .lt { display: inline-block; }
       #ld-line { top: 503px; font-size: 58px; color: #fff; letter-spacing: -0.01em; }
       #ld-line .serif { font-size: 1.08em; }
     </style>
@@ -27,33 +27,50 @@
 
         tl.fromTo("#ld-bg", { x: 0, y: 0 }, { x: -60, y: -30, duration: 2, ease: "none" }, 0);
 
-        // Mark: the two "Meet" corners arrive large and apart, then snap into the logo.
+        const B = 320; // reference frame where this scene starts
+        const at = (n) => FX.at(n, B);
+        const curve = (el, props) => FX.curve(tl, el, props, { base: B });
+
+        // Mark: two corners hold apart for a frame, merge oversized, then shrink into place with a long settle.
         const mk = document.getElementById("ld-mark");
         mk.innerHTML = FX.mark("#fff");
         const a = mk.querySelector(".mk-a"), b = mk.querySelector(".mk-b"), c = mk.querySelector(".mk-c");
-        tl.set(mk, { scale: 1.2, x: -30 }, 0);
-        tl.set(a, { x: -70, y: -10 }, 0);
-        tl.set(b, { x: 70, y: 10 }, 0);
-        tl.set(c, { scale: 0, transformOrigin: "50% 50%" }, 0);
-        tl.to([a, b], { x: 0, y: 0, duration: 0.08, ease: "power3.out" }, 0.02);
-        tl.to(mk, { scale: 1, x: 0, duration: 0.12, ease: "power2.out" }, 0.02);
-        tl.to(c, { scale: 1, duration: 0.08, ease: "back.out(2)" }, 0.08);
+        tl.set([a, b], { x: 0, y: 0 }, 0);
+        tl.set(a, { x: 25, y: 11 }, 0);
+        tl.set(b, { x: 89, y: -10 }, 0);
+        tl.set(c, { opacity: 0 }, 0);
+        tl.set(a, { x: -6, y: -4 }, at(322));
+        tl.set(b, { x: 6, y: 4 }, at(322));
+        tl.set([a, b], { x: 0, y: 0 }, at(323));
+        tl.set(c, { opacity: 1 }, at(323));
+        curve(mk, { scale: [[320, 1.4], [322, 1.4], [323, 1.12], [324, 1.07], [325, 1.05], [327, 1.035], [328, 1.025], [330, 1.015], [333, 1.008], [343, 1]] });
+        curve(mk, { x: [[322, -12], [323, -14], [324, -14.5], [325, -12.5], [327, -9.5], [328, -7], [329, -5.5], [330, -4], [333, -2.5], [337, -1.5], [343, 0], [347, 0], [349, -1], [350, -2], [352, -4], [353, -7], [354, -16]] });
 
-        // Wordmark types in letter by letter (accent first, then white).
+        // Wordmark types in one letter per source frame, accent first, white three source frames later.
         const letters = "benchlane".split("");
-        const slots = FX.line(document.getElementById("ld-word"), letters);
-        slots.forEach((s, i) => FX.wordIn(tl, s, 0.06 + i * 0.036, { dy: 0, lead: 0.02, open: 0.05, hold: 0.1, settle: 0.03, to: "#fff" }));
+        const word = document.getElementById("ld-word");
+        word.innerHTML = letters.map((ch) => `<span class="lt">${ch}</span>`).join("");
+        const LT = Array.from(word.children);
+        const T = [322, 323, 324, 325, 327, 328, 329, 330, 332];
+        LT.forEach((el, i) => {
+          tl.set(el, { opacity: 0, color: C.orange }, 0);
+          tl.set(el, { opacity: 1 }, at(T[i]));
+          tl.set(el, { color: "#fff" }, at(T[i]) + 3 / 24);
+        });
+        // drifts right a touch while typing, then squeezes into the mark, accelerating into the cut
+        curve(word, { x: [[322, -6], [325, -5], [328, -3], [330, -2], [333, -1], [337, 0], [347, 0], [348, -2], [349, -4], [350, -8], [352, -14], [353, -24], [354, -50]] });
+        tl.set("#ld-lock", { opacity: 0 }, at(355));
 
-        // Squeeze together, then cut to the line.
-        tl.fromTo("#ld-word", { x: 0, y: -6 }, { x: -34, y: -6, duration: 0.07, ease: "power2.in" }, 1.1);
-        tl.set("#ld-lock", { opacity: 0 }, 1.16);
-
+        // "Find the real builders": words land in place in accent, settle to white; the line pans left
+        // the whole time (fast re-centre, slow drift, accelerating out).
         const ls = FX.line(document.getElementById("ld-line"), ["Find", "the", "real", { t: "builders", cls: "serif" }]);
-        // words land in place (no lift), accent first, then settle to white
-        FX.wordIn(tl, ls[0], 1.16, { dy: 0, lead: 0.01, open: 0.01, hold: 0.13, settle: 0.02, to: "#fff" });
-        FX.wordIn(tl, ls[1], 1.226, { dy: 0, lead: 0.02, open: 0.01, hold: 0.1, settle: 0.02, to: "#fff" });
-        FX.wordIn(tl, ls[2], 1.226, { dy: 0, lead: 0.02, open: 0.01, hold: 0.1, settle: 0.02, to: "#fff" });
-        FX.wordIn(tl, ls[3], 1.26, { dy: 0, lead: 0.02, open: 0.01, hold: 0.14, settle: 0.06, to: "#fff" });
+        ls.forEach((sl) => tl.set(sl.firstElementChild, { opacity: 0 }, 0));
+        [[0, 355, 359], [1, 357, 360], [2, 357, 360], [3, 358, 362]].forEach(([i, f, w]) => {
+          const el = ls[i].firstElementChild;
+          tl.set(el, { opacity: 1, color: C.orange }, at(f));
+          tl.set(el, { color: "#fff" }, at(w));
+        });
+        curve("#ld-line", { x: [[355, 83.5], [356, 83.5], [357, 67.5], [358, 59.5], [359, 52.5], [360, 47.5], [362, 43.5], [363, 39.5], [364, 36.5], [365, 34.5], [367, 31.5], [368, 29.5], [369, 27.5], [370, 25.5], [372, 22.5], [373, 19.5], [374, 16.5], [375, 12.5], [377, 6.5], [378, -0.5], [379, -16.5], [380, -30]] });
 
         // a fresh timeline seeked to 0 skips its zero-time sets; prime it so frame 0 is correct
         tl.seek(0.001).seek(0);

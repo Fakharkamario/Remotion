@@ -61,6 +61,77 @@
     tl.to(slot, { gridTemplateColumns: "0fr", duration: o.close, ease: "power2.inOut" }, t + o.flash * 0.5);
   };
 
+  // ----------------------------------------------------------------- curves
+  // Motion measured off the reference, frame by frame. pts: [[frame30, value], ...] (reference frame
+  // numbers at 30 fps). Interpolated with monotone cubic (no overshoot) and written out as one set per
+  // output frame, so the curve is reproduced exactly whatever the render fps.
+  FX.FPS = 24;
+  FX.mono = function (pts0) {
+    // reference frames that show the same 24 fps source frame collapse to one key
+    const pts = pts0.filter((p, i) => i === 0 || FX.f(p[0]) > FX.f(pts0[i - 1][0]));
+    const n = pts.length, xs = pts.map((p) => FX.f(p[0])), ys = pts.map((p) => p[1]);
+    const d = [], m = [];
+    for (let i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i] || 1e-6));
+    for (let i = 0; i < n; i++) {
+      if (i === 0) m.push(d[0] || 0);
+      else if (i === n - 1) m.push(d[n - 2] || 0);
+      else m.push(d[i - 1] * d[i] <= 0 ? 0 : (2 * d[i - 1] * d[i]) / (d[i - 1] + d[i]));
+    }
+    return function (t) {
+      if (t <= xs[0]) return ys[0];
+      if (t >= xs[n - 1]) return ys[n - 1];
+      let i = 0;
+      while (t > xs[i + 1]) i++;
+      const h = xs[i + 1] - xs[i], u = (t - xs[i]) / h;
+      const h00 = 2 * u * u * u - 3 * u * u + 1, h10 = u * u * u - 2 * u * u + u, h01 = -2 * u * u * u + 3 * u * u, h11 = u * u * u - u * u;
+      return h00 * ys[i] + h10 * h * m[i] + h01 * ys[i + 1] + h11 * h * m[i + 1];
+    };
+  };
+  // props: { prop: pts | [pts, fn(v) -> value] }; written from the first to the last key time.
+  // o.base: reference frame where this composition starts (its local time 0).
+  FX.curve = function (tl, el, props, o) {
+    o = o || {};
+    const fps = o.fps || FX.FPS;
+    const off = o.base ? FX.f(o.base) : 0;
+    Object.keys(props).forEach((k) => {
+      const spec = props[k];
+      const pts = Array.isArray(spec[0][0]) || typeof spec[1] === "function" ? spec[0] : spec;
+      const fn = typeof spec[1] === "function" ? spec[1] : (v) => v;
+      const f = FX.mono(pts);
+      const a = FX.f(pts[0][0]) - off, b = FX.f(pts[pts.length - 1][0]) - off;
+      const k0 = Math.max(0, Math.ceil(a * fps - 1e-6)), k1 = Math.floor(b * fps + 1e-6);
+      tl.set(el, { [k]: fn(f(Math.max(a, 0) + off)) }, 0);
+      for (let q = k0; q <= k1; q++) tl.set(el, { [k]: fn(f(q / fps + off)) }, q / fps);
+      if (b >= 0) tl.set(el, { [k]: fn(f(b + off)) }, b);
+    });
+  };
+  // local time (s) of reference frame n in a composition that starts at reference frame base
+  FX.at = (n, base) => FX.f(n) - FX.f(base || 0);
+
+  // Decode-style reveal: the word's letters pop in, in random order, over `frames` reference frames
+  // (accent colour), then the whole word settles to `ink` at reference frame `inkAt`.
+  FX.decode = function (tl, el, o) {
+    const txt = el.textContent;
+    el.innerHTML = txt.split("").map((c) => `<span class="dc">${c === " " ? "&nbsp;" : c}</span>`).join("");
+    const r = FX.rng(o.seed || 7);
+    const L = Array.from(el.children);
+    tl.set(L, { opacity: 0 }, 0);
+    tl.set(el, { color: o.accent || FX.C.orange }, 0);
+    L.forEach((c) => tl.set(c, { opacity: 1 }, FX.at(o.at + Math.floor(r() * o.frames), o.base)));
+    tl.set(L, { opacity: 1 }, FX.at(o.at + o.frames, o.base));
+    if (o.ink) tl.set(el, { color: o.inkColor || FX.C.ink }, FX.at(o.inkAt, o.base));
+    return L;
+  };
+  // Reverse: letters drop out in random order over `frames`.
+  FX.undecode = function (tl, L, o) {
+    const r = FX.rng(o.seed || 9);
+    L.forEach((c) => tl.set(c, { opacity: 0 }, FX.at(o.at + Math.floor(r() * o.frames), o.base)));
+    tl.set(L, { opacity: 0 }, FX.at(o.at + o.frames, o.base));
+  };
+  // reference frame number -> seconds. The reference is 24 fps footage in a 30 fps file: its frame n
+  // shows source frame floor(n * 0.8), so events are placed on that 24 fps frame.
+  FX.f = (n) => Math.floor(n * 0.8 + 1e-6) / 24;
+
   // --------------------------------------------------------------- blinkers
   // Small orange squares that pop on/off around the type. spec: [x, y, w, h, [[on, off], ...]]
   FX.squares = function (host, tl, spec, color) {

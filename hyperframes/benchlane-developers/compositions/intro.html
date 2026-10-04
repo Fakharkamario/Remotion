@@ -1,18 +1,23 @@
 <template id="intro-template">
-  <div data-composition-id="intro" data-width="1920" data-height="1080" data-duration="1.8">
+  <div data-composition-id="intro" data-width="1920" data-height="1080" data-duration="1.79167">
     <div class="full cream"></div>
     <div id="in-glow" class="full"></div>
     <div id="in-noise" class="full"></div>
     <div id="in-sq" class="full"></div>
     <div id="in-cam" class="full">
-      <div id="in-line" class="line"></div>
+      <div id="in-pan" class="full">
+        <div id="in-line" class="line"></div>
+      </div>
     </div>
 
     <style>
       #in-glow { opacity: 0; background: radial-gradient(60% 55% at 92% 8%, rgba(240,150,125,.32), rgba(240,150,125,0) 70%), radial-gradient(55% 45% at 6% 96%, rgba(240,150,125,.26), rgba(240,150,125,0) 70%); }
       #in-noise canvas { position: absolute; inset: 0; opacity: 0; }
       #in-cam { transform-origin: 960px 540px; }
-      #in-line { top: 508px; font-size: 53px; letter-spacing: -0.012em; }
+      #in-line { top: 507px; font-size: 48px; letter-spacing: -0.012em; }
+      #in-line .w { display: inline-block; white-space: pre; padding-right: 0.27em; opacity: 0; }
+      #in-line .w.last { padding-right: 0; }
+      #in-line .wi, #in-line .ch { display: inline-block; }
       #in-line .sw-b { display: none; font-size: 1.06em; }
     </style>
 
@@ -20,6 +25,7 @@
       (function () {
         const tl = gsap.timeline({ paused: true });
         const C = FX.C;
+        const f = FX.f;
 
         // Pale pink pixel blotches that flicker behind the first beat.
         const host = document.getElementById("in-noise");
@@ -33,68 +39,86 @@
             return `rgba(238,128,104,${a.toFixed(3)})`;
           });
         const layers = [11, 12, 13, 14].map((s) => host.appendChild(blot(s)));
-        const step = 2 / 30;
         let k = 0;
-        for (let t = 0.07; t < 0.95; t += step, k++) {
-          layers.forEach((c, i) => tl.set(c, { opacity: i === k % layers.length ? Math.min(1, (t - 0.04) / 0.25) * Math.min(1, (0.97 - t) / 0.3) : 0 }, t));
+        for (let t = f(2); t < f(31); t += 1 / 12, k++) {
+          layers.forEach((c, i) => tl.set(c, { opacity: i === k % layers.length ? Math.min(1, (t - 0.04) / 0.25) * Math.min(1, (f(32) - t) / 0.3) : 0 }, t));
         }
-        tl.set(layers, { opacity: 0 }, 0.96);
-        tl.fromTo("#in-glow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.1);
-        tl.to("#in-glow", { opacity: 0, duration: 0.35, ease: "none" }, 0.65);
+        tl.set(layers, { opacity: 0 }, f(32));
+        tl.fromTo("#in-glow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, f(3));
+        tl.to("#in-glow", { opacity: 0, duration: 0.35, ease: "none" }, f(20));
 
-        // Words
-        const slots = FX.line(document.getElementById("in-line"), [
-          "Teams",
-          "now",
-          "build",
-          { t: '<span class="sw-a">differently</span><span class="sw-b serif">differently</span>' },
-        ]);
-        FX.wordIn(tl, slots[0], 0.1, { dy: 0, lead: 0.1, open: 0.01, hold: 0.04, settle: 0.04 });
-        FX.wordIn(tl, slots[1], 0.5, { dy: 0.95, dx: -0.05, lift: 0.22, hold: 0.1 });
-        FX.wordIn(tl, slots[2], 0.63, { dy: 0.85, dx: -0.04, lift: 0.2, hold: 0.1 });
-        FX.wordIn(tl, slots[3], 0.73, { dy: 0.75, dx: -0.03, lift: 0.2, hold: 0.12 });
-        const nw = slots[3].querySelector(".sw-a");
-        const ns = slots[3].querySelector(".sw-b");
+        // Line laid out at its final positions; the camera does the rest.
+        const line = document.getElementById("in-line");
+        const W = ["Teams", "now", "build", '<span class="sw-a">differently</span><span class="sw-b serif">differently</span>'];
+        line.innerHTML = W.map((t, i) => {
+          const inner = i === 0 ? t.split("").map((c) => `<span class="ch">${c}</span>`).join("") : t;
+          return `<span class="w${i === W.length - 1 ? " last" : ""}"><span class="wi">${inner}</span></span>`;
+        }).join("");
+        const ws = Array.from(line.querySelectorAll(".w"));
+        const wi = ws.map((w) => w.firstElementChild);
+
+        // ---- camera (all curves measured off the reference, reference frame numbers)
+        // zoom: holds near 1.66x, drops hard around frames 13-19, then a long settle to 1.0
+        // rise: exponential settle from +76px; pan: one continuous move from the first word to line centre
+        const cam = document.getElementById("in-cam");
+        FX.curve(tl, cam, {
+          scale: [[3, 1.66], [5, 1.66], [9, 1.64], [12, 1.6], [13, 1.57], [14, 1.52], [15, 1.44], [17, 1.3], [18, 1.19], [19, 1.13], [20, 1.1], [22, 1.07], [23, 1.054], [24, 1.036], [25, 1.022], [28, 1.009], [30, 1.004], [33, 1], [54, 1]],
+          y: [[3, 76], [4, 56], [5, 46], [7, 38], [8, 31], [9, 25], [10, 21], [12, 17], [13, 13], [14, 11], [15, 8], [17, 5.5], [19, 3], [22, 1.5], [25, 0], [54, 0]],
+        });
+        // pan: PAN0 = distance from the first word's centre to the line centre (measured in this layout)
+        const PAN0 = 224;
+        FX.curve(tl, "#in-pan", {
+          x: [[[3, 0], [5, 0.02], [10, 0.09], [12, 0.135], [13, 0.2], [14, 0.3], [15, 0.5], [17, 0.69], [18, 0.79], [19, 0.85], [20, 0.89], [22, 0.93], [25, 0.97], [30, 1], [54, 1]], (v) => PAN0 * (1 - v)],
+        });
+
+        // ---- words
+        // first word: letters land scattered for two frames, then lock
+        tl.set(ws[0], { opacity: 1, color: C.orange }, f(3));
+        const chs = Array.from(ws[0].querySelectorAll(".ch"));
+        const lr = FX.rng(5);
+        chs.forEach((c) => {
+          const d = 0.06 + lr() * 0.26;
+          tl.set(c, { y: d + "em" }, f(3));
+          tl.set(c, { y: d * 0.35 + "em" }, f(4));
+          tl.set(c, { y: 0 }, f(5));
+        });
+        tl.set(ws[0], { color: C.ink }, f(5));
+        // the rest drop in about 1em low and settle with a long exponential tail
+        const IN = [
+          { at: 15, ink: 19, y: [[15, 51], [17, 36], [18, 28], [19, 23], [20, 19], [22, 16], [25, 10], [28, 7], [30, 4], [32, 3], [35, 1.5], [38, 0.5], [42, 0]], x: [[15, 15], [17, 15], [18, 1], [19, 0]] },
+          { at: 19, ink: 22, y: [[19, 41], [20, 32], [22, 27], [23, 22], [24, 19], [25, 16], [27, 13], [28, 11], [30, 7], [32, 5.5], [33, 4.5], [35, 2.5], [37, 1.5], [38, 1], [40, 0]] },
+          { at: 23, ink: 25, fade: true, y: [[23, 48], [24, 38], [25, 31], [27, 25.5], [28, 21], [29, 17], [30, 14], [32, 12], [33, 9.5], [35, 6], [37, 5], [38, 3.5], [40, 2], [42, 1.5], [44, 0.5], [47, 0]] },
+        ];
+        IN.forEach((o, i) => {
+          const w = ws[i + 1];
+          tl.set(w, { opacity: o.fade ? 0.5 : 1, color: C.orange }, f(o.at));
+          if (o.fade) tl.set(w, { opacity: 1 }, f(o.at + 1));
+          tl.set(w, { color: C.ink }, f(o.ink));
+          FX.curve(tl, w, o.x ? { y: o.y, x: o.x } : { y: o.y });
+        });
+        const nw = ws[3].querySelector(".sw-a"), ns = ws[3].querySelector(".sw-b");
         tl.set(nw, { display: "inline" }, 0);
         tl.set(ns, { display: "none" }, 0);
-        tl.set(nw, { display: "none" }, 1.07);
-        tl.set(ns, { display: "inline" }, 1.07);
+        tl.set(nw, { display: "none" }, f(33));
+        tl.set(ns, { display: "inline" }, f(33));
 
-        // Camera pulls back in steps as the sentence grows.
-        const cam = document.getElementById("in-cam");
-        tl.set(cam, { scale: 1.62, y: 66 }, 0);
-        tl.to(cam, { y: 32, duration: 0.07, ease: "power2.out" }, 0.1);
-        tl.to(cam, { y: 0, duration: 0.3, ease: "sine.inOut" }, 0.17);
-        tl.to(cam, { scale: 1.45, duration: 0.27, ease: "sine.inOut" }, 0.2);
-        tl.to(cam, { scale: 1.12, duration: 0.13, ease: "power2.out" }, 0.47);
-        tl.to(cam, { scale: 1.0, duration: 0.2, ease: "power2.out" }, 0.6);
-        tl.to(cam, { scale: 0.965, duration: 0.97, ease: "none" }, 0.8);
+        // exit: every word rises with acceleration, staggered, into the cut
+        const OUT = [
+          [[41, 0], [42, -2], [43, -3.5], [44, -5.5], [45, -7.5], [47, -10.5], [48, -15], [49, -19.5], [50, -27], [52, -37.5], [53, -54], [54, -66]],
+          [[43, 0], [44, -1], [45, -2], [47, -4], [48, -6], [49, -10], [50, -14], [52, -22.5], [53, -34], [54, -44]],
+          [[44, 0], [45, -1], [47, -2.5], [48, -4.5], [49, -7.5], [50, -12.5], [52, -20.5], [53, -34.5], [54, -45]],
+          [[48, 0], [49, -1.5], [50, -6], [52, -15.5], [53, -34], [54, -46]],
+        ];
+        OUT.forEach((pts, i) => FX.curve(tl, wi[i], { y: pts }));
 
-        // Line breaks up just before the cut.
-        const ws = slots.map((s) => s.firstElementChild);
-        tl.to(ws[0], { y: -10, duration: 0.1, ease: "power1.in" }, 1.63);
-        tl.to(ws[1], { y: 6, duration: 0.1, ease: "power1.in" }, 1.65);
-        tl.to(ws[3], { y: 7, duration: 0.1, ease: "power1.in" }, 1.66);
-
-        // Orange pixels
-        FX.squares(document.getElementById("in-sq"), tl, [
-          [1578, 396, 18, 18, [[0.17, 1.45]]],
-          [1296, 396, 18, 18, [[0.3, 0.47]]],
-          [1440, 480, 18, 18, [[0.3, 0.6]]],
-          [228, 660, 18, 18, [[0.3, 0.47]]],
-          [228, 642, 18, 36, [[0.5, 1.45]]],
-          [426, 372, 18, 18, [[0.5, 0.64], [0.7, 1.24]]],
-          [426, 396, 18, 18, [[0.5, 0.6]]],
-          [510, 354, 18, 18, [[0.57, 1.5]]],
-          [350, 540, 18, 18, [[1.5, 1.8]]],
-          [1422, 354, 18, 18, [[0.6, 1.45]]],
-          [1452, 342, 18, 18, [[0.47, 0.6]]],
-          [1440, 498, 18, 18, [[0.47, 0.73]]],
-          [1458, 624, 36, 18, [[0.73, 1.42]]],
-          [1554, 522, 18, 18, [[0.9, 1.3]]],
-          [1472, 594, 18, 18, [[1.4, 1.8]]],
-          [1300, 618, 18, 18, [[1.27, 1.42]]],
-        ]);
+        // Orange pixels: positions and on/off frames taken from the reference
+        const SQ = [
+          [1566, 396, 24, 24, 5, 13], [1440, 372, 24, 24, 10, 18], [216, 654, 24, 24, 10, 14], [1464, 684, 24, 24, 13, 21],
+          [1410, 396, 24, 24, 14, 39], [420, 504, 24, 24, 14, 18], [420, 450, 24, 24, 15, 28], [216, 630, 24, 48, 15, 42],
+          [498, 396, 24, 24, 19, 42], [1434, 684, 54, 24, 22, 32], [1542, 576, 24, 24, 28, 41], [1434, 600, 54, 24, 33, 37],
+          [324, 450, 24, 24, 38, 44], [1464, 600, 24, 24, 38, 53], [216, 630, 24, 24, 43, 46], [336, 552, 24, 24, 47, 53],
+        ];
+        FX.squares(document.getElementById("in-sq"), tl, SQ.map(([x, y, w, h, a, b]) => [x, y, w, h, [[f(a), f(b + 1)]]]));
 
         // a fresh timeline seeked to 0 skips its zero-time sets; prime it so frame 0 is correct
         tl.seek(0.001).seek(0);

@@ -1,5 +1,5 @@
 <template id="icons-template">
-  <div data-composition-id="icons" data-width="1920" data-height="1080" data-duration="2.7">
+  <div data-composition-id="icons" data-width="1920" data-height="1080" data-duration="2.70833">
     <div class="full dark"></div>
     <div id="ic-glow" class="full"></div>
     <div id="ic-field" class="full"></div>
@@ -8,7 +8,9 @@
 
     <style>
       #ic-glow { background: radial-gradient(70% 45% at 50% 108%, rgba(120, 38, 16, 0.55), rgba(120, 38, 16, 0) 70%); }
-      #ic-line { top: 514px; font-size: 44px; color: #fff; letter-spacing: -0.01em; }
+      #ic-line { top: 509px; font-size: 47px; color: #fff; letter-spacing: -0.01em; }
+      #ic-line .w0 { padding-right: 0.26em; }
+      #ic-line .w0, #ic-line .w1, #ic-line .wi, #ic-line .ch { display: inline-block; }
       .ic-tile { position: absolute; left: 0; top: 0; width: 100px; height: 100px; }
       .ic-face { position: absolute; inset: 0; border-radius: 23%; overflow: hidden; }
       .ic-or { background: linear-gradient(180deg, #f8a283 0%, #ee7550 38%, #e05a34 62%, rgba(140, 45, 20, 0.15) 100%); }
@@ -91,12 +93,28 @@
           }
         });
 
-        // "alongside AI"
-        const slots = FX.line(document.getElementById("ic-line"), ["alongside", { t: "AI", cls: "accent" }]);
-        FX.wordIn(tl, slots[0], 0.0, { dy: 0, lead: 0.01, open: 0.01, hold: 0.06, settle: 0.04, to: "#fff" });
-        FX.wordIn(tl, slots[1], 0.1, { dy: 0.4, lift: 0.14, to: null });
-        tl.to(slots[0].firstElementChild, { y: -18, duration: 0.08, ease: "power1.in" }, 2.6);
-        tl.to(slots[1].firstElementChild, { y: 20, x: 10, duration: 0.08, ease: "power1.in" }, 2.6);
+        // "alongside AI" (curves measured off the reference; frame numbers are reference frames)
+        const B = 54;
+        const line = document.getElementById("ic-line");
+        line.innerHTML = `<span class="w0"><span class="wi">${"alongside".split("").map((c) => `<span class="ch">${c}</span>`).join("")}</span></span><span class="w1 accent"><span class="wi">AI</span></span>`;
+        const w0 = line.querySelector(".w0"), w1 = line.querySelector(".w1");
+        // first word lands ~27px low with its letters scattered, turns white, then a long settle
+        tl.set(w0, { opacity: 1, color: C.orange }, 0);
+        tl.set(w0, { color: "#fff" }, FX.at(57, B));
+        const lr = FX.rng(3);
+        line.querySelectorAll(".ch").forEach((c) => {
+          const d = (lr() - 0.3) * 0.5;
+          tl.set(c, { y: d + "em" }, 0);
+          tl.set(c, { y: d * 0.3 + "em" }, FX.at(55, B));
+          tl.set(c, { y: 0 }, FX.at(57, B));
+        });
+        FX.curve(tl, w0, { y: [[54, 27], [55, 23], [57, 17], [58, 14], [59, 11.5], [62, 7], [63, 6.5], [64, 5], [65, 4], [67, 3], [69, 2], [72, 1], [74, 0]] }, { base: B });
+        tl.set(w1, { opacity: 0 }, 0);
+        tl.set(w1, { opacity: 1 }, FX.at(60, B));
+        FX.curve(tl, w1, { y: [[60, 14], [62, 12], [63, 10], [64, 8], [65, 7], [67, 5], [69, 3], [72, 1], [74, 0.5], [77, 0]] }, { base: B });
+        // exit: first word flies up, "AI" drops, both accelerating into the cut
+        FX.curve(tl, w0.firstElementChild, { y: [[128, 0], [129, -2], [130, -4], [132, -9], [133, -17], [134, -28], [135, -45]] }, { base: B });
+        FX.curve(tl, w1.firstElementChild, { y: [[128, 0], [129, 1], [130, 4], [132, 8.5], [133, 17], [134, 39.5], [135, 55]] }, { base: B });
 
         FX.randomSquares(document.getElementById("ic-sq"), tl, {
           seed: 9, count: 16, x0: 120, x1: 1800, y0: 120, y1: 960, size: 18,
