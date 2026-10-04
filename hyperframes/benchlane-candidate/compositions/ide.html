@@ -1,0 +1,259 @@
+<template id="ide-template">
+  <div data-composition-id="ide" data-width="1920" data-height="1080" data-duration="2.5667">
+    <div class="full dark"></div>
+
+    <div id="id-left" class="full">
+      <div id="id-rail">
+        <div class="on"></div>
+        <i class="i1"></i><i class="i2"></i><i class="i3"></i><i class="i4"></i><i class="i5"></i><i class="gear"></i>
+      </div>
+      <div id="id-tree"></div>
+      <div id="id-ed">
+        <div class="tabs"><span class="t1">usePantryScan.ts</span><span class="t2">useCamera.ts</span></div>
+        <div class="code mono" data-layout-allow-overflow><div id="id-scroll"><div id="id-hl1" class="hl"></div><div id="id-hl2" class="hl"></div><div id="id-lines"></div></div></div>
+      </div>
+    </div>
+
+    <div id="id-ag" class="full mono">
+      <div class="head">
+        <div class="bot"></div>
+        <div class="rule"></div>
+        <div class="tips"><b>Getting started</b><br>Run <em>/init</em> to create a<br>FORGE.md file with<br>project notes</div>
+        <div class="ver" data-layout-allow-overlap><b>forge-cli</b> v3.4.0</div>
+      </div>
+      <div class="log" data-layout-allow-overflow data-layout-allow-overlap><div id="id-log"></div></div>
+      <div class="in">&gt;</div>
+    </div>
+
+    <style>
+      #id-rail { position: absolute; left: 0; top: 0; width: 88px; bottom: 0; border-right: 1px solid rgba(255, 255, 255, 0.05); }
+      #id-rail .on { position: absolute; left: 0; top: 38px; width: 5px; height: 36px; background: #efe7e0; }
+      #id-rail i { position: absolute; left: 30px; width: 28px; height: 28px; display: block; }
+      #id-rail i svg { width: 100%; height: 100%; display: block; }
+      #id-rail .i1 { top: 42px; } #id-rail .i2 { top: 106px; } #id-rail .i3 { top: 170px; } #id-rail .i4 { top: 234px; } #id-rail .i5 { top: 308px; }
+      #id-rail .gear { top: 1030px; }
+      #id-tree { position: absolute; left: 88px; top: 0; width: 296px; bottom: 0; border-right: 1.5px solid rgba(255, 255, 255, 0.06);
+        font-size: 17px; color: #d9cfc7; }
+      #id-tree .r { position: absolute; left: 0; height: 33px; line-height: 33px; white-space: nowrap; }
+      #id-tree .ic { position: absolute; left: 52px; top: 8px; width: 17px; height: 17px; }
+      #id-tree .ic svg { width: 100%; height: 100%; display: block; }
+      #id-tree .nm { position: absolute; left: 85px; }
+      #id-tree .hd .ic { left: 24px; } #id-tree .hd .nm { left: 55px; letter-spacing: 0.01em; }
+      #id-tree .m { position: absolute; left: 254px; color: #e3c64a; }
+
+      #id-ed { position: absolute; left: 410px; top: 28px; width: 746px; height: 1022px; border-radius: 14px; background: #160f0e;
+        border: 1.5px solid rgba(255, 255, 255, 0.09); overflow: hidden; }
+      #id-ed .tabs { position: absolute; left: 0; right: 0; top: 0; height: 66px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+        font: 21px/64px "JetBrains Mono", monospace; white-space: nowrap; }
+      #id-ed .t1 { position: absolute; left: 0; width: 266px; padding-left: 28px; color: #f1e9e2; border-bottom: 2px solid #d9d0c8; height: 66px; }
+      #id-ed .t2 { position: absolute; left: 300px; color: #7b716a; }
+      #id-ed .code { position: absolute; left: 0; right: 0; top: 66px; bottom: 0; overflow: hidden;
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.35) 52px, #000 92px); mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.35) 52px, #000 92px); }
+      #id-scroll { position: absolute; left: 0; right: 0; top: 0; }
+      #id-lines { position: absolute; left: 0; right: 0; top: 43px; font-size: 21px; line-height: 40px; color: #e2d9d1; white-space: pre; }
+      #id-lines .row { height: 40px; }
+      #id-lines .ln { display: inline-block; width: 56px; text-align: right; color: #4a413b; margin-right: 52px; vertical-align: top; }
+      #id-lines .cl { display: inline-block; overflow: hidden; vertical-align: top; max-width: 0; }
+      #id-lines .k { color: #ea6a43; } #id-lines .s { color: #e89a6c; } #id-lines .f { color: #c9cc63; } #id-lines .t { color: #9483f0; }
+      #id-lines .n { color: #e89a6c; } #id-lines .c { color: #5f5650; }
+      .hl { position: absolute; left: 0; right: 0; background: #241d1a; opacity: 0; }
+
+      #id-ag .head { position: absolute; left: 1182px; top: 28px; width: 710px; height: 236px; border: 2px solid #b4502f; border-radius: 10px; }
+      #id-ag .bot { position: absolute; left: 93px; top: 48px; width: 160px; height: 137px; }
+      #id-ag .bot svg { width: 100%; height: 100%; display: block; }
+      #id-ag .rule { position: absolute; left: 354px; top: 16px; width: 1.5px; height: 186px; background: #b4502f; }
+      #id-ag .tips { position: absolute; left: 391px; top: 46px; font-size: 18px; line-height: 32px; color: #cfc5bd; white-space: nowrap; }
+      #id-ag .tips b { font-weight: 400; color: #e8603c; line-height: 40px; }
+      #id-ag .tips em { font-style: normal; color: #e8603c; }
+      #id-ag .ver { position: absolute; left: 50%; bottom: -13px; transform: translateX(-50%); padding: 0 14px; background: #0D0B07;
+        font-size: 18px; line-height: 24px; color: #6a615b; white-space: nowrap; }
+      #id-ag .ver b { font-weight: 400; color: #e8603c; }
+      #id-ag .log { position: absolute; left: 1182px; top: 264px; width: 710px; height: 704px; overflow: hidden;
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0, rgba(0, 0, 0, 0.35) 40px, #000 84px); mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0, rgba(0, 0, 0, 0.35) 40px, #000 84px); }
+      #id-log { position: absolute; left: 0; right: 0; top: 126px; font-size: 21px; line-height: 36px; color: #cfc6bf; white-space: pre; }
+      #id-log .e { padding-left: 40px; position: relative; }
+      #id-log .e > .mk { position: absolute; left: 14px; }
+      #id-log .o > .mk { color: #e8603c; } #id-log .p > .mk { color: #b9a4f7; }
+      #id-log .lnk { color: #a8c8c0; }
+      #id-log .card { border: 1.5px solid rgba(255, 255, 255, 0.11); border-radius: 8px; }
+      #id-log .card .h { height: 56px; line-height: 54px; padding-left: 54px; position: relative; color: #a39a93; }
+      #id-log .card .h .dot { position: absolute; left: 22px; top: 20px; width: 14px; height: 14px; border-radius: 50%; background: #9bc53d; font-size: 0; }
+      #id-log .card .h b { font-weight: 700; color: #f2ebe5; margin-right: 13px; }
+      #id-log .card .sub { border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 10px 0 10px 54px; color: #8f857e; }
+      #id-log .card .sub.one { padding: 0 0 0 54px; height: 54px; line-height: 54px; }
+      #id-log .cut { display: inline-block; overflow: hidden; vertical-align: top; }
+      #id-log .st { padding-left: 40px; position: relative; color: #e8603c; }
+      #id-log .st .mk { position: absolute; left: 14px; width: 20px; }
+      #id-log .st .w span.hi { color: #ffb08f; }
+      #id-log .th { padding-left: 40px; position: relative; color: #9a908a; opacity: 0; }
+      #id-log .th .mk { position: absolute; left: 18px; top: 12px; width: 12px; height: 12px; border-radius: 50%; background: #6f665f; font-size: 0; }
+      #id-ag .in { position: absolute; left: 1182px; top: 984px; width: 710px; height: 66px; border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
+        color: #7c726b; font-size: 21px; line-height: 63px; padding-left: 26px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C, M = window.MOTION;
+        const CUT = 153, at = (n) => FX.at(n, CUT);
+        const root = document.getElementById("id-left").parentElement;
+        const $ = (s) => root.querySelector(s);
+
+        // ------------------------------------------------------------ rail + tree
+        const ico = {
+          files: '<svg viewBox="0 0 24 24" fill="none" stroke="#efe7e0" stroke-width="1.6" stroke-linejoin="round"><path d="M8 3h7l4 4v10H8z"/><path d="M5 7v14h11"/></svg>',
+          search: '<svg viewBox="0 0 24 24" fill="none" stroke="#6f665f" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>',
+          branch: '<svg viewBox="0 0 24 24" fill="none" stroke="#6f665f" stroke-width="1.6"><circle cx="7" cy="6" r="2.5"/><circle cx="17" cy="16" r="2.5"/><path d="M7 8.5V14a2 2 0 0 0 2 2h5.5"/></svg>',
+          blocks: '<svg viewBox="0 0 24 24" fill="none" stroke="#6f665f" stroke-width="1.6"><rect x="3.5" y="10.5" width="6" height="6"/><rect x="9.5" y="16.5" width="6" height="4"/><rect x="3.5" y="16.5" width="6" height="4"/><rect x="14" y="4" width="6" height="6" transform="rotate(12 17 7)"/></svg>',
+          layers: '<svg viewBox="0 0 24 24" fill="#6f665f"><path d="M5 4h10v3H8v10H5z"/><path d="M9 8h10v13H9z" opacity=".75"/></svg>',
+          gear: '<svg viewBox="0 0 24 24" fill="none" stroke="#6f665f" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>',
+        };
+        ["i1", "i2", "i3", "i4", "i5", "gear"].forEach((c, i) => ($(`#id-rail .${c}`).innerHTML = [ico.files, ico.search, ico.branch, ico.blocks, ico.layers, ico.gear][i]));
+        const chev = '<svg viewBox="0 0 16 16" fill="none" stroke="#bdb2aa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5L10.5 8 6 12.5"/></svg>';
+        const down = '<svg viewBox="0 0 16 16" fill="none" stroke="#bdb2aa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6L8 10.5 12.5 6"/></svg>';
+        const fileIco = {
+          env: '<svg viewBox="0 0 16 16" fill="none" stroke="#6f665f" stroke-width="1.4"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2.5M8 12v2.5M1.5 8H4M12 8h2.5M3.4 3.4l1.8 1.8M10.8 10.8l1.8 1.8M3.4 12.6l1.8-1.8M10.8 5.2l1.8-1.8"/></svg>',
+          git: '<svg viewBox="0 0 16 16"><path d="M8 1l7 7-7 7-7-7z" fill="#e2553b"/><circle cx="8" cy="8" r="1.8" fill="#fff"/></svg>',
+          info: '<svg viewBox="0 0 16 16" fill="none" stroke="#6f665f" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 7v4.5M8 4.6v.3"/></svg>',
+        };
+        const tree = [
+          { y: 58, nm: "WORKSPACE", ic: down, hd: 1 },
+          { nm: "api", ic: chev }, { nm: "web", ic: chev }, { nm: "scripts", ic: chev }, { nm: "tests", ic: chev },
+          { nm: "vision", ic: chev, m: 1 }, { nm: "infra", ic: chev },
+          { nm: ".env.example", ic: fileIco.env }, { nm: ".gitignore", ic: fileIco.git },
+          { nm: "BACKLOG.md", ic: chev }, { nm: "FORGE.md", ic: chev }, { nm: "README.md", ic: fileIco.info },
+        ];
+        $("#id-tree").innerHTML = tree.map((r, i) => `<div class="r${r.hd ? " hd" : ""}" style="top:${(i === 0 ? 58 : 91 + 33 * (i - 1)) - 16.5}px">
+          <span class="ic">${r.ic}</span><span class="nm">${r.nm}</span>${r.m ? '<span class="m">M</span>' : ""}</div>`).join("");
+
+        // ------------------------------------------------------------------ editor
+        const K = (s) => `<span class="k">${s}</span>`, S = (s) => `<span class="s">${s}</span>`, Fn = (s) => `<span class="f">${s}</span>`,
+          T = (s) => `<span class="t">${s}</span>`, N = (s) => `<span class="n">${s}</span>`, Cm = (s) => `<span class="c">${s}</span>`;
+        const code = [
+          `${K("import")} { useRef, useState, useTransition } ${K("from")} ${S("'react'")};`,
+          `${K("import")} { detectItems } ${K("from")} ${S("'../vision/detect'")};`,
+          `${K("import")} { matchRecipes } ${K("from")} ${S("'../lib/recipes'")};`,
+          `${K("import type")} { ${T("PantryItem")} } ${K("from")} ${S("'./types'")};`,
+          ``,
+          `${K("export const")} ${Fn("usePantryScan")} = () =&gt; {`,
+          `  ${K("const")} frameRef = ${Fn("useRef")}&lt;${T("Blob")} | ${K("null")}&gt;(${K("null")});`,
+          `  ${K("const")} [items, setItems] = ${Fn("useState")}&lt;${T("PantryItem")}[]&gt;([]);`,
+          `  ${K("const")} [isPending, startTransition] = ${Fn("useTransition")}();`,
+          ``,
+          `  ${Cm("// debounce frames so the model isn't flooded")}`,
+          `  ${K("const")} ${Fn("onFrame")} = ${K("async")} (frame: ${T("Blob")}) =&gt; {`,
+          `    frameRef.current = frame;`,
+          `    ${K("await")} ${Fn("sleep")}(${N("350")});`,
+          `    ${K("if")} (frameRef.current !== frame) ${K("return")};`,
+          `    ${K("const")} found = ${K("await")} ${Fn("detectItems")}(frame);`,
+          `    ${Fn("startTransition")}(() =&gt; {`,
+          `      ${Fn("setItems")}((prev) =&gt; ${Fn("merge")}(prev, found));`,
+          `    });`,
+          `  };`,
+          ``,
+          `  ${K("const")} recipes = ${Fn("matchRecipes")}(items, { maxMinutes: ${N("30")} });`,
+          ``,
+          `  ${K("return")} {`,
+          `    items, recipes, isPending, onFrame,`,
+          `  };`,
+          `};`,
+          ``,
+          `${K("function")} ${Fn("merge")}(a: ${T("PantryItem")}[], b: ${T("PantryItem")}[]) {`,
+          `  ${K("const")} seen = ${K("new")} ${Fn("Set")}(a.${Fn("map")}((i) =&gt; i.id));`,
+          `  ${K("return")} [...a, ...b.${Fn("filter")}((i) =&gt; !seen.${Fn("has")}(i.id))];`,
+          `}`,
+        ];
+        const plain = (h) => h.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+        $("#id-lines").innerHTML = code.map((l, i) => `<div class="row"><span class="ln">${i + 1}</span><span class="cl">${l || " "}</span></div>`).join("");
+        const cls = Array.from(root.querySelectorAll("#id-lines .cl"));
+
+        // the file is written as the agent works: [line, frame, partial-frame]
+        const reveal = [[14, 154], [15, 155], [16, 155], [17, 156], [18, 158, 156], [19, 160], [20, 162, 161], [21, 163], [22, 165],
+          [23, 194, 193], [24, 195], [25, 196], [26, 198], [27, 200], [28, 202], [29, 205], [30, 207], [31, 208], [32, 209]];
+        cls.forEach((el, i) => gsap.set(el, { maxWidth: i < 13 ? "none" : "0ch" }));
+        reveal.forEach(([ln, n, part]) => {
+          const el = cls[ln - 1], txt = plain(code[ln - 1] || "");
+          if (part && txt.trim().length > 8) {
+            const ind = txt.length - txt.trimStart().length;
+            tl.set(el, { maxWidth: `${ind + Math.ceil(txt.trim().length * 0.4)}ch` }, at(part));
+          }
+          tl.set(el, { maxWidth: "none" }, at(n));
+        });
+
+        // selection bands: one block lingers, the other steps down the file
+        const band = (el, r0, r1, n) => tl.set(el, { top: 43 + (r0 - 1) * 40, height: (r1 - r0 + 1) * 40, opacity: 1 }, at(n));
+        band("#id-hl1", 6, 9, 170);
+        band("#id-hl1", 11, 14, 178);
+        band("#id-hl2", 15, 16, 199);
+        band("#id-hl2", 17, 22, 206);
+        band("#id-hl2", 24, 27, 216);
+
+        M.editorScroll.forEach((v, i) => FX.put(tl, "#id-scroll", { y: -v }, at(CUT + i)));
+
+        // --------------------------------------------------------------- agent log
+        const bot = $("#id-ag .bot");
+        bot.innerHTML = FX.mascot(C.orange, C.dark);
+        FX.blink(tl, bot.querySelectorAll(".eye"), [[190, "half"], [191, "shut"], [193, "half"], [194, "open"]], CUT);
+
+        const cut = (id, s) => `<span class="cut" id="${id}">${s}</span>`;
+        $("#id-log").innerHTML = `
+          <div class="e o" style="margin-bottom:26px"><span class="mk">&#x2731;</span>ok — adding a camera hook and a vision call.<br>dev server needs HTTPS for the camera</div>
+          <div class="card" style="margin-bottom:30px"><div class="h"><span class="dot">&#x25CF;</span><b>Bash</b>npm i -D @vitejs/plugin-basic-ssl</div><div class="sub one">added 1 package, 0 vulnerabilities</div></div>
+          <div class="card" style="margin-bottom:28px"><div class="h"><span class="dot">&#x25CF;</span><b>Update</b>vite.config.ts</div><div class="sub">+ import basicSsl from '@vitejs/plugin-basic-ssl'<br>+ plugins: [react(), basicSsl()]</div></div>
+          <div class="e" style="margin-bottom:25px">done — dev server now runs on<br><span class="lnk">https://localhost:5173</span></div>
+          <div class="e p" style="margin-bottom:34px"><span class="mk">&gt;</span>add pantry scanner — camera → vision model.<br>skip auth for now</div>
+          <div class="card" id="lg-c3" style="margin-bottom:26px"><div class="h"><span class="dot" id="lg-d3">&#x25CF;</span><b id="lg-b3">Bash</b>${cut("lg-cmd3", "mkdir -p src/hooks src/vision")}</div><div class="sub one" id="lg-s3">${cut("lg-sub3", "created · 2 dirs")}</div></div>
+          <div id="lg-ln" style="position:relative;height:36px;margin-bottom:20px">
+            <div class="st" id="lg-st"><span class="mk" id="lg-sp">&#x273B;</span><span class="w">${"Thinking…".split("").map((c) => `<span>${c}</span>`).join("")}</span></div>
+            <div class="th" id="lg-th" style="position:absolute;left:0;top:0"><span class="mk">&#x25CF;</span>Thought</div>
+          </div>
+          <div class="card" id="lg-c4"><div class="h"><span class="dot" id="lg-d4">&#x25CF;</span><b id="lg-u4">Update</b>${cut("lg-cmd4", "src/hooks/usePantryScan.ts")}</div>
+            <div class="sub" id="lg-s4">${cut("lg-a4", "+ debounce frames → 350ms")}<br>${cut("lg-b4", "+ merge detected items by id")}</div></div>`
+          .trim().replace(/>\s+</g, "><"); // the log is white-space: pre, so template indentation would render
+
+        // new entries appear one by one at the bottom while the log scrolls them into view
+        gsap.set(["#lg-c3", "#lg-s3", "#lg-ln", "#lg-c4", "#lg-s4"], { visibility: "hidden" });
+        tl.set("#lg-c3", { visibility: "visible" }, at(154));
+        [[154, 0], [158, 5], [164, 8], [167, 18], [170, 29]].forEach(([n, c]) => tl.set("#lg-cmd3", { maxWidth: `${c}ch` }, at(n)));
+        [[154, 1], [158, 0], [167, 1]].forEach(([n, o]) => tl.set("#lg-d3", { opacity: o }, at(n)));
+        tl.set("#lg-b3", { color: "#e8603c", fontWeight: 400 }, at(154));
+        tl.set("#lg-b3", { color: "#f2ebe5", fontWeight: 700 }, at(171));
+        tl.set("#lg-s3", { visibility: "visible" }, at(173));
+        [[173, 9], [177, 16]].forEach(([n, c]) => tl.set("#lg-sub3", { maxWidth: `${c}ch` }, at(n)));
+
+        // spinner: glyph cycles, a highlight runs through the word, then it settles to "Thought"
+        tl.set("#lg-ln", { visibility: "visible" }, at(184));
+        const glyphs = ["✻", "✳", "✢", "·", "✢", "✳"];
+        const letters = Array.from(root.querySelectorAll("#lg-st .w span"));
+        for (let n = 184; n < 204; n++) {
+          tl.set("#lg-sp", { textContent: glyphs[Math.floor((n - 184) / 2) % glyphs.length] }, at(n));
+          letters.forEach((el, i) => tl.set(el, { color: i === (n - 184) % (letters.length + 3) ? "#ffb08f" : "#e8603c" }, at(n)));
+        }
+        tl.set("#lg-st", { opacity: 0 }, at(204));
+        tl.set("#lg-th", { opacity: 1 }, at(204));
+
+        tl.set("#lg-c4", { visibility: "visible" }, at(210));
+        tl.set("#lg-u4", { color: "#e8603c", fontWeight: 400 }, at(210));
+        gsap.set("#lg-cmd4", { maxWidth: "0ch" });
+        tl.set("#lg-u4", { color: "#f2ebe5", fontWeight: 700 }, at(216));
+        tl.set("#lg-cmd4", { maxWidth: "none" }, at(216));
+        [[210, 1], [216, 0], [223, 1]].forEach(([n, o]) => tl.set("#lg-d4", { opacity: o }, at(n)));
+        tl.set("#lg-s4", { visibility: "visible" }, at(220));
+        [[220, 0, 0], [222, 12, 0], [224, 25, 0], [226, 25, 28]].forEach(([n, a, b]) => {
+          tl.set("#lg-a4", { maxWidth: `${a}ch` }, at(n));
+          tl.set("#lg-b4", { maxWidth: `${b}ch` }, at(n));
+        });
+
+        M.logScroll.forEach((v, i) => FX.put(tl, "#id-log", { y: -v }, at(CUT + i)));
+
+        // the frame dips before the cut to Submit
+        M.editorDrift.forEach((v, i) => v && tl.set("#id-left", { y: v }, at(CUT + i)));
+        M.agentDrift.forEach((v, i) => v && tl.set("#id-ag", { y: v }, at(CUT + i)));
+
+        tl.set({}, {}, 2.5667);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["ide"] = tl;
+      })();
+    </script>
+  </div>
+</template>

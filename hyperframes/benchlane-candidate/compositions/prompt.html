@@ -1,0 +1,116 @@
+<template id="prompt-template">
+  <div data-composition-id="prompt" data-width="1920" data-height="1080" data-duration="5.1">
+    <div class="full dark"></div>
+
+    <!-- terminal: mascot, version label and prompt bar (sits under the modal, revealed as it whips away) -->
+    <div id="pr-term" class="full">
+      <div id="pr-tcam" class="full">
+        <div id="pr-bot"></div>
+        <div id="pr-ver" class="mono"><b>forge-cli</b> v3.4.0</div>
+        <div id="pr-bar" class="mono"><span class="pr">&gt;</span><span id="pr-txt"></span><span id="pr-caret"></span></div>
+      </div>
+    </div>
+
+    <!-- project brief modal with the Start project button -->
+    <div id="pr-modal" class="full">
+      <div id="pr-mcam" class="full">
+        <div class="box">
+          <div class="txt">ople snap or list what's in their kitchen and instantly see recipes<br>they can cook tonight. Filters like "under 30 minutes" or "uses up<br>the spinach" should feel instant.</div>
+          <div class="foot">
+            <div class="glow"></div>
+            <div id="pr-btn">Start project <span>&rarr;</span></div>
+            <div class="later">Maybe later</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pr-cur" class="cursor"></div>
+    <div id="pr-tag" class="tag">Candidate</div>
+
+    <style>
+      #pr-term { opacity: 0; }
+      #pr-tcam { transform-origin: 0 0; }
+      #pr-bot { position: absolute; left: 380px; top: 344px; width: 168px; height: 144px; }
+      #pr-bot svg { width: 100%; height: 100%; display: block; }
+      #pr-ver { position: absolute; right: 370px; top: 447px; font-size: 21px; line-height: 24px; color: #5a534e; white-space: nowrap; }
+      #pr-ver b { font-weight: 400; color: #c4573a; }
+      #pr-bar { position: absolute; left: 360px; top: 506px; width: 1201px; height: 117px; border-radius: 12px; background: #16100e;
+        border: 1.5px solid rgba(255, 255, 255, 0.08); font-size: 26px; line-height: 114px; color: #e9e1da; padding-left: 40px; white-space: pre;
+        transform-origin: 50% 50%; }
+      #pr-bar .pr { color: #7c726b; margin-right: 22px; }
+      #pr-caret { display: inline-block; width: 2px; height: 32px; background: #e9e1da; vertical-align: -7px; margin-left: 2px; opacity: 0; }
+
+      #pr-modal .box { position: absolute; left: -1400px; top: -40px; width: 3050px; height: 885px; border-radius: 0 0 50px 50px; background: #1b1311;
+        border: 2px solid rgba(255, 255, 255, 0.07); overflow: hidden; }
+      #pr-modal .txt { position: absolute; left: 1210px; top: 232px; font-size: 46px; line-height: 75px; color: #6f645d; white-space: nowrap; }
+      #pr-modal .foot { position: absolute; left: 0; right: 0; top: 601px; bottom: 0; border-top: 2px solid rgba(255, 255, 255, 0.06); background: #110c0a; }
+      #pr-modal .glow { position: absolute; inset: 0; opacity: 0;
+        background: radial-gradient(70% 150% at 64% 120%, rgba(120, 72, 230, 0.42), rgba(120, 72, 230, 0.12) 55%, rgba(120, 72, 230, 0) 80%); }
+      #pr-btn { position: absolute; left: 2329.5px; top: 141px; height: 140px; padding: 0 50px; border-radius: 32px; background: #FDF8F5; color: #16110D;
+        font-size: 46px; line-height: 140px; white-space: nowrap; }
+      #pr-btn span { font-size: 0.9em; margin-left: 6px; }
+      #pr-modal .later { position: absolute; left: 2638px; top: 71px; line-height: 140px; font-size: 46px; color: #6d625b; white-space: nowrap; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C, M = window.MOTION, at = (n) => FX.at(n, 0);
+
+        // ---------------------------------------------------------- start modal
+        // camera follows the measured Start-button position; it drifts left, then whips out
+        gsap.set("#pr-btn", { xPercent: -50, yPercent: -50, transformOrigin: "50% 50%" });
+        FX.track(tl, "#pr-mcam", M.startCam, 0, ([x, y]) => ({ x, y }));
+        tl.set("#pr-modal", { autoAlpha: 0 }, at(61));
+
+        // press: the button squishes and flashes purple while the cursor tip sits on its lower edge
+        const press = [[29, 0.975], [30, 0.94], [31, 0.893], [32, 0.893], [33, 0.91], [34, 0.953], [35, 0.98], [36, 0.995], [37, 1]];
+        press.forEach(([n, s]) => tl.set("#pr-btn", { scale: s }, at(n)));
+        const flash = [[30, 0], [31, 1], [32, 1], [33, 2], [34, 3], [35, 4], [36, 5], [37, 5]];
+        flash.forEach(([n, i]) => tl.set("#pr-btn", { backgroundColor: FX.flash.bg[i], color: FX.flash.fg[i] }, at(n)));
+        tl.set("#pr-btn", { backgroundColor: C.cream, color: C.ink }, at(38));
+        // purple wash rises in the footer after the click
+        tl.fromTo("#pr-modal .glow", { opacity: 0 }, { opacity: 1, duration: 20 / 30, ease: "sine.inOut" }, at(34));
+
+        // ------------------------------------------------------------- terminal
+        const bot = document.getElementById("pr-bot");
+        bot.innerHTML = FX.mascot(C.orange, C.dark);
+        tl.set("#pr-term", { opacity: 1 }, at(54));
+        gsap.set("#pr-tcam", { x: 110 });
+        FX.track(tl, "#pr-tcam", M.termSlide, 0, ([x]) => ({ x }));
+        // hard cut to the 2.22x close-up, then the camera follows the caret
+        FX.track(tl, "#pr-tcam", M.termZoom, 0, ([x, y]) => ({ x, y, scale: M.termScale }));
+        FX.blink(tl, bot.querySelectorAll(".eye"), [[93, "half"], [94, "shut"], [95, "half"], [96, "open"]], 0);
+
+        // the cursor clicks into the prompt bar
+        M.barPress.forEach(([n, s]) => tl.set("#pr-bar", { scale: s }, at(n)));
+        tl.set("#pr-caret", { opacity: 1 }, at(100));
+
+        // typing, at the reference's per-frame character count
+        const text = "add pantry scanner — camera → vision model. skip auth for now";
+        const txt = document.getElementById("pr-txt");
+        txt.innerHTML = text.split("").map((ch) => `<span>${ch}</span>`).join("");
+        const chars = Array.from(txt.children);
+        gsap.set(chars, { display: "none" });
+        let shown = 0;
+        M.typing.forEach(([n, count]) => {
+          if (count > shown) tl.set(chars.slice(shown, count), { display: "inline" }, at(n));
+          shown = Math.max(shown, count);
+        });
+
+        // --------------------------------------------------------- cursor + tag
+        const cur = document.getElementById("pr-cur"), tag = document.getElementById("pr-tag");
+        cur.innerHTML = FX.cursor(C.purple, "#e6ddff");
+        FX.cursorTrack(tl, cur, M.curPrompt, 0);
+        FX.tagTrack(tl, tag, M.tagPrompt, 0);
+        tl.set(cur, { opacity: 0 }, at(124));
+        tl.set(tag, { opacity: 0 }, at(124));
+
+        tl.set({}, {}, 5.1);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["prompt"] = tl;
+      })();
+    </script>
+  </div>
+</template>

@@ -1,0 +1,103 @@
+<template id="submit-template">
+  <div data-composition-id="submit" data-width="1920" data-height="1080" data-duration="1.5667">
+    <div class="full dark"></div>
+    <div id="sb-ring" class="full"></div>
+    <div id="sb-btn"><span class="lbl">Submit</span><span id="sb-ico"></span></div>
+    <div id="sb-pl"></div>
+    <div id="sb-cur" class="cursor"></div>
+    <div id="sb-tag" class="tag">Candidate</div>
+
+    <style>
+      #sb-ring svg { position: absolute; left: 0; top: 0; visibility: hidden; }
+      #sb-btn { position: absolute; left: 0; top: 0; width: 524px; height: 191px; border-radius: 36px; background: #FDF8F5; color: #16110D;
+        font-size: 66px; transform-origin: 50% 0; }
+      #sb-btn .lbl { position: absolute; left: 50%; top: 50%; line-height: 1; white-space: nowrap; transform: translate(-50%, -54%); }
+      #sb-btn .lbl { margin-left: -47px; }
+      #sb-ico { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 95px; }
+      #sb-ico svg, #sb-pl svg { width: 100%; height: 100%; display: block; overflow: visible; }
+      /* the flying plane: white + difference reads dark on the button and light on the background */
+      #sb-pl { position: absolute; left: 0; top: 0; width: 64px; height: 64px; mix-blend-mode: difference; opacity: 0; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C, M = window.MOTION;
+        const CUT = 230, at = (n) => FX.at(n, CUT);
+        const root = document.getElementById("sb-btn").parentElement;
+        const $ = (s) => root.querySelector(s);
+        const btn = $("#sb-btn"), lbl = $("#sb-btn .lbl"), ico = $("#sb-ico"), pl = $("#sb-pl");
+        ico.innerHTML = FX.plane(C.ink, 2);
+        pl.innerHTML = FX.plane("#ffffff", 2);
+        const icoSvg = ico.querySelector("svg");
+
+        // ------------------------------------------------------------- button
+        // [frame, top, face height, orange underside, width] measured off the reference:
+        // drops in squashed on its orange edge, settles, dips after the click, then re-fits around the label
+        const B = [[230, 343, 107, 19, 524], [231, 369, 153, 12, 524], [233, 384, 168, 9, 524], [234, 397, 175, 7, 524], [235, 407, 181, 5, 524],
+          [236, 417, 184, 2, 524], [237, 417, 184, 0, 524], [238, 425, 187, 0, 524], [239, 432, 189, 0, 524], [240, 439, 190, 0, 524],
+          [241, 444, 191, 0, 524], [243, 448, 191, 0, 524], [244, 450, 191, 0, 524], [245, 452, 191, 0, 524], [246, 453, 191, 0, 524],
+          [249, 452, 191, 0, 524], [250, 451, 191, 0, 524], [251, 449, 191, 0, 524], [260, 456, 191, 0, 524], [261, 466, 191, 0, 524],
+          [263, 477, 191, 0, 524], [264, 484, 191, 0, 524], [265, 487, 191, 0, 524], [266, 489, 191, 0, 524], [268, 490, 191, 0, 518],
+          [269, 490, 191, 0, 514], [270, 488, 191, 0, 510], [271, 484, 191, 0, 506], [273, 478, 191, 0, 498], [274, 470, 191, 0, 489],
+          [275, 462, 191, 0, 476], [276, 457, 191, 0, 444]];
+        B.forEach(([n, top, h, d, w]) => {
+          const sy = h / 191;
+          FX.put(tl, btn, { x: 960 - w / 2, y: top, width: w, scaleY: sy, boxShadow: `0 ${(d / sy).toFixed(1)}px 0 #E8603C` }, at(n));
+          // the icon slot collapses as the plane leaves, so the label slides back to centre
+          FX.put(tl, lbl, { marginLeft: -47 * Math.max(0, w - 444) / 80 }, at(n));
+        });
+
+        // press: squish about the centre + purple flash, label and icon go light
+        const P = [[253, 0.985, 0], [254, 0.927, 1], [255, 0.916, 2], [256, 0.924, 3], [257, 0.924, 3], [258, 0.96, 4], [259, 0.99, 5]];
+        P.forEach(([n, s, i]) => {
+          tl.set(btn, { transformOrigin: "50% 50%", scale: s, backgroundColor: FX.flash.bg[i], color: FX.flash.fg[i] }, at(n));
+          tl.set(icoSvg, { attr: { stroke: FX.flash.fg[i] } }, at(n));
+        });
+        tl.set(btn, { transformOrigin: "50% 0%", scale: 1, scaleY: 1, backgroundColor: C.cream, color: C.ink }, at(260));
+        tl.set(icoSvg, { attr: { stroke: C.ink } }, at(260));
+
+        // ---------------------------------------------------------- pixel ring
+        // dark cells bloom from the button out past the frame edges (cell grid measured off the reference)
+        const ring = $("#sb-ring"), layers = {};
+        Object.entries(M.ring).forEach(([k, rows]) => {
+          let s = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">`;
+          rows.forEach(([r, line]) => {
+            for (let c = 0; c < line.length; c++) if (line[c] === "#")
+              s += `<rect x="${(6.75 + c * 43.75).toFixed(2)}" y="${(2.25 + r * 43.75).toFixed(2)}" width="26" height="26" fill="#2c2523"/>`;
+          });
+          ring.insertAdjacentHTML("beforeend", s + "</svg>");
+          layers[k] = ring.lastElementChild;
+        });
+        let prev = null;
+        M.ringFrames.forEach(([n, k]) => {
+          if (prev) tl.set(layers[prev], { visibility: "hidden" }, at(n));
+          if (k) tl.set(layers[k], { visibility: "visible" }, at(n));
+          prev = k;
+        });
+
+        // --------------------------------------------------------- paper plane
+        // it tips over under the cursor, rights itself, then leaves through the top-right corner
+        const W = [[259, -13, 4, 20], [261, -15, 11, 20], [263, -20, 12, 20], [264, -15, 12, 16], [265, -10, 3, 8], [266, 0, 0, 0]];
+        gsap.set(ico, { transformOrigin: "50% 50%" });
+        W.forEach(([n, dx, dy, r]) => tl.set(ico, { x: dx, y: dy, rotation: r }, at(n)));
+        // centre of the flying plane, absolute
+        const FL = [[268, 1100, 580, 0, 1], [269, 1117, 565, -3, 1], [270, 1140, 542, -5, 1], [271, 1175, 517, -6, 1], [273, 1215, 480, -6, 0.98],
+          [274, 1285, 435, -6, 0.96], [275, 1362, 387, -6, 0.94], [276, 1591, 298, -6, 0.9]];
+        tl.set(ico, { opacity: 0 }, at(268));
+        gsap.set(pl, { transformOrigin: "50% 50%" });
+        FL.forEach(([n, x, y, r, s]) => tl.set(pl, { x: x - 32, y: y - 32, rotation: r, scale: s, opacity: 1 }, at(n)));
+
+        // --------------------------------------------------------- cursor + tag
+        const cur = $("#sb-cur"), tag = $("#sb-tag");
+        cur.innerHTML = FX.cursor(C.purple, "#e6ddff");
+        FX.cursorTrack(tl, cur, M.curSubmit, CUT);
+        FX.tagTrack(tl, tag, M.tagSubmit, CUT);
+
+        tl.set({}, {}, 1.5667);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["submit"] = tl;
+      })();
+    </script>
+  </div>
+</template>
