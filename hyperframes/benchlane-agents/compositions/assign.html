@@ -15,7 +15,7 @@
       <div class="hdr"><i></i><b>Acme Kitchen Co.</b><span>/ &nbsp;project brief</span><em>Public</em></div>
       <div class="pg">
         <div class="crumb">&#9776;&nbsp; Brief</div>
-        <div class="ttl">Pantry-Aware Recipe Planner</div>
+        <div class="ttl"><span>Pantry-Aware</span> <span>Recipe Planner</span></div>
         <div class="sub">Build a planner that suggests weeknight recipes from whatever is already in the pantry.</div>
         <div class="ov">
           <div class="ovh">Overview</div>
@@ -30,8 +30,8 @@
           <div id="as-mos"></div>
         </div>
       </div>
-      <div id="as-ring"></div>
     </div>
+    <div id="as-ring"></div>
 
     <!-- 3. Header close-up with the agents pill -->
     <div id="as-close" class="full">
@@ -68,8 +68,8 @@
       #as-tile .ico { position: absolute; left: 22%; top: 22%; width: 56%; height: 56%; }
       #as-tile .ico svg { width: 100%; height: 100%; display: block; }
       #as-win3d { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 30%; opacity: 0; }
-      #as-plane { position: absolute; left: 40px; top: -40px; width: 1840px; height: 600px; border-radius: 26px; background: #fbf3ea;
-        border: 2px solid #ecdfd3; box-shadow: 0 30px 60px rgba(120, 70, 40, 0.1); transform-origin: 50% 0%; }
+      #as-plane { position: absolute; left: 40px; top: -40px; width: 1840px; height: 600px; border-radius: 26px; background: #fdf7f2;
+        border: 2.5px solid #e9dcd1; box-shadow: 0 8px 18px rgba(120, 70, 40, 0.05); transform-origin: 50% 0%; }
 
       #as-win { position: absolute; left: 176px; top: 96px; width: 1568px; height: 900px; border-radius: 22px; overflow: hidden; background: #fbf5ee;
         border: 2px solid #ece0d5; box-shadow: 0 20px 50px rgba(120, 70, 40, 0.12); opacity: 0; transform-origin: 50% 40%; }
@@ -95,8 +95,8 @@
       .sh-cards span { flex: 1; height: 160px; border-radius: 14px; background: linear-gradient(135deg, var(--a), var(--b)); }
       #as-mos { position: absolute; inset: 230px 0 0 0; }
       #as-mos canvas { position: absolute; inset: 0; }
-      #as-ring { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; }
-      #as-ring svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      #as-ring { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+      #as-ring svg { position: absolute; left: 0; top: 0; opacity: 0; }
 
       #as-close { opacity: 0; }
       #as-cl-cam { transform-origin: 1000px 420px; }
@@ -105,7 +105,7 @@
       #as-close .warm { position: absolute; inset: 0; opacity: 0; background: linear-gradient(90deg, rgba(15, 11, 8, 0) 58%, rgba(110, 45, 25, 0.75) 88%, rgba(70, 30, 18, 0.6) 100%); }
       #as-close .strip { position: absolute; left: -1200px; top: 558px; width: 2920px; height: 132px; background: #efe8e0; border-right: 2px solid #e7ddd3; }
       #as-close .big { position: absolute; right: 2069px; top: 1100px; font-size: 80px; color: #4b4039; white-space: nowrap; letter-spacing: -0.01em; }
-      #as-pill { position: absolute; left: 1086px; top: 392px; height: 172px; width: 1130px; border-radius: 30px; background: #fff;
+      #as-pill { position: absolute; left: 1086px; top: 392px; height: 186px; width: 1130px; border-radius: 30px; background: #fff;
         overflow: hidden; display: flex; align-items: center; justify-content: center; }
       #as-pill span { font-size: 60px; color: #1d1712; white-space: nowrap; letter-spacing: -0.01em; }
       #as-av { position: absolute; left: 1086px; top: 392px; }
@@ -113,9 +113,9 @@
         border: 4px solid #2a1c15; opacity: 0; }
       .av > div { width: 70%; height: 70%; display: flex; align-items: center; justify-content: center; font-size: 120px; font-weight: 300; color: #fff; line-height: 1; }
       .av svg { width: 100%; height: 100%; }
-      .av.a1 { left: -330px; }
-      .av.a2 { left: -130px; }
-      .av.a3 { left: 70px; background: #4a3027; border-color: #4a3027; }
+      .av.a1 { left: -175px; }
+      .av.a2 { left: -2px; }
+      .av.a3 { left: 175px; background: #4a3027; border-color: #4a3027; }
     </style>
 
     <script>
@@ -134,12 +134,32 @@
 
         const cur = $("#as-cur"), tag = $("#as-tag");
         cur.innerHTML = FX.cursor("#16110D", "#16110D");
-        tl.set(cur, { x: 1314, y: 888, scale: 1, transformOrigin: "0 0" }, 0);
-        tl.set(tag, { x: 1520, y: 1030, transformOrigin: "0 0" }, 0);
+        tl.set([cur, tag], { transformOrigin: "0 0" }, 0);
+        // Cursor tip and "You" tag (top-left, scale) measured off the reference on every other frame;
+        // odd frames are interpolated. Glide in, press on the tile (squish), ride the swell, slip out bottom-left.
+        const CUR = [[0, 1316, 874, 1], [2, 1248, 811, 1], [4, 1137, 709, 1], [6, 1100, 674, 1], [8, 1051, 629, 1], [10, 1024, 604, 1], [12, 1016, 597, 1], [14, 1008, 589, 1],
+          [16, 1007, 588, 1], [18, 1007, 588, 0.87], [20, 1007, 588, 0.8], [22, 1007, 588, 0.8], [24, 1011, 589, 0.85], [26, 1015, 590, 0.95], [28, 1033, 593, 1.28], [30, 1045, 568, 1.51],
+          [32, 1048, 543, 1.51], [34, 1049, 496, 1.56], [36, 1049, 482, 1.56], [38, 1048, 466, 1.54], [40, 1044, 462, 1.46], [42, 1040, 464, 1.41], [44, 1020, 484, 1.05], [46, 1008, 495, 0.92],
+          [48, 987, 517, 0.82], [50, 952, 552, 0.82], [52, 924, 579, 0.82], [54, 836, 658, 0.82], [56, 769, 718, 0.82], [58, 608, 868, 0.82], [60, 490, 981, 0.82], [62, 452, 1018, 0.82], [64, 410, 1090, 0.82]];
+        const TAG = [[0, 1466, 1008, 1], [2, 1417, 963, 1], [4, 1288, 843, 1], [6, 1226, 786, 1], [8, 1139, 706, 1], [10, 1090, 660, 1], [12, 1075, 646, 1], [14, 1056, 628, 1],
+          [16, 1051, 623, 1], [18, 1047, 620, 1], [22, 1048, 621, 1], [24, 1054, 626, 1.09], [26, 1062, 633, 1.19], [28, 1096, 658, 1.59], [30, 1119, 659, 1.86], [32, 1123, 647, 1.9],
+          [34, 1126, 599, 1.93], [36, 1126, 571, 1.92], [38, 1123, 534, 1.9], [40, 1116, 517, 1.82], [42, 1109, 514, 1.74], [44, 1073, 517, 1.32], [46, 1059, 520, 1.14], [48, 1044, 527, 1.02],
+          [50, 1024, 546, 1], [52, 1007, 563, 1], [54, 952, 618, 1], [56, 908, 662, 1], [58, 771, 799, 1], [60, 607, 963, 1], [62, 547, 1023, 1], [64, 500, 1100, 1]];
+        const track = (el, K, dx) => {
+          for (let k = 0; k < K.length - 1; k++) {
+            const [f0, x0, y0, s0] = K[k], [f1, x1, y1, s1] = K[k + 1];
+            for (let f = f0; f < f1; f++) {
+              const u = (f - f0) / (f1 - f0), sc = s0 + (s1 - s0) * u;
+              tl.set(el, { x: x0 + (x1 - x0) * u - dx * sc, y: y0 + (y1 - y0) * u - dx * sc, scale: sc }, F(f));
+            }
+          }
+          const L = K[K.length - 1];
+          tl.set(el, { x: L[1] - dx * L[3], y: L[2] - dx * L[3], scale: L[3], opacity: 0 }, F(L[0]));
+        };
+        track(cur, CUR, 3);
+        track(tag, TAG, 0);
 
         // ---- cursor glides to the tile, clicks
-        tl.to(cur, { x: 1060, y: 606, duration: 0.5, ease: "power2.out" }, 0.02);
-        tl.to(tag, { x: 1096, y: 650, duration: 0.62, ease: "power2.out" }, 0.04);
         tl.to("#as-tile", { scale: 0.95, rotation: -4, duration: 0.06, ease: "power2.out" }, 0.55);
         tl.to("#as-tile", { scale: 1, rotation: -3, duration: 0.1, ease: "power2.out" }, 0.62);
 
@@ -152,18 +172,16 @@
         tl.set("#as-tile", { opacity: 0 }, F(45));
         tl.to("#as-w1", { x: -114, duration: F(8), ease: "power2.inOut" }, F(23));
         tl.to("#as-w2", { x: 97, duration: F(8), ease: "power2.inOut" }, F(23));
-        tl.to(cur, { x: 1180, y: 690, scale: 1.6, duration: 0.42, ease: "power2.inOut" }, 0.66);
-        tl.to(tag, { x: 1240, y: 760, scale: 1.7, duration: 0.42, ease: "power2.inOut" }, 0.66);
 
         // ---- the brief window drops in from above in perspective
         tl.set("#as-win3d", { opacity: 1 }, 0.98);
         tl.fromTo("#as-plane", { rotationX: -58, y: -560, scale: 0.95 }, { rotationX: 0, y: 10, scale: 0.857, height: 860, duration: F(13), ease: "sine.inOut" }, F(30));
-        tl.set("#as-w1", { color: C.orange }, 1.12);
-        tl.to("#as-w1", { opacity: 0, duration: 0.08 }, 1.14);
-        tl.set("#as-w2", { color: C.orange }, 1.22);
-        tl.to("#as-w2", { opacity: 0, duration: 0.1 }, 1.25);
-        tl.to(cur, { x: 1096, y: 530, scale: 1.3, duration: 0.42, ease: "power2.out" }, 1.08);
-        tl.to(tag, { x: 1130, y: 570, scale: 1.4, duration: 0.42, ease: "power2.out" }, 1.08);
+        tl.set("#as-w1", { color: C.orange, opacity: 0.85 }, F(34));
+        tl.set("#as-w1", { opacity: 0.45 }, F(36));
+        tl.set("#as-w1", { opacity: 0 }, F(37));
+        tl.set("#as-w2", { color: C.orange, opacity: 0.85 }, F(37));
+        tl.set("#as-w2", { opacity: 0.45 }, F(39));
+        tl.set("#as-w2", { opacity: 0 }, F(40));
 
         // ---- flat window; tile becomes a pixel ring that blooms into the page
         tl.set("#as-win", { opacity: 1 }, F(44));
@@ -177,41 +195,89 @@
         WP.forEach(([f, y, x, w]) => tl.set("#as-win", { x: x - 178, y: y - 98, scale: w / 1563 }, F(f)));
         tl.set("#as-win .pg", { opacity: 0 }, 0);
         tl.set("#as-win .pg", { opacity: 1 }, 1.72);
-        const ring = $("#as-ring");
-        ring.innerHTML = FX.pixelRing(1096, 504, 36, 9, 4, C.orange, 8, 0);
-        tl.set(ring, { opacity: 1, scale: 0.7 }, 1.48);
-        tl.to(ring, { scale: 1.45, duration: 0.19, ease: "none" }, 1.5);
-        tl.set(ring.querySelectorAll("rect"), { attr: { fill: "#dff04a" } }, 1.65);
-        tl.set(ring, { opacity: 0 }, 1.72);
-        tl.to(cur, { x: 1010, y: 650, scale: 0.75, duration: 0.3, ease: "power2.out" }, 1.48);
-        tl.to(tag, { x: 1050, y: 676, scale: 0.75, duration: 0.3, ease: "power2.out" }, 1.48);
+        // Pixel ring, measured off the reference in screen space: [frames, x, y, w, h, top/bottom band, side band, colour].
+        // 30px grid, 21px squares, notched outer corners and filled inner corners.
+        const LIME = "#dcef3a";
+        const RING = [[[45, 46], 568, 414, 783, 235, 1, 2, C.orange], [[47], 507, 368, 906, 371, 2, 3, C.orange], [[48], 411, 315, 1098, 510, 4, 5, C.orange],
+          [[49], 264, 216, 1392, 729, 6, 8, C.orange], [[50, 51], 200, 202, 1517, 775, 4, 7, LIME], [[52], 188, 200, 1541, 787, 1, 1, LIME]];
+        const ringHost = $("#as-ring");
+        RING.forEach(([fs, x, y, w, h, bt, bs, col]) => {
+          const cols = Math.round(w / 30), rows = Math.round(h / 30), px = w / cols, py = h / rows, sq = 21;
+          let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+          for (let j = 0; j < rows; j++)
+            for (let i = 0; i < cols; i++) {
+              const edgeI = i === 0 || i === cols - 1, edgeJ = j === 0 || j === rows - 1;
+              if (edgeI && edgeJ) continue; // notched outer corner
+              const band = j < bt || j >= rows - bt || i < bs || i >= cols - bs;
+              const innerCorner = (i === bs || i === cols - bs - 1) && (j === bt || j === rows - bt - 1);
+              const lastBorder = bt === 1 && bs === 1 && (i < 2 || i >= cols - 2) && (j < 3 || j >= rows - 3);
+              if (!band && !innerCorner && !lastBorder) continue;
+              svg += `<rect x="${(i * px + (px - sq) / 2).toFixed(1)}" y="${(j * py + (py - sq) / 2).toFixed(1)}" width="${sq}" height="${sq}" fill="${col}"/>`;
+            }
+          const wrap = document.createElement("div");
+          wrap.innerHTML = svg + "</svg>";
+          const el = wrap.firstElementChild;
+          el.style.left = x + "px";
+          el.style.top = y + "px";
+          ringHost.appendChild(el);
+          tl.set(el, { opacity: 1 }, F(fs[0]));
+          tl.set(el, { opacity: 0 }, F(fs[fs.length - 1] + 1));
+        });
 
-        // ---- page content resolves
-        tl.fromTo("#as-win .ttl", { color: C.orange }, { color: C.ink, duration: 0.08 }, 1.95);
-        tl.from("#as-win .sub", { opacity: 0, duration: 0.05 }, 1.8);
-        tl.set(["#as-win .ovh", "#as-win .ovt"], { opacity: 0 }, 0);
-        tl.set(["#as-win .ovh", "#as-win .ovt"], { opacity: 1 }, 1.84);
-        tl.fromTo("#as-win .ovt", { color: C.orange }, { color: "#3c332d", duration: 0.08 }, 1.98);
-        tl.set("#as-win .shot", { opacity: 0 }, 0);
-        tl.set("#as-win .shot", { opacity: 1 }, 2.02);
+        // header fills in: bare white dot, then orange name, then the breadcrumb and badge settle
+        const hd = $("#as-win .hdr");
+        tl.set(hd.querySelector("i"), { backgroundColor: "#fff" }, 0);
+        tl.set(hd.querySelector("i"), { backgroundColor: C.orange }, F(48));
+        tl.set([hd.querySelector("b"), hd.querySelector("span"), hd.querySelector("em")], { opacity: 0 }, 0);
+        tl.set(hd.querySelector("b"), { opacity: 1, color: C.orange }, F(48));
+        tl.set(hd.querySelector("span"), { opacity: 1, color: "#b5583c" }, F(53));
+        tl.set(hd.querySelector("b"), { color: "#efe6de" }, F(53));
+        tl.set(hd.querySelector("span"), { color: "#8b7f77" }, F(56));
+        tl.set(hd.querySelector("em"), { opacity: 1 }, F(56));
+
+        // ---- page content resolves word by word, orange first, then settles (reference frames 52-72)
+        const ttl = root.querySelectorAll("#as-win .ttl span");
+        tl.set("#as-win .pg", { opacity: 0 }, 0);
+        tl.set("#as-win .pg", { opacity: 1 }, F(52));
+        tl.set([".crumb", ".sub", ".ovh", ".ovt", ".shot"].map((c) => "#as-win " + c), { opacity: 0 }, 0);
+        tl.set(ttl[0], { color: C.orange }, F(52));
+        tl.set(ttl[1], { opacity: 0, color: C.orange }, 0);
+        tl.set(ttl[1], { opacity: 1 }, F(53));
+        tl.set("#as-win .crumb", { opacity: 1 }, F(53));
+        tl.set(ttl[0], { color: C.ink }, F(54));
+        tl.set("#as-win .sub", { opacity: 1, color: C.orange }, F(54));
+        tl.set(ttl[1], { color: C.ink }, F(56));
+        tl.set("#as-win .ovh", { opacity: 1 }, F(56));
+        tl.set("#as-win .ovt", { opacity: 1, color: C.orange }, F(58));
+        tl.set("#as-win .sub", { color: "#6d625a" }, F(60));
+        tl.set("#as-win .ovt", { color: "#3c332d" }, F(60));
+        tl.set("#as-win .shot", { opacity: 1 }, F(60));
+
+        // pixelated peach gradient that sweeps over the mock and drains off to the right
         const mos = $("#as-mos");
-        const mk = (seed, cut) =>
-          FX.mosaic(1500, 420, 30, seed, (x, y, r) => {
-            const k = x / 1500;
-            if (k < cut) return null;
-            const a = Math.min(1, (k - cut) * 2.4) * (0.55 + r() * 0.45);
-            return `rgba(${235 + Math.round(r() * 15)},${120 + Math.round(r() * 60)},${100 + Math.round(r() * 50)},${a.toFixed(2)})`;
-          });
-        const m1 = mos.appendChild(mk(3, 0.0)), m2 = mos.appendChild(mk(4, 0.35)), m3 = mos.appendChild(mk(5, 0.7));
-        tl.set([m1, m2, m3], { opacity: 0 }, 0);
-        tl.set(m1, { opacity: 1 }, 1.84);
-        tl.set(m1, { opacity: 0 }, 2.02);
-        tl.set(m2, { opacity: 1 }, 2.02);
-        tl.set(m2, { opacity: 0 }, 2.14);
-        tl.set(m3, { opacity: 1 }, 2.14);
-        tl.to(m3, { opacity: 0, duration: 0.12 }, 2.24);
-        tl.to(cur, { x: 1500, y: 1040, duration: 0.55, ease: "power1.inOut" }, 2.05);
-        tl.to(tag, { x: 1540, y: 1080, duration: 0.55, ease: "power1.inOut" }, 2.08);
+        const W = 1500, H = 420;
+        const mk = (seed, fn) => FX.mosaic(W, H, 30, seed, (x, y, r) => {
+          const a = fn(x / W, y / H) * (0.82 + r() * 0.18);
+          if (a < 0.03) return null;
+          return `rgba(${236 + Math.round(r() * 8)},${128 + Math.round(r() * 26)},${100 + Math.round(r() * 22)},${Math.min(1, a).toFixed(2)})`;
+        });
+        const cl = (v) => Math.max(0, Math.min(1, v));
+        const wave = (c, amp) => (u, v) => cl(1 - Math.abs(u - c) * 2.4) * amp;
+        const MOS = [
+          [56, 58, (u, v) => cl(0.55 - u * 2.2) * cl((v - 0.35) * 2)],
+          [58, 60, wave(0.18, 0.9)],
+          [60, 62, wave(0.32, 0.95)],
+          [62, 64, wave(0.48, 0.9)],
+          [64, 67, wave(0.64, 0.8)],
+          [67, 70, wave(0.8, 0.65)],
+          [70, 72, wave(0.94, 0.4)],
+        ];
+        MOS.forEach(([a, b, fn], k) => {
+          const c = mos.appendChild(mk(11 + k, fn));
+          tl.set(c, { opacity: 0 }, 0);
+          tl.set(c, { opacity: 1 }, F(a));
+          tl.set(c, { opacity: 0 }, F(b));
+        });
 
         // ---- whip into the header
         tl.set("#as-win", { opacity: 0 }, F(82));
@@ -236,39 +302,57 @@
         tl.set("#as-pill span", { opacity: 0 }, 0);
         tl.set("#as-pill span", { opacity: 1 }, F(83));
 
-        // white cursor comes in and clicks
+        // Cursor (black, white outline) glides in from bottom-right and parks with its tip just inside the
+        // pill's bottom edge; it squishes while pressed (104-108) and springs back as the pill becomes avatars.
+        // Screen-space tip positions measured off the reference.
         const c2 = document.createElement("div");
         c2.className = "cursor";
-        c2.innerHTML = FX.cursor("#fff", "#16110D");
-        root.querySelector("#as-cl-cam").appendChild(c2);
-        tl.set(c2, { x: 1500, y: 980, scale: 1.8, transformOrigin: "0 0", opacity: 0 }, 0);
-        tl.set(c2, { opacity: 1 }, F(88));
-        tl.to(c2, { x: 1170, y: 520, duration: 0.5, ease: "power2.out" }, F(88));
-        tl.to("#as-pill", { scale: 0.97, duration: 0.05 }, 3.45);
-        tl.to("#as-pill", { scale: 1, duration: 0.06 }, 3.5);
-        tl.to("#as-pill", { backgroundColor: "#f3a185", duration: 0.05 }, 3.47);
-        tl.to("#as-pill span", { color: "rgba(255,255,255,0.55)", duration: 0.05 }, 3.47);
-        tl.to("#as-pill", { backgroundColor: C.orange, duration: 0.05 }, 3.56);
-        tl.to("#as-pill span", { color: "#fff", duration: 0.05 }, 3.56);
+        c2.style.zIndex = 6;
+        c2.innerHTML = FX.cursor("#16110D", "#fff");
+        root.appendChild(c2);
+        const CK = [[88, 1445, 945, 2.3, 0.4], [89, 1393, 841, 2.3, 0.8], [90, 1330, 755, 2.3, 1], [92, 1290, 700, 2.3, 1], [93, 1252, 662, 2.3, 1], [94, 1226, 616, 2.3, 1],
+          [95, 1203, 595, 2.3, 1], [97, 1188, 578, 2.3, 1], [98, 1175, 562, 2.3, 1], [100, 1168, 553, 2.3, 1], [103, 1168, 553, 2.3, 1], [104, 1168, 550, 1.66, 1], [108, 1165, 549, 1.66, 1],
+          [109, 1163, 548, 2.3, 1], [117, 1163, 548, 2.3, 1], [119, 1157, 548, 2.3, 1], [120, 1151, 548, 2.3, 1], [121, 1145, 548, 2.3, 1], [122, 1128, 548, 2.3, 1], [123, 1122, 548, 2.3, 1],
+          [124, 1099, 548, 2.3, 1], [125, 1082, 548, 2.3, 1], [126, 1082, 548, 2.3, 1], [127, 1047, 548, 2.3, 1], [128, 1001, 548, 2.3, 1]];
+        tl.set(c2, { transformOrigin: "0 0", opacity: 0 }, 0);
+        for (let k = 0; k < CK.length - 1; k++) {
+          const [f0, x0, y0, s0, o0] = CK[k], [f1, x1, y1] = CK[k + 1];
+          for (let f = f0; f < f1; f++) {
+            const u = (f - f0) / (f1 - f0);
+            tl.set(c2, { x: x0 + (x1 - x0) * u - 3.8 * s0, y: y0 + (y1 - y0) * u - 3.9 * s0, scale: s0, opacity: o0 }, F(f));
+          }
+        }
+        tl.set(c2, { x: 1001 - 3.8 * 2.3, y: 548 - 3.9 * 2.3, scale: 2.3, opacity: 1 }, F(128));
 
-        // pill collapses into agent avatars
-        tl.to("#as-pill span", { opacity: 0, duration: 0.03 }, F(108));
-        tl.to("#as-pill", { width: 380, x: -140, height: 190, borderRadius: 95, duration: F(1), ease: "power2.in" }, F(108));
-        tl.set("#as-pill", { opacity: 0 }, F(109));
+        // press: pink (105-106) → salmon (107) → orange (108), shrinking ~10%, then it becomes the avatars
+        const pill = $("#as-pill"), lbl = $("#as-pill span");
+        tl.set(pill, { scale: 0.97, backgroundColor: "#f3d0c2" }, F(105));
+        tl.set(lbl, { color: "#6e5148" }, F(105));
+        tl.set(pill, { scale: 0.91, backgroundColor: "#ec8b70" }, F(107));
+        tl.set(lbl, { color: "rgba(255,240,232,0.6)" }, F(107));
+        tl.set(pill, { scale: 0.895, backgroundColor: C.orange }, F(108));
+        tl.set(lbl, { color: "#fff" }, F(108));
+        tl.set(pill, { opacity: 0 }, F(109));
+
         const avs = root.querySelectorAll(".av");
-        tl.set(avs[0], { opacity: 1, backgroundColor: C.orange, scale: 0.95 }, F(109));
-        tl.set(avs[1], { opacity: 1, backgroundColor: C.orange, scale: 0.95 }, F(109));
-        tl.set(avs[0].firstElementChild, { opacity: 0 }, 0);
-        tl.set(avs[1].firstElementChild, { opacity: 0 }, 0);
-        tl.to(avs[0], { backgroundColor: "#fbf5ef", scale: 1, duration: F(1) }, F(111));
+        avs.forEach((a) => tl.set(a.firstElementChild, { opacity: 0 }, 0));
+        tl.set(avs[0], { opacity: 1, backgroundColor: C.orange, borderColor: C.orange, scale: 0.65 }, F(109));
+        tl.set(avs[0], { scale: 0.85 }, F(110));
+        tl.set(avs[0], { scale: 0.9 }, F(111));
+        tl.set(avs[0], { scale: 1 }, F(112));
+        tl.set(avs[1], { opacity: 1, backgroundColor: C.orange, borderColor: C.orange, scale: 0.65 }, F(110));
+        tl.set(avs[1], { scale: 0.7 }, F(111));
+        tl.set(avs[1], { scale: 1 }, F(112));
+        tl.set(avs[0], { backgroundColor: "#fbf5ef", borderColor: "#2a1c15" }, F(112));
         tl.set(avs[0].firstElementChild, { opacity: 1 }, F(112));
-        tl.to(avs[1], { backgroundColor: "#fbf5ef", scale: 1, duration: F(1) }, F(112));
+        tl.set(avs[1], { backgroundColor: "#fbf5ef", borderColor: "#2a1c15" }, F(113));
         tl.set(avs[1].firstElementChild, { opacity: 1 }, F(113));
-        tl.set(avs[2].firstElementChild, { opacity: 0 }, 0);
-        tl.fromTo(avs[2], { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: F(2) }, F(113));
-        tl.set(avs[2].firstElementChild, { opacity: 1 }, F(116));
+        tl.set(avs[2], { opacity: 0 }, 0);
+        tl.set(avs[2], { opacity: 1, scale: 0.55 }, F(113));
+        tl.set(avs[2], { scale: 0.8 }, F(114));
+        tl.set(avs[2], { scale: 1 }, F(115));
+        tl.set(avs[2].firstElementChild, { opacity: 1 }, F(115));
         tl.to("#as-close .warm", { opacity: 1, duration: 0.3, ease: "power1.out" }, F(108));
-        tl.to(c2, { x: 1110, y: 540, duration: 0.6, ease: "sine.inOut" }, F(109));
 
         window.__timelines = window.__timelines || {};
         window.__timelines["assign"] = tl;

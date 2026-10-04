@@ -17,6 +17,11 @@ How the motion is matched:
   window's path and the close-up camera were measured off the reference video and are
   written as one `set` per 30 fps frame (frame numbers in the code are reference frames
   counted from each scene's cut).
+- **Cursors:** the "You" cursor/tag (glide in, press-squish on the tile, ride the swell, slip out)
+  and the close-up cursor (glide in, tip parks just inside the pill, shrinks while pressed, springs
+  back as the pill becomes avatars) follow measured screen positions and scales.
+- **Pixel ring:** six measured boxes on a 30px grid with notched corners, orange → lime → thin border,
+  while the header and title fill in word by word and a pixelated peach wave crosses the mock.
 - **Backdrop:** `assets/backdrop.jpg` (the supplied photo), slow push-in, an orange wash that
   lifts to a peach tint, and a diagonal gradient scanner that sweeps across it.
 
