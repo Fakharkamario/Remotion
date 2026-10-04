@@ -22,9 +22,9 @@
       .wd-line .w { display: inline-block; white-space: pre; padding-right: 0.27em; opacity: 0; }
       .wd-line .w.last { padding-right: 0; }
       .wd-line .wi, .wd-line .dc { display: inline-block; }
-      #wd-glyphs .row { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 50px; font-weight: 600; color: #EA5E39; white-space: pre; letter-spacing: 0.1em; }
+      #wd-glyphs .row { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 56px; font-weight: 650; color: #D66B4E; white-space: pre; letter-spacing: 0.04em; }
       #wd-glyphs .v { position: absolute; left: 0; top: 0; opacity: 0; }
-      #wd-conf span { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 36px; opacity: 0; }
+      #wd-conf span { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 32px; font-weight: 300; opacity: 0; }
       #wd-l4 .t-b { display: none; }
       #wd-l1 .gw { font-family: "JetBrains Mono", monospace; font-weight: 600; letter-spacing: 0.08em; }
       #wd-l3 .br, #wd-l3b .br { padding-right: 1.3em; }
@@ -159,7 +159,7 @@
 
         const conf = document.getElementById("wd-conf");
         const chars = ["*", "\\", "}", "{", "*", "}", "\\", "}"];
-        const cols = [C.ink, "#d6c51c", C.orange, C.ink, C.orange, "#d6c51c", C.orange, C.ink];
+        const cols = [C.ink, "#C9C43A", "#D9775A", C.ink, "#D9775A", "#C9C43A", "#D9775A", C.ink];
         for (let i = 0; i < 17; i++) {
           const sp = document.createElement("span");
           sp.textContent = chars[i % chars.length];
@@ -170,7 +170,8 @@
             const wide = t > at(222);
             const ax = wide ? 900 : 430, ay = wide ? 470 : 175;
             const x = 960 + (r() * 2 - 1) * ax, y = 530 + (r() * 2 - 1) * ay;
-            if (Math.abs(y - 530) < 40 && Math.abs(x - 960) < 380) continue;
+            // keep clear of the line itself, as the reference does
+            if (Math.abs(y - 540) < 70 && Math.abs(x - 960) < 470) continue;
             tl.set(sp, { x: x, y: y, opacity: 1 }, t);
             t += (2 + Math.floor(r() * 4)) * SRC;
           }

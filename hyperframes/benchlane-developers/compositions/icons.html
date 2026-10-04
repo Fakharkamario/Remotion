@@ -13,10 +13,14 @@
       #ic-line .w0, #ic-line .w1, #ic-line .wi, #ic-line .ch { display: inline-block; }
       .ic-tile { position: absolute; left: 0; top: 0; width: 100px; height: 100px; }
       .ic-face { position: absolute; inset: 0; border-radius: 23%; overflow: hidden; }
-      .ic-or { background: linear-gradient(180deg, #f8a283 0%, #ee7550 38%, #e05a34 62%, rgba(140, 45, 20, 0.15) 100%); }
-      .ic-px { position: absolute; inset: 0; background-size: 100% 100%; image-rendering: pixelated; }
-      .ic-ic { background: linear-gradient(160deg, #1d1410, #100b08 60%); border: 2px solid rgba(234, 94, 57, 0.4);
-        box-shadow: inset 0 0 26px rgba(234, 94, 57, 0.14), 0 0 34px rgba(234, 94, 57, 0.08); }
+      /* orange face: flat peach in faint vertical columns, dissolved cell by cell */
+      .ic-or { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr); }
+      .ic-or > i { display: block; }
+      .ic-ghost { position: absolute; left: 0; top: 0; width: 100px; height: 100px; border-radius: 23%; overflow: hidden; display: grid; grid-template-columns: repeat(6, 1fr); filter: brightness(0.5) blur(2px); }
+      .ic-ghost > i { display: block; }
+      /* resolved tile: near-black, thin pale outline, soft halo */
+      .ic-ic { background: linear-gradient(165deg, #1a1411 0%, #0d0a08 55%, #0b0907 100%); border: 1.5px solid rgba(255, 206, 186, 0.3);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 28px rgba(234, 94, 57, 0.07); }
       .ic-ic .gl { position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; }
       .ic-ic .gl svg { width: 100%; height: 100%; display: block; }
     </style>
@@ -25,17 +29,6 @@
       (function () {
         const tl = gsap.timeline({ paused: true });
         const C = FX.C;
-
-        // Shared vertical-streak mosaic used while the tiles are "rushing" in.
-        // columns of slightly different brightness, fading out towards the bottom
-        const colB = [];
-        const rr = FX.rng(21);
-        for (let i = 0; i < 9; i++) colB.push(0.62 + rr() * 0.38);
-        const mos = FX.mosaic(9, 14, 1, 22, (x, y, r) => {
-          const b = colB[Math.floor(x)] * (1 - 0.04 * r());
-          const a = Math.max(0, 1 - Math.pow(y / 14, 1.6));
-          return `rgba(${Math.round(248 * b)},${Math.round(128 * b)},${Math.round(92 * b)},${a.toFixed(2)})`;
-        }).toDataURL();
 
         // Tile paths sampled from the reference (local time, centre x, centre y, size; half-scale px).
         // The field sweeps clockwise around the line: fast as it lands, slow mid-way, accelerating out.
@@ -65,29 +58,56 @@
         };
 
         const field = document.getElementById("ic-field");
+        const SF = 1 / 24; // one source frame
+        const TINT = [[244, 168, 139], [238, 128, 94], [232, 112, 76], [242, 150, 118]];
         Object.keys(P).forEach((name, i) => {
+          const tr = FX.rng(40 + i);
+          const base = TINT[i % TINT.length];
+          const cols = Array.from({ length: 6 }, () => 0.84 + tr() * 0.2);
+          const cellCol = (k) => base.map((v) => Math.min(255, Math.round(v * cols[k % 6]))).join(",");
+          // each cell bleeds 1px into its neighbours so no seams show between them
+          const cells = Array.from({ length: 36 }, (_, k) => `<i style="background:rgb(${cellCol(k)});box-shadow:0 0 0 1.2px rgb(${cellCol(k)})"></i>`).join("");
           const el = document.createElement("div");
           el.className = "ic-tile";
-          el.innerHTML = `<div class="ic-face ic-ic"><div class="gl">${FX.icons[name]}</div></div>
-            <div class="ic-face ic-or"><div class="ic-px" style="background-image:url(${mos})"></div></div>`;
+          el.innerHTML = `<div class="ic-face ic-ic"><div class="gl">${FX.icons[name]}</div></div><div class="ic-face ic-or">${cells}</div>`;
+          const flip = FLIP[name];
+          // motion smear: a dark copy one source frame behind while the tile is still rushing in
+          let ghost = null;
+          if (flip != null) {
+            ghost = document.createElement("div");
+            ghost.className = "ic-ghost";
+            ghost.innerHTML = Array.from({ length: 6 }, (_, k) => `<i style="background:rgb(${cellCol(k)})"></i>`).join("");
+            field.appendChild(ghost);
+          }
           field.appendChild(el);
-          const ic = el.children[0], or = el.children[1], px = or.firstElementChild;
-          for (let f = 0; f <= 81; f++) {
-            const t = f / 30;
+          const ic = el.children[0], or = el.children[1];
+          // positions on the reference's 24 fps grid
+          for (let k = 0; k <= 65; k++) {
+            const t = k * SF;
             const [x, y, s] = sample(P[name], t);
             tl.set(el, { x: x - 50, y: y - 50, scale: s / 100 }, t);
+            if (ghost && k <= 5) {
+              const [gx, gy, gs] = sample(P[name], Math.max(0, t - 0.8 * SF));
+              tl.set(ghost, { x: gx - 50, y: gy - 50, scale: gs / 100, opacity: [0.6, 0.5, 0.35, 0.22, 0.1, 0.04][k] }, t);
+            }
           }
-          const flip = FLIP[name];
+          if (ghost) tl.set(ghost, { opacity: 0 }, 6 * SF);
           if (flip != null) {
-            // lands dim and streaky, brightens, then steps over into the icon tile
-            tl.set(el, { opacity: 0.35 }, 0);
-            tl.to(el, { opacity: 1, duration: 0.18, ease: "power1.out" }, 0.02);
-            tl.set(px, { opacity: 0.9 }, 0);
-            tl.to(px, { opacity: 0.15, duration: 0.25, ease: "power1.in" }, 0.08);
+            // lands dim, brightens over three source frames, then dissolves cell by cell into the icon tile
+            tl.set(el, { opacity: 0.45 }, 0);
+            tl.set(el, { opacity: 0.75 }, SF);
+            tl.set(el, { opacity: 1 }, 3 * SF);
             tl.set(ic, { opacity: 0 }, 0);
-            tl.set(px, { opacity: 0.85 }, flip - 0.06);
-            tl.to(or, { opacity: 0, duration: 0.16, ease: "steps(4)" }, flip);
-            tl.to(ic, { opacity: 1, duration: 0.12, ease: "steps(3)" }, flip - 0.02);
+            const f0 = Math.round(flip * 24);
+            tl.set(ic, { opacity: 1 }, f0 * SF);
+            const dr = FX.rng(70 + i);
+            Array.from(or.children).forEach((c, k) => {
+              // columns go roughly left to right with jitter, like the reference's blocky wipe
+              const step = Math.min(3, Math.floor((k % 6) / 2 + dr() * 1.6));
+              tl.set(c, { opacity: 1 }, 0);
+              tl.set(c, { opacity: 0.55 }, (f0 + step) * SF);
+              tl.set(c, { opacity: 0 }, (f0 + step + 1) * SF);
+            });
           } else {
             tl.set(or, { opacity: 0 }, 0);
           }
