@@ -1,0 +1,66 @@
+<template id="checklist-template">
+  <div data-composition-id="checklist" data-width="1920" data-height="1080" data-duration="1.3667">
+    <div class="full cream"></div>
+    <div id="ck-list"></div>
+
+    <style>
+      #ck-list { position: absolute; left: 0; top: 0; }
+      /* items are placed by the top of their ascenders (about 9px below the box top at line-height 1) */
+      .ck-it { position: absolute; left: 372px; top: 0; line-height: 1; white-space: nowrap; font-size: 113px; letter-spacing: -0.02em; color: #ddd6d0; }
+      .ck-it .bx { position: absolute; left: -144px; top: 23px; width: 76px; height: 76px; border-radius: 14px; border: 6px solid #ddd6d0; }
+      .ck-it .bx svg { position: absolute; inset: 5px; width: calc(100% - 10px); height: calc(100% - 10px); opacity: 0; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const CUT = 256, at = (n) => FX.at(n, CUT);
+        const items = ["Code clarity", "Problem framing", "Learning speed", "Test strategy", "Tooling choices", "Fast iteration", "Checks AI output", "Root-cause hunting", "Security sense", "Clear communication"];
+        const host = document.getElementById("ck-list");
+        const els = items.map((t) => {
+          const d = document.createElement("div");
+          d.className = "ck-it";
+          d.innerHTML = `<span class="bx"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>${t}`;
+          host.appendChild(d);
+          return d;
+        });
+        const P = 174;
+
+        // list scroll: ascender top of item 1 per frame, measured (fast flick, then a steady glide)
+        const Y1 = [176, 79, 33, 33, -1, -30, -55, -77, -77, -96, -114, -130, -144, -144, -158, -170, -182, -193, -193, -204, -214, -223, -232, -232, -242,
+          -250, -259, -267, -267, -276, -285, -293, -302, -302, -312, -322, -332, -343, -343, -357, -373];
+        Y1.forEach((y, k) => FX.put(tl, host, { y: y - P - 9 }, at(CUT + k)));
+        els.forEach((e, i) => gsap.set(e, { top: i * P }));
+
+        // ticks: [frame, active index]; earlier items fade to ticked, the active one is ink on an accent box
+        const steps = [[256, 1], [257, 2], [260, 3], [262, 4], [270, 5], [280, 6], [291, 7], [296, 8]];
+        const done = { color: "#f0c4b2" }, doneBx = { borderColor: "#f3b9a3", backgroundColor: "#f3b9a3" };
+        const act = { color: C.ink }, actBx = { borderColor: C.orange, backgroundColor: C.orange };
+        els.forEach((e, i) => {
+          if (i < 1) {
+            FX.put(tl, e, done, 0);
+            FX.put(tl, e.querySelector(".bx"), doneBx, 0);
+            FX.put(tl, e.querySelector("svg"), { opacity: 1 }, 0);
+          }
+        });
+        steps.forEach(([n, a], k) => {
+          const t = at(n);
+          FX.put(tl, els[a], act, t);
+          FX.put(tl, els[a].querySelector(".bx"), actBx, t);
+          const next = steps[k + 1] ? steps[k + 1][0] : 999;
+          if (next - n > 4) FX.put(tl, els[a].querySelector("svg"), { opacity: 1 }, at(n + 4));
+          if (a > 0) {
+            FX.put(tl, els[a - 1], done, t);
+            FX.put(tl, els[a - 1].querySelector(".bx"), doneBx, t);
+            FX.put(tl, els[a - 1].querySelector("svg"), { opacity: 1 }, t);
+          }
+        });
+
+        tl.set({}, {}, 1.3667);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["checklist"] = tl;
+      })();
+    </script>
+  </div>
+</template>

@@ -1,0 +1,65 @@
+<template id="title-template">
+  <div data-composition-id="title" data-width="1920" data-height="1080" data-duration="1.0333">
+    <div class="full cream"></div>
+    <div id="ti-cam" class="full">
+      <div id="ti-line" class="line"></div>
+    </div>
+    <div id="ti-pl"></div>
+
+    <style>
+      /* laid out at the final framing: cap top at y 500, line centred on x 960 */
+      #ti-cam { transform-origin: 960px 534px; }
+      #ti-line { top: 487px; font-size: 95px; letter-spacing: -0.015em; }
+      #ti-line .serif { font-size: 1.08em; }
+      #ti-pl { position: absolute; left: 0; top: 0; width: 100px; height: 100px; transform-origin: 50% 50%; }
+      #ti-pl svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C, M = window.MOTION;
+        const at = (n) => FX.at(n, 0);
+        const root = document.getElementById("ti-cam").parentElement;
+        const $ = (s) => root.querySelector(s);
+
+        // "the whole" lands in one beat, like the reference's second word
+        const s = FX.line($("#ti-line"), ["Replay", "the", "whole", { t: "session", cls: "serif" }]);
+        const w = s.map((sl) => sl.firstElementChild);
+        const open = (i, n) => {
+          FX.put(tl, s[i], { gridTemplateColumns: "0fr" }, 0);
+          FX.put(tl, w[i], { opacity: 0 }, 0);
+          FX.put(tl, s[i], { gridTemplateColumns: "1fr" }, at(n));
+          FX.put(tl, w[i], { opacity: 1 }, at(n));
+        };
+        [1, 2, 3].forEach((i) => open(i, i === 3 ? 12 : 6));
+
+        // colours: accent until the next beat settles, then ink (the serif word stays tan)
+        FX.put(tl, w[0], { color: C.text }, 0);
+        FX.put(tl, w[0], { color: C.ink }, at(3));
+        [1, 2].forEach((i) => {
+          FX.put(tl, w[i], { color: C.text }, 0);
+          FX.put(tl, w[i], { color: C.ink }, at(10));
+        });
+        FX.put(tl, w[3], { color: "#D86A4D" }, 0);
+        FX.put(tl, w[3], { color: C.tan }, at(14));
+
+        // the new words arrive below the line and lift into place (em offsets measured per frame)
+        const lift = (els, rows) => rows.forEach(([n, dy]) => els.forEach((el) => FX.put(tl, el, { y: dy + "em" }, at(n))));
+        lift([w[1], w[2]], [[0, 0.25], [6, 0.25], [7, 0.12], [8, 0.07], [10, 0]]);
+        lift([w[3]], [[0, 0.24], [12, 0.24], [13, 0.12], [15, 0.05], [16, 0.03], [17, 0]]);
+
+        // camera: three framings that cut wider on each beat, drifting inside each
+        FX.track(tl, $("#ti-cam"), M.titleCam, 0, ([sc, x, y]) => ({ scale: sc, x, y }));
+
+        // paper plane: screen-space path, tumbling clockwise and shrinking into the line
+        const pl = $("#ti-pl");
+        pl.innerHTML = FX.plane(C.text, 1.5);
+        FX.track(tl, pl, M.plane, 0, ([cx, cy, size, rot]) => ({ x: cx - 50, y: cy - 50, scale: size / 100, rotation: rot, opacity: size > 0 ? 1 : 0 }));
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["title"] = tl;
+      })();
+    </script>
+  </div>
+</template>

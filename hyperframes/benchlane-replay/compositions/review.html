@@ -1,0 +1,141 @@
+<template id="review-template">
+  <div data-composition-id="review" data-width="1920" data-height="1080" data-duration="2.1">
+    <canvas id="rv-bg" width="96" height="54"></canvas>
+    <div id="rv-band"></div>
+    <div id="rv-line" class="line"></div>
+
+    <style>
+      #rv-bg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; image-rendering: pixelated; }
+      #rv-band { position: absolute; left: 0; right: 0; top: 431px; height: 218px; background: #0D0B07; }
+      #rv-line { top: 509px; font-size: 51px; color: #fff; letter-spacing: -0.005em; }
+      #rv-line .serif { font-size: 1.08em; }
+      #rv-line .spin { width: 70px; height: 70px; display: inline-block; vertical-align: -14px; margin: 0 0.3em 0 0.05em; }
+      #rv-line .spin svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const CUT = 193, at = (n) => FX.at(n, CUT);
+        const root = document.getElementById("rv-band").parentElement;
+        const $ = (s) => root.querySelector(s);
+
+        // ------------------------------------------------------------- band
+        // [frame, top, bottom] of the dark band, measured; it opens out symmetrically around y 540
+        const BAND = [[193, 431, 648], [195, 425, 653], [196, 422, 654], [197, 419, 657], [198, 418, 659], [200, 415, 659], [201, 415, 663], [203, 414, 667],
+          [205, 409, 668], [206, 409, 670], [207, 408, 671], [208, 404, 673], [210, 404, 673], [211, 401, 676], [213, 402, 677], [215, 400, 679], [216, 398, 681],
+          [218, 395, 680], [220, 395, 684], [222, 395, 683], [223, 393, 684], [226, 389, 688], [228, 388, 689], [230, 386, 691], [231, 386, 693], [232, 385, 695],
+          [235, 384, 695], [236, 382, 697], [237, 381, 698], [238, 380, 702], [240, 376, 701], [241, 374, 703], [242, 372, 707], [245, 368, 709], [246, 367, 711],
+          [247, 364, 713], [248, 360, 718], [250, 356, 720], [251, 353, 725], [252, 349, 731], [253, 343, 736], [255, 336, 747]];
+        const band = $("#rv-band");
+        for (let n = 193; n <= 255; n++) {
+          const top = FX.lerp(BAND.map((r) => [r[0], r[1]]), n), bot = FX.lerp(BAND.map((r) => [r[0], r[2]]), n);
+          const dup = [194, 199, 204, 209, 214, 219, 224, 229, 234, 239, 244, 249, 254].includes(n);
+          if (!dup) FX.put(tl, band, { top: Math.round(top), height: Math.round(bot - top) }, at(n));
+        }
+
+        // ------------------------------------------------------- background
+        // Nested horizontal glows: an inner strip hugging the band (from the band edge out to a boundary that
+        // keeps opening) and an outer field beyond it. Colours are keyed through the beat: dark -> ember ->
+        // cream -> ember; columns fall off towards black at the sides; drawn on a 20 px grid.
+        const OUTER = [[193, 378], [195, 394], [196, 402], [197, 408], [198, 413], [200, 417], [201, 422], [202, 425], [203, 428], [205, 431], [206, 434], [207, 436],
+          [208, 438], [210, 441], [211, 442], [226, 457], [228, 460], [230, 460], [231, 462], [232, 464], [233, 466], [235, 468], [236, 469], [237, 472], [238, 474],
+          [240, 477], [241, 480], [242, 483], [243, 486], [245, 491], [250, 512], [253, 535], [255, 560]];
+        // [frame, nearBand, mid, nearBoundary, outer, edge ratio]
+        const KEYS = [
+          [193, [101, 45, 31], [60, 27, 19], [32, 17, 9], [229, 95, 57], 0.25],
+          [197, [226, 95, 57], [204, 84, 48], [156, 65, 40], [248, 206, 182], 0.29],
+          [203, [242, 169, 140], [231, 132, 96], [200, 98, 67], [253, 244, 219], 0.48],
+          [210, [254, 222, 198], [239, 186, 157], [219, 134, 108], [244, 210, 184], 0.52],
+          [220, [253, 244, 223], [249, 228, 206], [236, 193, 169], [240, 155, 125], 0.61],
+          [230, [245, 202, 181], [250, 222, 199], [243, 208, 187], [233, 117, 82], 0.68],
+          [240, [240, 141, 107], [241, 176, 147], [241, 190, 161], [228, 98, 58], 0.77],
+          [250, [231, 95, 58], [231, 111, 75], [236, 137, 103], [244, 156, 125], 0.84],
+          [255, [246, 207, 182], [243, 175, 143], [238, 145, 112], [238, 145, 112], 0.84],
+        ];
+        const mix = (a, b, t) => [0, 1, 2].map((i) => a[i] + (b[i] - a[i]) * t);
+        const key = (n) => {
+          let i = 1;
+          while (i < KEYS.length - 1 && n > KEYS[i][0]) i++;
+          const A = KEYS[i - 1], B = KEYS[i], t = Math.max(0, Math.min(1, (n - A[0]) / (B[0] - A[0])));
+          return [1, 2, 3, 4].map((k) => mix(A[k], B[k], t)).concat([A[5] + (B[5] - A[5]) * t]);
+        };
+        const cv = $("#rv-bg"), g = cv.getContext("2d"), img = g.createImageData(96, 54);
+        const noise = (() => { const r = FX.rng(7), a = []; for (let i = 0; i < 96 * 54; i++) a.push((r() - 0.5) * 8); return a; })();
+        const draw = (n) => {
+          const [nb, mid, nbd, out, edge] = key(n);
+          const hb = (FX.lerp(BAND.map((r) => [r[0], r[2]]), n) - FX.lerp(BAND.map((r) => [r[0], r[1]]), n)) / 2;
+          const D = FX.lerp(OUTER, n);
+          for (let y = 0; y < 54; y++) {
+            const d = Math.abs(y * 20 + 10 - 540);
+            let col;
+            if (d <= D) {
+              const t = Math.max(0, Math.min(1, (d - hb) / Math.max(1, D - hb)));
+              col = t < 0.5 ? mix(nb, mid, t * 2) : mix(mid, nbd, (t - 0.5) * 2);
+            } else {
+              col = mix(out, [out[0] * 0.92, out[1] * 0.9, out[2] * 0.9], Math.min(1, (d - D) / 200));
+            }
+            for (let x = 0; x < 96; x++) {
+              const u = Math.abs(x * 20 + 10 - 960) / 960;
+              const v = 1 - (1 - edge) * Math.pow(u, 2.4);
+              const o = (y * 96 + x) * 4, z = noise[y * 96 + x];
+              img.data[o] = Math.max(0, Math.min(255, col[0] * v + z));
+              img.data[o + 1] = Math.max(0, Math.min(255, col[1] * v * (0.92 + 0.08 * v) + z));
+              img.data[o + 2] = Math.max(0, Math.min(255, col[2] * v * (0.88 + 0.12 * v) + z));
+              img.data[o + 3] = 255;
+            }
+          }
+          g.putImageData(img, 0, 0);
+        };
+        // the reference holds every fifth frame (24 fps cadence); redraw on the held frame numbers
+        const hold = (n) => n - ([194, 199, 204, 209, 214, 219, 224, 229, 234, 239, 244, 249, 254].includes(n) ? 1 : 0);
+        let last = -1;
+        const render = () => {
+          const n = hold(Math.min(255, CUT + Math.floor(tl.time() * 30 + 0.5)));
+          if (n !== last) { last = n; draw(n); }
+        };
+        tl.eventCallback("onUpdate", render);
+        draw(193);
+
+        // ------------------------------------------------------------- line
+        const spin = `<span class="spin"><svg viewBox="0 0 70 70"><circle cx="35" cy="35" r="32" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></span>`;
+        const s = FX.line($("#rv-line"), ["AI agents", { t: spin }, { t: "grade", cls: "serif" }, "every", "session"]);
+        const words = s.map((sl) => sl.firstElementChild);
+        words.forEach((w, i) => {
+          if (i === 1) return;
+          FX.put(tl, w, { color: C.text }, 0);
+          FX.put(tl, w, { color: "#fff" }, at(197));
+        });
+
+        // spinner slot opens on frame 200, the arc comes in accent and turns white three frames later
+        const sp = words[1], circ = sp.querySelector("circle");
+        FX.put(tl, s[1], { gridTemplateColumns: "0fr" }, 0);
+        FX.put(tl, sp, { opacity: 0, color: C.text }, 0);
+        [[200, "0.75fr"], [201, "0.87fr"], [202, "0.93fr"], [203, "0.96fr"], [205, "1fr"]].forEach(([n, fr]) => FX.put(tl, s[1], { gridTemplateColumns: fr }, at(n)));
+        FX.put(tl, sp, { opacity: 1 }, at(200));
+        FX.put(tl, sp, { color: "#fff" }, at(203));
+        // arc length and leading-edge angle per frame (clockwise from 3 o'clock)
+        const ARC = [[200, 90, 230], [202, 140, 240], [203, 200, 270], [205, 240, 320], [206, 240, 360], [207, 250, 390], [208, 270, 400], [210, 270, 420], [211, 270, 440],
+          [212, 265, 460], [213, 280, 460], [215, 290, 470], [216, 290, 480], [217, 290, 490], [218, 290, 500], [220, 290, 500], [221, 290, 510], [222, 290, 520],
+          [223, 280, 530], [225, 280, 540], [226, 280, 550], [227, 290, 550], [228, 290, 560], [230, 290, 570], [231, 290, 580], [232, 280, 590], [233, 280, 600],
+          [235, 280, 610], [236, 270, 630], [237, 270, 640], [238, 270, 650], [240, 270, 660], [241, 280, 670], [242, 260, 690], [243, 250, 710], [245, 240, 730],
+          [246, 240, 750], [247, 240, 770], [248, 250, 780], [250, 220, 820], [251, 210, 850], [252, 230, 870], [253, 200, 900], [255, 160, 950]];
+        const L = 2 * Math.PI * 32;
+        ARC.forEach(([n, arc, ang]) => {
+          FX.put(tl, circ, { attr: { "stroke-dasharray": `${((arc / 360) * L).toFixed(1)} ${L.toFixed(1)}` } }, at(n));
+          FX.put(tl, sp.querySelector("svg"), { rotation: ang - arc, transformOrigin: "50% 50%" }, at(n));
+        });
+
+        // the line eases left a touch, then lifts as the band opens before the cut
+        const line = $("#rv-line");
+        [[205, 0, 0], [210, -3, 0], [225, -7, 0], [240, -11, -2], [242, -11.5, -3], [243, -12, -4], [245, -12, -5], [246, -12.5, -6], [247, -13, -9], [248, -13, -12],
+          [250, -13.5, -15], [251, -14, -21], [252, -14, -27], [253, -14, -36], [255, -14, -58]].forEach(([n, x, y]) => FX.put(tl, line, { x, y }, at(n)));
+
+        tl.set({}, {}, 2.1);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["review"] = tl;
+      })();
+    </script>
+  </div>
+</template>
