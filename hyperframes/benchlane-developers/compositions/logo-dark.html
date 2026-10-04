@@ -51,11 +51,12 @@
         const word = document.getElementById("ld-word");
         word.innerHTML = letters.map((ch) => `<span class="lt">${ch}</span>`).join("");
         const LT = Array.from(word.children);
-        const T = [322, 323, 324, 325, 327, 328, 329, 330, 332];
+        // nine letters over the reference's seven typing frames, so the word completes on the same frame
+        const T = [322, 323, 324, 324, 325, 327, 328, 329, 329];
         LT.forEach((el, i) => {
           tl.set(el, { opacity: 0, color: C.orange }, 0);
           tl.set(el, { opacity: 1 }, at(T[i]));
-          tl.set(el, { color: "#fff" }, at(T[i]) + 3 / 24);
+          tl.set(el, { color: "#fff" }, at(T[i]) + 2 / 24);
         });
         // drifts right a touch while typing, then squeezes into the mark, accelerating into the cut
         curve(word, { x: [[322, -6], [325, -5], [328, -3], [330, -2], [333, -1], [337, 0], [347, 0], [348, -2], [349, -4], [350, -8], [352, -14], [353, -24], [354, -50]] });

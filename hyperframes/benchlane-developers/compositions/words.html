@@ -139,7 +139,11 @@
         tl.set("#wd-l1", { transformOrigin: "960px 50%" }, 0);
         curve("#wd-l1", { scale: [[158, 1], [183, 1.021], [195, 1.028]] });
         // words blink out one by one, leaving their gaps
-        [[0, 178], [3, 182], [5, 184], [2, 188], [4, 189]].forEach(([i, f]) => tl.set(L1.ws[i], { opacity: 0 }, at(f)));
+        // each flashes light accent for one frame, then is gone
+        [[0, 178], [3, 182], [5, 184], [2, 187], [4, 189]].forEach(([i, f]) => {
+          tl.set(L1.ws[i], { color: C.orange, opacity: 0.7 }, at(f));
+          tl.set(L1.ws[i], { opacity: 0 }, at(f + 1));
+        });
         // the survivor drifts right, accelerating, then breaks up in orange
         curve(L1.wi[1], { x: [[186, 0], [188, 1], [189, 3], [190, 4], [192, 5], [193, 8], [194, 11], [195, 15], [197, 22]] });
         tl.set(L1.ws[1], { color: C.orange }, at(195));
@@ -189,19 +193,28 @@
         tl.set(L3b.ws, { opacity: 0 }, at(250));
 
         // --------------------------------------- 5. "developers truly build now" on a dot grid
-        const dots = FX.mosaic(1920, 1080, 22, 31, (x, y, rr) => {
-          const n = Math.sin(x * 0.006 + 1.3) * Math.sin(y * 0.009 + 0.4);
-          const p = 0.45 + n * 0.3;
-          return rr() < p ? `rgba(205,160,130,${(0.08 + rr() * 0.06).toFixed(3)})` : null;
+        // faint, coarse dot grid that builds in over a few frames
+        const host = document.getElementById("wd-dots");
+        const dr = FX.rng(31);
+        const layers = [252, 253, 255].map(() => {
+          const c = FX.canvas(1920, 1080);
+          c.style.position = "absolute";
+          host.appendChild(c);
+          return c;
         });
-        dots.style.position = "absolute";
-        const dg = dots.getContext("2d");
-        const tmp = FX.canvas(1920, 1080);
-        const tg = tmp.getContext("2d");
-        tg.drawImage(dots, 0, 0);
-        dg.clearRect(0, 0, 1920, 1080);
-        for (let y = 0; y < 1080; y += 22) for (let x = 0; x < 1920; x += 22) dg.drawImage(tmp, x + 3, y + 3, 16, 16, x + 3, y + 3, 16, 16);
-        document.getElementById("wd-dots").appendChild(dots);
+        for (let y = 8; y < 1080; y += 44) {
+          for (let x = 8; x < 1920; x += 44) {
+            const n = Math.sin(x * 0.004 + 1.3) * Math.sin(y * 0.006 + 0.4);
+            if (dr() > 0.5 + n * 0.25) continue;
+            const g = layers[Math.floor(dr() * 3)].getContext("2d");
+            g.fillStyle = `rgba(214,170,145,${(0.1 + dr() * 0.08).toFixed(3)})`;
+            g.fillRect(x, y, 28, 28);
+          }
+        }
+        layers.forEach((c, i) => {
+          tl.set(c, { opacity: 0 }, 0);
+          tl.set(c, { opacity: 1 }, at([252, 253, 255][i]));
+        });
         tl.set("#wd-dots", { opacity: 1 }, at(250));
 
         const L4 = mkLine("wd-l4", ["developers", { t: '<span class="t-a">truly</span><span class="t-b serif">truly</span>' }, "build", "now"]);
