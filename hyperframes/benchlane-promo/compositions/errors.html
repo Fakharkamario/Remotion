@@ -1,0 +1,95 @@
+<template id="errors-template">
+  <div data-composition-id="errors" data-width="1920" data-height="1080" data-duration="2.7">
+    <div class="full dark"></div>
+    <div id="er-line" class="line"></div>
+    <div id="er-grp" class="full">
+      <div id="er-term">
+        <div class="bar">forge-cli</div>
+        <div class="body"><div id="er-log"></div></div>
+        <div class="input"><span>&gt;</span></div>
+      </div>
+      <div id="er-chips"></div>
+    </div>
+
+    <style>
+      #er-line { top: 503px; font-size: 58px; color: #fff; letter-spacing: -0.01em; }
+      #er-line .serif { font-size: 1.08em; }
+      #er-grp { opacity: 0; }
+      #er-term { position: absolute; left: 612px; top: 144px; width: 780px; height: 800px; border-radius: 16px; background: #15100d;
+        border: 1.5px solid rgba(255, 255, 255, 0.09); overflow: hidden; opacity: 0.9; }
+      #er-term .bar { height: 40px; text-align: center; font: 15px "JetBrains Mono", monospace; color: #8a7f77; line-height: 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+      #er-term .body { position: absolute; left: 0; right: 0; top: 41px; bottom: 92px; overflow: hidden; }
+      #er-log { padding: 18px 30px; font: 18px/2.05 "JetBrains Mono", monospace; color: #9a8e85; }
+      #er-log .y::before { content: "\25CF  "; color: #e3c64a; }
+      #er-log .g::before { content: "\25CF  "; color: #63c76a; }
+      #er-log .p::before { content: "> "; color: #b9a4f7; }
+      #er-log .r::before { content: "\2715  "; color: #e2554f; }
+      #er-log .sub { padding-left: 28px; color: #6b615a; }
+      #er-log b { color: #efe6de; font-weight: 500; }
+      #er-term .input { position: absolute; left: 22px; right: 22px; bottom: 22px; height: 54px; border: 1.5px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+        font: 17px/54px "JetBrains Mono", monospace; color: #8d8178; padding-left: 18px; }
+      .er-chip { position: absolute; left: 0; top: 0; padding: 0 34px 0 28px; height: 100px; line-height: 96px; border-radius: 14px; white-space: nowrap;
+        font: 32px/96px "JetBrains Mono", monospace; color: #e8464c; background: rgba(95, 10, 18, 0.82); border: 2px solid rgba(225, 52, 62, 0.65); opacity: 0;
+        transform: translate(-50%, -50%); }
+      .er-chip::before { content: ""; display: inline-block; width: 24px; height: 24px; border: 3px solid #e8464c; border-radius: 50%; margin-right: 14px; vertical-align: -2px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        const ls = FX.line(document.getElementById("er-line"), ["and", "the", { t: "autopilots", cls: "serif" }]);
+        [[0, 0.04, 0], [1, 0.1, 0.2], [2, 0.17, 0.3]].forEach(([i, t, dy]) => {
+          const w = ls[i].firstElementChild;
+          tl.set(w, { opacity: 0, color: C.orange, y: dy + "em" }, 0);
+          tl.set(w, { opacity: 1 }, t);
+          tl.to(w, { y: 0, duration: 0.14, ease: "power3.out" }, t);
+          tl.to(w, { color: "#fff", duration: 0.04, ease: "none" }, [0.11, 0.15, 0.25][i]);
+        });
+        tl.set("#er-line", { opacity: 0 }, 0.84);
+
+        // Terminal log (scrolls while the agent flails)
+        const L = [
+          ["y", "Read <b>(api/handlers.ts)</b>"], ["y", "Read <b>(db/schema.sql)</b>"], ["y", "Update <b>(db/migrations/007_idx.sql)</b>"], ["sub", "added 9 lines, removed 2"],
+          ["", "Added an index on the two slowest lookups."], ["", ""], ["p", "[pasted 214 lines] <b>this is broken in prod</b>"], ["sub", "Thinking"],
+          ["y", "Read <b>(services/cart.ts)</b>"], ["y", "Update <b>(services/cart.ts)</b>"], ["sub", "added 3 lines, removed 1"], ["", "Wrapped the null branch in a guard."], ["", ""],
+          ["p", "<b>why is memory still going up</b>"], ["sub", "Thinking"], ["y", "Read <b>(workers/queue.ts)</b>"], ["y", "Read <b>(workers/queue.ts)</b>"], ["sub", "added 6 lines, removed 4"],
+          ["", "Cleared a listener that was never removed."], ["", ""], ["p", "[pasted 380 lines] <b>still failing</b>"], ["sub", "Thinking"], ["y", "Read <b>(lib/cache.ts)</b>"],
+          ["y", "Update <b>(lib/cache.ts)</b>"], ["sub", "bumped TTL, disabled invalidation"], ["r", "<b>tests failed (4)</b>"], ["", ""], ["p", "<b>just make it pass</b>"], ["sub", "Thinking"],
+          ["y", "Update <b>(tests/cart.test.ts)</b>"], ["sub", "skipped 4 tests"], ["g", "<b>tests passed</b>"],
+        ];
+        document.getElementById("er-log").innerHTML = L.map(([c, t]) => `<div class="${c}">${t || "&nbsp;"}</div>`).join("");
+
+        tl.set("#er-grp", { opacity: 1 }, 0.84);
+        tl.fromTo("#er-log", { y: 0 }, { y: -900, duration: 1.86, ease: "none" }, 0.84);
+        tl.fromTo("#er-grp", { x: 0, y: 0, scale: 1 }, { x: -30, y: -20, scale: 1.04, duration: 1.86, ease: "sine.in" }, 0.84);
+
+        const chips = [
+          ["OOM again", 1040, 960, 0.97],
+          ["tests failing", 1350, 860, 1.3],
+          ["still flaky", 1500, 740, 1.64],
+          ["latency spiking", 1560, 600, 1.77],
+          ["builds timing out", 1540, 230, 2.04],
+          ["red again", 860, 200, 2.17],
+          ["just fix it", 520, 400, 2.3],
+          ["502s everywhere", 560, 640, 2.37],
+          ["pool exhausted", 690, 930, 2.44],
+        ];
+        const host = document.getElementById("er-chips");
+        chips.forEach(([t, x, y, at], i) => {
+          const d = document.createElement("div");
+          d.className = "er-chip";
+          d.textContent = t;
+          host.appendChild(d);
+          tl.set(d, { x: x, y: y, xPercent: -50, yPercent: -50, opacity: 0, scale: 0.9 }, 0);
+          tl.to(d, { opacity: 1, scale: 1, duration: 0.07, ease: "power2.out" }, at);
+          tl.to(d, { y: y - 70, duration: 2.7 - at, ease: "none" }, at);
+        });
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["errors"] = tl;
+      })();
+    </script>
+  </div>
+</template>

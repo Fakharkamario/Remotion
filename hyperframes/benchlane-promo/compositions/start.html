@@ -1,0 +1,57 @@
+<template id="start-template">
+  <div data-composition-id="start" data-width="1920" data-height="1080" data-duration="1.83">
+    <div class="full dark"></div>
+    <div id="st-cam" class="full">
+      <div id="st-modal">
+        <div class="txt">ople snap or list what's in their kitchen and instantly see recipes<br>they can cook tonight. Filters like "under 30 minutes" or "uses up<br>the spinach" should feel instant.</div>
+        <div class="foot"><div class="glow"></div><div id="st-btn">Start project <span>&rarr;</span></div><div class="later">Maybe later</div></div>
+      </div>
+    </div>
+    <div id="st-cur" class="cursor"></div>
+    <div id="st-tag" class="tag cand">Candidate</div>
+
+    <style>
+      #st-modal { position: absolute; left: -400px; top: -40px; width: 2160px; height: 880px; border-radius: 0 0 40px 40px; background: #1b1311;
+        border: 2px solid rgba(255, 255, 255, 0.07); overflow: hidden; }
+      #st-modal .txt { position: absolute; left: 330px; top: 230px; font-size: 44px; line-height: 1.6; color: #6f645d; white-space: nowrap; }
+      #st-modal .foot { position: absolute; left: 0; right: 0; top: 600px; bottom: 0; border-top: 2px solid rgba(255, 255, 255, 0.06); background: #130e0c; }
+      #st-modal .glow { position: absolute; inset: 0; opacity: 0; background: radial-gradient(60% 120% at 60% 100%, rgba(120, 80, 220, 0.4), rgba(120, 80, 220, 0) 70%); }
+      #st-btn { position: absolute; left: 1248px; top: 26px; height: 128px; padding: 0 44px; border-radius: 22px; background: #fff; color: #16110D;
+        font-size: 46px; line-height: 128px; white-space: nowrap; transform-origin: 50% 50%; }
+      #st-btn span { font-size: 0.9em; margin-left: 6px; }
+      #st-modal .later { position: absolute; left: 1744px; top: 26px; line-height: 128px; font-size: 46px; color: #6d625b; }
+      #st-tag { font-size: 26px; padding: 6px 22px 8px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const cur = document.getElementById("st-cur"), tag = document.getElementById("st-tag");
+        cur.innerHTML = FX.cursor(C.purple, "#c9b8ff");
+        tl.set(cur, { x: 1880, y: 1100, scale: 1.3, rotation: 0, transformOrigin: "0 0" }, 0);
+        tl.set(tag, { x: 2000, y: 1180 }, 0);
+
+        // camera drifts left across the modal footer
+        tl.fromTo("#st-cam", { x: 0, y: 0 }, { x: -100, y: 0, duration: 0.5, ease: "power2.out" }, 0);
+        tl.to("#st-cam", { x: -112, duration: 0.33, ease: "none" }, 0.5);
+        tl.to("#st-cam", { x: -144, duration: 0.5, ease: "sine.inOut" }, 0.83);
+        tl.to("#st-cam", { x: -436, duration: 0.35, ease: "power2.in" }, 1.33);
+        tl.to("#st-cam", { x: -720, y: 20, duration: 0.15, ease: "none" }, 1.68);
+
+        // candidate cursor arrives and clicks
+        tl.to(cur, { x: 1010, y: 760, duration: 0.45, ease: "power2.out" }, 0.1);
+        tl.to(tag, { x: 1000, y: 830, duration: 0.55, ease: "power2.out" }, 0.13);
+        tl.to("#st-btn", { scale: 0.96, backgroundColor: "#a98cf7", color: "#d9ccff", duration: 0.05 }, 1.0);
+        tl.to("#st-btn", { scale: 1, duration: 0.08 }, 1.08);
+        tl.to("#st-btn", { backgroundColor: "#fff", color: C.ink, duration: 0.08 }, 1.22);
+        tl.to("#st-modal .glow", { opacity: 1, duration: 0.25 }, 1.02);
+        tl.to(cur, { x: 1000, y: 800, rotation: -14, duration: 0.5, ease: "sine.inOut" }, 1.2);
+        tl.to(tag, { x: 980, y: 870, duration: 0.5, ease: "sine.inOut" }, 1.22);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["start"] = tl;
+      })();
+    </script>
+  </div>
+</template>

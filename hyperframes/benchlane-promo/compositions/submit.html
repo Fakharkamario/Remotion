@@ -1,0 +1,61 @@
+<template id="submit-template">
+  <div data-composition-id="submit" data-width="1920" data-height="1080" data-duration="1.6">
+    <div class="full dark"></div>
+    <div id="sb-ring"></div>
+    <div id="sb-btn"><span class="lbl">Submit</span><span id="sb-pl"></span></div>
+    <div id="sb-cur" class="cursor"></div>
+    <div id="sb-tag" class="tag cand">Candidate</div>
+
+    <style>
+      #sb-btn { position: absolute; left: 696px; top: 420px; width: 528px; height: 188px; border-radius: 34px; background: #fff; color: #16110D;
+        font-size: 66px; display: flex; align-items: center; justify-content: center; gap: 30px; box-shadow: 0 0 0 rgba(234, 94, 57, 0); transform-origin: 50% 50%; }
+      #sb-pl { width: 64px; height: 64px; display: block; }
+      #sb-pl svg { width: 100%; height: 100%; display: block; overflow: visible; }
+      #sb-ring { position: absolute; inset: 0; opacity: 0; }
+      #sb-ring svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      #sb-tag { font-size: 26px; padding: 6px 22px 8px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const pl = document.getElementById("sb-pl");
+        pl.innerHTML = FX.plane("#16110D", 2);
+
+        // button settles down into place with a warm underline flash
+        tl.fromTo("#sb-btn", { y: -124, boxShadow: "0 10px 0 rgba(234,94,57,0.9)" }, { y: 0, boxShadow: "0 6px 0 rgba(234,94,57,0)", duration: 0.3, ease: "power2.out" }, 0);
+
+        const cur = document.getElementById("sb-cur"), tag = document.getElementById("sb-tag");
+        cur.innerHTML = FX.cursor(C.purple, "#c9b8ff");
+        tl.set(cur, { x: 1060, y: 1080, scale: 1.6, rotation: -14, transformOrigin: "0 0" }, 0);
+        tl.set(tag, { x: 1180, y: 1170, transformOrigin: "0 0" }, 0);
+        tl.to(cur, { x: 1000, y: 560, duration: 0.55, ease: "power2.out" }, 0.02);
+        tl.to(tag, { x: 1060, y: 600, duration: 0.6, ease: "power2.out" }, 0.05);
+
+        // click
+        tl.to("#sb-btn", { scale: 0.95, backgroundColor: "#a98cf7", color: "#d6c8ff", duration: 0.05 }, 0.74);
+        tl.set(pl.querySelector("svg"), { attr: { stroke: "#d6c8ff" } }, 0.74);
+        tl.to("#sb-btn", { scale: 1, duration: 0.08 }, 0.8);
+        tl.to("#sb-btn", { backgroundColor: "#fff", color: C.ink, duration: 0.06 }, 1.0);
+        tl.set(pl.querySelector("svg"), { attr: { stroke: "#16110D" } }, 1.0);
+
+        // dark pixel ring blooms outward
+        const ring = document.getElementById("sb-ring");
+        ring.innerHTML = FX.pixelRing(1040, 560, 40, 12, 3, "#2e2723", 12, 0.08);
+        tl.set(ring, { opacity: 1, scale: 0.85 }, 0.8);
+        tl.to(ring, { scale: 2.3, duration: 0.33, ease: "none" }, 0.8);
+        tl.set(ring, { opacity: 0 }, 1.15);
+
+        // the paper plane leaves the button; the cursor drops away
+        tl.to(pl, { x: 520, y: -520, rotation: -12, scale: 0.6, duration: 0.42, ease: "power2.in" }, 1.13);
+        tl.to(cur, { x: 640, y: 1150, rotation: -60, duration: 0.42, ease: "power2.in" }, 1.13);
+        tl.to(tag, { x: 760, y: 1200, duration: 0.42, ease: "power2.in" }, 1.15);
+        tl.to("#sb-btn", { width: 420, x: 54, duration: 0.2, ease: "power2.out" }, 1.15);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["submit"] = tl;
+      })();
+    </script>
+  </div>
+</template>

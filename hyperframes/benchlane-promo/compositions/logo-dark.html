@@ -1,0 +1,62 @@
+<template id="logo-dark-template">
+  <div data-composition-id="logo-dark" data-width="1920" data-height="1080" data-duration="2.0">
+    <div class="full dark"></div>
+    <div id="ld-bg" class="full"></div>
+    <div id="ld-lock">
+      <div id="ld-mark"></div>
+      <div id="ld-word"></div>
+    </div>
+    <div id="ld-line" class="line"></div>
+
+    <style>
+      #ld-bg { background: radial-gradient(42% 38% at 78% 82%, rgba(110, 38, 18, 0.55), rgba(110, 38, 18, 0) 70%),
+          radial-gradient(40% 50% at 12% 18%, rgba(70, 22, 18, 0.45), rgba(70, 22, 18, 0) 70%); }
+      #ld-lock { position: absolute; left: 0; right: 0; top: 488px; height: 104px; display: flex; justify-content: center; align-items: center; color: #fff; }
+      #ld-mark { width: 104px; height: 104px; position: relative; flex: none; }
+      #ld-mark svg { width: 100%; height: 100%; overflow: visible; display: block; }
+      #ld-word { display: flex; font-size: 104px; font-weight: 500; letter-spacing: -0.035em; line-height: 1; margin-left: 40px; }
+      #ld-word .slot > .w { padding-right: 0; }
+      #ld-line { top: 503px; font-size: 58px; color: #fff; letter-spacing: -0.01em; }
+      #ld-line .serif { font-size: 1.08em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        tl.fromTo("#ld-bg", { x: 0, y: 0 }, { x: -60, y: -30, duration: 2, ease: "none" }, 0);
+
+        // Mark: the two "Meet" corners arrive large and apart, then snap into the logo.
+        const mk = document.getElementById("ld-mark");
+        mk.innerHTML = FX.mark("#fff");
+        const a = mk.querySelector(".mk-a"), b = mk.querySelector(".mk-b"), c = mk.querySelector(".mk-c");
+        tl.set(mk, { scale: 1.2, x: -30 }, 0);
+        tl.set(a, { x: -70, y: -10 }, 0);
+        tl.set(b, { x: 70, y: 10 }, 0);
+        tl.set(c, { scale: 0, transformOrigin: "50% 50%" }, 0);
+        tl.to([a, b], { x: 0, y: 0, duration: 0.08, ease: "power3.out" }, 0.02);
+        tl.to(mk, { scale: 1, x: 0, duration: 0.12, ease: "power2.out" }, 0.02);
+        tl.to(c, { scale: 1, duration: 0.08, ease: "back.out(2)" }, 0.08);
+
+        // Wordmark types in letter by letter (accent first, then white).
+        const letters = "benchlane".split("");
+        const slots = FX.line(document.getElementById("ld-word"), letters);
+        slots.forEach((s, i) => FX.wordIn(tl, s, 0.06 + i * 0.036, { dy: 0, lead: 0.02, open: 0.05, hold: 0.1, settle: 0.03, to: "#fff" }));
+
+        // Squeeze together, then cut to the line.
+        tl.fromTo("#ld-word", { x: 0, y: -6 }, { x: -34, y: -6, duration: 0.07, ease: "power2.in" }, 1.06);
+        tl.set("#ld-lock", { opacity: 0 }, 1.18);
+
+        const ls = FX.line(document.getElementById("ld-line"), ["Find", "the", "real", { t: "builders", cls: "serif" }]);
+        FX.wordIn(tl, ls[0], 1.2, { dy: 0, lead: 0.02, open: 0.02, hold: 0.07, settle: 0.04, to: "#fff" });
+        FX.wordIn(tl, ls[1], 1.25, { dy: 0.2, lead: 0.03, open: 0.07, hold: 0.03, settle: 0.03, to: "#fff" });
+        FX.wordIn(tl, ls[2], 1.26, { dy: 0.25, lead: 0.03, open: 0.07, hold: 0.04, settle: 0.03, to: "#fff" });
+        FX.wordIn(tl, ls[3], 1.26, { dy: 0.3, lead: 0.02, open: 0.07, hold: 0.15, settle: 0.04, to: "#fff" });
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["logo-dark"] = tl;
+      })();
+    </script>
+  </div>
+</template>

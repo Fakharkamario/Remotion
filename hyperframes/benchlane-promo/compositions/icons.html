@@ -1,0 +1,98 @@
+<template id="icons-template">
+  <div data-composition-id="icons" data-width="1920" data-height="1080" data-duration="2.7">
+    <div class="full dark"></div>
+    <div id="ic-glow" class="full"></div>
+    <div id="ic-field" class="full"></div>
+    <div id="ic-sq" class="full"></div>
+    <div id="ic-line" class="line"></div>
+
+    <style>
+      #ic-glow { background: radial-gradient(70% 45% at 50% 108%, rgba(120, 38, 16, 0.55), rgba(120, 38, 16, 0) 70%); }
+      #ic-line { top: 514px; font-size: 44px; color: #fff; letter-spacing: -0.01em; }
+      .ic-tile { position: absolute; left: 0; top: 0; width: 100px; height: 100px; }
+      .ic-face { position: absolute; inset: 0; border-radius: 23%; overflow: hidden; }
+      .ic-or { background: linear-gradient(180deg, #f8a283 0%, #ee7550 38%, #e05a34 62%, rgba(140, 45, 20, 0.15) 100%); }
+      .ic-px { position: absolute; inset: 0; background-size: 100% 100%; image-rendering: pixelated; }
+      .ic-ic { background: linear-gradient(160deg, #1d1410, #100b08 60%); border: 2px solid rgba(234, 94, 57, 0.4);
+        box-shadow: inset 0 0 26px rgba(234, 94, 57, 0.14), 0 0 34px rgba(234, 94, 57, 0.08); }
+      .ic-ic .gl { position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; }
+      .ic-ic .gl svg { width: 100%; height: 100%; display: block; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        // Shared vertical-streak mosaic used while the tiles are "rushing" in.
+        // columns of slightly different brightness, fading out towards the bottom
+        const colB = [];
+        const rr = FX.rng(21);
+        for (let i = 0; i < 9; i++) colB.push(0.62 + rr() * 0.38);
+        const mos = FX.mosaic(9, 14, 1, 22, (x, y, r) => {
+          const b = colB[Math.floor(x)] * (1 - 0.04 * r());
+          const a = Math.max(0, 1 - Math.pow(y / 14, 1.6));
+          return `rgba(${Math.round(248 * b)},${Math.round(128 * b)},${Math.round(92 * b)},${a.toFixed(2)})`;
+        }).toDataURL();
+
+        // name, P1 (x, y, size) at t=1.0, P2 at t=2.6, appear time
+        const T = [
+          ["ripple", [1026, 798, 366], [210, 960, 366], 0.0],
+          ["chevrons", [270, 510, 300], [1032, 306, 172], 0.02],
+          ["atom", [1650, 570, 312], [888, 888, 348], 0.05],
+          ["wave", [888, 276, 180], [1722, 192, 168], 0.08],
+          ["cube", [378, 930, 360], [-150, 1220, 360], 0.04],
+          ["devkit", [1536, 132, 180], [1990, -20, 180], 0.1],
+          ["bot", [1908, 48, 190], [2120, -80, 190], 0.12],
+          ["bolt", [30, 900, 330], [-280, 1120, 330], 0.06],
+          ["dots", [-140, 780, 240], [312, 432, 180], 1.3],
+          ["prism", [2080, 470, 330], [1596, 648, 348], 1.5],
+        ];
+        const field = document.getElementById("ic-field");
+        T.forEach(([name, p1, p2, at], i) => {
+          const el = document.createElement("div");
+          el.className = "ic-tile";
+          el.innerHTML = `<div class="ic-face ic-ic"><div class="gl">${FX.icons[name]}</div></div>
+            <div class="ic-face ic-or"><div class="ic-px" style="background-image:url(${mos})"></div></div>`;
+          field.appendChild(el);
+          const ic = el.children[0], or = el.children[1], px = or.firstElementChild;
+          const pose = (p) => ({ x: p[0] - 50, y: p[1] - 50, scale: p[2] / 100 });
+          if (at < 1) {
+            // rush in from below / outside, orange and streaky, then resolve into the icon tile
+            const p0 = [960 + (p1[0] - 960) * 1.25, p1[1] + 300, p1[2] * 1.15];
+            tl.set(el, Object.assign(pose(p0), { opacity: 0 }), 0);
+            tl.set(el, { opacity: 1 }, at);
+            tl.to(el, Object.assign(pose(p1), { duration: 0.75, ease: "power3.out" }), at);
+            tl.to(el, Object.assign(pose(p2), { duration: 1.6, ease: "sine.in" }), 1.0);
+            tl.fromTo(px, { opacity: 0.9 }, { opacity: 0, duration: 0.35, ease: "power1.in" }, at + 0.05);
+            const flip = 0.33 + i * 0.055;
+            tl.set(ic, { opacity: 0 }, 0);
+            tl.set(px, { opacity: 0.85 }, flip);
+            tl.to(or, { opacity: 0, duration: 0.14, ease: "steps(4)" }, flip + 0.02);
+            tl.to(ic, { opacity: 1, duration: 0.12, ease: "steps(3)" }, flip);
+          } else {
+            // late arrivals slide in from the edge already resolved
+            tl.set(or, { opacity: 0 }, 0);
+            tl.set(el, Object.assign(pose(p1), { opacity: 1 }), 0);
+            tl.to(el, Object.assign(pose(p2), { duration: 2.6 - at + 0.2, ease: "power1.out" }), at - 0.2);
+          }
+        });
+
+        // "alongside AI"
+        const slots = FX.line(document.getElementById("ic-line"), ["alongside", { t: "AI", cls: "accent" }]);
+        FX.wordIn(tl, slots[0], 0.0, { dy: 0, lead: 0.01, open: 0.01, hold: 0.06, settle: 0.04, to: "#fff" });
+        FX.wordIn(tl, slots[1], 0.1, { dy: 0.4, lift: 0.14, to: null });
+        tl.to(slots[0].firstElementChild, { y: -18, duration: 0.08, ease: "power1.in" }, 2.6);
+        tl.to(slots[1].firstElementChild, { y: 20, x: 10, duration: 0.08, ease: "power1.in" }, 2.6);
+
+        FX.randomSquares(document.getElementById("ic-sq"), tl, {
+          seed: 9, count: 16, x0: 120, x1: 1800, y0: 120, y1: 960, size: 18,
+          t0: 0.45, t1: 2.7, stagger: 0.5, minOn: 0.2, maxOn: 0.9, minOff: 0.1, maxOff: 0.6,
+        });
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["icons"] = tl;
+      })();
+    </script>
+  </div>
+</template>

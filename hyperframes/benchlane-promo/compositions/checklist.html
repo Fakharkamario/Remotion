@@ -1,0 +1,56 @@
+<template id="checklist-template">
+  <div data-composition-id="checklist" data-width="1920" data-height="1080" data-duration="1.4">
+    <div class="full cream"></div>
+    <div id="ck-list"></div>
+
+    <style>
+      #ck-list { position: absolute; left: 0; top: 0; }
+      .ck-it { position: absolute; left: 228px; height: 174px; display: flex; align-items: center; white-space: nowrap; font-size: 118px; letter-spacing: -0.02em; color: #ddd6d0; }
+      .ck-it .bx { width: 84px; height: 84px; border-radius: 16px; border: 6px solid #ddd6d0; margin-right: 66px; position: relative; flex: none; }
+      .ck-it .bx svg { position: absolute; inset: 6px; width: calc(100% - 12px); height: calc(100% - 12px); opacity: 0; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const items = ["Code clarity", "Problem framing", "Learning speed", "Test strategy", "Tooling choices", "Fast iteration", "Checks AI output", "Root-cause hunting", "Security sense", "Clear communication"];
+        const host = document.getElementById("ck-list");
+        const els = items.map((t, i) => {
+          const d = document.createElement("div");
+          d.className = "ck-it";
+          d.style.top = i * 174 - 87 + "px";
+          d.innerHTML = `<span class="bx"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>${t}`;
+          host.appendChild(d);
+          return d;
+        });
+        // active item index over time; previous items become ticked and faded
+        const steps = [[0, 0], [0.06, 1], [0.13, 2], [0.26, 3], [0.4, 4], [0.73, 5], [1.13, 6], [1.33, 7]];
+        const done = { color: "#f0c4b2" }, doneBx = { borderColor: "#f3b9a3", backgroundColor: "#f3b9a3" };
+        const act = { color: C.ink }, actBx = { borderColor: C.orange, backgroundColor: C.orange };
+        steps.forEach(([t, a]) => {
+          tl.set(els[a], act, t);
+          tl.set(els[a].querySelector(".bx"), actBx, t);
+          tl.set(els[a].querySelector("svg"), { opacity: 1 }, t);
+          if (a > 0) {
+            tl.set(els[a - 1], done, t);
+            tl.set(els[a - 1].querySelector(".bx"), doneBx, t);
+          }
+        });
+        // the list scrolls quickly at first, then slows while the ticks keep moving down
+        tl.set(host, { y: 222 }, 0);
+        tl.to(host, { keyframes: [
+          { y: 78, duration: 0.06, ease: "power2.out" },
+          { y: 10, duration: 0.14, ease: "sine.out" },
+          { y: -108, duration: 0.2, ease: "sine.inOut" },
+          { y: -192, duration: 0.33, ease: "sine.inOut" },
+          { y: -294, duration: 0.4, ease: "sine.inOut" },
+          { y: -350, duration: 0.27, ease: "sine.out" },
+        ] }, 0);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["checklist"] = tl;
+      })();
+    </script>
+  </div>
+</template>

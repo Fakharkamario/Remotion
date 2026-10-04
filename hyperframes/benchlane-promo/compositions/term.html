@@ -1,0 +1,76 @@
+<template id="term-template">
+  <div data-composition-id="term" data-width="1920" data-height="1080" data-duration="3.3">
+    <div class="full dark"></div>
+    <div id="tm-prev"></div>
+    <div id="tm-cam" class="full">
+      <div id="tm-bot"></div>
+      <div id="tm-ver"><b>forge-cli</b> v3.4.0</div>
+      <div id="tm-in"><span class="pr">&gt;</span><span id="tm-txt"></span><span id="tm-caret"></span></div>
+    </div>
+    <div id="tm-cur" class="cursor"></div>
+    <div id="tm-tag" class="tag cand">Candidate</div>
+
+    <style>
+      #tm-prev { position: absolute; left: -1700px; top: -40px; width: 2080px; height: 880px; border-radius: 0 0 40px 40px; background: #1b1311;
+        border: 2px solid rgba(255, 255, 255, 0.07); }
+      #tm-cam { transform-origin: 392px 452px; }
+      #tm-bot { position: absolute; left: 380px; top: 344px; width: 168px; height: 144px; }
+      #tm-bot svg { width: 100%; height: 100%; display: block; }
+      #tm-ver { position: absolute; left: 1290px; top: 452px; font: 13px "JetBrains Mono", monospace; color: #55504c; white-space: nowrap; }
+      #tm-ver b { font-weight: 400; color: #c4573a; }
+      #tm-in { position: absolute; left: 360px; top: 504px; width: 1200px; height: 120px; border-radius: 10px; background: #15100e; border: 1.5px solid rgba(255, 255, 255, 0.08);
+        font: 26px/116px "JetBrains Mono", monospace; color: #e9e1da; padding-left: 28px; white-space: pre; }
+      #tm-in .pr { color: #7c726b; margin-right: 18px; }
+      #tm-caret { display: inline-block; width: 2px; height: 30px; background: #e9e1da; vertical-align: -6px; margin-left: 2px; opacity: 0; }
+      #tm-tag { font-size: 26px; padding: 6px 22px 8px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        document.getElementById("tm-bot").innerHTML = FX.mascot(C.orange);
+
+        // leftover modal slides away
+        tl.fromTo("#tm-prev", { x: 0 }, { x: -500, duration: 0.18, ease: "power2.in" }, 0);
+        tl.from(["#tm-bot", "#tm-in", "#tm-ver"], { opacity: 0, duration: 0.08 }, 0.02);
+        tl.fromTo("#tm-in", { scaleX: 0.92, scaleY: 0.2 }, { scaleX: 1, scaleY: 1, duration: 0.2, ease: "power2.out" }, 0.02);
+
+        const cur = document.getElementById("tm-cur"), tag = document.getElementById("tm-tag");
+        cur.innerHTML = FX.cursor(C.purple, "#c9b8ff");
+        tl.set(cur, { x: 1084, y: 744, scale: 1, rotation: -14, transformOrigin: "0 0" }, 0);
+        tl.set(tag, { x: 1112, y: 790, scale: 0.8, transformOrigin: "0 0" }, 0);
+        tl.to(cur, { x: 1010, y: 700, duration: 0.95, ease: "sine.inOut" }, 0);
+        tl.to(tag, { x: 1040, y: 740, duration: 0.95, ease: "sine.inOut" }, 0);
+
+        // cut-zoom onto the prompt
+        tl.set("#tm-cam", { scale: 2.2 }, 0.97);
+        tl.set(cur, { x: 1010, y: 712, scale: 1.7 }, 0.97);
+        tl.set(tag, { x: 1500, y: 930, scale: 1.3 }, 0.97);
+        tl.to(cur, { x: 640, y: 650, duration: 0.7, ease: "power2.out" }, 1.0);
+        tl.to(tag, { x: 690, y: 720, duration: 0.8, ease: "power2.out" }, 1.02);
+
+        // typing
+        const text = "add pantry scanner — camera → vision model. skip auth for now";
+        const txt = document.getElementById("tm-txt");
+        txt.innerHTML = text.split("").map((ch) => `<span>${ch === " " ? " " : ch}</span>`).join("");
+        const chars = Array.from(txt.children);
+        tl.set(chars, { display: "none" }, 0);
+        tl.set("#tm-caret", { opacity: 1 }, 1.0);
+        const t0 = 1.65, cps = 41;
+        chars.forEach((c, i) => tl.set(c, { display: "inline" }, t0 + i / cps));
+        tl.to(cur, { x: 300, y: 720, rotation: -40, duration: 0.5, ease: "power1.in" }, 1.9);
+        tl.to(tag, { x: 330, y: 790, duration: 0.5, ease: "power1.in" }, 1.95);
+        tl.to(cur, { x: -200, duration: 0.25, ease: "power1.in" }, 2.35);
+        tl.to(tag, { x: -260, duration: 0.25, ease: "power1.in" }, 2.38);
+
+        // camera follows the caret, then eases back a touch before the cut
+        tl.to("#tm-cam", { x: -1220, duration: 1.0, ease: "power1.inOut" }, 2.2);
+        tl.to("#tm-cam", { x: -1380, y: -60, scale: 2.05, duration: 0.2, ease: "power2.inOut" }, 3.08);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["term"] = tl;
+      })();
+    </script>
+  </div>
+</template>

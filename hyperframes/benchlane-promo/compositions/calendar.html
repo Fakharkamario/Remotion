@@ -1,0 +1,67 @@
+<template id="calendar-template">
+  <div data-composition-id="calendar" data-width="1920" data-height="1080" data-duration="2.5">
+    <div class="full cream"></div>
+    <div id="ca-line" class="line"></div>
+    <div id="ca-and" class="ca-side">and</div>
+    <div id="ca-hire" class="ca-side">hire</div>
+    <div id="ca-field" class="full"></div>
+
+    <style>
+      #ca-line { top: 512px; font-size: 44px; letter-spacing: -0.01em; }
+      .ca-side { position: absolute; top: 512px; font-size: 44px; color: #16110D; opacity: 0; }
+      #ca-and { left: 300px; }
+      #ca-hire { left: 1500px; }
+      .ca-card { position: absolute; left: 0; top: 0; width: 300px; height: 104px; margin: -52px 0 0 -150px; border-radius: 12px; padding: 18px 26px; font-size: 21px; line-height: 1.5; white-space: nowrap;
+        border-left: 6px solid; transform-origin: 50% 50%; }
+      .ca-card small { display: block; font-size: 15px; opacity: 0.75; }
+      .ca-card.p { background: rgba(186, 160, 248, 0.42); color: #7b56e6; border-color: #8b6cf2; }
+      .ca-card.o { background: rgba(244, 170, 145, 0.45); color: #df5a34; border-color: #ea7a55; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const r = FX.rng(404);
+
+        const s = FX.line(document.getElementById("ca-line"), ["so", "you", "interview", "less"]);
+        [[0, 0.08], [1, 0.13], [2, 0.3], [3, 0.42]].forEach(([i, t]) => FX.wordIn(tl, s[i], t, { dy: 0.2, lead: 0.04, open: 0.1, hold: 0.1, settle: 0.05 }));
+        s.forEach((sl) => tl.set(sl.firstElementChild, { opacity: 0 }, 1.5));
+
+        const names = ["Ava", "Theo", "Nina", "Omar", "Kai", "Lena", "Marco", "Iris", "Jonah", "Priya", "Felix", "Rosa", "Dev", "Mila", "Hugo", "Sana", "Leo", "Yara", "Nico", "Esme", "Tariq", "June", "Bram", "Cleo"];
+        const verbs = ["Meet with", "Call with", "Chat with", "Interview:", "Sync with"];
+        const field = document.getElementById("ca-field");
+        const N = 36;
+        for (let i = 0; i < N; i++) {
+          const d = document.createElement("div");
+          const purple = r() < 0.45;
+          d.className = "ca-card " + (purple ? "p" : "o");
+          const h = 9 + Math.floor(r() * 8), m = r() < 0.5 ? "00" : "30";
+          d.innerHTML = `${verbs[Math.floor(r() * verbs.length)]} ${names[i % names.length]}<small>&#9719; ${h}:${m} – ${h + 1}:${m}</small>`;
+          field.appendChild(d);
+          // depth: far cards are small; everything pushes outward as the camera flies in
+          const z = 0.55 + r() * 1.25;
+          const ang = r() * Math.PI * 2, rad = 160 + r() * 980;
+          const x0 = 960 + Math.cos(ang) * rad * 1.15, y0 = 540 + Math.sin(ang) * rad * 0.62;
+          const born = r() * 0.7;
+          const k = 1.25 + z * 0.5;
+          tl.set(d, { x: x0, y: y0, scale: z * 0.8, opacity: 0 }, 0);
+          tl.to(d, { opacity: 1, duration: 0.08 }, born);
+          tl.to(d, { x: 960 + (x0 - 960) * k, y: 540 + (y0 - 540) * k, scale: z * 0.8 * k, duration: 1.55, ease: "sine.in" }, 0);
+          tl.set(d, { filter: "blur(0px) saturate(1)" }, 0);
+          if (z > 1.0) tl.to(d, { filter: "blur(3px) saturate(1)", duration: 1.2 }, 0.3);
+          // gather into a cluster between "and" and "hire", then collapse
+          const cx = 960 + (r() - 0.5) * 700, cy = 560 + (r() - 0.5) * 640;
+          tl.to(d, { x: cx, y: cy, scale: 0.5 + r() * 0.25, filter: "blur(0.5px) saturate(1.1)", duration: 0.4, ease: "power3.out" }, 1.48 + r() * 0.06);
+          tl.to(d, { x: 960 + (cx - 960) * 0.3, y: 560 + (cy - 560) * 0.35, scale: 0.36, scaleX: 0.5, filter: "blur(3px) saturate(1.6)", duration: 0.55, ease: "power2.in" }, 1.9);
+          tl.set(d, { opacity: 0 }, 2.47);
+        }
+        tl.set(["#ca-and", "#ca-hire"], { opacity: 1, color: C.orange }, 1.53);
+        tl.to(["#ca-and", "#ca-hire"], { color: C.ink, duration: 0.08 }, 1.63);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["calendar"] = tl;
+      })();
+    </script>
+  </div>
+</template>

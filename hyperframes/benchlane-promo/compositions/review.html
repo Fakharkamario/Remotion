@@ -1,0 +1,64 @@
+<template id="review-template">
+  <div data-composition-id="review" data-width="1920" data-height="1080" data-duration="2.1">
+    <div class="full" style="background:#f3cbb3"></div>
+    <div id="rv-glow" class="full"></div>
+    <div id="rv-band"></div>
+    <div id="rv-line" class="line"></div>
+
+    <style>
+      #rv-glow canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; opacity: 0; }
+      #rv-band { position: absolute; left: 0; right: 0; top: 408px; height: 252px; background: #0e0a08; }
+      #rv-line { top: 510px; font-size: 44px; color: #fff; letter-spacing: -0.005em; }
+      #rv-line .serif { font-size: 1.08em; }
+      #rv-line .spin { width: 48px; height: 48px; display: inline-block; vertical-align: -10px; margin: 0 0.25em; }
+      #rv-line .spin svg { width: 100%; height: 100%; display: block; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        // Blocky warm glows above and below the band. Four states, cross-faded.
+        const glow = (seed, cx, cy, hot, edge, dim) =>
+          FX.mosaic(96, 54, 1, seed, (x, y, r) => {
+            const top = y < 27;
+            const yy = top ? y / 20.4 : (54 - y) / 20.4; // 0 at the screen edge, 1 at the band
+            const dx = (x - cx) / 48;
+            const blob = Math.exp(-(dx * dx) / 0.35 - Math.pow(yy - cy, 2) / 0.12) * hot;
+            const dark = Math.min(1, Math.pow(Math.max(0, yy), 3.2) * 0.95 + (dim || 0) * Math.min(1, yy * 2.2));
+            const edgeO = Math.max(0, 1 - yy * 3.2) * edge;
+            let R = 252, G = 236, B = 222;
+            R = R * (1 - blob) + 236 * blob; G = G * (1 - blob) + 106 * blob; B = B * (1 - blob) + 64 * blob;
+            R = R * (1 - edgeO) + 234 * edgeO; G = G * (1 - edgeO) + 98 * edgeO; B = B * (1 - edgeO) + 58 * edgeO;
+            R *= 1 - dark; G *= 1 - dark * 1.05; B *= 1 - dark * 1.1;
+            const n = (r() - 0.5) * 10;
+            return `rgb(${Math.max(0, R + n) | 0},${Math.max(0, G + n) | 0},${Math.max(0, B + n) | 0})`;
+          });
+        const host = document.getElementById("rv-glow");
+        const st = [glow(1, 48, 0.4, 0.0, 1.0, 0.92), glow(2, 48, 0.5, 0.2, 0.9), glow(3, 40, 0.45, 0.05, 0.5), glow(4, 52, 0.5, 0.95, 0.6)].map((c) => host.appendChild(c));
+        tl.set(st[0], { opacity: 1 }, 0);
+        tl.to(st[1], { opacity: 1, duration: 0.3, ease: "none" }, 0.1);
+        tl.to(st[2], { opacity: 1, duration: 0.5, ease: "none" }, 0.45);
+        tl.to(st[3], { opacity: 1, duration: 0.6, ease: "none" }, 1.4);
+
+        const spin = `<span class="spin"><svg viewBox="0 0 40 40"><path d="M20 4a16 16 0 0 1 16 16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></span>`;
+        const s = FX.line(document.getElementById("rv-line"), ["AI agents", { t: spin }, { t: "grade", cls: "serif" }, "every", "session"]);
+        s.forEach((sl, i) => {
+          if (i === 1) return;
+          const w = sl.firstElementChild;
+          tl.set(w, { color: C.orange }, 0);
+          tl.to(w, { color: "#fff", duration: 0.06, ease: "none" }, 0.12 + (i === 0 ? 0 : 0.02));
+        });
+        tl.set(s[1], { gridTemplateColumns: "0fr" }, 0);
+        tl.set(s[1].firstElementChild, { opacity: 0 }, 0);
+        tl.to(s[1], { gridTemplateColumns: "1fr", duration: 0.12, ease: "power2.out" }, 0.18);
+        tl.set(s[1].firstElementChild, { opacity: 1 }, 0.22);
+        tl.fromTo(s[1].querySelector("svg"), { rotation: 0 }, { rotation: 900, duration: 1.88, ease: "none", transformOrigin: "50% 50%" }, 0.22);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["review"] = tl;
+      })();
+    </script>
+  </div>
+</template>

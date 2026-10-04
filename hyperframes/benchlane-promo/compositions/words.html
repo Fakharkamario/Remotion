@@ -1,0 +1,204 @@
+<template id="words-template">
+  <div data-composition-id="words" data-width="1920" data-height="1080" data-duration="6.17">
+    <div class="full cream"></div>
+    <div id="wd-dots" class="full"></div>
+    <div id="wd-glyphs" class="full"></div>
+    <div id="wd-conf" class="full"></div>
+    <div id="wd-sq" class="full"></div>
+    <div id="wd-l1" class="line wd-line"></div>
+    <div id="wd-l2" class="line wd-line"></div>
+    <div id="wd-l3" class="line wd-line"></div>
+    <div id="wd-l4" class="line wd-line"></div>
+    <div id="wd-ring" class="full"></div>
+    <div id="wd-meet" class="full">
+      <div id="wd-tl" class="wd-br"></div>
+      <div id="wd-bl" class="wd-br"></div>
+      <div id="wd-meet-t" class="serif">Meet</div>
+    </div>
+
+    <style>
+      .wd-line { top: 512px; font-size: 46px; letter-spacing: -0.01em; }
+      #wd-glyphs .row { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 50px; font-weight: 600; color: #EA5E39; white-space: pre; letter-spacing: 0.1em; }
+      #wd-glyphs .v { position: absolute; left: 0; top: 0; opacity: 0; }
+      #wd-conf span { position: absolute; left: 0; top: 0; font-family: "JetBrains Mono", monospace; font-size: 36px; opacity: 0; }
+      #wd-l3 .brk > .w { padding-right: 1.05em; }
+      #wd-l3 .brk2 > .w { padding-left: 0.9em; }
+      #wd-l1 .gw { font-family: "JetBrains Mono", monospace; font-weight: 600; letter-spacing: 0.08em; }
+      #wd-l4 .w { transition: none; }
+      #wd-dots { opacity: 0; }
+      #wd-ring { opacity: 0; display: flex; align-items: center; justify-content: center; }
+      #wd-ring svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      #wd-meet { opacity: 0; }
+      .wd-br { position: absolute; width: 234px; height: 285px; }
+      .wd-br::before, .wd-br::after { content: ""; position: absolute; background: #EA5E39; }
+      #wd-tl { left: 606px; top: 360px; }
+      #wd-tl::before { left: 0; top: 0; width: 88px; height: 285px; }
+      #wd-tl::after { left: 0; top: 0; width: 234px; height: 76px; }
+      #wd-bl { left: 1092px; top: 435px; }
+      #wd-bl::before { right: 0; top: 0; width: 88px; height: 285px; }
+      #wd-bl::after { right: 0; bottom: 0; width: 234px; height: 76px; }
+      #wd-meet-t { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 128px; line-height: 1; color: #16110D; padding-left: 40px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const r = FX.rng(77);
+        const F = 1 / 30;
+
+        // ---------------------------------------------------------- 1. glyph scramble
+        const gl = document.getElementById("wd-glyphs");
+        const G = "&*[]<>#%&*<>";
+        const rowText = (n) => Array.from({ length: n }, () => (r() < 0.15 ? " " : G[Math.floor(r() * G.length)])).join("");
+        const rows = [
+          { x0: 640, x1: 900, y0: 440, y1: 420, n: 9 },
+          { x0: 960, x1: 600, y0: 530, y1: 585, n: 8 },
+        ].map((o) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          let html = "";
+          for (let k = 0; k < 10; k++) html += `<span class="v">${rowText(o.n)}</span>`;
+          row.innerHTML = html;
+          gl.appendChild(row);
+          tl.fromTo(row, { x: o.x0, y: o.y0 }, { x: o.x1, y: o.y1, duration: 0.6, ease: "none" }, 0);
+          const vs = Array.from(row.children);
+          let k = 0;
+          for (let t = 0; t < 0.66; t += 2 * F, k++) vs.forEach((v, i) => tl.set(v, { opacity: i === k % vs.length ? 1 : 0 }, t));
+          tl.set(vs, { opacity: 0 }, 0.66);
+          return row;
+        });
+
+        // ------------------------------------------------- 2. "Yet hiring is stuck in the past."
+        const glyphWord = (w, g) => ({ t: `<span class="gw">${g}</span><span class="rw">${w}</span>` });
+        const s1 = FX.line(document.getElementById("wd-l1"), ["Yet", "interviews", glyphWord("still", "[]&amp;*"), glyphWord("live", "&lt;&gt;*#"), glyphWord("in", "&amp;#"), "2015."]);
+        s1.forEach((sl) => {
+          const g = sl.querySelector(".gw"), rw = sl.querySelector(".rw");
+          if (!g) return;
+          tl.set(rw, { display: "none" }, 0);
+          tl.set(g, { display: "inline" }, 0);
+          tl.set(g, { display: "none" }, 0.7);
+          tl.set(rw, { display: "inline" }, 0.7);
+        });
+        const scat = [
+          [0.57, -0.15, 0.35], [0.57, 0, 0.55], [0.63, 0.1, 0.75], [0.6, 0.05, -0.4], [0.66, 0, 0.3], [0.57, 0.1, -0.45],
+        ];
+        s1.forEach((sl, i) => {
+          const [t, dx, dy] = scat[i];
+          const w = sl.firstElementChild;
+          tl.set(w, { opacity: 0, color: C.orange, x: dx + "em", y: dy + "em" }, 0);
+          tl.set(w, { opacity: 1 }, t);
+          tl.to(w, { x: 0, y: 0, duration: 0.3, ease: "power2.out" }, t + 0.06);
+          tl.to(w, { color: C.ink, duration: 0.08, ease: "none" }, [0.66, 0.78, 0.8, 0.76, 0.8, 0.7][i]);
+        });
+        // words leave: first collapses (line re-centres), the rest blink out and leave gaps
+        FX.wordOut(tl, s1[0], 1.43, { flash: 0.07, close: 0.1 });
+        [[3, 1.57], [5, 1.63], [2, 1.7], [4, 1.77]].forEach(([i, t]) => {
+          const w = s1[i].firstElementChild;
+          tl.set(w, { color: C.orange }, t);
+          tl.set(w, { opacity: 0 }, t + 0.06);
+        });
+        tl.set(s1[1].firstElementChild, { color: C.orange }, 2.03);
+        tl.set(s1[1].firstElementChild, { opacity: 0 }, 2.1);
+
+        // -------------------------------------------- 3. "Old-school coding quizzes" + confetti
+        const s2 = FX.line(document.getElementById("wd-l2"), ["Old-school", "coding", "quizzes"]);
+        FX.wordIn(tl, s2[0], 2.1, { dy: 0.1, lead: 0.02, open: 0.04, hold: 0.12, settle: 0.04 });
+        FX.wordIn(tl, s2[1], 2.23, { dy: 0.12, lead: 0.05, open: 0.12, hold: 0.12, settle: 0.04 });
+        FX.wordIn(tl, s2[2], 2.37, { dy: 0.12, lead: 0.05, open: 0.12, hold: 0.14, settle: 0.04 });
+        s2.forEach((sl) => tl.set(sl.firstElementChild, { opacity: 0 }, 2.97));
+
+        const conf = document.getElementById("wd-conf");
+        const chars = ["*", "\\", "}", "{", "*", "}", "\\", "}"];
+        const cols = [C.ink, "#d6c51c", C.orange, C.ink, C.orange, "#d6c51c", C.orange, C.ink];
+        for (let i = 0; i < 17; i++) {
+          const sp = document.createElement("span");
+          sp.textContent = chars[i % chars.length];
+          sp.style.color = cols[(i * 3) % cols.length];
+          conf.appendChild(sp);
+          const born = 2.1 + (i < 7 ? i * 0.02 : 0.25 + r() * 0.7);
+          let t = born;
+          while (t < 3.8) {
+            const wide = t > 2.95;
+            const ax = wide ? 900 : 430, ay = wide ? 470 : 175;
+            const x = 960 + (r() * 2 - 1) * ax, y = 530 + (r() * 2 - 1) * ay;
+            if (Math.abs(y - 530) < 40 && Math.abs(x - 960) < 380) continue;
+            tl.set(sp, { x: x, y: y, opacity: 1 }, t);
+            t += 0.2 + r() * 0.25;
+          }
+          tl.set(sp, { opacity: 0 }, 3.8);
+        }
+
+        // ------------------------------------------------ 4. "< can't reveal how >"
+        const s3 = FX.line(document.getElementById("wd-l3"), [{ t: "&lt;", cls: "" }, "can't", "reveal", "how", { t: "&gt;", cls: "" }]);
+        s3[0].classList.add("brk");
+        s3[4].classList.add("brk2");
+        [[0, 2.97], [1, 2.97], [2, 3.17], [3, 3.23], [4, 2.97]].forEach(([i, t]) => {
+          const isB = i === 0 || i === 4;
+          FX.wordIn(tl, s3[i], t, { dy: 0, lead: 0.03, open: isB ? 0.01 : 0.1, hold: 0.13, settle: 0.04, from: isB ? C.ink : C.orange });
+        });
+        tl.to(s3[4].firstElementChild, { paddingLeft: "0.45em", duration: 0.1, ease: "power2.out" }, 3.15);
+        tl.to(s3[4].firstElementChild, { paddingLeft: "0.2em", duration: 0.1, ease: "power2.out" }, 3.21);
+        s3.forEach((sl) => tl.set(sl.firstElementChild, { opacity: 0 }, 3.8));
+
+        // ------------------------------------- 5. "developers truly build now" on a dot grid
+        const dots = FX.mosaic(1920, 1080, 22, 31, (x, y, rr) => {
+          const n = Math.sin(x * 0.006 + 1.3) * Math.sin(y * 0.009 + 0.4);
+          const p = 0.45 + n * 0.3;
+          return rr() < p ? `rgba(205,160,130,${(0.08 + rr() * 0.06).toFixed(3)})` : null;
+        });
+        dots.style.position = "absolute";
+        const dg = dots.getContext("2d");
+        // turn solid cells into small squares (gaps between cells)
+        const tmp = FX.canvas(1920, 1080);
+        const tg = tmp.getContext("2d");
+        tg.drawImage(dots, 0, 0);
+        dg.clearRect(0, 0, 1920, 1080);
+        for (let y = 0; y < 1080; y += 22) for (let x = 0; x < 1920; x += 22) dg.drawImage(tmp, x + 3, y + 3, 16, 16, x + 3, y + 3, 16, 16);
+        document.getElementById("wd-dots").appendChild(dots);
+        tl.to("#wd-dots", { opacity: 1, duration: 0.15, ease: "none" }, 3.9);
+
+        const s4 = FX.line(document.getElementById("wd-l4"), ["developers", { t: '<span class="t-a">truly</span><span class="t-b serif">truly</span>' }, "build", "now"]);
+        [[0, 3.83, 0], [1, 3.9, 0.12], [2, 3.97, 0.1], [3, 4.03, 0.3]].forEach(([i, t, dy]) => {
+          const w = s4[i].firstElementChild;
+          tl.set(w, { opacity: 0, y: dy + "em" }, 0);
+          tl.set(w, { opacity: 1 }, t);
+          tl.to(w, { y: 0, duration: 0.2, ease: "power3.out" }, t + 0.04);
+        });
+        const ta = s4[1].querySelector(".t-a"), tb = s4[1].querySelector(".t-b");
+        tl.set(tb, { display: "none", color: C.orange }, 0);
+        tl.set(ta, { display: "none" }, 4.23);
+        tl.set(tb, { display: "inline" }, 4.23);
+        s4.slice(0, 3).forEach((sl) => tl.to(sl.firstElementChild, { paddingRight: "0.62em", duration: 0.2, ease: "power2.out" }, 4.25));
+        FX.squares(document.getElementById("wd-sq"), tl, [
+          [1398, 618, 18, 18, [[4.23, 4.5], [4.6, 5.3]]],
+          [150, 618, 18, 18, [[4.4, 5.3]]],
+          [1800, 380, 18, 18, [[4.7, 5.3]]],
+          [930, 690, 18, 18, [[4.3, 4.45]]],
+        ]);
+
+        // pixel ring bursts outward
+        const ring = document.getElementById("wd-ring");
+        ring.innerHTML = FX.pixelRing(1100, 462, 44, 11, 3, C.orange, 5, 0);
+        tl.set(ring, { opacity: 1 }, 5.3);
+        tl.fromTo(ring, { scale: 0.8 }, { scale: 2.05, duration: 0.27, ease: "none" }, 5.3);
+        s4.forEach((sl) => tl.set(sl.firstElementChild, { color: C.orange }, 5.3));
+        tl.set([ring, "#wd-dots"], { opacity: 0 }, 5.57);
+        s4.forEach((sl) => tl.set(sl.firstElementChild, { opacity: 0 }, 5.57));
+
+        // ------------------------------------------------------------ 6. Meet
+        tl.set("#wd-meet", { opacity: 1 }, 5.57);
+        tl.to("#wd-tl", { x: -96, duration: 0.36, ease: "power2.out" }, 5.57);
+        tl.to("#wd-bl", { x: 92, duration: 0.36, ease: "power2.out" }, 5.57);
+        tl.to("#wd-meet", { x: -28, duration: 0.4, ease: "sine.inOut" }, 5.75);
+        tl.set("#wd-meet-t", { color: C.orange }, 6.05);
+        tl.set("#wd-meet-t", { opacity: 0 }, 6.13);
+        tl.to("#wd-tl", { x: -40, duration: 0.07, ease: "power2.in" }, 6.1);
+        tl.to("#wd-bl", { x: -10, duration: 0.07, ease: "power2.in" }, 6.1);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["words"] = tl;
+      })();
+    </script>
+  </div>
+</template>

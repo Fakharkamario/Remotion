@@ -1,0 +1,195 @@
+<template id="replay-template">
+  <div data-composition-id="replay" data-width="1920" data-height="1080" data-duration="5.4">
+    <div class="full cream"></div>
+    <div id="rp-glow" class="full"></div>
+    <div id="rp-cam" class="full">
+      <div id="rp-list">
+        <div class="it">Final build</div>
+        <div class="it">Source</div>
+        <div class="it">Agent workflow</div>
+        <div class="it">AI review</div>
+        <div id="rp-dot"></div>
+      </div>
+      <div id="rp-view"><div id="rp-stack"></div></div>
+    </div>
+
+    <style>
+      #rp-glow { background: radial-gradient(40% 45% at 100% 100%, rgba(240, 160, 140, 0.35), rgba(240, 160, 140, 0) 70%); }
+      #rp-cam { transform-origin: 1300px 500px; }
+      #rp-list { position: absolute; left: 102px; top: 296px; font-size: 50px; letter-spacing: -0.01em; color: #16110D; }
+      #rp-list .it { height: 114px; line-height: 64px; white-space: nowrap; }
+      #rp-dot { position: absolute; left: -46px; top: 22px; width: 22px; height: 22px; background: #EA5E39; opacity: 0; }
+      #rp-view { position: absolute; left: 762px; top: 0; width: 1092px; height: 1080px; overflow: visible; }
+      #rp-stack { position: absolute; left: 0; top: 57px; width: 1092px; }
+      .rp-card { position: absolute; left: 0; width: 1092px; height: 894px; border-radius: 44px; overflow: hidden; }
+      .rp-card .land { position: absolute; inset: 0; }
+      .rp-card .px { position: absolute; inset: 0; opacity: 0; background-size: 100% 100%; image-rendering: pixelated; }
+      .rp-win { position: absolute; left: 72px; top: 162px; width: 948px; height: 606px; border-radius: 22px; background: #15100d; box-shadow: 0 24px 60px rgba(30, 10, 5, 0.45); overflow: hidden; color: #d8cfc7; }
+      /* final build */
+      .fb-top { height: 66px; display: flex; align-items: center; justify-content: center; }
+      .fb-top span { width: 380px; height: 40px; border-radius: 20px; background: #221a16; }
+      .fb-row { margin: 18px 54px 0; font-size: 15px; color: #8b8079; }
+      .fb-tiles { display: flex; gap: 14px; margin: 10px 54px 0; }
+      .fb-tiles span { width: 116px; height: 116px; border-radius: 12px; background: linear-gradient(140deg, var(--a), var(--b)); opacity: 0; }
+      .fb-ask { position: absolute; left: 150px; right: 150px; bottom: 26px; height: 50px; border-radius: 25px; background: #221a16; font-size: 15px; color: #9a8f88; line-height: 50px; padding-left: 26px; }
+      /* code */
+      .cd-tabs { height: 46px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); font: 14px "JetBrains Mono", monospace; color: #6f665f; display: flex; gap: 26px; padding-left: 22px; align-items: center; }
+      .cd-tabs b { color: #e7ded6; font-weight: 400; }
+      .cd-body { position: relative; font: 15px/28px "JetBrains Mono", monospace; color: #d8cfc7; white-space: pre; padding-top: 12px; }
+      .cd-body .ln { display: inline-block; width: 48px; text-align: right; color: #4f4741; margin-right: 20px; }
+      .cd-body .k { color: #c792ea; } .cd-body .s { color: #c3e88d; } .cd-body .f { color: #82aaff; } .cd-body .n { color: #f78c6c; } .cd-body .c { color: #5c544e; }
+      .cd-body .hl { position: absolute; left: 0; right: 0; height: 28px; background: rgba(255, 255, 255, 0.05); }
+      .cd-flag { position: absolute; right: 26px; width: 18px; height: 12px; }
+      /* agents */
+      .ag-head { margin: 22px; height: 210px; border: 1.5px solid rgba(234, 94, 57, 0.55); border-radius: 12px; position: relative; }
+      .ag-head .bot { position: absolute; left: 62px; top: 40px; width: 150px; height: 128px; }
+      .ag-head .tips { position: absolute; left: 400px; top: 26px; font: 14px/1.6 "JetBrains Mono", monospace; color: #8f857e; border-left: 1px solid rgba(234, 94, 57, 0.4); padding-left: 22px; }
+      .ag-head .tips b { color: #e86a4a; font-weight: 400; }
+      .ag-log { font: 15px/27px "JetBrains Mono", monospace; color: #8f857e; padding: 6px 40px; white-space: pre; }
+      .ag-log .y::before { content: "\25CF  "; color: #e3c64a; } .ag-log .g::before { content: "\25CF  "; color: #63c76a; } .ag-log .p::before { content: "> "; color: #b9a4f7; }
+      .ag-log .o::before { content: "\2731  "; color: #e86a4a; }
+      .ag-log b { color: #e9e0d8; font-weight: 400; }
+      .ag-log .sub { padding-left: 26px; color: #6b625b; }
+      /* rubric */
+      .rb-h { font-size: 15px; color: #c9bfb7; padding: 20px 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+      .rb-row { height: 128px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; padding: 0 30px; font-size: 16px; color: #d9d0c8; }
+      .rb-row .lab { width: 330px; }
+      .rb-row .chip { width: 116px; height: 34px; border-radius: 9px; font-size: 14px; line-height: 32px; text-align: center; opacity: 0; }
+      .rb-row .chip.ex { color: #5bd88a; background: rgba(60, 170, 100, 0.18); border: 1.5px solid rgba(91, 216, 138, 0.5); }
+      .rb-row .chip.gd { color: #e6c651; background: rgba(200, 160, 40, 0.18); border: 1.5px solid rgba(230, 198, 81, 0.5); }
+      .rb-row .bars { margin-left: auto; width: 300px; }
+      .rb-row .bars i { display: block; height: 7px; border-radius: 4px; background: #2b221d; margin: 9px 0; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        // painted-looking landscapes (gradients + layered ridge silhouettes + blocky grain)
+        const land = (seed, sky, ridges) => {
+          const c = FX.canvas(546, 447);
+          const g = c.getContext("2d");
+          const r = FX.rng(seed);
+          const gr = g.createLinearGradient(0, 0, 0, 447);
+          sky.forEach(([o, col]) => gr.addColorStop(o, col));
+          g.fillStyle = gr;
+          g.fillRect(0, 0, 546, 447);
+          for (let k = 0; k < 40; k++) {
+            g.fillStyle = `rgba(255,${200 + Math.floor(r() * 40)},${190 + Math.floor(r() * 40)},${(0.08 + r() * 0.12).toFixed(2)})`;
+            g.beginPath();
+            g.ellipse(r() * 546, r() * 150, 40 + r() * 90, 8 + r() * 14, 0, 0, Math.PI * 2);
+            g.fill();
+          }
+          ridges.forEach(([y0, amp, col], j) => {
+            g.fillStyle = col;
+            g.beginPath();
+            g.moveTo(0, 447);
+            for (let x = 0; x <= 546; x += 6) g.lineTo(x, y0 + Math.sin(x * 0.012 + j * 2 + seed) * amp + Math.sin(x * 0.041 + j) * amp * 0.35);
+            g.lineTo(546, 447);
+            g.fill();
+          });
+          for (let k = 0; k < 1400; k++) {
+            const y = 220 + r() * 227;
+            g.fillStyle = `rgba(${90 + Math.floor(r() * 120)},${50 + Math.floor(r() * 60)},${30 + Math.floor(r() * 40)},${(0.12 + r() * 0.25).toFixed(2)})`;
+            g.fillRect(r() * 546, y, 2 + r() * 5, 1 + r() * 3);
+          }
+          return c;
+        };
+        const lands = [
+          land(1, [[0, "#9a7e9a"], [0.35, "#d79a8f"], [0.6, "#e7a07c"]], [[250, 18, "#c9876a"], [300, 14, "#b86f50"], [360, 10, "#a85c3c"]]),
+          land(2, [[0, "#a7869a"], [0.4, "#dca28d"], [0.6, "#eaa679"]], [[240, 22, "#cf8d6c"], [310, 12, "#ba6c48"], [370, 9, "#9d5232"]]),
+          land(3, [[0, "#7a6f8c"], [0.4, "#c99486"], [0.62, "#e39466"]], [[230, 30, "#8d5e58"], [300, 16, "#b9673f"], [365, 10, "#934826"]]),
+          land(4, [[0, "#c9b7b3"], [0.45, "#e8c4ad"], [0.6, "#ecb48c"]], [[200, 40, "#6d7fa3"], [280, 16, "#d79a6d"], [350, 10, "#c27a4c"]]),
+        ];
+
+        const K = (s) => `<span class="k">${s}</span>`, S = (s) => `<span class="s">${s}</span>`, Fn = (s) => `<span class="f">${s}</span>`, N = (s) => `<span class="n">${s}</span>`;
+        const code = [
+          `  ${K("const")} frameRef = ${Fn("useRef")}&lt;Blob | ${K("null")}&gt;(${K("null")});`,
+          `  ${K("const")} [items, setItems] = ${Fn("useState")}&lt;PantryItem[]&gt;([]);`,
+          `  ${K("const")} [isPending, startTransition] = ${Fn("useTransition")}();`,
+          ``,
+          `  ${K("const")} ${Fn("onFrame")} = ${K("async")} (frame: Blob) =&gt; {`,
+          `    frameRef.current = frame;`,
+          `    ${K("await")} ${Fn("sleep")}(${N("350")});`,
+          `    ${K("if")} (frameRef.current !== frame) ${K("return")};`,
+          `    ${K("const")} found = ${K("await")} ${Fn("detectItems")}(frame);`,
+          `    ${Fn("startTransition")}(() =&gt; {`,
+          `      ${Fn("setItems")}((prev) =&gt; ${Fn("merge")}(prev, found));`,
+          `    });`,
+          `  };`,
+          ``,
+          `  ${K("const")} recipes = ${Fn("matchRecipes")}(items, { maxMinutes: ${N("30")} });`,
+          `  ${K("return")} { items, recipes, isPending, onFrame };`,
+          `};`,
+          ``,
+          `${K("function")} ${Fn("merge")}(a: PantryItem[], b: PantryItem[]) {`,
+        ];
+        const tiles = [["#d9a066", "#7d9a4f"], ["#e7c38b", "#c55a3a"], ["#8fb36b", "#e0b25a"], ["#c86f4e", "#f0d3a2"], ["#e2b07a", "#9c4a2e"], ["#b9c48a", "#5d7a3c"], ["#f0c27b", "#d0643c"]];
+        const tileRow = (o) => `<div class="fb-tiles">${tiles.map((t, i) => `<span style="--a:${tiles[(i + o) % 7][0]};--b:${tiles[(i + o) % 7][1]}"></span>`).join("")}</div>`;
+        const wins = [
+          `<div class="fb-top"><span></span></div><div class="fb-row">Tonight's picks</div>${tileRow(0)}<div class="fb-row">Under 20 minutes</div>${tileRow(3)}<div class="fb-ask">&#10022;&nbsp; What's in your fridge?</div>`,
+          `<div class="cd-tabs"><b>usePantryScan.ts</b><span>useCamera.ts</span></div><div class="cd-body"><div class="hl" style="top:${12 + 28 * 4}px"></div>${code.map((l, i) => `<div><span class="ln">${i + 7}</span>${l}</div>`).join("")}
+             <svg class="cd-flag" style="top:30px" viewBox="0 0 14 10"><rect width="14" height="10" rx="2" fill="#e86a4a"/></svg><svg class="cd-flag" style="top:250px" viewBox="0 0 14 10"><rect width="14" height="10" rx="2" fill="#e86a4a"/></svg></div>`,
+          `<div class="ag-head"><div class="bot">${FX.mascot(C.orange)}</div><div class="tips"><b>Getting started</b><br>Run /init to create a<br>FORGE.md file with<br>project notes</div></div>
+             <div class="ag-log"><div>done — dev server now runs on</div><div style="color:#7aa7ff">https://localhost:5173</div><div> </div><div class="p">add pantry scanner — camera → vision model.</div><div>  skip auth for now</div><div> </div><div class="y">Bash <b>mkdir -p src/hooks src/vision</b></div><div class="sub">created · 3 files</div><div> </div><div class="o" style="color:#e86a4a">Simmering…</div></div>`,
+          `<div class="rb-h">Rubric results</div>${[
+            ["Codebase navigation", "ex", "Excellent"], ["System design", "gd", "Good"], ["Full-stack delivery", "ex", "Excellent"], ["Working with agents", "gd", "Good"],
+          ].map(([l, k, t]) => `<div class="rb-row"><div class="lab">${l}</div><div class="chip ${k}">${t}</div><div class="bars"><i style="width:90%"></i><i style="width:70%"></i></div></div>`).join("")}`,
+        ];
+
+        const stack = document.getElementById("rp-stack");
+        const cards = lands.map((cv, i) => {
+          const d = document.createElement("div");
+          d.className = "rp-card";
+          d.style.top = i * 999 + "px";
+          const px = FX.mosaic(24, 20, 1, 50 + i, (x, y, r) => `rgba(${200 + Math.floor(r() * 50)},${110 + Math.floor(r() * 60)},${90 + Math.floor(r() * 50)},1)`).toDataURL();
+          d.innerHTML = `<div class="land"></div><div class="rp-win">${wins[i]}</div><div class="px" style="background-image:url(${px})"></div>`;
+          cv.style.width = "100%";
+          cv.style.height = "100%";
+          d.querySelector(".land").appendChild(cv);
+          stack.appendChild(d);
+          return d;
+        });
+
+        // entry: the whole layout eases down/in a touch, final-build tiles pop in one by one
+        tl.fromTo("#rp-cam", { y: -24, scale: 0.985 }, { y: 30, scale: 1.03, duration: 1.0, ease: "power2.out" }, 0);
+        tl.to("#rp-cam", { y: 36, scale: 1.04, duration: 4.4, ease: "none" }, 1.0);
+        const fbt = cards[0].querySelectorAll(".fb-tiles span");
+        fbt.forEach((t, i) => tl.to(t, { opacity: 1, duration: 0.06 }, 0.1 + (i % 7) * 0.06 + (i >= 7 ? 0.25 : 0)));
+        tl.set(cards[0].querySelector(".rp-win"), { opacity: 0.6 }, 0);
+        tl.to(cards[0].querySelector(".rp-win"), { opacity: 1, duration: 0.25 }, 0);
+
+        // bullet + labels
+        const its = document.querySelectorAll("#rp-list .it");
+        const dot = document.getElementById("rp-dot");
+        tl.set(dot, { opacity: 1, y: 0 }, 0.33);
+        tl.set(its[0], { color: C.orange }, 0.33);
+        const moveTo = (i, t) => {
+          tl.to(dot, { keyframes: [{ y: 114 * i - 57, scaleY: 2.2, duration: 0.05 }, { y: 114 * i, scaleY: 1, duration: 0.06 }], ease: "power2.out" }, t);
+          tl.set(its[i - 1], { color: C.ink }, t);
+          tl.set(its[i], { color: C.orange }, t + 0.06);
+        };
+
+        // vertical slides between cards with a brief pixelation on the moving card edges
+        const slide = (i, t) => {
+          tl.to(stack, { y: -999 * i, duration: 0.42, ease: "power3.inOut" }, t);
+          tl.fromTo(cards[i - 1].querySelector(".px"), { opacity: 0 }, { keyframes: [{ opacity: 0.22, duration: 0.12 }, { opacity: 0, duration: 0.14 }] }, t + 0.06);
+          tl.fromTo(cards[i].querySelector(".px"), { opacity: 0 }, { keyframes: [{ opacity: 0.22, duration: 0.12 }, { opacity: 0, duration: 0.16 }] }, t + 0.14);
+          moveTo(i, t + 0.15);
+        };
+        slide(1, 1.07);
+        slide(2, 2.64);
+        slide(3, 4.04);
+
+        // rubric chips light up in sequence
+        cards[3].querySelectorAll(".chip").forEach((c, i) => tl.to(c, { opacity: 1, duration: 0.06 }, 4.45 + i * 0.12));
+        tl.fromTo(cards[2].querySelector(".ag-log"), { y: 30 }, { y: -40, duration: 1.4, ease: "none" }, 2.7);
+        tl.fromTo(cards[1].querySelector(".cd-body"), { y: 0 }, { y: -110, duration: 1.4, ease: "none" }, 1.2);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["replay"] = tl;
+      })();
+    </script>
+  </div>
+</template>

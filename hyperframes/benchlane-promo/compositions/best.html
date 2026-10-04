@@ -1,0 +1,33 @@
+<template id="best-template">
+  <div data-composition-id="best" data-width="1920" data-height="1080" data-duration="1.4">
+    <div class="full cream"></div>
+    <div id="be-wrap"><div id="be-pill"><div id="be-line"></div></div></div>
+
+    <style>
+      #be-wrap { position: absolute; left: 0; right: 0; top: 488px; display: flex; justify-content: center; }
+      #be-pill { border: 2.5px solid #c98068; border-radius: 22px; padding: 0 30px; height: 104px; display: flex; align-items: center; font-size: 44px; letter-spacing: -0.01em; }
+      #be-line { display: flex; align-items: baseline; }
+      #be-line .serif { font-size: 1.08em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const s = FX.line(document.getElementById("be-line"), ["with", "hard", { t: "evidence.", cls: "serif" }]);
+        FX.wordIn(tl, s[0], 0.0, { dy: 0, lead: 0, open: 0.01, hold: 0.06, settle: 0.06 });
+        FX.wordIn(tl, s[1], 0.2, { dy: 0.1, lead: 0.04, open: 0.12, hold: 0.08, settle: 0.06 });
+        FX.wordIn(tl, s[2], 0.4, { dy: 0.15, lead: 0.04, open: 0.14, hold: 0.1, settle: 0.08 });
+        tl.fromTo("#be-pill", { borderColor: "#e7a088" }, { borderColor: "#b9786a", duration: 0.5 }, 0);
+
+        // exit: wipe from the left, words fade first
+        tl.to(s[0].firstElementChild, { color: "#e9b3a1", opacity: 0.5, duration: 0.05 }, 1.1);
+        tl.to(s[1].firstElementChild, { color: "#e9b3a1", duration: 0.05 }, 1.16);
+        tl.fromTo("#be-pill", { clipPath: "inset(-10px -10px -10px -10px)" }, { clipPath: "inset(-10px -10px -10px 100%)", duration: 0.27, ease: "power1.in" }, 1.1);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["best"] = tl;
+      })();
+    </script>
+  </div>
+</template>

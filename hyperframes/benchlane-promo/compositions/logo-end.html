@@ -1,0 +1,50 @@
+<template id="logo-end-template">
+  <div data-composition-id="logo-end" data-width="1920" data-height="1080" data-duration="1.6">
+    <div class="full cream"></div>
+    <div id="le-lock">
+      <div id="le-clip"><div id="le-word">benchlane</div></div>
+      <div id="le-mark"></div>
+    </div>
+
+    <style>
+      #le-lock { position: absolute; left: 0; right: 0; top: 488px; height: 104px; display: flex; justify-content: center; align-items: center; }
+      #le-mark { position: absolute; width: 100px; height: 100px; top: 2px; opacity: 0; }
+      #le-mark svg { width: 100%; height: 100%; display: block; }
+      #le-clip { overflow: hidden; height: 130px; display: flex; align-items: center; }
+      #le-word { font-size: 104px; font-weight: 500; letter-spacing: -0.035em; line-height: 1; color: #16110D; white-space: nowrap; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const mk = document.getElementById("le-mark");
+        mk.innerHTML = FX.mark(C.orange);
+        const g = mk.querySelector("g");
+        // word width is measured from layout so the clip/offset math stays exact
+        const word = document.getElementById("le-word");
+        const W = 470;
+        const gap = 40;
+        const total = 100 + gap + W;
+        const left = 960 - total / 2;
+        tl.set("#le-clip", { position: "absolute", left: left + 100 + gap, width: W }, 0);
+        tl.set(mk, { left: left, opacity: 0, scale: 0.6 }, 0);
+        tl.set(word, { x: -W - gap, y: -6 }, 0);
+
+        // the mark pops in orange, darkens to ink, then the word slides out from behind it
+        tl.to(mk, { opacity: 1, scale: 0.82, x: total / 2 - 50, duration: 0.05 }, 0.03);
+        tl.set(g, { attr: { fill: "#5a2a1c" } }, 0.1);
+        tl.set(g, { attr: { fill: "#2a1610" } }, 0.17);
+        tl.set(g, { attr: { fill: C.ink } }, 0.23);
+        tl.to(mk, { scale: 1.12, x: 0, duration: 0.25, ease: "power3.inOut" }, 0.23);
+        tl.to(word, { x: 0, duration: 0.3, ease: "power3.out" }, 0.3);
+        tl.fromTo("#le-lock", { scale: 1.16 }, { scale: 1.16, duration: 0.01 }, 0.0);
+        tl.to("#le-lock", { scale: 1.0, duration: 0.18, ease: "power2.out" }, 0.48);
+        tl.to(mk, { scale: 1, duration: 0.18, ease: "power2.out" }, 0.48);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["logo-end"] = tl;
+      })();
+    </script>
+  </div>
+</template>

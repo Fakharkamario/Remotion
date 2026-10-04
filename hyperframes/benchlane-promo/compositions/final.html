@@ -1,0 +1,27 @@
+<template id="final-template">
+  <div data-composition-id="final" data-width="1920" data-height="1080" data-duration="2.6">
+    <div class="full cream"></div>
+    <div id="fi-line" class="line"></div>
+    <div id="fi-black" class="full" style="background:#000;opacity:0"></div>
+
+    <style>
+      #fi-line { top: 510px; font-size: 52px; letter-spacing: -0.01em; }
+      #fi-line .serif { font-size: 1.08em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const s = FX.line(document.getElementById("fi-line"), ["Hire", "on", { t: "proof,", cls: "serif" }, "not", "puzzles"]);
+        FX.wordIn(tl, s[0], 0.0, { dy: 0, lead: 0, open: 0.01, hold: 0.1, settle: 0.06 });
+        FX.wordIn(tl, s[1], 0.03, { dy: 0.1, lead: 0.02, open: 0.08, hold: 0.12, settle: 0.06 });
+        FX.wordIn(tl, s[2], 0.06, { dy: 0.1, lead: 0.02, open: 0.08, hold: 0.12, settle: 0.06 });
+        FX.wordIn(tl, s[3], 0.1, { dy: 0.15, lead: 0.03, open: 0.1, hold: 0.1, settle: 0.06 });
+        FX.wordIn(tl, s[4], 0.13, { dy: 0.15, lead: 0.03, open: 0.1, hold: 0.1, settle: 0.06 });
+        tl.set("#fi-black", { opacity: 1 }, 2.56);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["final"] = tl;
+      })();
+    </script>
+  </div>
+</template>

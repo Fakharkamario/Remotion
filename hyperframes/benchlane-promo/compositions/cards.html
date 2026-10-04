@@ -1,0 +1,85 @@
+<template id="cards-template">
+  <div data-composition-id="cards" data-width="1920" data-height="1080" data-duration="1.56">
+    <div id="cd-photo" class="full">
+      <div class="cd-wood"></div>
+      <div class="cd-sheet s1"></div>
+      <div class="cd-sheet s2"></div>
+      <div class="cd-sheet s3"></div>
+      <div class="cd-light"></div>
+    </div>
+    <div id="cd-tint" class="full"></div>
+    <div id="cd-cam" class="full"><div id="cd-list"></div></div>
+
+    <style>
+      #cd-photo { overflow: hidden; filter: blur(12px) saturate(0.8); transform: scale(1.06); }
+      .cd-wood { position: absolute; inset: -10%; transform: rotate(-24deg);
+        background: repeating-linear-gradient(90deg, #c78a66 0 60px, #cf9470 60px 130px, #bd7f5c 130px 160px, #cb916d 160px 240px); }
+      .cd-sheet { position: absolute; border-radius: 30px; background: linear-gradient(135deg, #f6eadf, #e8d3c3); box-shadow: 0 30px 80px rgba(80, 30, 10, 0.35); }
+      .cd-sheet.s1 { width: 1300px; height: 520px; left: -260px; top: 610px; transform: rotate(-28deg); }
+      .cd-sheet.s2 { width: 900px; height: 700px; left: 1250px; top: -260px; transform: rotate(32deg); background: linear-gradient(135deg, #ece3da, #cbbdb1); }
+      .cd-sheet.s3 { width: 560px; height: 120px; left: 1350px; top: 760px; transform: rotate(-40deg); background: linear-gradient(90deg, #f3e7dc, #d9c4b4); }
+      .cd-light { position: absolute; inset: 0; background: radial-gradient(60% 70% at 40% 40%, rgba(255, 235, 215, 0.35), rgba(255, 235, 215, 0) 70%); }
+      #cd-tint { background: #f07a55; mix-blend-mode: multiply; }
+      #cd-list { position: absolute; left: 415px; top: 0; width: 1090px; }
+      .cd-card { position: absolute; left: 0; width: 1090px; height: 190px; border-radius: 26px; background: #fbf4ec;
+        box-shadow: 0 12px 30px rgba(90, 40, 20, 0.16); padding: 44px 0 0 98px; }
+      .cd-card .ico { position: absolute; left: 44px; top: 48px; width: 32px; height: 32px; }
+      .cd-card .ico svg { width: 100%; height: 100%; display: block; }
+      .cd-card .t { font-size: 27px; font-weight: 450; color: #1b1612; letter-spacing: -0.01em; white-space: nowrap; }
+      .cd-card .c { font-size: 20px; color: #b7aaa0; margin-top: 12px; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const ic = {
+          check: `<svg viewBox="0 0 24 24" fill="none" stroke="#5cb85c" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>`,
+          layers: `<svg viewBox="0 0 24 24" fill="none" stroke="#8a6cf0" stroke-width="2" stroke-linejoin="round"><path d="M12 4l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4M4 16l8 4 8-4"/></svg>`,
+          chat: `<svg viewBox="0 0 24 24" fill="none" stroke="#ea5e39" stroke-width="2" stroke-linejoin="round"><path d="M4 5h11v8H9l-3 3v-3H4z"/><path d="M15 9h5v8h-2v3l-3-3h-4v-2"/></svg>`,
+          target: `<svg viewBox="0 0 24 24" fill="none" stroke="#e0603f" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M21 12h-3"/></svg>`,
+          book: `<svg viewBox="0 0 24 24" fill="none" stroke="#5a7bf0" stroke-width="2" stroke-linejoin="round"><path d="M4 5h6a2 2 0 012 2v12a2 2 0 00-2-2H4zM20 5h-6a2 2 0 00-2 2v12a2 2 0 012-2h6z"/></svg>`,
+          bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="#e7a73c" stroke-width="2" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>`,
+        };
+        const items = [
+          ["bolt", "Debounced search so the API stops getting hammered", "Performance Tuning"],
+          ["layers", "Added a cache layer with invalidation on profile edits", "Full-Stack Execution"],
+          ["chat", "Rejected an agent patch that faked passing tests", "Agent Oversight"],
+          ["check", "Added retry with backoff that the agent skipped", "Reliability &amp; Shipping"],
+          ["target", "Sketched the data model before letting agents code", "System Design"],
+          ["book", "Removed stale feature flags the agent left behind", "Codebase Hygiene"],
+          ["check", "Spotted an unbounded query the agent wrote", "Reliability &amp; Shipping"],
+          ["chat", "Stopped a refactor that duplicated an existing helper", "Agent Oversight"],
+          ["layers", "Made the webhook handler safe to replay", "Full-Stack Execution"],
+          ["target", "Compared three queue options before picking one", "System Design"],
+        ];
+        const offs = [0, 0, 6, 0, -4, 8, 14, 22, 36, 52];
+        const list = document.getElementById("cd-list");
+        items.forEach(([k, t, c], i) => {
+          const d = document.createElement("div");
+          d.className = "cd-card";
+          d.style.top = i * 228 + "px";
+          d.style.left = offs[i] + "px";
+          d.innerHTML = `<div class="ico">${ic[k]}</div><div class="t">${t}</div><div class="c">${c}</div>`;
+          list.appendChild(d);
+        });
+
+        // Orange wash eases off to reveal the photo-ish backdrop.
+        tl.fromTo("#cd-tint", { opacity: 1 }, { opacity: 0.55, duration: 0.6, ease: "power1.out" }, 0);
+        tl.fromTo("#cd-photo", { scale: 1.06, x: 0 }, { scale: 1.12, x: 40, duration: 1.56, ease: "none" }, 0);
+
+        // Scroll: steady steps, then a whip up-and-right into the cut.
+        tl.set(list, { y: 0, x: 0 }, 0);
+        tl.to(list, { y: -228, duration: 0.22, ease: "power2.inOut" }, 0.25);
+        tl.to(list, { y: -456, duration: 0.2, ease: "power2.inOut" }, 0.78);
+        tl.to(list, { y: -684, duration: 0.18, ease: "power2.inOut" }, 1.13);
+        tl.to(list, { y: -1140, duration: 0.16, ease: "power2.in" }, 1.32);
+        tl.to(list, { y: -1330, duration: 0.08, ease: "none" }, 1.48);
+        Array.from(list.children).forEach((cd, i) => tl.to(cd, { x: (i - 5) * 200 - 415 - offs[i], duration: 0.16, ease: "power2.in" }, 1.32));
+        tl.to(list, { x: 160, duration: 0.08, ease: "none" }, 1.48);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["cards"] = tl;
+      })();
+    </script>
+  </div>
+</template>
