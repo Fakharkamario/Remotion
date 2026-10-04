@@ -144,21 +144,21 @@
   };
 
   // ------------------------------------------------------------------ art
-  // Original pixel mascot ("Volt"): a boxy robot with an antenna and stubby legs.
+  // Original pixel mascot ("Volt"): a TV-screen robot head with an antenna.
   FX.mascot = function (color) {
     const rows = [
       "......##......",
       "......##......",
+      ".......#......",
       "..##########..",
       ".############.",
+      ".##........##.",
+      ".##.##..##.##.",
+      ".##........##.",
       ".##..####..##.",
-      ".##..####..##.",
+      ".##........##.",
       ".############.",
-      "##.########.##",
-      "##.##....##.##",
-      ".############.",
-      "...##....##...",
-      "..###....###..",
+      "..##########..",
     ];
     let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 12" shape-rendering="crispEdges">`;
     rows.forEach((row, y) => {

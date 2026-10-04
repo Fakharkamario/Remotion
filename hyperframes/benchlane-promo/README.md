@@ -7,7 +7,7 @@ card scrolls) is matched to its timing. The content is new:
 - **Brand:** *benchlane*, a mock company with its own two-corner logo mark.
 - **Copy:** all lines rewritten.
 - **Icons:** an original set (ripple, atom, wave, `</>`, cube, dots, prism, bolt, "devkit").
-- **Mascot:** an original pixel robot ("Volt").
+- **Mascot:** an original pixel robot head ("Volt").
 - **Sample project:** a mock recipe-planner brief for "Acme Kitchen Co." driven through a
   fictional `forge-cli` agent.
 - **Backdrops:** generated CSS/canvas gradients instead of photos.
