@@ -1,0 +1,43 @@
+<template id="final-template">
+  <div data-composition-id="final" data-width="1920" data-height="1080" data-duration="2.6">
+    <div class="full cream"></div>
+    <div id="fi-row"><div id="fi-line" class="line"></div></div>
+    <div id="fi-black" class="full" style="background:#000"></div>
+
+    <style>
+      /* baseline at y 556, centred on x 960; the row scales about the frame centre while it settles */
+      #fi-row { position: absolute; left: 0; right: 0; top: 505.9px; display: flex; justify-content: center; transform-origin: 960px 50px; }
+      #fi-line { position: relative; font-size: 58px; letter-spacing: -0.005em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const CUT = 165, at = (n) => FX.at(n, CUT);
+        const root = document.getElementById("fi-line").parentElement.parentElement;
+        const $ = (s) => root.querySelector(s);
+
+        // three beats: "Hire" · "on proof," · "not puzzles", each lands in the accent and inks a few frames later
+        const w = FX.words($("#fi-line"), ["Hire", "on", { t: "proof,", cls: "serif" }, "not", "puzzles"]);
+        const beats = [[[0], 165, 170], [[1, 2], 167, 172], [[3, 4], 168, 173]];
+        beats.forEach(([ids, on, ink]) => ids.forEach((i) => {
+          FX.put(tl, w[i], { opacity: 0, color: C.text }, 0);
+          FX.put(tl, w[i], { opacity: 1 }, at(on));
+          FX.put(tl, w[i], { color: C.ink }, at(ink));
+        }));
+
+        // the line arrives a touch large and right of centre, then settles (measured offset px, scale)
+        FX.track(tl, $("#fi-row"), [[165, 70, 1.06], [167, 46, 1.055], [168, 34, 1.049], [169, 19.5, 1.024], [170, 13, 1.013], [172, 7.5, 1.006], [173, 6, 1.006], [174, 4, 1.005],
+          [175, 1.5, 1.004], [177, 0.5, 1.003], [178, 0, 1.0]], CUT, ([x, s]) => ({ x, scale: s }));
+
+        FX.put(tl, $("#fi-black"), { opacity: 0 }, 0);
+        FX.put(tl, $("#fi-black"), { opacity: 1 }, at(242));
+
+        tl.set({}, {}, 2.6);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["final"] = tl;
+      })();
+    </script>
+  </div>
+</template>

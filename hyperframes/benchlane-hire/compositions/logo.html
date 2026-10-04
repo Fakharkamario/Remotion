@@ -1,0 +1,75 @@
+<template id="logo-template">
+  <div data-composition-id="logo" data-width="1920" data-height="1080" data-duration="1.5667">
+    <div class="full cream"></div>
+    <!-- the wordmark slides out from behind the mark: it is clipped on the left at the mark's right edge only,
+         so the full word always shows once it is out -->
+    <div id="lo-clip" class="full"><div id="lo-word">benchlane</div></div>
+    <div id="lo-mark"></div>
+
+    <style>
+      #lo-word { position: absolute; left: 0; top: 540px; transform-origin: 0 0; }
+      /* Inter 96 / 500: baseline 32 px below the mark's centre line at scale 1 */
+      #lo-word { font-size: 96px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; color: #16110D; margin-top: -50.88px; }
+      #lo-mark { position: absolute; left: 0; top: 0; width: 100px; height: 100px; transform-origin: 0 0; }
+      #lo-mark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+        const CUT = 118, at = (n) => FX.at(n, CUT);
+        const root = document.getElementById("lo-mark").parentElement;
+        const $ = (s) => root.querySelector(s);
+        const mk = $("#lo-mark"), word = $("#lo-word"), clip = $("#lo-clip");
+        mk.innerHTML = FX.mark(C.mark);
+        const g0 = mk.querySelector("g"), pa = mk.querySelector(".mk-a"), pb = mk.querySelector(".mk-b");
+
+        // lockup at rest: 96 px mark, 41 px gap, wordmark 462.2 px wide (Inter 96/500, -0.02em), centred on x 960
+        const MARK = 96, GAP = 41, WORD = 462.2;
+        const restCx = 960 - (MARK + GAP + WORD) / 2 + MARK / 2;
+
+        // measured per frame: [frame, mark centre x (reference), mark height]
+        const refMark = [[118, 1010, 116], [119, 990.5, 126], [120, 983.5, 132], [122, 978, 136], [123, 972.5, 139], [124, 966.9, 141], [125, 959.3, 142], [127, 949.3, 142],
+          [128, 933.8, 143], [129, 899.5, 138], [130, 770.5, 134], [132, 752, 126], [133, 758, 116], [134, 765.5, 108], [135, 769.5, 104], [137, 772.5, 100], [138, 774.5, 99],
+          [139, 776, 98], [140, 777.5, 96], [142, 778.5, 96], [148, 777.5, 96], [152, 776.5, 96], [154, 775.5, 96], [157, 774.5, 96], [158, 773.5, 96], [159, 772.5, 96],
+          [160, 770.5, 96], [162, 769.5, 96], [163, 766.5, 96], [164, 761.5, 96]];
+        // how far the wordmark still sits behind the mark, as a fraction of (word + gap)
+        const slide = { 125: -0.98, 127: -0.95, 128: -0.896, 129: -0.77, 130: -0.25, 132: -0.128, 133: -0.082, 134: -0.049, 135: -0.034, 137: -0.007, 138: -0.011, 139: -0.012 };
+        // the mark pops in orange and darkens to ink
+        const col = { 118: C.mark, 119: "#d05635", 120: "#9a4228", 122: "#5a2a1d", 123: "#23130e", 124: C.ink };
+
+        const val = (rows, g) => {
+          let r = rows[0];
+          for (const x of rows) if (x[0] <= g) r = x;
+          return r;
+        };
+        for (let g = 118; g <= 164; g++) {
+          if (FX.held(g)) continue;
+          const [, rcx, h] = val(refMark, g);
+          const S = h / MARK;
+          // alone, the mark sits where the reference's does; once the word comes out it heads to this lockup's rest spot
+          let cx = rcx;
+          if (g >= 140) cx = restCx + (rcx - 777.5);
+          else if (g >= 129) cx = 933.8 + (rcx - 933.8) * (restCx - 933.8) / (777.5 - 933.8);
+          const left = cx - h / 2, right = cx + h / 2;
+          const s = g <= 124 ? -1 : slide[g] != null ? slide[g] : 0;
+          const wx = right + GAP * S + s * (WORD + GAP) * S;
+          const t = at(g);
+          FX.put(tl, mk, { x: left, y: 540 - h / 2, scale: h / 100 }, t);
+          FX.put(tl, word, { x: wx, scale: S }, t);
+          FX.put(tl, clip, { clipPath: `inset(-10px -10px -10px ${right.toFixed(2)}px)` }, t);
+          if (col[g]) FX.put(tl, g0, { attr: { fill: col[g] } }, t);
+          // first frame: the two corners are drawn in tight to the centre block, then spring out
+          const pull = g === 118 ? 9 : 0;
+          FX.put(tl, pa, { attr: { transform: `translate(${pull} ${pull})` } }, t);
+          FX.put(tl, pb, { attr: { transform: `translate(${-pull} ${-pull})` } }, t);
+        }
+
+        tl.set({}, {}, 1.5667);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["logo"] = tl;
+      })();
+    </script>
+  </div>
+</template>
