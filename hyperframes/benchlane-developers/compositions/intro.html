@@ -1,0 +1,106 @@
+<template id="intro-template">
+  <div data-composition-id="intro" data-width="1920" data-height="1080" data-duration="1.8">
+    <div class="full cream"></div>
+    <div id="in-glow" class="full"></div>
+    <div id="in-noise" class="full"></div>
+    <div id="in-sq" class="full"></div>
+    <div id="in-cam" class="full">
+      <div id="in-line" class="line"></div>
+    </div>
+
+    <style>
+      #in-glow { opacity: 0; background: radial-gradient(60% 55% at 92% 8%, rgba(240,150,125,.32), rgba(240,150,125,0) 70%), radial-gradient(55% 45% at 6% 96%, rgba(240,150,125,.26), rgba(240,150,125,0) 70%); }
+      #in-noise canvas { position: absolute; inset: 0; opacity: 0; }
+      #in-cam { transform-origin: 960px 540px; }
+      #in-line { top: 508px; font-size: 53px; letter-spacing: -0.012em; }
+      #in-line .sw-b { display: none; font-size: 1.06em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const C = FX.C;
+
+        // Pale pink pixel blotches that flicker behind the first beat.
+        const host = document.getElementById("in-noise");
+        const blot = (seed) =>
+          FX.mosaic(1920, 1080, 40, seed, (x, y, r) => {
+            const d1 = Math.hypot((x - 1750) / 900, (y - 120) / 520);
+            const d2 = Math.hypot((x - 150) / 900, (y - 1000) / 480);
+            const p = Math.max(0, 1 - Math.min(d1, d2)) * 0.8;
+            if (r() > p * 0.7) return null;
+            const a = (0.03 + r() * 0.16) * p;
+            return `rgba(238,128,104,${a.toFixed(3)})`;
+          });
+        const layers = [11, 12, 13, 14].map((s) => host.appendChild(blot(s)));
+        const step = 2 / 30;
+        let k = 0;
+        for (let t = 0.07; t < 0.95; t += step, k++) {
+          layers.forEach((c, i) => tl.set(c, { opacity: i === k % layers.length ? Math.min(1, (t - 0.04) / 0.25) * Math.min(1, (0.97 - t) / 0.3) : 0 }, t));
+        }
+        tl.set(layers, { opacity: 0 }, 0.96);
+        tl.fromTo("#in-glow", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "none" }, 0.1);
+        tl.to("#in-glow", { opacity: 0, duration: 0.35, ease: "none" }, 0.65);
+
+        // Words
+        const slots = FX.line(document.getElementById("in-line"), [
+          "Teams",
+          "now",
+          "build",
+          { t: '<span class="sw-a">differently</span><span class="sw-b serif">differently</span>' },
+        ]);
+        FX.wordIn(tl, slots[0], 0.1, { dy: 0, lead: 0.1, open: 0.01, hold: 0.04, settle: 0.04 });
+        FX.wordIn(tl, slots[1], 0.5, { dy: 0.95, dx: -0.05, lift: 0.22, hold: 0.1 });
+        FX.wordIn(tl, slots[2], 0.63, { dy: 0.85, dx: -0.04, lift: 0.2, hold: 0.1 });
+        FX.wordIn(tl, slots[3], 0.73, { dy: 0.75, dx: -0.03, lift: 0.2, hold: 0.12 });
+        const nw = slots[3].querySelector(".sw-a");
+        const ns = slots[3].querySelector(".sw-b");
+        tl.set(nw, { display: "inline" }, 0);
+        tl.set(ns, { display: "none" }, 0);
+        tl.set(nw, { display: "none" }, 1.07);
+        tl.set(ns, { display: "inline" }, 1.07);
+
+        // Camera pulls back in steps as the sentence grows.
+        const cam = document.getElementById("in-cam");
+        tl.set(cam, { scale: 1.62, y: 66 }, 0);
+        tl.to(cam, { y: 32, duration: 0.07, ease: "power2.out" }, 0.1);
+        tl.to(cam, { y: 0, duration: 0.3, ease: "sine.inOut" }, 0.17);
+        tl.to(cam, { scale: 1.45, duration: 0.27, ease: "sine.inOut" }, 0.2);
+        tl.to(cam, { scale: 1.12, duration: 0.13, ease: "power2.out" }, 0.47);
+        tl.to(cam, { scale: 1.0, duration: 0.2, ease: "power2.out" }, 0.6);
+        tl.to(cam, { scale: 0.965, duration: 0.97, ease: "none" }, 0.8);
+
+        // Line breaks up just before the cut.
+        const ws = slots.map((s) => s.firstElementChild);
+        tl.to(ws[0], { y: -10, duration: 0.1, ease: "power1.in" }, 1.63);
+        tl.to(ws[1], { y: 6, duration: 0.1, ease: "power1.in" }, 1.65);
+        tl.to(ws[3], { y: 7, duration: 0.1, ease: "power1.in" }, 1.66);
+
+        // Orange pixels
+        FX.squares(document.getElementById("in-sq"), tl, [
+          [1578, 396, 18, 18, [[0.17, 1.45]]],
+          [1296, 396, 18, 18, [[0.3, 0.47]]],
+          [1440, 480, 18, 18, [[0.3, 0.6]]],
+          [228, 660, 18, 18, [[0.3, 0.47]]],
+          [228, 642, 18, 36, [[0.5, 1.45]]],
+          [426, 372, 18, 18, [[0.5, 0.64], [0.7, 1.24]]],
+          [426, 396, 18, 18, [[0.5, 0.6]]],
+          [510, 354, 18, 18, [[0.57, 1.5]]],
+          [350, 540, 18, 18, [[1.5, 1.8]]],
+          [1422, 354, 18, 18, [[0.6, 1.45]]],
+          [1452, 342, 18, 18, [[0.47, 0.6]]],
+          [1440, 498, 18, 18, [[0.47, 0.73]]],
+          [1458, 624, 36, 18, [[0.73, 1.42]]],
+          [1554, 522, 18, 18, [[0.9, 1.3]]],
+          [1472, 594, 18, 18, [[1.4, 1.8]]],
+          [1300, 618, 18, 18, [[1.27, 1.42]]],
+        ]);
+
+        // a fresh timeline seeked to 0 skips its zero-time sets; prime it so frame 0 is correct
+        tl.seek(0.001).seek(0);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["intro"] = tl;
+      })();
+    </script>
+  </div>
+</template>

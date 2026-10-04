@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>benchlane developers</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/fx.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Newsreader"; font-style: italic; src: url("assets/fonts/newsreader-italic-latin.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin.woff2") format("woff2"); font-weight: 100 800; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #FDF6EF; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #FDF6EF;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif; color: #16110D; -webkit-font-smoothing: antialiased; }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .full { position: absolute; inset: 0; }
+      .cream { background: #FDF6EF; }
+      .dark { background: #0D0B07; color: #fff; }
+      .serif { font-family: "Newsreader", Georgia, serif; font-style: italic; letter-spacing: -0.005em; }
+      .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+      .accent { color: #EA5E39; }
+      /* centred line built from word slots (see FX.line) */
+      .line { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: baseline; white-space: nowrap; }
+      .slot { display: inline-grid; grid-template-columns: 1fr; }
+      .slot > .w { min-width: 0; display: inline-block; white-space: pre; padding-right: 0.26em; will-change: transform; }
+      .slot > .w.last { padding-right: 0; }
+      .sq { position: absolute; }
+      canvas { display: block; }
+      .cursor { position: absolute; width: 34px; height: 40px; }
+      .cursor svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+      .tag { position: absolute; padding: 4px 13px 5px; border-radius: 999px; font-size: 17px; font-weight: 500; white-space: nowrap; }
+      .tag.you { background: #16110D; color: #fff; }
+      .tag.cand { background: #8B6CF2; color: #fff; border: 1.5px solid #C9B8FF; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="12.6667" data-width="1920" data-height="1080">
+      <div id="intro-comp" class="clip" data-composition-id="intro" data-composition-src="compositions/intro.html" data-start="0" data-duration="1.8" data-track-index="0"></div>
+      <div id="icons-comp" class="clip" data-composition-id="icons" data-composition-src="compositions/icons.html" data-start="1.8" data-duration="2.7" data-track-index="1"></div>
+      <div id="words-comp" class="clip" data-composition-id="words" data-composition-src="compositions/words.html" data-start="4.5" data-duration="6.1667" data-track-index="2"></div>
+      <div id="logo-dark-comp" class="clip" data-composition-id="logo-dark" data-composition-src="compositions/logo-dark.html" data-start="10.6667" data-duration="2.0" data-track-index="3"></div>
+      <audio id="soundtrack" src="assets/audio.m4a" data-start="0" data-duration="12.6667" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 12.6667);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
