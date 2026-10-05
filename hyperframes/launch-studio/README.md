@@ -1,6 +1,6 @@
 # Launch Studio (HyperFrames)
 
-A 30 s, 1920x1080 / 30 fps HyperFrames launch film for **Launch Studio**, a motion studio that makes
+A 30 s, 1920x1080 / 30 fps HyperFrames launch film for **Launch Studio** (brand logo in `assets/logo/`), a motion studio that makes
 launch videos for SaaS brands. It is in the genre of a dark kinetic-type product film: a glyph-scramble
 wordmark, a wall of real launch frames, punchy word cuts and a logo lockup. The storyboard, copy, mark,
 icons and soundtrack are all original to this project.

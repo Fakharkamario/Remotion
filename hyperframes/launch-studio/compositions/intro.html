@@ -5,17 +5,19 @@
       <div id="in-lock">
         <div id="in-mark"></div>
         <div id="in-word"></div>
+        <div id="in-sub"></div>
       </div>
     </div>
     <div id="in-flash" class="full"></div>
 
     <style>
       #in-glow { background: radial-gradient(640px 360px at 50% 52%, rgba(255, 91, 46, 0.22), rgba(255, 91, 46, 0) 70%); opacity: 0; }
-      #in-lock { display: flex; align-items: center; gap: 30px; }
-      #in-mark { width: 116px; height: 116px; }
-      #in-mark svg { width: 100%; height: 100%; display: block; }
-      #in-word { font-size: 104px; font-weight: 640; letter-spacing: -0.035em; line-height: 1; display: flex; }
-      #in-word .ch { min-width: 0.2em; text-align: center; }
+      /* the brand lockup: rocket-A mark over a widely tracked LΛUNCH / STUDIO wordmark */
+      #in-lock { display: flex; flex-direction: column; align-items: center; }
+      #in-mark { width: 250px; height: 223px; }
+      #in-word { margin-top: 64px; font-size: 92px; font-weight: 420; letter-spacing: 0.42em; margin-right: -0.42em; line-height: 1; display: flex; }
+      #in-sub { margin-top: 30px; font-size: 34px; font-weight: 440; letter-spacing: 0.9em; margin-right: -0.9em; line-height: 1; display: flex; }
+      #in-word .ch, #in-sub .ch { min-width: 0.62em; text-align: center; }
       #in-flash { background: #F5F3EE; opacity: 0; }
     </style>
 
@@ -25,7 +27,7 @@
         const root = document.getElementById("in-lock").closest("[data-composition-id]");
         const $ = (s) => root.querySelector(s);
         $("#in-mark").innerHTML = FX.mark();
-        const chars = FX.chars($("#in-word"), "Launch Studio");
+        const chars = FX.chars($("#in-word"), "LΛUNCH").concat(FX.chars($("#in-sub"), "STUDIO"));
 
         // the mark spins up out of a point, overshoots, settles
         FX.put(tl, $("#in-mark"), { scale: 0, rotation: -120, transformOrigin: "50% 50%" }, 0);

@@ -69,13 +69,9 @@
     tl.set(span, { textContent: final, color: FX.C.ink }, Math.max(lock, (Math.round(lock * FX.FPS) + 0.2) / FX.FPS));
   };
 
-  // Launch Studio mark: an orange tile with a rising arrow cut through a launch arc.
+  // Launch Studio mark: the rocket-A from the brand logo (white, transparent; assets/logo/).
   FX.mark = function () {
-    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" rx="26" fill="${FX.C.orange}"/>
-      <path d="M24 74 C 34 56, 48 44, 70 32" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity=".35"/>
-      <path d="M33 67 L67 33 M44 32 H68 V56" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>`;
+    return '<img src="assets/logo/mark-white.png" alt="" style="width:100%;height:100%;object-fit:contain;display:block">';
   };
 
   // Small line icons for the process rail.
