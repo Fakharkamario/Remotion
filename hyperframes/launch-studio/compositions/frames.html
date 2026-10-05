@@ -1,0 +1,54 @@
+<template id="frames-template">
+  <div data-composition-id="frames" data-width="1920" data-height="1080" data-duration="2.6">
+    <div id="fr-wrap" class="center">
+      <div id="fr-stack">
+        <div id="fr-big">EVERY FRAME</div>
+        <div id="fr-sub"><span class="serif">on purpose.</span></div>
+      </div>
+    </div>
+
+    <style>
+      #fr-stack { display: flex; flex-direction: column; align-items: center; }
+      /* the headline is a window onto a running strip of launch frames */
+      #fr-big { font-size: 236px; font-weight: 880; letter-spacing: -0.055em; line-height: 0.92; color: transparent;
+        -webkit-background-clip: text; background-clip: text; background-size: auto 100%; background-repeat: repeat-x; }
+      #fr-sub { margin-top: 18px; font-size: 96px; line-height: 1; }
+      #fr-sub .serif { color: #F5F3EE; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const root = document.getElementById("fr-big").closest("[data-composition-id]");
+        const $ = (s) => root.querySelector(s);
+        const big = $("#fr-big");
+
+        // a strip of frames painted behind the type: several images side by side, scrolled per frame
+        const pick = [1, 5, 9, 13, 3, 8, 16, 18, 6, 2];
+        big.style.backgroundImage = pick.map((n) => `url(assets/frames/f${String(n).padStart(2, "0")}.jpg)`).join(",");
+        const TW = 420;
+        const layout = (off) => pick.map((_, i) => `${i * TW - off}px 0`).join(",");
+        big.style.backgroundSize = pick.map(() => `${TW}px 100%`).join(",");
+        big.style.backgroundRepeat = "no-repeat";
+        FX.each(0, 2.6, (f, t, k) => {
+          const off = 40 + 1500 * gsap.parseEase("power1.inOut")(k);
+          FX.put(tl, big, { backgroundPosition: layout(off) }, t);
+        });
+
+        // headline punches in from large, subline slides up under it
+        FX.put(tl, big, { scale: 1.6, opacity: 0, filter: "blur(20px)" }, 0);
+        tl.to(big, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.02);
+        tl.to(big, { scale: 0.96, duration: 1.6, ease: "none" }, 0.62);
+        FX.put(tl, $("#fr-sub"), { opacity: 0, y: 50, filter: "blur(10px)" }, 0);
+        tl.to($("#fr-sub"), { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out" }, 0.55);
+
+        // out: a fast horizontal smear
+        tl.to($("#fr-stack"), { x: -380, opacity: 0, filter: "blur(18px)", skewX: -8, duration: 0.32, ease: "power3.in" }, 2.25);
+
+        tl.set({}, {}, 2.6);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["frames"] = tl;
+      })();
+    </script>
+  </div>
+</template>

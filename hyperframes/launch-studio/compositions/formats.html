@@ -1,0 +1,72 @@
+<template id="formats-template">
+  <div data-composition-id="formats" data-width="1920" data-height="1080" data-duration="3.4">
+    <div id="fm-left" class="fm-side"></div>
+    <div id="fm-right" class="fm-side"></div>
+    <div id="fm-card">
+      <img id="fm-img-a" class="fm-img" src="assets/frames/f01.jpg" />
+      <img id="fm-img-b" class="fm-img" src="assets/frames/f05.jpg" />
+      <img id="fm-img-c" class="fm-img" src="assets/frames/f11.jpg" />
+      <div id="fm-tag" class="mono"><span id="fm-ratio">16:9</span></div>
+      <div class="fm-corner tl"></div><div class="fm-corner tr"></div><div class="fm-corner bl"></div><div class="fm-corner br"></div>
+    </div>
+
+    <style>
+      #fm-card { position: absolute; left: 960px; top: 540px; width: 1040px; height: 585px; margin: 0; transform: translate(-50%, -50%);
+        border-radius: 26px; overflow: hidden; background: #111; box-shadow: 0 50px 120px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1); }
+      .fm-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      #fm-tag { position: absolute; left: 22px; top: 22px; padding: 10px 16px; border-radius: 999px; background: rgba(7, 7, 10, 0.72);
+        font-size: 22px; letter-spacing: 0.08em; color: #F5F3EE; backdrop-filter: blur(8px); }
+      .fm-corner { position: absolute; width: 34px; height: 34px; border: 4px solid #FF5B2E; }
+      .fm-corner.tl { left: 10px; top: 10px; border-right: 0; border-bottom: 0; border-radius: 16px 0 0 0; }
+      .fm-corner.tr { right: 10px; top: 10px; border-left: 0; border-bottom: 0; border-radius: 0 16px 0 0; }
+      .fm-corner.bl { left: 10px; bottom: 10px; border-right: 0; border-top: 0; border-radius: 0 0 0 16px; }
+      .fm-corner.br { right: 10px; bottom: 10px; border-left: 0; border-top: 0; border-radius: 0 0 16px 0; }
+      .fm-side { position: absolute; top: 500px; font-size: 76px; font-weight: 640; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; }
+      #fm-left { right: 1240px; }
+      #fm-right { left: 1240px; }
+      #fm-right .serif { color: #FF5B2E; font-size: 1.1em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const root = document.getElementById("fm-card").closest("[data-composition-id]");
+        const $ = (s) => root.querySelector(s);
+        const card = $("#fm-card");
+
+        // card rises in at 16:9, then re-frames to 1:1 and 9:16, swapping the cut inside each time
+        FX.put(tl, card, { xPercent: -50, yPercent: -50, x: 0, y: 140, scale: 0.86, opacity: 0, width: 1040, height: 585 }, 0);
+        tl.to(card, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "expo.out" }, 0);
+        FX.put(tl, [$("#fm-img-b"), $("#fm-img-c")], { opacity: 0 }, 0);
+        FX.put(tl, $("#fm-img-a"), { scale: 1.12 }, 0);
+        tl.to($("#fm-img-a"), { scale: 1, duration: 1.2, ease: "power2.out" }, 0);
+
+        const reframe = (t, w, h, img, label) => {
+          tl.to(card, { width: w, height: h, duration: 0.5, ease: "expo.inOut" }, t);
+          tl.to(img, { opacity: 1, duration: 0.16, ease: "none" }, t + 0.2);
+          tl.fromTo(img, { scale: 1.15 }, { scale: 1, duration: 0.9, ease: "power2.out", immediateRender: false }, t + 0.2);
+          tl.set($("#fm-ratio"), { textContent: label }, t + 0.25);
+          tl.fromTo($("#fm-tag"), { scale: 1 }, { scale: 1.14, duration: 0.09, yoyo: true, repeat: 1, ease: "power1.out", immediateRender: false }, t + 0.25);
+        };
+        reframe(0.95, 600, 600, $("#fm-img-b"), "1:1");
+        reframe(1.75, 420, 746, $("#fm-img-c"), "9:16");
+
+        // copy splits around the card once it's narrow
+        $("#fm-left").textContent = "One cut.";
+        $("#fm-right").innerHTML = 'Every <span class="serif">feed.</span>';
+        FX.put(tl, $("#fm-left"), { opacity: 0, x: 80, filter: "blur(12px)" }, 0);
+        FX.put(tl, $("#fm-right"), { opacity: 0, x: -80, filter: "blur(12px)" }, 0);
+        tl.to($("#fm-left"), { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out" }, 2.0);
+        tl.to($("#fm-right"), { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out" }, 2.12);
+
+        // out: everything drops away
+        tl.to(card, { y: 900, rotation: 6, duration: 0.42, ease: "power3.in" }, 2.98);
+        tl.to([$("#fm-left"), $("#fm-right")], { opacity: 0, y: -40, filter: "blur(10px)", duration: 0.3, ease: "power2.in" }, 3.0);
+
+        tl.set({}, {}, 3.4);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["formats"] = tl;
+      })();
+    </script>
+  </div>
+</template>

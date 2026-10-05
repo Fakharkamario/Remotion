@@ -1,0 +1,74 @@
+<template id="wall-template">
+  <div data-composition-id="wall" data-width="1920" data-height="1080" data-duration="2.6">
+    <div id="wa-stage" class="full">
+      <div id="wa-tilt"></div>
+    </div>
+    <div id="wa-shade" class="full"></div>
+    <div id="wa-copy" class="center"><div id="wa-line"></div></div>
+
+    <style>
+      #wa-stage { perspective: 1800px; }
+      /* three bands of frames, tilted, running in alternate directions */
+      #wa-tilt { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+      .wa-row { position: absolute; left: 0; top: 0; display: flex; gap: 28px; }
+      .wa-tile { width: 500px; height: 282px; border-radius: 18px; overflow: hidden; flex: none; background: #15151a;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+      .wa-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      #wa-shade { background: radial-gradient(900px 300px at 50% 50%, rgba(7, 7, 10, 0.86), rgba(7, 7, 10, 0.25) 70%, rgba(7, 7, 10, 0.55)); opacity: 0; }
+      #wa-line { font-size: 92px; font-weight: 620; letter-spacing: -0.035em; line-height: 1; }
+      #wa-line .serif { font-size: 1.08em; color: #FF5B2E; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const root = document.getElementById("wa-tilt").closest("[data-composition-id]");
+        const $ = (s) => root.querySelector(s);
+
+        // 3 rows x 9 tiles of the supplied launch-video frames
+        const tilt = $("#wa-tilt");
+        const rows = [];
+        for (let r = 0; r < 3; r++) {
+          const row = document.createElement("div");
+          row.className = "wa-row";
+          for (let i = 0; i < 9; i++) {
+            const n = ((r * 7 + i * 3) % 24) + 1;
+            row.innerHTML += `<div class="wa-tile"><img src="assets/frames/f${String(n).padStart(2, "0")}.jpg"></div>`;
+          }
+          tilt.appendChild(row);
+          rows.push(row);
+        }
+        const W = 9 * 500 + 8 * 28;
+        rows.forEach((row, r) => gsap.set(row, { x: -W / 2, y: (r - 1) * 310 - 141 }));
+
+        // the field arrives from deep and tilted, flattens a little, and the rows run past each other
+        FX.put(tl, tilt, { rotationX: 38, rotationZ: -14, z: -2600, opacity: 0 }, 0);
+        tl.to(tilt, { opacity: 1, duration: 0.2, ease: "none" }, 0);
+        tl.to(tilt, { z: 0, rotationX: 22, rotationZ: -10, duration: 1.0, ease: "expo.out" }, 0);
+        tl.to(tilt, { z: 260, rotationX: 16, rotationZ: -8, duration: 1.6, ease: "none" }, 1.0);
+        rows.forEach((row, r) => {
+          const dir = r % 2 ? 1 : -1;
+          tl.fromTo(row, { x: -W / 2 - dir * 260 }, { x: -W / 2 + dir * 420, duration: 2.6, ease: "power1.inOut", immediateRender: true }, 0);
+        });
+
+        // the headline settles over a shaded centre band
+        FX.put(tl, $("#wa-shade"), { opacity: 0 }, 0);
+        tl.to($("#wa-shade"), { opacity: 1, duration: 0.5, ease: "power2.out" }, 0.75);
+        const w = FX.words($("#wa-line"), ["Launch", "videos", "for", { t: "SaaS.", cls: "serif" }]);
+        w.forEach((el, i) => {
+          FX.put(tl, el, { opacity: 0, y: 46, filter: "blur(14px)" }, 0);
+          tl.to(el, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 0.85 + i * 0.09);
+        });
+
+        // out: everything blurs back as the camera pushes
+        tl.to($("#wa-stage"), { filter: "blur(16px)", opacity: 0, scale: 1.1, duration: 0.35, ease: "power2.in" }, 2.25);
+        tl.to($("#wa-shade"), { opacity: 0, duration: 0.3, ease: "power2.in" }, 2.3);
+        tl.to(w, { y: -40, opacity: 0, filter: "blur(10px)", duration: 0.3, stagger: 0.03, ease: "power2.in" }, 2.25);
+
+        tl.set({}, {}, 2.6);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["wall"] = tl;
+      })();
+    </script>
+  </div>
+</template>

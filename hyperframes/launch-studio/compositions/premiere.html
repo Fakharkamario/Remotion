@@ -1,0 +1,51 @@
+<template id="premiere-template">
+  <div data-composition-id="premiere" data-width="1920" data-height="1080" data-duration="2.4">
+    <div id="pr-spot" class="full"></div>
+    <div id="pr-copy" class="center">
+      <div id="pr-stack">
+        <div id="pr-a" class="pr-line"></div>
+        <div id="pr-b" class="pr-line"></div>
+      </div>
+    </div>
+
+    <style>
+      #pr-spot { background: radial-gradient(520px 260px at 50% 50%, rgba(255, 91, 46, 0.35), rgba(255, 91, 46, 0) 70%); opacity: 0; }
+      #pr-stack { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .pr-line { font-size: 118px; font-weight: 640; letter-spacing: -0.04em; line-height: 1.06; display: flex; }
+      #pr-b .serif { color: #FF5B2E; font-size: 1.12em; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const root = document.getElementById("pr-stack").closest("[data-composition-id]");
+        const $ = (s) => root.querySelector(s);
+        const a = FX.words($("#pr-a"), ["Your", "product"]);
+        const b = FX.words($("#pr-b"), ["deserves", "a", { t: "premiere.", cls: "serif" }]);
+        const all = a.concat(b);
+
+        // words rise out of blur one by one; the last word lands in the accent under a spotlight
+        all.forEach((el, i) => {
+          FX.put(tl, el, { opacity: 0, y: 60, filter: "blur(16px)" }, 0);
+          const t = i < 2 ? 0.05 + i * 0.12 : 0.55 + (i - 2) * 0.12;
+          tl.to(el, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.55, ease: "power3.out" }, t);
+        });
+        const last = b[2];
+        FX.put(tl, last, { scale: 1.25, transformOrigin: "50% 60%" }, 0);
+        tl.to(last, { scale: 1, duration: 0.7, ease: "expo.out" }, 0.79);
+        FX.put(tl, $("#pr-spot"), { opacity: 0, scale: 0.6 }, 0);
+        tl.to($("#pr-spot"), { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out" }, 0.8);
+
+        // slow push, then the lines lift away in sequence
+        FX.put(tl, $("#pr-stack"), { scale: 1 }, 0);
+        tl.to($("#pr-stack"), { scale: 1.06, duration: 2.0, ease: "none" }, 0);
+        tl.to(all, { y: -70, opacity: 0, filter: "blur(12px)", duration: 0.32, stagger: 0.035, ease: "power2.in" }, 1.95);
+        tl.to($("#pr-spot"), { opacity: 0, duration: 0.3 }, 2.05);
+
+        tl.set({}, {}, 2.4);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["premiere"] = tl;
+      })();
+    </script>
+  </div>
+</template>

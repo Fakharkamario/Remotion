@@ -1,0 +1,83 @@
+<template id="outro-template">
+  <div data-composition-id="outro" data-width="1920" data-height="1080" data-duration="3.6">
+    <div id="ou-roll"></div>
+    <div id="ou-lock-wrap" class="center">
+      <div id="ou-stack">
+        <div id="ou-lock"><div id="ou-mark"></div><div id="ou-word"></div></div>
+        <div id="ou-tag">Launch videos for SaaS brands.</div>
+        <div id="ou-cta">Book a launch call <span>→</span></div>
+      </div>
+    </div>
+    <div id="ou-black" class="full"></div>
+
+    <style>
+      /* what we make: a quick vertical roll of services before the lockup */
+      #ou-roll { position: absolute; left: 0; right: 0; top: 540px; height: 0; }
+      .ou-item { position: absolute; left: 0; right: 0; text-align: center; font-size: 96px; font-weight: 680; letter-spacing: -0.04em; line-height: 1; margin-top: -48px; }
+      #ou-stack { display: flex; flex-direction: column; align-items: center; }
+      #ou-lock { display: flex; align-items: center; gap: 30px; }
+      #ou-mark { width: 116px; height: 116px; }
+      #ou-mark svg { width: 100%; height: 100%; display: block; }
+      #ou-word { font-size: 104px; font-weight: 640; letter-spacing: -0.035em; line-height: 1; display: flex; }
+      #ou-tag { margin-top: 34px; font-size: 40px; color: #A6A4AD; letter-spacing: -0.01em; }
+      #ou-cta { margin-top: 44px; padding: 22px 40px; border-radius: 999px; background: #FF5B2E; color: #fff; font-size: 34px; font-weight: 620; letter-spacing: -0.01em;
+        box-shadow: 0 20px 60px rgba(255, 91, 46, 0.45); }
+      #ou-cta span { display: inline-block; margin-left: 8px; }
+      #ou-black { background: #07070A; opacity: 0; }
+    </style>
+
+    <script>
+      (function () {
+        const tl = gsap.timeline({ paused: true });
+        const root = document.getElementById("ou-roll").closest("[data-composition-id]");
+        const $ = (s) => root.querySelector(s);
+        const C = FX.C;
+
+        // service roll: items enter from below, the centre one is full size and colour, neighbours shrink and dim
+        const items = [
+          ["Launch films", C.orange], ["Product demos", C.violet], ["UI animation", C.lime], ["Feature drops", C.sky],
+          ["Explainers", C.amber], ["Social cutdowns", C.pink], ["Brand reels", C.orange],
+        ];
+        $("#ou-roll").innerHTML = items.map(([t, c]) => `<div class="ou-item" style="color:${c}">${t}</div>`).join("");
+        const els = Array.from(root.querySelectorAll(".ou-item"));
+        const GAP = 120, T0 = 0.0, T1 = 1.45;
+        const roll = gsap.parseEase("power2.inOut");
+        FX.each(T0, T1 + 0.2, (f, t, k0) => {
+          const k = Math.min(1, (t - T0) / (T1 - T0));
+          const pos = -1 + roll(Math.max(0, k)) * (items.length);
+          els.forEach((el, i) => {
+            const d = i - pos, ad = Math.abs(d);
+            const out = t > T1 ? Math.min(1, (t - T1) / 0.15) : 0;
+            tl.set(el, { y: d * GAP, scale: Math.max(0.4, 1 - ad * 0.38), opacity: Math.max(0, 1 - ad * 0.75) * (1 - out), filter: `blur(${Math.min(8, ad * 5)}px)` }, t);
+          });
+        });
+
+        // lockup
+        $("#ou-mark").innerHTML = FX.mark();
+        const ch = FX.chars($("#ou-word"), "Launch Studio");
+        FX.put(tl, $("#ou-mark"), { scale: 0, rotation: -120 }, 0);
+        tl.to($("#ou-mark"), { scale: 1, rotation: 0, duration: 0.55, ease: "back.out(2.2)" }, 1.6);
+        ch.forEach((c, i) => {
+          if (c.classList.contains("sp")) return;
+          const final = c.textContent;
+          FX.put(tl, c, { opacity: 0, y: 18 }, 0);
+          const t0 = 1.72 + i * 0.03;
+          tl.to(c, { opacity: 1, y: 0, duration: 0.25, ease: "power3.out" }, t0);
+          FX.scramble(tl, c, final, t0, t0 + 0.22 + i * 0.025, 31 + i * 17);
+        });
+        FX.put(tl, $("#ou-tag"), { opacity: 0, y: 24 }, 0);
+        tl.to($("#ou-tag"), { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 2.2);
+        FX.put(tl, $("#ou-cta"), { opacity: 0, y: 30, scale: 0.9 }, 0);
+        tl.to($("#ou-cta"), { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, 2.35);
+        tl.fromTo($("#ou-cta span"), { x: 0 }, { x: 10, duration: 0.3, yoyo: true, repeat: 1, ease: "sine.inOut", immediateRender: false }, 2.85);
+
+        FX.put(tl, $("#ou-black"), { opacity: 0 }, 0);
+        tl.to($("#ou-black"), { opacity: 1, duration: 0.3, ease: "power1.in" }, 3.3);
+
+        tl.set({}, {}, 3.6);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["outro"] = tl;
+      })();
+    </script>
+  </div>
+</template>
