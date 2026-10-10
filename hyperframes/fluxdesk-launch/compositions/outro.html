@@ -1,0 +1,97 @@
+<template id="outro-template">
+  <div data-composition-id="outro" data-width="1920" data-height="1080" data-duration="2">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const RED = K.BRAND.red;
+        // Reference frames 336-383: the wordmark holds (typing cursor on the first frame), then
+        // breaks apart into glyphs along dotted arcs, collapses to a dot, and the domain types
+        // itself out behind a glyph cursor.
+        const DOM = K.BRAND.domain;
+        // [frame, visible chars, trailing glyph, glyph gap]
+        const TYPE = [[359, 0, ".", 0], [360, 6, "<", 0], [362, 11, "+", 1.6], [364, 13, ".", 1.1], [366, 14, ".", 0.6], [368, 14, "<", 0], [374, 14, null, 0]];
+
+        function bg(ctx, f) {
+          K.fill(ctx, "#120402");
+          const a = K.key([[336, 0.18], [350, 0.16], [356, 0.1], [358, 0.04], [362, 0.1], [383, 0.1]])(f);
+          K.ember(ctx, 960, 560, 900, RED, a);
+        }
+
+        function hold(ctx, f) {
+          K.glow(ctx, (g) => {
+            const lay = K.lockup(g, 960, 622, 236, RED);
+            if (f === 336) { g.fillStyle = RED; g.fillRect(lay.end + 14, 615 - 160, 14, 190); }
+          }, { blur: 22, alpha: 0.7, passes: 1 });
+        }
+
+        function scramble(ctx, f) {
+          // the lockup breaks up: leading letters swap for glyphs in boxes, the rest thins out
+          const SIZE = 236;
+          const g0 = ctx;
+          const full = K.measure(g0, K.BRAND.word, SIZE, 600, -0.045);
+          const b = SIZE * 0.32, markW = b * 2.1, gap = SIZE * 0.3;
+          const x0 = 960 - (markW + gap + full) / 2, tx = x0 + markW + gap, base = 622;
+          const pre = (n) => K.measure(g0, K.BRAND.word.slice(0, n), SIZE, 600, -0.045);
+          const word = K.BRAND.word;
+          K.glow(ctx, (g) => {
+            if (f <= 352) {
+              K.mark(g, x0 + markW / 2, base - SIZE * 0.36, b, RED, { offs: [[0, 0], [-10, 0], [b * 0.4, 0]] });
+              K.glyph(g, "/", tx + pre(1) * 0.5, base - SIZE * 0.36, SIZE * 0.95, RED, 0, { weight: 0.15 });
+              K.text(g, word.slice(1), tx + pre(1), base, { size: SIZE, weight: 600, color: RED, ls: -0.045 });
+            } else if (f <= 355) {
+              g.fillStyle = RED; g.fillRect(x0 + 10, base - SIZE * 0.5, b * 0.7, b * 0.7);
+              K.glyph(g, ">", tx + pre(2) * 0.45, base - SIZE * 0.3, SIZE * 0.7, RED, 0, { weight: 0.17 });
+              K.text(g, word.slice(3), tx + pre(3), base, { size: SIZE, weight: 600, color: RED, ls: -0.045 });
+            } else if (f <= 357) {
+              K.glyph(g, "+", 744, base - SIZE * 0.28, SIZE * 0.6, RED, 0, { weight: 0.2 });
+              K.text(g, word.slice(4), tx + pre(4), base, { size: SIZE, weight: 600, color: RED, ls: -0.045 });
+            } else {
+              g.fillStyle = RED; g.fillRect(870, 543, 14, 14);
+            }
+          }, { blur: 22, alpha: 0.7, passes: 1 });
+          if (f <= 357) {
+            // boxes round the letters and dotted arcs hopping over them
+            ctx.save();
+            ctx.strokeStyle = K.rgba(RED, 0.5); ctx.lineWidth = 1.5;
+            const from = f <= 352 ? 0 : f <= 355 ? 2 : 3;
+            for (let i = from; i < word.length; i++) ctx.strokeRect(tx + pre(i), base - SIZE * 0.74, pre(i + 1) - pre(i), SIZE * 0.78);
+            ctx.restore();
+            const ac = "rgba(255,210,195,0.55)";
+            const a0 = f <= 352 ? tx : f <= 355 ? x0 + 30 : 744;
+            K.dashed(ctx, a0, base - SIZE * 0.5, tx + pre(6), base - SIZE * 0.6, { color: ac, curve: -0.25 });
+            K.dashed(ctx, a0 + 40, base - SIZE * 0.2, tx + pre(4), base - SIZE * 0.1, { color: ac, curve: 0.25 });
+            if (f <= 355) K.dashed(ctx, tx + pre(2), base - SIZE * 0.55, tx + pre(8), base - SIZE * 0.5, { color: ac, curve: -0.3 });
+          }
+        }
+
+        function domain(ctx, f) {
+          let st = TYPE[0];
+          for (const t of TYPE) if (f >= t[0]) st = t;
+          const [, n, gl, gap] = st;
+          const SIZE = 92;
+          const full = K.measure(ctx, DOM, SIZE, 500, -0.03);
+          const x0 = 960 - full / 2 + (n <= 6 ? 24 : 0), base = 566;
+          const shown = DOM.slice(0, n);
+          K.glow(ctx, (g) => {
+            K.text(g, shown, x0, base, { size: SIZE, weight: 500, color: RED, ls: -0.03 });
+            if (gl) {
+              const w = K.measure(g, shown, SIZE, 500, -0.03);
+              const gx = x0 + w + SIZE * (0.3 + gap * 0.6);
+              K.glyph(g, gl, gx, base - SIZE * 0.34, gl === "." ? SIZE * 0.5 : SIZE * 0.62, RED, 0, { weight: 0.17 });
+            }
+          }, { blur: 18, alpha: 0.75, passes: 1 });
+        }
+
+        K.mount("outro", 336, 48, (ctx, f, cv) => {
+          bg(ctx, f);
+          if (f <= 350) hold(ctx, f);
+          else if (f <= 358) scramble(ctx, f);
+          else domain(ctx, f);
+          K.bloom(cv, 0.3, 60);
+          K.vignette(ctx, 0.6);
+          K.grain(ctx, f, 0.05);
+        });
+      })();
+    </script>
+  </div>
+</template>

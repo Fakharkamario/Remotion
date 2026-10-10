@@ -1,0 +1,138 @@
+<template id="headline-template">
+  <div data-composition-id="headline" data-width="1920" data-height="1080" data-duration="1.25">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 24-53: "Early Access is open." lands word by word (accent, a touch large
+        // and low, settling to cream) among popping glyphs; orbit paths draw round it; a light flash
+        // turns it accent with highlight blocks; back to dark, pushed in, and the words break into
+        // glyphs that fly out.
+        const WORDS = ["Early", "Access", "is", "open."];
+        const SIZE = 100, WT = 500;
+        // word arrival frame and the frame it settles to cream
+        const ARR = [24, 24, 26, 30], INK = [24, 28, 30, 32];
+        // whole-line scale (pull back as words land), then the push-in after the flash
+        const lineS = K.key([[24, 1.13], [26, 1.06], [28, 1.03], [30, 1.01], [33, 1.0], [45, 1.0], [46, 1.18], [47, 1.4], [48, 1.55], [50, 1.56], [53, 1.58]]);
+        const groupX = K.key([[24, 120], [26, -14], [28, -68], [30, 16], [32, 0]]);
+        const lineX = K.key([[24, 0], [45, 0], [48, -60], [53, -66]]);
+        // light flash 36-47 (measured mean brightness)
+        const L = K.key([[35, 0], [36, 0.08], [37, 0.24], [38, 0.42], [39, 0.6], [40, 0.77], [41, 0.92], [42, 1], [45, 1], [46, 0.7], [47, 0.33], [48, 0], [52, 0], [53, 0.08]]);
+
+        const POP = [
+          [24, 25, "/", 1320, 375, 110], [26, 27, "/", 1440, 375, 110], [26, 27, ">", 759, 696, 60],
+          [28, 29, ">", 1500, 381, 90], [28, 29, "+", 600, 699, 50],
+          [30, 31, ">", 1545, 375, 120], [30, 31, ">", 384, 501, 70], [30, 31, "+", 486, 699, 46],
+          [32, 33, ">", 1560, 375, 120], [32, 33, ">", 306, 501, 70], [32, 33, ".", 429, 699, 46],
+          [34, 35, "+", 1578, 375, 110], [34, 35, "+", 276, 501, 70], [34, 35, ".", 396, 699, 46],
+          [36, 37, "+", 1590, 375, 90], [36, 37, "<", 375, 699, 70], [36, 37, ".", 255, 495, 40],
+          [38, 39, "<", 375, 699, 70], [38, 39, ".", 1590, 375, 70],
+          [40, 41, "<", 40, 480, 80], [40, 41, "<", 180, 750, 70], [40, 41, ".", 1791, 330, 70],
+        ];
+
+        function background(ctx, f, l) {
+          K.fill(ctx, K.mix(C.bg, C.light, l));
+          const drift = (f - 24) * 3;
+          K.glow(ctx, (g) => {
+            K.segGrid(g, f, { cell: 300, ox: 160 - drift, oy: 90, color: K.mix(C.orange, "#E9906E", l), alpha: K.lerp(0.42, 0.3, l), width: 2.2, seed: 11, density: 0.65 });
+            K.grid(g, { cell: 300, ox: 160 - drift, oy: 90, color: C.orange, alpha: K.lerp(0.12, 0.1, l), width: 1.5 });
+          }, { blur: 8, alpha: 0.5 * (1 - l) + 0.1 });
+          K.ember(ctx, 960, 560, 900, C.orange, K.lerp(0.22, 0.05, l));
+        }
+
+        function headline(ctx, f, l) {
+          const lay = K.layout(ctx, WORDS, SIZE, WT);
+          const S = lineS(f), base = 576;
+          // the visible words stay roughly centred, re-centring as each one lands
+          const vis = lay.filter((w, i) => f >= ARR[i]);
+          const gw = vis.length ? vis[vis.length - 1].x + vis[vis.length - 1].width : lay.total;
+          const cx = 960 + lineX(f) + groupX(f);
+          const x0 = cx - (gw / 2) * S;
+          // highlight blocks during the flash
+          if (l > 0.2) {
+            const spans = f < 39 ? [[0, 0.45]] : f < 41 ? [[0, 1.6]] : f < 43 ? [[0, 4]] : f < 45 ? [[2, 4]] : [[1.55, 4]];
+            K.glow(ctx, (g) => {
+              spans.forEach(([a, b]) => {
+                const wa = lay[Math.floor(a)], wb = lay[Math.min(3, Math.ceil(b) - 1)];
+                const xa = x0 + (wa.x + (a % 1) * wa.width) * S, xb = x0 + (wb.x + wb.width) * S;
+                g.fillStyle = K.rgba(C.orange, 0.9);
+                g.fillRect(xa, base - SIZE * 0.8, xb - xa, SIZE * 0.95);
+              });
+            }, { blur: 26, alpha: 0.9 * K.inv(0.2, 0.6, l), sharp: false, mode: "source-over" });
+            // thin boxes round word groups
+            ctx.save();
+            ctx.strokeStyle = K.rgba("#C8401C", 0.55 * K.inv(0.5, 1, l));
+            ctx.lineWidth = 1.5;
+            lay.forEach((w, i) => { if (i % 2 === 0 || f >= 43) ctx.strokeRect(x0 + w.x * S - 6, base - SIZE * 0.86, w.width * S + 12, SIZE * 1.12); });
+            ctx.restore();
+          }
+          K.glow(ctx, (g) => {
+            lay.forEach((w, i) => {
+              if (f < ARR[i]) return;
+              // break-up: words leave / turn into glyphs
+              if (i === 0 && f >= 50) return;
+              const age = f - ARR[i];
+              const k = K.eo(age / 3, 2);
+              const sc = K.lerp(1.07, 1, k), dy = K.lerp(16, 0, k);
+              let col = f >= INK[i] ? C.cream : C.orange2;
+              if (i >= 2 && f >= 46) col = C.orange2;
+              if (l > 0) col = K.mix(col, i >= 2 || f < 44 ? "#EE4A18" : (f >= 45 ? "#3A2016" : "#EE4A18"), K.inv(0.25, 0.85, l));
+              if (f >= 45 && f < 47 && i < 2) col = K.mix("#3A2016", "#EE4A18", i === 1 ? 0.5 : 0);
+              const x = x0 + w.x * S, y = base + dy * S;
+              if (i === 1 && f >= 52) {
+                K.glyph(g, ">", x + w.width * S * 0.62, base - SIZE * 0.36 * S, SIZE * 0.9 * S, C.orange2, 0, { weight: 0.17 });
+                return;
+              }
+              g.save();
+              // a landing word scales about its own centre so it never crowds its neighbours
+              g.translate(x + (w.width * S) / 2, y);
+              g.scale(S * sc, S * sc);
+              K.text(g, w.w, 0, 0, { size: SIZE, weight: WT, color: col, align: "center" });
+              g.restore();
+            });
+          }, { blur: K.lerp(14, 22, l), alpha: K.lerp(0.75, 0.5, l), sharpBlur: K.lerp(0, 1.2, K.inv(0.6, 1, l)) });
+        }
+
+        function particles(ctx, f, l) {
+          K.glow(ctx, (g) => {
+            POP.forEach(([a, b, gl, x, y, s]) => {
+              if (f < a || f > b) return;
+              const col = K.mix(C.orange2, "#E9501E", l);
+              if (gl === "+" && f >= 36 && f < 38) {
+                g.strokeStyle = K.rgba(col, 0.7); g.lineWidth = 2; g.strokeRect(x - s * 0.42, y - s * 0.42, s * 0.84, s * 0.84);
+              }
+              K.glyph(g, gl, x, y, s, col, 0, { weight: 0.18 });
+            });
+            // slashes flying out
+            if (f >= 50) {
+              const u = f - 50;
+              [[1110, 360, 190, 1], [1410, 324, 120, 0.8], [675, 1170, 150, 1]].forEach(([x, y, s, k], i) => {
+                const vx = i === 2 ? 0 : 300 * k, vy = i === 2 ? -60 : -150 * k;
+                if (i === 2 && f < 52) return;
+                K.glyph(g, "/", x + vx * u, y + vy * u, s, C.orange2, 0, { weight: 0.14 });
+              });
+            }
+          }, { blur: 14, alpha: 0.9 });
+          // orbit paths
+          if (f >= 36 && f <= 45) {
+            const k = K.lerp(1, 1.25, K.inv(36, 44, f));
+            const col = K.rgba(l > 0.5 ? "#3A2016" : "#F6DCCB", K.lerp(0.55, 0.45, l));
+            if (f < 38 || f >= 42) K.orbit(ctx, 960, 531, 667 * (f >= 42 ? 0.55 : 1) * k, 382 * (f >= 42 ? 0.35 : 1) * k, 0.06, { color: col, arrows: 3 });
+            if (f >= 38) K.orbit(ctx, 1040, 560, 520 * k, 260 * k, -0.18, { color: col, arrows: 2 });
+            if (f >= 42) K.orbit(ctx, 880, 560, 320, 110, 0.05, { color: col, arrows: 2, from: 0, to: Math.PI });
+          }
+        }
+
+        K.mount("headline", 24, 30, (ctx, f, cv) => {
+          const l = L(f);
+          background(ctx, f, l);
+          headline(ctx, f, l);
+          particles(ctx, f, l);
+          K.bloom(cv, K.lerp(0.32, 0.12, l), 60);
+          K.vignette(ctx, K.lerp(0.55, 0.1, l));
+          K.grain(ctx, f, 0.06);
+        });
+      })();
+    </script>
+  </div>
+</template>

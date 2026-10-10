@@ -1,0 +1,267 @@
+<template id="dash-template">
+  <div data-composition-id="dash" data-width="1920" data-height="1080" data-duration="2.666667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 54-117: a flash bursts the glyph into a cluster of glyph tiles, which spread
+        // into a constellation; the pixel cursor sweeps in and the dashboard wires itself up; the
+        // Launchpad card fills with rows of bars; the camera tilts and pushes in; a flash; the camera
+        // pans away leaving the cursor.
+
+        // ------------------------------------------------------------ timing
+        const L = K.key([[53, 0.08], [54, 0.45], [55, 1], [56, 0.96], [56.5, 0], [99, 0], [100, 0.5], [101, 1], [102, 0.9], [103, 0.8], [104, 0.71], [105, 0.62], [106, 0.53], [107, 0.45], [108, 0.37], [109, 0.29], [110, 0.21], [111, 0.16], [112, 0.11], [113, 0.07], [114, 0.04], [116, 0]]);
+        // 2D camera on the dashboard while it builds (scale about 960,560)
+        const camS = K.key([[61, 0.55], [64, 0.68], [66, 0.77], [68, 0.84], [70, 0.92], [72, 1.0], [80, 1.02], [86, 1.04]]);
+        const camX = K.key([[61, 120], [66, 60], [70, 20], [72, 0], [86, -6]]);
+        const camY = K.key([[61, 60], [66, 30], [72, 0], [86, -4]]);
+        // 3D push (from 86)
+        const rx = K.key([[86, 0], [88, 0.3], [90, 0.46], [92, 0.5], [110, 0.5], [116, 0.56]]);
+        const ry = K.key([[86, 0], [88, 0.26], [90, 0.38], [92, 0.42], [110, 0.44], [116, 0.62]]);
+        const rz = K.key([[86, 0], [88, 0.07], [90, 0.11], [116, 0.12]]);
+        const zs = K.key([[86, 1.04], [88, 1.3], [90, 1.6], [92, 1.72], [99, 1.86], [110, 1.9], [112, 1.6], [114, 1.3], [116, 1.08]]);
+        const pvx = K.key([[86, 960], [90, 700], [110, 700], [116, 640]]);
+        const pvy = K.key([[86, 560], [90, 430], [116, 430]]);
+        const sx = K.key([[86, 960], [88, 860], [90, 780], [99, 760], [108, 770], [110, 820], [112, 1060], [114, 1400], [116, 1900]]);
+        const sy = K.key([[86, 560], [90, 440], [110, 440], [116, 470]]);
+        // cursor path (screen space) and pixel size
+        const curX = K.key([[61, 1700], [62, 1500], [64, 1035], [66, 930], [68, 960], [70, 975], [72, 900], [76, 930], [80, 945], [84, 960], [86, 1005], [88, 1065], [90, 1240], [92, 1290], [96, 1335], [108, 1335], [110, 1300], [112, 1320], [114, 1290], [116, 1200], [117, 1190]]);
+        const curY = K.key([[61, 1150], [62, 980], [64, 750], [66, 705], [68, 645], [70, 645], [72, 645], [80, 630], [84, 600], [86, 525], [88, 420], [90, 450], [92, 480], [96, 480], [108, 495], [112, 510], [116, 510]]);
+        const curP = K.key([[61, 30], [62, 22], [64, 9], [66, 6], [72, 5.6], [86, 5.6], [90, 7.5], [100, 7.5], [112, 8], [116, 9.5]]);
+
+        // --------------------------------------------------- constellation
+        const R = K.rng(21);
+        const GL = ["/", ">", "+", "/", ">", "<", "+", "/"];
+        const STARS = [];
+        for (let i = 0; i < 26; i++) {
+          const a = R() * Math.PI * 2, d = Math.pow(R(), 0.7);
+          STARS.push({ x: Math.cos(a) * d * 900, y: Math.sin(a) * d * 520, g: GL[i % GL.length], s: 54 + R() * 34, link: Math.floor(R() * 26) });
+        }
+        function constellation(ctx, f, l) {
+          const spread = K.key([[54, 0.0], [55, 0.36], [56, 0.42], [57, 0.95], [58, 1.12], [59, 1.25], [60, 1.4], [61, 1.6], [62, 1.9], [64, 2.6]])(f);
+          const a = K.key([[57, 0], [62, 0.1]])(f);
+          const fade = 1 - K.inv(61, 64, f);
+          if (fade <= 0) return;
+          const P = STARS.map((s) => {
+            const x = s.x * spread, y = s.y * spread;
+            return [960 + x * Math.cos(a) - y * Math.sin(a), 540 + x * Math.sin(a) + y * Math.cos(a)];
+          });
+          ctx.save();
+          ctx.globalAlpha = fade;
+          // connectors
+          STARS.forEach((s, i) => {
+            const p = P[i], q = P[s.link];
+            K.dashed(ctx, p[0], p[1], q[0], q[1], { color: l > 0.5 ? "rgba(90,40,20,0.45)" : "rgba(255,226,206,0.42)", width: 1.3 });
+          });
+          // faint UI labels drifting with the field
+          if (f >= 57) {
+            [[3, "Good to see you"], [9, "Launchpad"], [14, "Futures"], [20, "Vaults"]].forEach(([i, t]) => K.text(ctx, t, P[i][0] + 30, P[i][1] + 40, { size: 14, weight: 500, color: "rgba(250,225,205,0.45)", ls: 0 }));
+          }
+          ctx.restore();
+          K.glow(ctx, (g) => {
+            g.globalAlpha = fade;
+            STARS.forEach((s, i) => {
+              const sz = s.s * (f < 57 ? 1.25 : K.lerp(1, 1.5, K.inv(57, 62, f)));
+              K.tile(g, P[i][0], P[i][1], sz, { fill: K.mix(C.orange2, "#F06A30", l), glyph: s.g, gsize: 0.55, gcolor: "#3a1206" });
+            });
+          }, { blur: l > 0.5 ? 34 : 20, alpha: l > 0.5 ? 1 : 0.85, passes: 2, sharpBlur: l > 0.5 ? 5 : 0 });
+        }
+
+        // ------------------------------------------------------- dashboard
+        // drawn in layout space (1920x1080), revealed by `f`
+        const LAY = {
+          a: [456, 264, 492, 411], // Launchpad
+          b: [969, 270, 495, 456], // Futures
+          c: [456, 795, 1008, 255], // Vaults
+        };
+        function glowRect(g, r, col, a, lw) {
+          g.save();
+          g.strokeStyle = K.rgba(col, a);
+          g.lineWidth = lw || 3;
+          g.strokeRect(r[0], r[1], r[2], r[3]);
+          g.restore();
+        }
+        function hatch(g, f, r, mode) {
+          // rows of slanted bars that fill in, row by row; later vertical bars and glyph rows
+          const rows = K.key([[69, 0], [70, 0.6], [72, 1.4], [74, 2.1], [76, 3.0], [78, 3.4], [80, 4.0], [84, 4.6], [88, 5.2], [92, 6.2], [96, 7.4], [99, 8.2]])(f);
+          const top = r[1] + 14, rowH = 26, x0 = r[0] + 10, x1 = r[0] + r[2] - 10;
+          g.save();
+          g.beginPath(); g.rect(r[0], r[1], r[2], 206); g.clip();
+          // dim base pattern
+          for (let j = 0; j < 8; j++) {
+            for (let x = x0; x < x1; x += 15) {
+              g.fillStyle = K.rgba(C.orange, 0.13);
+              g.fillRect(x, top + j * rowH, 5, rowH - 10);
+            }
+          }
+          const glyphRows = f >= 95 ? [">", "=", "<", "?"] : null;
+          for (let j = 0; j < 8; j++) {
+            const fillTo = K.clamp(rows - j, 0, 1);
+            if (fillTo <= 0) continue;
+            const xe = x0 + (x1 - x0) * fillTo;
+            const y = top + j * rowH;
+            if (glyphRows && j < 4) {
+              for (let x = x0 + 8; x < xe; x += 22) K.glyph(g, glyphRows[j], x, y + 8, 22, C.orange2, 0, { weight: 0.2 });
+              continue;
+            }
+            for (let x = x0; x < xe; x += 15) {
+              g.fillStyle = C.orange2;
+              g.save();
+              g.translate(x, y);
+              if (mode === "slant") g.transform(1, 0, -0.45, 1, 0, 0);
+              g.fillRect(0, 0, 6, rowH - 10);
+              g.restore();
+            }
+          }
+          g.restore();
+        }
+        function arcs(g, r) {
+          g.save();
+          g.beginPath(); g.rect(r[0], r[1], r[2], r[3]); g.clip();
+          const gr = g.createLinearGradient(r[0], r[1], r[0], r[1] + r[3]);
+          gr.addColorStop(0, "#151A2E"); gr.addColorStop(1, "#0E1220");
+          g.fillStyle = gr;
+          g.fillRect(r[0], r[1], r[2], r[3]);
+          g.strokeStyle = K.rgba(C.green, 0.75);
+          g.lineWidth = 2.2;
+          for (let k = 0; k < 7; k++) {
+            g.beginPath();
+            g.arc(r[0] + r[2] + 10, r[1] + r[3] + 40, 70 + k * 22, Math.PI * 1.05, Math.PI * 1.5);
+            g.stroke();
+          }
+          g.restore();
+        }
+        function dashboard(g, f, l) {
+          const ink = K.mix(C.cream, "#2A1A12", l), sub = K.mix("#B9A397", "#5A463C", l), lineC = K.mix(C.orange2, "#F0521E", l);
+          const on = (a) => K.inv(a, a + 2, f);
+          const A = LAY.a, B = LAY.b, Cc = LAY.c;
+          // header
+          g.globalAlpha = on(64);
+          K.text(g, "Good to see you", 456, 226, { size: 25, weight: 500, color: ink, ls: -0.01 });
+          K.text(g, "▣  Invite friends and split the fees →", 954, 226, { size: 17, weight: 500, color: K.rgba(C.orange2, 0.9), ls: 0 });
+          g.globalAlpha = 1;
+          // A: Launchpad
+          g.fillStyle = K.rgba("#2A0C05", 0.9 * on(64));
+          g.fillRect(A[0], A[1], A[2], A[3]);
+          if (f >= 66) {
+            g.fillStyle = K.rgba("#3A1006", 0.9);
+            g.fillRect(A[0], A[1], A[2], 206);
+            if (f < 70) { g.fillStyle = C.orange2; g.fillRect(A[0] + A[2] / 2 - 14, A[1] + 90, 28, 28); }
+            else if (f < 72) K.glyph(g, "<", A[0] + 60, A[1] + 110, 110, C.orange2, 0, { weight: 0.15 });
+            hatch(g, f, A, f >= 88 ? "vert" : "slant");
+          }
+          g.globalAlpha = on(65);
+          K.text(g, "Launchpad", A[0] + 24, A[1] + 266, { size: 21, weight: 600, color: ink, ls: -0.01 });
+          K.text(g, "Snipe new token launches the", A[0] + 24, A[1] + 304, { size: 17, weight: 400, color: sub, ls: 0 });
+          K.text(g, "moment they go live.", A[0] + 24, A[1] + 334, { size: 17, weight: 400, color: sub, ls: 0 });
+          g.globalAlpha = 1;
+          // B: Futures
+          if (f >= 65) {
+            g.fillStyle = K.rgba("#200A05", 0.9);
+            g.fillRect(B[0], B[1], B[2], B[3]);
+            arcs(g, [B[0], B[1], B[2], 225]);
+            g.globalAlpha = on(66);
+            K.text(g, "Futures", B[0] + 24, B[1] + 286, { size: 21, weight: 600, color: ink, ls: -0.01 });
+            K.text(g, "Trade perpetuals on majors.", B[0] + 24, B[1] + 322, { size: 17, weight: 400, color: sub, ls: 0 });
+            K.text(g, "Deep books, tight spreads.", B[0] + 24, B[1] + 352, { size: 17, weight: 400, color: sub, ls: 0 });
+            g.fillStyle = K.rgba("#9A8A82", 0.7);
+            g.fillRect(B[0] + B[2] - 92, B[1] + B[3] - 52, 70, 30);
+            g.globalAlpha = 1;
+          }
+          // C: Vaults
+          if (f >= 72) {
+            const k = on(72);
+            g.fillStyle = K.rgba("#1E0904", 0.9 * k);
+            g.fillRect(Cc[0], Cc[1], Cc[2], Cc[3]);
+            g.fillStyle = K.rgba("#3A2A26", 0.8 * k);
+            g.fillRect(Cc[0] + 10, Cc[1] + 10, 300, Cc[3] - 20);
+            // soft frosted glow inside the image
+            const gr = g.createRadialGradient(Cc[0] + 210, Cc[1] + 200, 0, Cc[0] + 210, Cc[1] + 200, 160);
+            gr.addColorStop(0, K.rgba("#C8B6A8", 0.35 * k)); gr.addColorStop(1, K.rgba("#C8B6A8", 0));
+            g.fillStyle = gr;
+            g.fillRect(Cc[0] + 10, Cc[1] + 10, 300, Cc[3] - 20);
+            g.globalAlpha = on(74);
+            K.text(g, "Vaults", Cc[0] + 360, Cc[1] + 60, { size: 21, weight: 600, color: ink, ls: -0.01 });
+            K.text(g, "Put idle balances to work.", Cc[0] + 360, Cc[1] + 98, { size: 17, weight: 400, color: sub, ls: 0 });
+            g.fillStyle = K.rgba("#9A8A82", 0.7);
+            g.fillRect(Cc[0] + Cc[2] - 140, Cc[1] + Cc[3] - 56, 116, 32);
+            K.text(g, "Explore", Cc[0] + Cc[2] - 82, Cc[1] + Cc[3] - 34, { size: 15, weight: 500, color: "#2A1A12", align: "center", ls: 0 });
+            g.globalAlpha = 1;
+          }
+        }
+        function dashFrames(g, f, l) {
+          // glowing card outlines, drawn on their own layer so they bloom
+          const lineC = K.mix(C.orange2, "#F0521E", l);
+          if (f >= 61) glowRect(g, LAY.a, lineC, on2(61, f), 4);
+          if (f >= 65) glowRect(g, LAY.b, lineC, on2(65, f) * 0.9, 4);
+          if (f >= 76) glowRect(g, LAY.c, lineC, on2(76, f), 4);
+          else if (f >= 62) glowRect(g, LAY.c, C.orange, 0.25, 2);
+        }
+        const on2 = (a, f) => K.inv(a, a + 2, f);
+
+        function drawLayer(f, l) {
+          const c = K.buf("dashLayer");
+          const g = c.getContext("2d");
+          dashboard(g, f, l);
+          const c2 = K.buf("dashFrames");
+          const g2 = c2.getContext("2d");
+          dashFrames(g2, f, l);
+          return [c, c2];
+        }
+
+        function cursor(ctx, f, l) {
+          if (f < 61) return;
+          const x = curX(f), y = curY(f), p = curP(f);
+          // trailing pixel cloud
+          const cloud = K.key([[61, 1], [64, 1], [66, 0.7], [68, 0.3], [70, 0]])(f);
+          K.glow(ctx, (g) => {
+            if (cloud > 0) {
+              K.pixelCloud(g, x + 180 + (66 - f) * 40, y + 140, 230 * cloud + 60, Math.max(8, p * 2.2), 7 + Math.floor(f / 2), C.orange2, 1);
+            }
+            if (f >= 84 && f <= 92) K.pixelCloud(g, x - 60, y + 40, 50, 10, 33 + f, C.orange2, 1);
+            K.ember(g, x, y + 20, 70, C.orange2, 0.5);
+            K.hand(g, x, y, p, { fill: K.mix("#FFFFFF", "#1A0A05", l * 0.8), line: K.mix("#1A0A05", "#FFFFFF", l * 0.3), rot: f >= 88 ? -0.45 : -0.15 });
+          }, { blur: 16, alpha: 0.85 });
+        }
+
+        K.mount("dash", 54, 64, (ctx, f, cv) => {
+          const l = L(f);
+          K.fill(ctx, K.mix(C.bg, C.light, l));
+          K.ember(ctx, 960, 540, 1100, C.orange, K.lerp(0.2, 0.06, l));
+          if (f <= 63) constellation(ctx, f, l);
+          if (f >= 61) {
+            const [layer, frames] = drawLayer(f, l);
+            if (f < 87) {
+              const s = camS(f), ox = camX(f), oy = camY(f);
+              ctx.save();
+              ctx.translate(960 + ox, 560 + oy); ctx.scale(s, s); ctx.translate(-960, -560);
+              ctx.drawImage(layer, 0, 0);
+              ctx.restore();
+              K.glow(ctx, (g) => { g.translate(960 + ox, 560 + oy); g.scale(s, s); g.translate(-960, -560); g.drawImage(frames, 0, 0); }, { blur: 22, alpha: 1, passes: 2 });
+            } else {
+              const cam = { rx: rx(f), ry: ry(f), rz: rz(f), d: 1500, s: zs(f), cx: sx(f), cy: sy(f) };
+              const px = pvx(f), py = pvy(f);
+              const P = (u, v) => K.proj([u * K.W - px, v * K.H - py, 0], cam);
+              K.drawQuad(ctx, layer, K.W, K.H, P);
+              K.glow(ctx, (g) => K.drawQuad(g, frames, K.W, K.H, P), { blur: 24, alpha: 1, passes: 2 });
+              // dark grid revealed on the left as the camera pans away
+              if (f >= 112) {
+                const a = K.inv(112, 115, f);
+                ctx.save();
+                ctx.globalAlpha = a;
+                K.grid(ctx, { cell: 128, ox: 40 - (f - 112) * 60, oy: 40, color: C.ember, alpha: 0.45, width: 2, x0: 0, x1: 980, y0: 0, y1: 1080 });
+                ctx.restore();
+              }
+            }
+          }
+          cursor(ctx, f, l);
+          // flash: blow out and defocus
+          if (l > 0.02) K.defocus(cv, 14 * l * (f >= 100 ? 1 : 0.6));
+          K.bloom(cv, K.lerp(0.35, 0.2, l), 70);
+          K.vignette(ctx, K.lerp(0.6, 0.15, l));
+          K.grain(ctx, f, 0.07);
+        });
+      })();
+    </script>
+  </div>
+</template>

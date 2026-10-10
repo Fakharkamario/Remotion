@@ -1,0 +1,167 @@
+<template id="logo-template">
+  <div data-composition-id="logo" data-width="1920" data-height="1080" data-duration="2.166667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C, RED = K.BRAND.red;
+        // Reference frames 284-335: the orange square carrying the mark shrinks onto dark; a
+        // wireframe cube, seen face-on, cycles glyphs ( > + . < ) then tumbles into 3D; cut to solid
+        // dark cubes on orange as the camera pulls back; three blocks drop into the stair mark; a
+        // white flash, and the wordmark types itself in.
+
+        // --------------------------------------------- orange square with the mark
+        function square(ctx, f) {
+          K.fill(ctx, C.bg);
+          const side = K.key([[284, 1470], [285, 1000], [286, 660], [287, 520]])(f);
+          K.glow(ctx, (g) => K.grid(g, { cell: 300, ox: 60, oy: 90, color: C.ember, alpha: 0.45, width: 2 }), { blur: 6, alpha: 0.4 });
+          K.glow(ctx, (g) => {
+            g.fillStyle = "#F0642C";
+            g.fillRect(960 - side / 2, 540 - side / 2, side, side);
+          }, { blur: 30, alpha: 0.6 });
+          const rot = K.key([[284, -0.6], [286, -0.35], [287, -0.25]])(f);
+          K.mark(ctx, 960, 540, side * 0.24, "#2A0A04", { rot, offs: f === 284 ? [[-40, 60], [0, 0], [40, -60]] : null });
+          if (f === 284) K.tile(ctx, 960, 540, side * 0.07, { fill: "#F6A070", rot: 0.78 });
+        }
+
+        // ------------------------------------------------------ wireframe cube
+        const cube = {
+          rx: K.key([[288, 0.02], [296, 0.02], [298, 0.18], [300, 0.24], [302, 0.62], [304, 0.62], [305, 0.62]]),
+          ry: K.key([[288, 0.12], [290, 0.04], [292, 0], [296, 0.04], [298, -0.12], [300, 0.3], [302, 0.78], [305, 0.8]]),
+          rz: K.key([[288, 0.17], [290, 0.05], [292, 0], [296, 0.02], [298, -0.08], [300, 0.36], [302, 0.1], [305, 0.08]]),
+          s: K.key([[287, 0.9], [288, 1.0], [302, 1.0], [304, 1.55], [305, 1.75]]),
+        };
+        const GLY = K.step([[288, ">"], [292, "+"], [296, "."], [300, "<"], [304, null]]);
+        const GSZ = K.step([[288, 300], [290, 200], [292, 160], [294, 150], [296, 40], [300, 170]]);
+        function wire(ctx, f) {
+          K.fill(ctx, "#0C0302");
+          K.glow(ctx, (g) => K.grid(g, { cell: 255, ox: 40 - (f - 288) * 3, oy: 30, color: C.ember, alpha: 0.42, width: 1.8 }), { blur: 6, alpha: 0.45 });
+          K.ember(ctx, 960, 540, 700, C.orange, 0.12);
+          const e = 250;
+          const cam = { rx: cube.rx(f), ry: cube.ry(f), rz: cube.rz(f), d: 1800, s: cube.s(f), z: 0 };
+          const V = [];
+          for (const z of [-e, e]) for (const y of [-e, e]) for (const x of [-e, e]) V.push(K.proj([x, y, z], cam));
+          // front face = z = -e : indices 0..3 (x-,y-),(x+,y-),(x-,y+),(x+,y+)
+          const E = [[0, 1], [1, 3], [3, 2], [2, 0], [4, 5], [5, 7], [7, 6], [6, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+          const showBack = f >= 299;
+          K.glow(ctx, (g) => {
+            g.strokeStyle = "#FF5A26";
+            g.lineWidth = 4;
+            E.forEach(([a, b], i) => {
+              if (!showBack && i >= 4) return;
+              g.beginPath(); g.moveTo(V[a][0], V[a][1]); g.lineTo(V[b][0], V[b][1]); g.stroke();
+            });
+            const n = 16;
+            g.fillStyle = "#FF6A33";
+            V.forEach((p, i) => { if (!showBack && i >= 4) return; g.fillRect(p[0] - n / 2, p[1] - n / 2, n, n); });
+            const gl = GLY(f);
+            if (gl) {
+              const c = K.proj([0, 0, -e], cam);
+              const s = GSZ(f);
+              g.strokeStyle = K.rgba("#FF6A33", 0.45); g.lineWidth = 1.5;
+              g.strokeRect(c[0] - s * 0.4, c[1] - s * 0.4, s * 0.8, s * 0.8);
+              K.glyph(g, gl, c[0], c[1], s, "#FF6A33", cube.rz(f), { weight: 0.2 });
+            }
+          }, { blur: 16, alpha: 0.9 });
+          // dashed diagonals with arrows on the front face (and through the body once it turns)
+          const dc = "rgba(255,200,180,0.55)";
+          K.dashed(ctx, V[0][0], V[0][1], V[3][0], V[3][1], { color: dc, arrow: true });
+          K.dashed(ctx, V[1][0], V[1][1], V[2][0], V[2][1], { color: dc, arrow: true });
+          if (showBack) { K.dashed(ctx, V[0][0], V[0][1], V[7][0], V[7][1], { color: dc }); K.dashed(ctx, V[4][0], V[4][1], V[1][0], V[1][1], { color: dc }); }
+        }
+
+        // ------------------------------------------------------ solid cubes on orange
+        function solidCube(ctx, cx, cy, e, cam, o) {
+          o = o || {};
+          const V = [];
+          for (const z of [-e, e]) for (const y of [-e, e]) for (const x of [-e * (o.long || 1), e * (o.long || 1)]) V.push(K.proj([x, y, z], Object.assign({}, cam, { cx, cy })));
+          const F = [[0, 1, 3, 2], [4, 5, 7, 6], [0, 1, 5, 4], [2, 3, 7, 6], [0, 2, 6, 4], [1, 3, 7, 5]];
+          // painter's sort by mean depth (k smaller = farther)
+          const faces = F.map((idx) => ({ idx, k: idx.reduce((a, i) => a + V[i][2], 0) / 4 })).sort((a, b) => a.k - b.k);
+          faces.forEach(({ idx }) => {
+            const P = idx.map((i) => V[i]);
+            const mx = P.reduce((a, p) => a + p[0], 0) / 4, my = P.reduce((a, p) => a + p[1], 0) / 4;
+            const r = Math.max(...P.map((p) => Math.hypot(p[0] - mx, p[1] - my)));
+            const gr = ctx.createRadialGradient(mx, my, 0, mx, my, r);
+            gr.addColorStop(0, "#050000"); gr.addColorStop(0.75, "#1A0302"); gr.addColorStop(1, "#4A0C04");
+            ctx.beginPath(); P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath();
+            ctx.fillStyle = gr; ctx.fill();
+            ctx.strokeStyle = o.edge || "#F0642C"; ctx.lineWidth = o.lw || 3; ctx.stroke();
+          });
+          if (o.nodes) {
+            V.forEach((p) => {
+              ctx.fillStyle = "#F0642C";
+              ctx.beginPath();
+              for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; const x = p[0] + Math.cos(a) * o.nodes, y = p[1] + Math.sin(a) * o.nodes; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+              ctx.fill();
+            });
+          }
+        }
+        function cubes(ctx, f) {
+          K.fill(ctx, "#EE5E30");
+          const z = K.key([[306, 2.6], [308, 2.2], [310, 1.9], [312, 1.7], [314, 1.6], [316, 1.52], [317, 1.5]])(f);
+          K.grid(ctx, { cell: 510, ox: 160, oy: 120, color: "#5A1406", alpha: 0.45, width: 2 });
+          const cam = { rx: K.key([[306, 0.85], [310, 0.66], [316, 0.62]])(f), ry: K.key([[306, 0.95], [310, 0.8], [316, 0.78]])(f), rz: K.key([[306, -0.5], [310, -0.08], [316, 0]])(f), d: 2600, s: z };
+          const sep = K.key([[306, 60], [310, 20], [312, 8], [316, 0]])(f);
+          solidCube(ctx, 560 - sep, 820, 230, cam, { nodes: 14 * z * 0.5, lw: 3 });
+          solidCube(ctx, 1240 + sep, 700, 230, cam, { nodes: 14 * z * 0.5, lw: 3 });
+        }
+        // pull back: the cubes become the three blocks and drop into the mark
+        function blocks(ctx, f) {
+          K.fill(ctx, "#EC5A2C");
+          const grid = K.key([[318, 510], [320, 264], [322, 204], [324, 192], [325, 190]])(f);
+          K.grid(ctx, { cell: grid, ox: 960 - grid * 0.5, oy: 540 - grid * 0.5, color: "#5A1406", alpha: 0.55, width: 2 });
+          const b = K.key([[318, 150], [320, 120], [322, 96], [324, 88], [325, 86]])(f);
+          const mx = K.key([[318, 1110], [320, 1080], [322, 1100], [324, 1005], [325, 1005]])(f), my = K.key([[318, 700], [320, 640], [322, 540], [324, 530]])(f);
+          const settle = K.inv(320, 322, f);
+          const gap = b * 0.1;
+          const tops = K.MARK.map(([i, j], k) => {
+            // start positions (pairs side by side, the third falling in from top-left)
+            const st = [[-0.6, -3.2], [-1.1, 0.3], [0.2, 0.3]][k];
+            const end = [(i - 0.5) * (b + gap) / b, (j - 0.5) * (b + gap) / b];
+            return [K.lerp(st[0], end[0], K.eio(settle)) * b + mx, K.lerp(st[1], end[1], K.eio(settle)) * b + my, k];
+          });
+          tops.forEach(([x, y, k]) => {
+            const tumble = f < 322 ? (k === 0 ? 0.9 - (f - 318) * 0.2 : 0.62) : 0.12 * (1 - K.inv(322, 324, f)) + 0.05;
+            const cam = { rx: tumble, ry: k === 0 && f < 321 ? 0.9 : 0.25 + 0.4 * (1 - settle), rz: k === 0 ? 0.3 * (1 - settle) : 0.05, d: 2600 };
+            solidCube(ctx, x, y, b / 2, cam, { lw: 2, edge: "#3A0A03", long: k === 0 && f >= 320 && f < 322 ? 1.6 : 1 });
+          });
+        }
+
+        // ------------------------------------------------------ flash + typing
+        const TYPE = K.step([[326, "F"], [328, "Flux"], [330, "Fluxd"], [332, "Fluxdes"], [336, "Fluxdesk"]]);
+        function wordmark(ctx, f) {
+          const L = K.key([[325, 0], [326, 1], [327, 0.62], [328, 0.4], [329, 0.15], [330, 0]])(f);
+          K.fill(ctx, K.mix("#120402", "#FDF6F4", L));
+          K.ember(ctx, 960, 560, 900, RED, K.lerp(0.18, 0.05, L));
+          const text = TYPE(f);
+          const sc = K.key([[326, 1.5], [328, 1.08], [330, 1.0]])(f);
+          const blur = K.lerp(0, 10, L);
+          // the newest letter drops in from a little below
+          K.glow(ctx, (g) => {
+            g.translate(960, 560); g.scale(sc, sc); g.translate(-960, -560);
+            const lay = K.lockup(g, 960, 622, 236, K.mix(RED, "#F23A10", L), { text: text.slice(0, -1) || "", markOpts: f === 330 ? { offs: [[0, -6], [0, 0], [0, 0]] } : null });
+            const last = text.slice(-1);
+            const drop = f === 332 || f === 330 ? 30 : f === 333 ? 10 : 0;
+            const lw = K.measure(g, text.slice(0, -1), 236, 600, -0.045);
+            // recompute so the whole visible text is centred
+            g.clearRect(0, 0, K.W, K.H);
+            const lay2 = K.lockup(g, 960, 622, 236, K.mix(RED, "#F23A10", L), { text: text.slice(0, -1), markOpts: null });
+            K.text(g, last, lay2.tx + lw - (text.length > 1 ? 0 : 0), 622 + drop, { size: 236, weight: 600, color: K.mix(RED, "#F23A10", L), ls: -0.045 });
+            void lay;
+          }, { blur: 22, alpha: K.lerp(0.7, 0.6, L), passes: 1, sharpBlur: blur });
+        }
+
+        K.mount("logo", 284, 52, (ctx, f, cv) => {
+          if (f <= 287) square(ctx, f);
+          else if (f <= 305) wire(ctx, f);
+          else if (f <= 317) cubes(ctx, f);
+          else if (f <= 325) blocks(ctx, f);
+          else wordmark(ctx, f);
+          K.bloom(cv, f >= 306 && f <= 325 ? 0.12 : 0.3, 60);
+          K.vignette(ctx, f >= 306 && f <= 325 ? 0.35 : 0.6);
+          K.grain(ctx, f, 0.06);
+        });
+      })();
+    </script>
+  </div>
+</template>

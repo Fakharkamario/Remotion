@@ -1,0 +1,136 @@
+<template id="intro-template">
+  <div data-composition-id="intro" data-width="1920" data-height="1080" data-duration="1">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 0-23: a glyph tile seen from very close pulls back through the grid,
+        // swapping glyph each beat ( / > + ), spins into a diamond, then a light flash reveals a
+        // staircase of tiles that recedes into a fine grid.
+        const size = K.key([[0, 2300], [1, 1350], [2, 806], [3, 600], [4, 480], [5, 420], [6, 384], [7, 372], [8, 384], [9, 420], [10, 470]]);
+        const rot = K.key([[0, 0], [7, 0], [8, -0.06], [9, 0.32], [10, 0.74]]);
+        const cell = K.key([[0, 2800], [2, 1160], [4, 422], [6, 355], [8, 336], [10, 380]]);
+        const grot = K.key([[0, 0], [7, 0.02], [8, -0.09], [9, 0.3], [10, 0.64]]);
+        const glyph = K.step([[0, "/"], [4, ">"], [8, "+"]]);
+        const gsz = K.key([[0, 0.5], [3, 0.46], [4, 0.33], [7, 0.33], [8, 0.3], [9, 0.45], [10, 0.62]]);
+        // light flash at 11, decaying to dark by 20 (measured mean brightness)
+        const L = K.key([[10.5, 0], [11, 1], [12, 0.89], [13, 0.79], [14, 0.67], [15, 0.54], [16, 0.42], [17, 0.31], [18, 0.2], [19, 0.12], [20, 0.06], [21, 0.03], [22, 0.02]]);
+
+        function partTiles(ctx, f, cx, cy, s) {
+          // the little glyph particles around the tile
+          const P = [];
+          if (f >= 2 && f < 4) {
+            const k = K.lerp(1, 1.25, f - 2);
+            [[-1, -1], [1, -1], [1, 1], [-1, 1], [-0.2, -1.1], [0.25, 1.1]].forEach(([a, b], i) => P.push(["/", cx + a * s * 0.62 * k, cy + b * s * 0.62 * k, 70 * (i < 4 ? 1 : 0.7)]));
+          }
+          if (f >= 4 && f < 8) {
+            const k = K.lerp(1, 1.85, (f - 4) / 3);
+            [[-260, -95], [-265, 77], [260, -78], [255, 95], [-80, -263], [95, -258], [-95, 257], [78, 257]].forEach(([a, b]) => P.push([">", cx + a * 1.92 * k, cy + b * 1.92 * k, 78]));
+          }
+          if (f >= 9 && f < 11) {
+            const k = K.lerp(1, 1.12, f - 9);
+            [[-280, 70], [275, -70], [-75, -275], [70, 270]].forEach(([a, b]) => P.push(["+", cx + a * 1.92 * k, cy + b * 1.92 * k, 60]));
+          }
+          P.forEach(([g, x, y, z]) => K.glyph(ctx, g, x, y, z, C.orange2, 0, { weight: 0.18 }));
+        }
+
+        function zoomScene(ctx, f) {
+          const cx = K.W / 2, cy = K.H / 2;
+          const s = size(f), c = cell(f);
+          const warm = K.inv(6, 9, f);
+          K.fill(ctx, f < 1 ? C.peach : C.bg);
+          if (f >= 1) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(grot(f));
+            ctx.translate(-cx, -cy);
+            K.glow(ctx, (g) => {
+              g.translate(cx, cy); g.rotate(grot(f)); g.translate(-cx, -cy);
+              K.grid(g, { cell: c, ox: cx + c / 2, oy: cy + c / 2, color: C.orange, alpha: 0.75, width: 3 });
+            }, { blur: 10, alpha: 0.7 });
+            ctx.restore();
+            K.ember(ctx, cx, cy, s * 1.3, C.orange, K.lerp(0.75, 0.45, warm));
+          }
+          // tile
+          const fill = K.mix(C.peach, C.orange2, warm);
+          K.glow(ctx, (g) => {
+            K.tile(g, cx, cy, s, { fill, rot: rot(f), corners: f >= 8 && f < 9, nodes: f >= 9 ? 8 : 0, ncolor: C.orange2 });
+            // the glyph stays upright while the tile spins
+            K.glyph(g, glyph(f), cx, cy, s * gsz(f), K.mix("#4a1a07", "#2a0d05", warm), 0, { weight: f >= 9 ? 0.19 : 0.16 });
+            if (f >= 1) partTiles(g, f, cx, cy, s);
+          }, { blur: f < 1 ? 0 : K.lerp(26, 12, warm), alpha: f < 1 ? 0 : K.lerp(0.9, 0.6, warm), passes: f < 7 ? 2 : 1 });
+        }
+
+        // staircase configs after the flash: [cx, cy, cellPx, gridPx, tiles[]]
+        // tile: [gx, gy, kind, glyph]  kind: F filled, O outline, D dark olive with cream inner
+        const STAIR = [
+          [11, 960, 540, 262, 130, [[0, 0, "D", null], [1, 0, "O", null], [1.0, 1.0, "G", ">"]]],
+          [14, 1214, 467, 270, 128, [[0, 0, "F", "."], [-1, 1, "O", "/"], [-0.72, -0.28, "s", null]]],
+          [16, 1214, 497, 269, 120, [[0, 0, "F", "."], [-1, 1, "O", ">"], [-1, -0.45, "G", "<"]]],
+          [18, 950, 288, 259, 127, [[0, 0, "F", "<"], [1, 1, "O", "<"], [0, 2, "O", "."]]],
+          [20, 950, 304, 230, 115, [[0, 0, "Fd", "<"], [1, 1, "O", null], [0, 2, "O", null]]],
+          [22, 1027, 543, 138, 69, [[-0.5, -1, "O", null], [0, 0, "O", null], [-0.5, 1, "O", null]]],
+        ];
+
+        function flashScene(ctx, f) {
+          const l = L(f);
+          const bg = K.mix(C.bg, "#FAD3C4", l);
+          K.fill(ctx, bg);
+          let cfg = STAIR[0];
+          for (const s of STAIR) if (f >= s[0]) cfg = s;
+          const i = STAIR.indexOf(cfg);
+          const nx = STAIR[Math.min(STAIR.length - 1, i + 1)];
+          const u = nx === cfg ? 0 : K.inv(cfg[0], nx[0], f) * 0.6;
+          const cx = K.lerp(cfg[1], nx[1], u), cy = K.lerp(cfg[2], nx[2], u);
+          const ts = K.lerp(cfg[3], nx[3], u), gc = K.lerp(cfg[4], nx[4], u);
+          const lineC = K.mix(C.ember, C.orange2, l);
+          // grid
+          K.glow(ctx, (g) => {
+            if (f >= 22) {
+              // a finite, finer grid panel receding, with tall bars at its sides
+              const w = 1280, h = 1000;
+              g.save();
+              g.beginPath(); g.rect(cx - w / 2 + 150, cy - h / 2, w, h); g.clip();
+              K.grid(g, { cell: gc, ox: cx, oy: cy, color: C.orange, alpha: 0.55, width: 1.4 });
+              g.restore();
+              K.grid(g, { cell: gc * 1.6, ox: cx, oy: 0, color: C.orange, alpha: 0.28, width: 1.2, y0: 0, y1: 0 });
+              for (let k = 0; k < 7; k++) { g.fillStyle = K.rgba(C.orange, 0.25); g.fillRect(40 + k * 34, 0, 2, K.H); g.fillRect(K.W - 60 - k * 40, 0, 2, K.H); }
+            } else {
+              K.grid(g, { cell: gc, ox: cx + ts / 2, oy: cy + ts / 2, color: lineC, alpha: K.lerp(0.55, 0.85, l), width: 2.2 });
+            }
+          }, { blur: 6, alpha: 0.6 });
+          // halo
+          K.ember(ctx, cx, cy, ts * 1.6, C.orange, K.lerp(0.35, 0.9, l));
+          const blur = K.lerp(0, 9, K.inv(0.3, 1, l));
+          K.glow(ctx, (g) => {
+            cfg[5].forEach(([gx, gy, kind, gl]) => {
+              const x = cx + gx * ts, y = cy + gy * ts;
+              const tone = K.mix(C.orange2, "#E25A26", l);
+              if (kind === "D") {
+                K.tile(g, x, y, ts, { fill: "#6E4B12", glyph: null });
+                g.fillStyle = "#F6E2C2";
+                g.fillRect(x - ts * 0.24, y - ts * 0.24, ts * 0.48, ts * 0.48);
+              } else if (kind === "F" || kind === "Fd") {
+                K.tile(g, x, y, ts, { fill: kind === "Fd" ? K.rgba("#E8662E", 0.55) : tone, glyph: gl, gsize: gl === "." ? 0.6 : 0.42, gcolor: "#2b0e05", nodes: 6, ncolor: tone });
+              } else if (kind === "O") {
+                K.tile(g, x, y, ts, { fill: null, stroke: K.mix(C.orange, "#E8551F", l), lw: f >= 22 ? 2 : 3, glyph: gl, gsize: gl === "." ? 0.5 : 0.36, gcolor: C.orange2, nodes: 6 });
+              } else if (kind === "G") {
+                K.glyph(g, gl, x, y, ts * 0.5, K.mix(C.orange2, "#9A5A10", l * 0.6), 0, { weight: 0.2 });
+              } else if (kind === "s") {
+                g.fillStyle = tone; g.fillRect(x - ts * 0.14, y - ts * 0.14, ts * 0.28, ts * 0.28);
+              }
+            });
+          }, { blur: 22, alpha: K.lerp(0.55, 1, l), passes: 2, sharpBlur: blur });
+        }
+
+        K.mount("intro", 0, 24, (ctx, f, cv) => {
+          if (f <= 10) zoomScene(ctx, f);
+          else flashScene(ctx, f);
+          K.bloom(cv, f <= 10 ? 0.35 : 0.3, 60);
+          if (f >= 1) K.vignette(ctx, 0.55);
+          K.grain(ctx, f, 0.06);
+        });
+      })();
+    </script>
+  </div>
+</template>

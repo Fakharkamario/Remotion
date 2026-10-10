@@ -1,0 +1,249 @@
+<template id="market-template">
+  <div data-composition-id="market" data-width="1920" data-height="1080" data-duration="4.291667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 139-241:
+        //  139-161  the Markets table: rows resolve out of a blur while the page scrolls away fast
+        //  162-181  a field of token tiles drifts past, then gathers at the bottom of frame
+        //  182-225  the amount panel drops in; the cursor hovers a tile, then drags the slider to 100%
+        //  226-241  big pixel letters for the network name break in over everything
+        const GREEN = "#4CD86E";
+
+        // ================================================================ table
+        const ROWS = [
+          ["orb", "ORBT", "Orbit Cats", "12h", "$198.4K", "$19.7K", "$2.4M", "14.2K"],
+          ["dots", "??", "unnamed", "9h", "$261.3K", "$24.1K", "$1.3M", "11.8K"],
+          ["letter", "KILN", "KILN", "5h", "$48.9K", "$8.8K", "$311.6K", "6.1K"],
+          ["chev", "VOLT", "Voltage", "8h", "$152.2K", "$15.9K", "$702.5K", "8.4K"],
+          ["moon", "MOSS", "Mossy", "11h", "$41.7K", "$9.1K", "$88.3K", "2.2K"],
+        ];
+        const ROW_IN = [145, 148, 151, 154, 157]; // first blurred frame of each row
+        const tY = K.key([[139, 60], [144, 57], [146, 55], [148, 42], [150, 0], [152, -84], [154, -219], [156, -420], [158, -750], [160, -1272], [162, -1700]]);
+        const tX = K.key([[139, 150], [141, 48], [144, 0], [146, -12], [150, -10], [156, 0], [158, 30], [160, 45]]);
+        const tS = K.key([[139, 1.0], [150, 1.0], [156, 1.03], [158, 1.08], [160, 1.12]]);
+
+        function table(ctx, f) {
+          const glowTop = K.key([[139, 1], [141, 0.85], [143, 0.6], [146, 0.35], [150, 0.25]])(f);
+          K.fill(ctx, "#140804");
+          const gr = ctx.createLinearGradient(0, 0, 0, K.H);
+          gr.addColorStop(0, K.rgba("#C2401A", 0.95 * glowTop));
+          gr.addColorStop(0.55, K.rgba("#8A2A10", 0.55 * glowTop));
+          gr.addColorStop(1, K.rgba("#2A0C05", 0.3 * glowTop));
+          ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
+          // grid ghosts at the top
+          K.grid(ctx, { cell: 240, ox: tX(f) + 60, oy: tY(f), color: C.orange, alpha: 0.12 * glowTop, width: 1.4 });
+          const s = tS(f), ox = tX(f), oy = tY(f);
+          ctx.save();
+          ctx.translate(ox, oy); ctx.translate(0, 0); ctx.scale(s, s);
+          const dark = 1 - K.inv(160, 162, f);
+          ctx.globalAlpha = dark;
+          // nav
+          const navC = "rgba(250,228,212,0.82)";
+          [["Markets", 15, true], ["Pulse", 264], ["Live", 414], ["Watchlist", 560], ["Screens", 780]].forEach(([t, x, act]) => K.text(ctx, t, x, 136, { size: 25, weight: 500, color: act ? C.orange2 : navC, ls: 0 }));
+          if (f < 141) { ctx.fillStyle = C.orange2; ctx.fillRect(0, 156, 130, 3); }
+          K.text(ctx, "⌕  Search tokens, CA", 1780, 136, { size: 22, weight: 400, color: "rgba(250,228,212,0.55)", ls: 0 });
+          // heading + tabs
+          K.text(ctx, "Markets", 150, 300, { size: 37, weight: 600, color: C.cream, ls: -0.01 });
+          [["Hot", 330, true], ["Rising", 455], ["Fresh", 590]].forEach(([t, x, act]) => {
+            ctx.strokeStyle = act ? C.orange2 : "rgba(250,228,212,0.3)";
+            ctx.lineWidth = 2;
+            const w = K.measure(ctx, t, 22, 500, 0) + 34;
+            ctx.strokeRect(x, 268, w, 46);
+            K.text(ctx, t, x + 17, 299, { size: 22, weight: 500, color: act ? C.orange2 : "rgba(250,228,212,0.75)", ls: 0 });
+          });
+          ctx.fillStyle = "rgba(250,228,212,0.35)"; ctx.beginPath(); ctx.arc(705, 291, 9, 0, 7); ctx.fill();
+          // header bar
+          ctx.fillStyle = "rgba(28,14,9,0.9)";
+          ctx.fillRect(105, 384, 2000, 66);
+          ctx.strokeStyle = K.rgba(C.orange2, 0.35); ctx.lineWidth = 2; ctx.strokeRect(105, 384, 2000, 66);
+          [["Asset", 264], ["Mkt Cap", 1122], ["Liquidity", 1398], ["24h Vol", 1659], ["Txns", 1905]].forEach(([t, x]) => K.text(ctx, t, x, 426, { size: 20, weight: 500, color: "rgba(250,228,212,0.6)", ls: 0 }));
+          ctx.restore();
+          // rows (with their own focus blur)
+          ROWS.forEach((r, k) => {
+            if (f < ROW_IN[k]) return;
+            const age = f - ROW_IN[k];
+            const blur = age < 1 ? 10 : age < 2 ? 4 : 0;
+            const y = 576 + k * 264;
+            K.glow(ctx, (g) => {
+              g.translate(ox, oy); g.scale(s, s);
+              g.globalAlpha = (age < 1 ? 0.6 : 1) * dark;
+              K.token(g, r[0], 222, y, 150, { outline: GREEN, side: false, blur: blur * 0.6 });
+              if (blur) g.filter = `blur(${blur}px)`;
+              K.text(g, r[1], 330, y - 12, { size: 30, weight: 700, color: C.cream, ls: 0 });
+              K.text(g, r[2] + "  ↗", 330 + K.measure(g, r[1], 30, 700, 0) + 18, y - 12, { size: 28, weight: 500, color: "rgba(250,228,212,0.85)", ls: 0 });
+              K.text(g, r[3] + "   ✕  ⌕", 330, y + 38, { size: 24, weight: 500, color: "rgba(250,228,212,0.7)", ls: 0 });
+              [4, 5, 6].forEach((c, i) => K.text(g, r[c], [1122, 1398, 1659][i], y + 10, { size: 32, weight: 600, color: C.cream, ls: 0 }));
+              K.text(g, r[7], 1905, y + 10, { size: 22, weight: 600, color: GREEN, ls: 0 });
+              g.strokeStyle = "rgba(250,228,212,0.08)"; g.lineWidth = 2;
+              g.beginPath(); g.moveTo(105, y + 130); g.lineTo(2100, y + 130); g.stroke();
+            }, { blur: 18, alpha: 0.75 });
+          });
+          K.ember(ctx, 900, 700, 900, C.orange, 0.12);
+        }
+
+        // ================================================================ field
+        // tiles: [art, x, y, depth(size), vx, vy] and a cluster slot for the gather
+        const FR = K.rng(77);
+        const NAMES = ["letter", "orb", "land", "flame", "sprout", "dots", "bolt", "coin", "chev", "wave", "letter", "stripes", "moon", "letter", "orb", "sprout", "flame", "dots", "land", "coin"];
+        const FIELD = NAMES.map((n, i) => ({
+          n,
+          x: FR() * 2400 - 240,
+          y: FR() * 1500 - 210,
+          s: i === 2 ? 420 : i === 8 ? 300 : 120 + FR() * 70,
+          vx: -18 - FR() * 16,
+          vy: -26 - FR() * 22,
+          // gather slot at the bottom
+          gx: 640 + (i % 7) * 120 + (FR() - 0.5) * 60,
+          gy: 900 + Math.floor(i / 7) * 120 + (FR() - 0.5) * 50,
+          gs: 150 + FR() * 50,
+          r: (FR() - 0.5) * 0.12,
+        }));
+        // the hover target: the mascot tile
+        const HOT = NAMES.indexOf("bolt");
+        FIELD[HOT].gx = 975; FIELD[HOT].gy = 830; FIELD[HOT].gs = 175;
+        FIELD[0].gx = 735; FIELD[0].gy = 790; FIELD[0].gs = 160;
+        FIELD[10].gx = 1240; FIELD[10].gy = 860; FIELD[10].gs = 175;
+
+        // camera for the slider phase: zoom about a point (affects tiles + panel)
+        const zS = K.key([[182, 1.0], [202, 1.0], [204, 1.33], [218, 1.36], [220, 1.48], [222, 1.42], [224, 1.12], [226, 1.0], [241, 1.0]]);
+        const zX = K.key([[182, 960], [241, 960]]);
+        const zY = K.key([[182, 0], [202, 0], [204, 0], [241, 0]]);
+
+        function fieldPos(t, f) {
+          const fl = f - 162;
+          const gather = K.eio(K.inv(176, 184, f));
+          // the cluster drifts with the camera after it forms
+          const drift = K.key([[184, 0], [196, 0], [200, -20], [224, -30], [232, 20], [241, 60]])(f);
+          const x = t.x + t.vx * fl * (t.s / 150), y = t.y + t.vy * fl * (t.s / 150);
+          return [K.lerp(x, t.gx, gather), K.lerp(y, t.gy, gather) + drift, K.lerp(t.s, t.gs, gather)];
+        }
+
+        function field(ctx, f, hot) {
+          K.fill(ctx, "#110805");
+          const fade = K.inv(162, 164, f);
+          ctx.save();
+          ctx.globalAlpha = fade;
+          K.grid(ctx, { cell: 150, ox: -(f - 162) * 14, oy: -(f - 162) * 22, color: "#8A1E10", alpha: 0.5, width: 1.4 });
+          ctx.restore();
+          const z = zS(f), zx = zX(f), zy = zY(f);
+          K.glow(ctx, (g) => {
+            g.globalAlpha = fade;
+            g.translate(zx, 1080 + zy); g.scale(z, z); g.translate(-zx, -1080);
+            FIELD.forEach((t, i) => {
+              const [x, y, s] = fieldPos(t, f);
+              if (x < -400 || x > 2300 || y < -400 || y > 1500) return;
+              const isHot = i === HOT;
+              K.token(g, t.n, x, y, s, {
+                outline: isHot ? "#8E86E8" : GREEN,
+                badgeFill: isHot ? "#2A2260" : null,
+                badgeGlyph: isHot ? "+" : null,
+                rot: t.r * K.lerp(1, 0.4, K.inv(176, 184, f)),
+                hot: isHot ? hot : 0,
+                blur: f < 170 && s > 280 ? 2 : 0,
+              });
+            });
+          }, { blur: 16, alpha: 0.55 });
+        }
+
+        // ================================================================ panel
+        const pY = K.key([[182, -260], [184, -150], [186, -40], [188, 27], [190, 81], [192, 108], [196, 126], [200, 129], [202, 141], [224, 105], [226, 105], [232, 90], [234, 75], [236, 120], [238, 240], [240, 525], [241, 600]]);
+        const VAL = K.step([[0, ["0", 0]], [212, ["12.8831", 3]], [214, ["104.226", 10]], [216, ["318.905", 22]], [218, ["702.117", 43]], [220, ["1840.09", 84]], [222, ["2180.40", 100]]]);
+        function panel(ctx, f) {
+          if (f < 182) return;
+          const z = zS(f), zx = zX(f);
+          const y = pY(f);
+          const bright = K.key([[218, 0], [219, 0.4], [220, 1], [221, 0.8], [222, 0.3], [223, 0]])(f);
+          K.glow(ctx, (g) => {
+            // zoom about the bottom centre, like the tiles (the panel sits near the top)
+            // the panel zooms about a point near its own top so it grows in place
+            g.translate(zx, 60); g.scale(z, z); g.translate(-zx, -60);
+            const x0 = 450, w = 1035;
+            g.fillStyle = "rgba(48,30,24,0.82)";
+            g.fillRect(x0, y, w, 92);
+            g.fillStyle = "rgba(36,22,18,0.82)";
+            g.fillRect(x0, y + 100, w - 140, 84);
+            g.fillRect(x0 + w - 130, y + 100, 130, 84);
+            const [v, pct] = VAL(f);
+            K.text(g, "AMOUNT", x0 + 30, y + 56, { size: 22, weight: 600, color: "rgba(250,236,226,0.8)", ls: 0.02 });
+            K.text(g, v, x0 + w - 190, y + 60, { size: 34, weight: 500, color: "rgba(250,240,232,0.95)", align: "right", ls: 0 });
+            K.text(g, "USDC ⌄", x0 + w - 30, y + 56, { size: 24, weight: 600, color: "rgba(250,240,232,0.9)", align: "right", ls: 0 });
+            K.text(g, pct + "%", x0 + w - 65, y + 154, { size: 26, weight: 600, color: "rgba(250,240,232,0.9)", align: "center", ls: 0 });
+            // slider ticks
+            const n = 25, tx0 = x0 + 34, tx1 = x0 + w - 190;
+            for (let k = 0; k < n; k++) {
+              const x = tx0 + (tx1 - tx0) * (k / (n - 1));
+              const lit = k / (n - 1) <= pct / 100 + 1e-6 && pct > 0;
+              g.fillStyle = lit ? C.green : "rgba(250,236,226,0.16)";
+              const big = k % 5 === 0;
+              g.fillRect(x - 2, y + 142 - (big ? 18 : 12), 4, big ? 36 : 24);
+            }
+            g.fillStyle = "#E23B2A"; g.fillRect(tx1 - 4, y + 120, 6, 6);
+            if (pct === 0) { g.fillStyle = C.green; g.fillRect(tx0 - 2, y + 130, 4, 24); }
+          }, { blur: 14 + bright * 30, alpha: 0.55 + bright * 0.5, sharpBlur: bright * 14 });
+          if (bright > 0) {
+            // the commit flash: a soft white-green bloom over the panel
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            const gr = ctx.createRadialGradient(960, 300, 0, 960, 300, 900);
+            gr.addColorStop(0, `rgba(255,240,225,${0.5 * bright})`); gr.addColorStop(0.5, `rgba(80,230,170,${0.25 * bright})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
+            ctx.restore();
+          }
+        }
+
+        // ================================================================ cursor
+        const cX = K.key([[184, 990], [186, 960], [196, 975], [200, 975], [202, 960], [204, 840], [206, 735], [208, 705], [212, 720], [214, 750], [216, 825], [218, 924], [220, 1035], [222, 1290], [224, 1185], [226, 585], [228, 405], [230, 375], [232, 360], [234, 375], [236, 375]]);
+        const cY = K.key([[184, 20], [186, 300], [188, 405], [190, 465], [192, 495], [194, 525], [196, 534], [200, 540], [202, 540], [204, 495], [206, 450], [208, 435], [214, 435], [216, 405], [218, 390], [220, 345], [222, 285], [224, 1020], [226, 885], [228, 570], [230, 390], [232, 300], [234, 180], [236, 120]]);
+        function cursor(ctx, f) {
+          if (f < 183 || f > 237) return;
+          const x = cX(f), y = cY(f);
+          const pointLeft = f >= 222;
+          K.ember(ctx, x, y + 30, 260, C.orange, 0.55);
+          K.glow(ctx, (g) => {
+            // pixel trail
+            if (f <= 188 || (f >= 203 && f <= 207) || f >= 224) K.pixelCloud(g, x + (pointLeft ? 40 : 0), y - 60, 40, 12, 90 + f, C.orange2, 1);
+            K.hand(g, x, y, 7, { rot: pointLeft ? -1.45 : -0.05, alpha: f >= 236 ? 0.5 : 1 });
+          }, { blur: 14, alpha: 0.9 });
+        }
+
+        // ============================================================ pixel letters
+        const PL = [
+          [233, 236, "N", 1410, 285, 72], [234, 236, "O", 1200, 700, 56], [235, 238, "V", 870, 390, 54],
+          [236, 238, "A", 375, 810, 64], [237, 239, "N", 330, 375, 30], [238, 240, "A", 1200, 705, 54],
+          [239, 241, "$", 915, 420, 38], [239, 241, "O", 570, 930, 40],
+        ];
+        function pixels(ctx, f) {
+          K.glow(ctx, (g) => {
+            PL.forEach(([a, b, ch, x, y, c], i) => {
+              if (f < a || f > b) return;
+              K.pixelLetter(g, ch, x, y, c, C.orange2, { seed: 3 + i + f, drop: f === b ? 0.4 : 0.06 });
+            });
+            if (f >= 238) { g.fillStyle = C.orange; g.fillRect(960, 840, 90, 90); g.fillRect(890, 300, 60, 60); }
+          }, { blur: 22, alpha: 0.85 });
+        }
+
+        K.mount("market", 139, 103, (ctx, f, cv) => {
+          if (f < 162) {
+            table(ctx, f);
+            K.defocus(cv, f >= 158 ? (f - 157) * 3 : 0);
+          } else {
+            const hot = K.key([[193, 0], [195, 1], [200, 1], [202, 0]])(f);
+            field(ctx, f, hot);
+            panel(ctx, f);
+            cursor(ctx, f);
+            pixels(ctx, f);
+            if (f >= 240) {
+              // warming into the next scene's taupe flash
+              ctx.save(); ctx.globalAlpha = f === 240 ? 0.15 : 0.45; ctx.fillStyle = "#A08A7C"; ctx.fillRect(0, 0, K.W, K.H); ctx.restore();
+            }
+          }
+          K.bloom(cv, 0.3, 70);
+          K.vignette(ctx, 0.55);
+          K.grain(ctx, f, 0.07);
+        });
+      })();
+    </script>
+  </div>
+</template>

@@ -1,0 +1,122 @@
+<template id="nova1-template">
+  <div data-composition-id="nova1" data-width="1920" data-height="1080" data-duration="0.875">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 118-138: hard cut to the partner colour. A tumbling cube's silhouette
+        // carries "Nova Network Synced" (the text inverts where it crosses the shape) over rows of
+        // slanted strokes; glyph rows build on the right, the frame strobes and everything shoots off.
+        const BLUE = C.blue, PALE = "#F7F7FD", HATCH = "#B5B8F4";
+        // frames where the colours are inverted (blue ground, white shape)
+        const INVERT = new Set([118, 119, 120, 135, 137]);
+        const cx = K.key([[118, 1560], [119, 1250], [120, 1000], [121, 830], [122, 760], [124, 720], [128, 690], [132, 660], [134, 640], [136, 600], [137, 420], [138, 140]]);
+        const cy = K.key([[118, 600], [120, 560], [124, 540], [138, 560]]);
+        const ry = K.key([[118, 0.15], [120, 0.42], [122, 0.62], [126, 0.86], [130, 1.06], [134, 1.25], [138, 1.48]]);
+        const rx = K.key([[118, 0.12], [120, 0.32], [124, 0.46], [130, 0.56], [138, 0.66]]);
+        const rz = K.key([[118, -0.05], [120, 0.18], [124, 0.1], [130, -0.02], [138, -0.12]]);
+        const edge = K.key([[118, 1300], [119, 900], [120, 640], [122, 580], [138, 560]]);
+        const txX = K.key([[120, 70], [122, 20], [124, 0], [136, 0], [137, 320], [138, 760]]);
+
+        function hull(pts) {
+          pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+          const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+          const lo = [], up = [];
+          for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+          for (const p of pts.slice().reverse()) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+          return lo.slice(0, -1).concat(up.slice(0, -1));
+        }
+        function shape(f) {
+          const e = edge(f) / 2;
+          const cam = { rx: rx(f), ry: ry(f), rz: rz(f), d: 2200, cx: cx(f), cy: cy(f) };
+          const V = [];
+          for (const a of [-e, e]) for (const b of [-e, e]) for (const c of [-e, e]) V.push(K.proj([a, b, c], cam));
+          return hull(V.map((p) => [p[0], p[1]]));
+        }
+        function path(ctx, P) {
+          ctx.beginPath();
+          P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+          ctx.closePath();
+        }
+
+        function hatch(ctx, f, col) {
+          // rows of slanted strokes; some rows turn to dots near the end
+          const R = K.rng(4);
+          const drift = (f - 118) * 7;
+          ctx.save();
+          ctx.fillStyle = col;
+          for (let j = 0; j < 17; j++) {
+            const y = -20 + j * 68 + ((f - 118) * -2);
+            const dens = R(), off = R() * 60;
+            const dots = f >= 132 && j % 3 === 1;
+            if (dens < 0.25 && f < 126) continue;
+            for (let x = -60 + ((off - drift) % 32); x < K.W + 40; x += 32) {
+              if (dots) { if (x > 1100) ctx.fillRect(x, y + 18, 5, 5); continue; }
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.transform(1, 0, -0.32, 1, 0, 0);
+              ctx.fillRect(0, 0, 4.5, 38);
+              ctx.restore();
+            }
+          }
+          ctx.restore();
+        }
+
+        function glyphRows(ctx, f) {
+          if (f < 134) return;
+          const rows = f < 137 ? [["@@@@", 720, 150], [">>>>>>>>", 840, 270], ["<<<<<<<<<<", 930, 390]] : [["@@@@@@@@@", 360, 735], [">>>>>>>>>>>>>>>>", 270, 855], ["========<<<<<<<<<<<<<", 0, 975]];
+          const k = f === 134 ? 0.5 : 1;
+          rows.forEach(([t, x, y], i) => {
+            const n = Math.ceil(t.length * (f === 135 ? 0.7 : k));
+            K.text(ctx, t.slice(0, n), x, y, { size: 74, weight: 500, color: "rgba(0,0,0,0)", stroke: f === 135 || f === 137 ? "#C9CBFA" : HATCH, lw: 2.2, ls: 0.02 });
+          });
+        }
+
+        K.mount("nova1", 118, 21, (ctx, f, cv) => {
+          const inv = INVERT.has(f);
+          const ground = inv ? BLUE : PALE, ink = inv ? PALE : BLUE;
+          K.fill(ctx, ground);
+          if (!inv || f >= 135) hatch(ctx, f, inv ? K.rgba("#FFFFFF", 0.35) : HATCH);
+          const P = shape(f);
+          // the shape
+          ctx.save();
+          path(ctx, P);
+          ctx.fillStyle = ink;
+          if (inv && f <= 120) { ctx.shadowColor = "rgba(255,255,255,0.6)"; ctx.shadowBlur = 60; }
+          ctx.fill();
+          ctx.restore();
+          // text: ground-coloured inside the shape, shape-coloured outside it
+          const SIZE = 104;
+          const words = f >= 121 ? ["Nova", "Network", "Synced"] : ["Nova", "Network"];
+          const lay = K.layout(ctx, ["Nova", "Network", "Synced"], SIZE, 500);
+          const x0 = 969 - lay.total / 2 + txX(f), base = 577;
+          const draw = (col) => {
+            lay.forEach((w, i) => {
+              if (i >= words.length) return;
+              let dy = 0, sc = 1;
+              if (i === 2) { const k = K.eo((f - 121) / 3, 2); dy = K.lerp(46, 0, k); sc = K.lerp(1.08, 1, k); }
+              ctx.save();
+              ctx.translate(x0 + w.x, base + dy);
+              ctx.scale(sc, sc);
+              K.text(ctx, w.w, 0, 0, { size: SIZE, weight: 500, color: col });
+              ctx.restore();
+            });
+          };
+          if (f === 118) {
+            // only a fragment shows on the incoming card
+            ctx.save(); path(ctx, P); ctx.clip();
+            K.text(ctx, "N", 1040, 600, { size: 130, weight: 500, color: BLUE });
+            ctx.restore();
+          } else {
+            draw(inv ? PALE : BLUE);
+            ctx.save(); path(ctx, P); ctx.clip(); draw(inv ? BLUE : PALE); ctx.restore();
+          }
+          glyphRows(ctx, f);
+          // light glow on the inverted frames
+          if (inv) K.bloom(cv, 0.25, 80);
+          K.grain(ctx, f, 0.04);
+        });
+      })();
+    </script>
+  </div>
+</template>

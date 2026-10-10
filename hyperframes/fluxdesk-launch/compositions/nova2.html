@@ -1,0 +1,185 @@
+<template id="nova2-template">
+  <div data-composition-id="nova2" data-width="1920" data-height="1080" data-duration="1.75">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 242-283: through a taupe flash into a pale blue world: "Nova" with big
+        // spinning diamonds and small squares on dashed orbits, pushing in; it dims to taupe, the
+        // squares turn warm and the line "Nova now trades on Fluxdesk." builds on dark; the brand
+        // word lights up letter by letter; a grainy orange wipe clears all but "Fluxdesk."
+        const BLUE = "#3438F0";
+        const bgL = K.key([[242, 0], [243, 0.55], [244, 0.92], [245, 1], [253, 1], [254, 0.82], [255, 0.6], [256, 0.35], [257, 0.15], [258, 0]]);
+        const Z = K.key([[242, 0.6], [244, 0.73], [246, 0.935], [248, 1.0], [250, 1.0], [253, 1.04], [255, 1.1]]);
+        const panX = K.key([[244, 0], [250, 0], [252, -10], [253, -30], [255, -120]]);
+        const panY = K.key([[244, 0], [250, 0], [252, 0], [253, 60], [255, 120]]);
+        const drot = K.key([[244, 0.42], [250, 0.55], [255, 0.68]]);
+
+        const SMALL = [[1290, 60], [1560, 500], [1440, 960], [870, 1090], [1020, -70]];
+        const DIAM = [[390, 390, 375], [540, 900, 375]];
+
+        function world(ctx, f, a) {
+          const z = Z(f), px = panX(f), py = panY(f);
+          const T = (x, y) => [955 + (x - 955) * z + px, 540 + (y - 540) * z + py];
+          ctx.save();
+          ctx.globalAlpha = a;
+          // faint grid
+          K.grid(ctx, { cell: 225 * z, ox: T(0, 0)[0], oy: T(0, 0)[1], color: "#9CA2E6", alpha: 0.18, width: 1.2 });
+          // blue haze
+          K.ember(ctx, T(955, 540)[0], T(955, 540)[1], 700 * z, "#6E76FF", 0.32);
+          DIAM.forEach(([x, y]) => { const p = T(x, y); K.ember(ctx, p[0], p[1], 360 * z, "#6E76FF", 0.35); });
+          // dashed orbits
+          const lines = [[SMALL[0], [955, 540], 0.25], [SMALL[1], DIAM[0], -0.2], [SMALL[2], [955, 540], 0.3], [SMALL[3], DIAM[1], -0.25], [SMALL[4], SMALL[1], 0.35], [DIAM[0], SMALL[2], 0.2]];
+          lines.forEach(([p, q, c]) => { const A = T(p[0], p[1]), B = T(q[0], q[1]); K.dashed(ctx, A[0], A[1], B[0], B[1], { color: "rgba(70,74,150,0.5)", curve: c, width: 1.4 }); });
+          // big diamonds with bracket frames
+          DIAM.forEach(([x, y, s], i) => {
+            const p = T(x, y), S = s * z * 0.72;
+            ctx.save();
+            ctx.strokeStyle = "rgba(80,84,170,0.55)"; ctx.lineWidth = 1.5;
+            const b = S * 0.75;
+            ctx.strokeRect(p[0] - b, p[1] - b, b * 2, b * 2);
+            ctx.restore();
+            K.tile(ctx, p[0], p[1], S, { fill: BLUE, rot: drot(f) + i * 0.18 });
+            K.glyph(ctx, "+", p[0], p[1], 34 * z, "#FFFFFF", 0, { weight: 0.12 });
+          });
+          // small squares
+          SMALL.forEach(([x, y]) => {
+            const p = T(x, y), S = 90 * z;
+            ctx.strokeStyle = "rgba(80,84,170,0.5)"; ctx.lineWidth = 1.4;
+            ctx.strokeRect(p[0] - S * 0.62, p[1] - S * 0.62, S * 1.24, S * 1.24);
+            K.tile(ctx, p[0], p[1], S, { fill: BLUE });
+            K.glyph(ctx, "+", p[0], p[1], 34 * z, "#FFFFFF", 0, { weight: 0.12 });
+          });
+          // "Nova"
+          const size = 206 * z;
+          const w = K.measure(ctx, "Nova", size, 600, -0.03);
+          const c = T(955, 540), x0 = c[0] - w / 2, base = c[1] + size * 0.36;
+          K.glow(ctx, (g) => K.text(g, "Nova", x0, base, { size, weight: 600, color: K.rgba(BLUE, 0.92), ls: -0.03, stroke: "rgba(170,175,255,0.9)", lw: 2 }), { blur: 26, alpha: 0.7 });
+          ctx.strokeStyle = "rgba(60,64,200,0.7)"; ctx.lineWidth = 1.5;
+          ctx.strokeRect(x0 - 4, base - size * 0.76, w * 0.5, size * 0.82);
+          ctx.strokeRect(x0 + w * 0.5, base - size * 0.6, w * 0.5 + 4, size * 0.66);
+          [0.08, 0.38, 0.62, 0.88].forEach((u) => K.glyph(ctx, "+", x0 + w * u, base - size * 0.36, size * 0.13, "#FFFFFF", 0, { weight: 0.13 }));
+          ctx.restore();
+        }
+
+        // ------------------------------------------------------------ line
+        const WORDS = ["Nova", "now", "trades", "on", "Fluxdesk."];
+        const ARR = [256, 256, 258, 260, 260];
+        function line(ctx, f) {
+          const SIZE = 98;
+          const lay = K.layout(ctx, WORDS, SIZE, 500);
+          // partial lines sit a little left, as in the build
+          const vis = lay.filter((w, i) => f >= ARR[i]);
+          const gw = vis[vis.length - 1].x + vis[vis.length - 1].width;
+          const off = K.key([[256, -360], [258, -170], [260, 0]])(f);
+          let x0 = (f >= 260 ? 960 - lay.total / 2 : 960 - gw / 2 + off);
+          if (f >= 281) x0 = 960 - lay[4].width / 2 - lay[4].x;
+          const base = 577;
+          // the wipe: everything left of the orange front disappears, the brand word stays
+          const front = K.key([[276, -300], [277, 300], [278, 760], [279, 1050], [280, 1350], [281, 1700], [282, 2400]])(f);
+          K.glow(ctx, (g) => {
+            lay.forEach((w, i) => {
+              if (f < ARR[i]) return;
+              const x = x0 + w.x;
+              if (i < 4 && f >= 277 && x + w.width * 0.5 < front) return;
+              const age = f - ARR[i];
+              const k = K.eo(age / 3, 2);
+              let col = C.cream;
+              if (i === 0) col = f < 259 ? K.mix(C.orange2, C.cream, (f - 256) / 3) : C.cream;
+              if (age < 2) col = C.orange2;
+              const sc = K.lerp(1.08, 1, k), dy = K.lerp(14, 0, k);
+              if (f >= 278 && f < 282) col = K.mix(col, "#4A3A34", 0.8);
+              if (i === 4) {
+                // brand word: letters light up left to right (263-266)
+                const lit = Math.floor(K.key([[262, 0], [263, 2], [264, 4], [265, 6], [266, 9]])(f));
+                let cx = x;
+                for (let j = 0; j < w.w.length; j++) {
+                  const ch = w.w[j];
+                  const cw = K.measure(g, w.w.slice(0, j + 1), SIZE, 500) - K.measure(g, w.w.slice(0, j), SIZE, 500);
+                  let cc = j < lit ? C.orange2 : col;
+                  if (f >= 282) cc = C.cream;
+                  else if (f >= 278 && j < lit) cc = "#F2592A";
+                  g.save(); g.translate(x + K.measure(g, w.w.slice(0, j), SIZE, 500) * sc, base + dy); g.scale(sc, sc);
+                  K.text(g, ch, 0, 0, { size: SIZE, weight: 500, color: cc, ls: 0 });
+                  g.restore();
+                  cx += cw;
+                }
+                return;
+              }
+              g.save(); g.translate(x, base + dy); g.scale(sc, sc);
+              K.text(g, w.w, 0, 0, { size: SIZE, weight: 500, color: col });
+              g.restore();
+            });
+          }, { blur: 18, alpha: f >= 277 ? 0.3 : 0.7 });
+        }
+
+        function wipe(ctx, f, part) {
+          if (f < 275) return;
+          const front = K.key([[275, -200], [276, 220], [277, 520], [278, 900], [279, 1100], [280, 1400], [281, 1800], [282, 2600]])(f);
+          const right = K.key([[276, 0], [277, 0.6], [278, 1], [281, 1], [282, 0]])(f);
+          // light grey ground ahead of the front
+          if (part === "ground") {
+            if (right <= 0) return;
+            ctx.save(); ctx.globalAlpha = right; ctx.fillStyle = "#C9C3C0"; ctx.fillRect(Math.max(0, front - 200), 0, K.W, K.H);
+            K.grid(ctx, { cell: 240, ox: 120, oy: 60, color: "#B07060", alpha: 0.25, width: 1.3, x0: Math.max(0, front - 200) });
+            ctx.restore();
+            return;
+          }
+          // grainy orange body with a soft edge
+          const c = K.buf("wipe"); const g = c.getContext("2d");
+          const gr = g.createLinearGradient(front - 520, 0, front + 120, 0);
+          gr.addColorStop(0, "rgba(240,74,26,1)"); gr.addColorStop(0.7, "rgba(240,90,40,0.85)"); gr.addColorStop(1, "rgba(240,90,40,0)");
+          g.fillStyle = gr; g.fillRect(0, 0, K.W, K.H);
+          // speckle
+          const R = K.rng(500 + f);
+          g.fillStyle = "rgba(255,200,170,0.35)";
+          for (let i = 0; i < 2600; i++) { const x = R() * (front + 100), y = R() * K.H; g.fillRect(x, y, 2, 2); }
+          ctx.drawImage(c, 0, 0);
+          if (f >= 281) {
+            K.fill(ctx, f === 281 ? "#B83A16" : "#E84A20");
+            K.grid(ctx, { cell: 240, ox: 120, oy: 60, color: "#A02A0E", alpha: 0.45, width: 2 });
+            K.vignette(ctx, 0.45);
+          }
+        }
+
+        K.mount("nova2", 242, 42, (ctx, f, cv) => {
+          const l = bgL(f);
+          if (f <= 243) {
+            // taupe flash with a few warm-violet squares and a blurred fragment of the word
+            K.fill(ctx, K.mix("#9C8676", "#E9EAF7", l));
+            [[807, 195], [1005, 120], [774, 510], [975, 681], [870, 780]].forEach(([x, y], i) => K.tile(ctx, x, y, 66, { fill: i % 2 ? "#A2488E" : "#8C4CA0" }));
+            K.glow(ctx, (g) => K.text(g, "No", 675, 600, { size: 160, weight: 600, color: K.rgba(C.orange2, 0.55) }), { blur: 12, alpha: 0.6, sharpBlur: 6 });
+            if (f === 243) world(ctx, f, 0.5);
+          } else if (f <= 257) {
+            K.fill(ctx, K.mix("#2A140C", "#EEF0FB", l));
+            world(ctx, f, K.inv(0.5, 0.9, l));
+            if (f >= 254) {
+              // dims; the square nearest turns violet then warm; "now" arrives low right
+              const warm = K.inv(254, 257, f);
+              K.tile(ctx, K.lerp(450, 285, warm), K.lerp(930, 345, warm), K.lerp(300, 500, warm), { fill: K.mix("#7E48B8", "#D24A62", warm), rot: K.lerp(-0.5, 0.2, warm) });
+              if (f >= 256) K.tile(ctx, 1830, 369, 108, { fill: "#E05A3A" });
+              if (f === 254 || f === 255) K.glow(ctx, (g) => K.text(g, "now", 1125, 730, { size: 120, weight: 500, color: "#5A3A2A" }), { blur: 8, alpha: 0.4, sharpBlur: 2 });
+              if (f >= 256) line(ctx, f);
+            }
+          } else {
+            K.fill(ctx, C.bg);
+            K.glow(ctx, (g) => K.segGrid(g, f, { cell: 300, ox: 160 - (f - 258) * 2, oy: 90, color: C.orange, alpha: 0.38, width: 2.2, seed: 41, density: 0.6 }), { blur: 8, alpha: 0.5 });
+            K.ember(ctx, 960, 560, 900, C.orange, 0.18);
+            if (f <= 259) {
+              // warm squares leaving left
+              K.tile(ctx, 170 - (f - 258) * 200, 315, 345, { fill: "#F26A2E", rot: 0.05 });
+              K.tile(ctx, 240 - (f - 258) * 200, 940, 380, { fill: "#F26A2E", rot: -0.08 });
+            }
+            wipe(ctx, f, "ground");
+            if (f < 281) line(ctx, f);
+            wipe(ctx, f, "body");
+            if (f >= 281) line(ctx, f);
+          }
+          K.bloom(cv, f >= 258 ? 0.3 : 0.18, 70);
+          if (f >= 258) K.vignette(ctx, 0.5);
+          K.grain(ctx, f, f >= 276 ? 0.12 : 0.05);
+        });
+      })();
+    </script>
+  </div>
+</template>
