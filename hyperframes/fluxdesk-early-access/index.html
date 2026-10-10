@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>fluxdesk early access</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/kit.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-latin.woff2") format("woff2"); font-weight: 100 800; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #110503; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #110503; font-family: "Inter", system-ui, sans-serif; }
+      .clip { position: absolute; inset: 0; overflow: hidden; }
+      .stage { position: absolute; inset: 0; }
+      /* keeps the canvas fonts loaded before the first frame is drawn */
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="4.9" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:400">Aa</span><span style="font-weight:500">Aa</span><span style="font-weight:600">Aa</span><span style="font-weight:700">Aa</span><span style="font-family:'JetBrains Mono'">Aa</span></div>
+      <div id="intro-comp" class="clip" data-composition-id="intro" data-composition-src="compositions/intro.html" data-start="0.000000" data-duration="0.958333" data-track-index="0"></div>
+      <div id="headline-comp" class="clip" data-composition-id="headline" data-composition-src="compositions/headline.html" data-start="0.958333" data-duration="1.291667" data-track-index="1"></div>
+      <div id="dash-comp" class="clip" data-composition-id="dash" data-composition-src="compositions/dash.html" data-start="2.250000" data-duration="2.650000" data-track-index="2"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 4.9);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

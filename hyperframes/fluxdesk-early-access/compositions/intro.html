@@ -1,0 +1,196 @@
+<template id="intro-template">
+  <div data-composition-id="intro" data-width="1920" data-height="1080" data-duration="0.958333">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Animation frames 0-22 (24 fps). A glyph tile seen from very close pulls back through a
+        // grid, swapping glyph ( / > + ) while rings of glyphs burst outward, spins toward a diamond,
+        // then a white flash shows a red "+" tile and the camera settles on a three-tile staircase that
+        // shuffles and recedes into a fine grid. Values are measured per frame from the reference.
+        const PEACH = "#FADD96", INK = "#521D05";
+
+        // ------------------------------------------------------------ zoom (0-10)
+        // tile size, rotation (deg), fill, glyph, glyph size (K.glyph em), glyph weight
+        const Z = [
+          [2070, 0, PEACH, "/", 2070 * 0.56, 0.17],
+          [1240, 0, PEACH, "/", 1240 * 0.54, 0.17],
+          [813, 0, PEACH, "/", 813 * 0.48, 0.17],
+          [596, 0, PEACH, "/", 596 * 0.45, 0.17],
+          [480, 0, PEACH, ">", 480 * 0.48, 0.16],
+          [412, 0, "#F9CE8A", ">", 412 * 0.54, 0.16],
+          [378, 0, "#F7BD7D", ">", 378 * 0.53, 0.16],
+          [370, 0.8, "#F4A765", ">", 370 * 0.47, 0.16],
+          [375, 3, "#E6673A", "+", 150, 0.12],
+          [392, 14, "#E6673A", "+", 116, 0.13],
+          [470, 37, "#E6673A", "+", 456, 0.15],
+        ];
+        // grid cell and rotation (deg); there is always a line through the centre
+        const GRID = [[0, 0], [773, 0], [580, 0], [484, 0], [424, 0], [386, 0], [358, 0], [345, 0.8], [340, 4], [335, 15], [300, 36]];
+
+        // glyph particle rings: [glyph, size, alpha, [[dx, dy], ...]] per frame (offsets from centre)
+        const RING_GT = [[-150, -504], [180, -496], [-496, -184], [-508, 150], [504, -154], [494, 180], [-186, 490], [146, 500]];
+        const ring = (rot, s) => {
+          const a = (rot * Math.PI) / 180;
+          return RING_GT.map(([x, y]) => [(x * Math.cos(a) - y * Math.sin(a)) * s, (x * Math.sin(a) + y * Math.cos(a)) * s]);
+        };
+        const PARTS = {
+          2: [["/", 100, [[-122, -416], [122, -416], [-122, 416], [122, 416], [-416, -122], [-416, 122], [416, -122], [416, 122]]], ["/", 110, [[-504, -516], [530, -492], [-540, 492], [500, 508]]]],
+          3: [["/", 100, [[-134, -418], [146, -418], [-140, 418], [146, 418], [-414, -138], [-414, 138], [420, -138], [420, 138]]], ["/", 110, [[756, -532], [-754, 528]]]],
+          4: [[">", 145, ring(0, 1)]],
+          5: [[">", 150, ring(5.4, 1.29)]],
+          6: [[">", 150, ring(17, 1.8)]],
+          7: [[">", 150, ring(26, 2.4)]],
+        };
+        function corners(s, rot, k) {
+          const a = (rot * Math.PI) / 180, h = (s / 2) * k;
+          return [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)]);
+        }
+
+        function zoomScene(ctx, f) {
+          const cx = 960, cy = 540;
+          const [S, rotD, fill, gl, gs, gw] = Z[f];
+          const rot = (rotD * Math.PI) / 180;
+          K.fill(ctx, ["#140405", "#4A140C", "#36100A", "#3A100B", "#48140E", "#40120C", "#3A100B", "#2E0C09", "#120506", "#120506", "#120506"][f]);
+          // grid
+          const [cell, grD] = GRID[f];
+          if (cell) {
+            K.glow(ctx, (g) => {
+              g.translate(cx, cy); g.rotate((grD * Math.PI) / 180); g.translate(-cx, -cy);
+              K.grid(g, { cell, ox: cx, oy: cy, color: "#E0482A", alpha: 0.9, width: f >= 8 ? 2.6 : 3.2 });
+            }, { blur: 9, alpha: 1, passes: 2 });
+          }
+          // the warm halo round the tile
+          if (f >= 1) K.ember(ctx, cx, cy, S * (f >= 8 ? 0.85 : 1.05), f >= 8 ? "#B83A14" : "#E0581E", f >= 8 ? 0.35 : f >= 5 ? 0.7 : 0.85);
+          // particles hidden behind the tile, the tile, then the particles in front
+          const parts = PARTS[f] || [];
+          const P = [];
+          parts.forEach(([g, s, offs]) => offs.forEach(([dx, dy]) => P.push([g, cx + dx, cy + dy, s])));
+          if (f >= 7) {
+            const k = f === 7 ? 0.98 : f === 8 ? 1.04 : f === 9 ? 1.32 : 1.66;
+            const lag = f === 10 ? -7 : f === 9 ? -1 : 0;
+            corners(S, rotD + lag, k).forEach(([x, y]) => P.push(["+", cx + x, cy + y, f === 7 ? 60 : f === 8 ? 76 : 80]));
+          }
+          K.glow(ctx, (g) => {
+            P.forEach(([gg, x, y, s]) => K.glyph(g, gg, x, y, s, "#FFA463", 0, { weight: gg === "/" ? 0.14 : gg === "+" ? 0.19 : 0.14 }));
+          }, { blur: 10, alpha: 1, passes: 1 });
+          // orange light bleeding off the tile's edges, then the crisp tile with a pale rim and corner nodes
+          K.glow(ctx, (g) => {
+            g.translate(cx, cy); g.rotate(rot);
+            g.strokeStyle = f >= 8 ? "#E0481C" : "#FF6A26";
+            g.lineWidth = Math.max(8, S * 0.05);
+            g.strokeRect(-S / 2, -S / 2, S, S);
+          }, { blur: f >= 8 ? 14 : Math.max(22, S * 0.08), alpha: f >= 8 ? 0.6 : 1, passes: 2, sharp: false });
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(rot);
+          ctx.fillStyle = fill;
+          ctx.fillRect(-S / 2, -S / 2, S, S);
+          ctx.strokeStyle = f >= 8 ? "#F08050" : "#FFC27E";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(-S / 2 + 1.5, -S / 2 + 1.5, S - 3, S - 3);
+          if (f >= 2) {
+            ctx.fillStyle = f >= 8 ? "#F07A48" : "#FFD08E";
+            const n = f >= 8 ? 10 : 12;
+            [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => ctx.fillRect((a * S) / 2 - n / 2, (b * S) / 2 - n / 2, n, n));
+          }
+          ctx.restore();
+          // the glyph stays upright while the tile spins
+          K.glyph(ctx, gl, cx, cy, gs, f >= 8 ? "#5E1404" : INK, 0, { weight: gw });
+        }
+
+        // ------------------------------------------------------- flash (11-22)
+        const FLASH_GRID = 334;
+        function flash11(ctx) {
+          K.fill(ctx, "#FDF7F7");
+          K.grid(ctx, { cell: FLASH_GRID, ox: 960, oy: 540, color: "#E7D3CF", alpha: 1, width: 2.5 });
+          K.glow(ctx, (g) => {
+            g.fillStyle = "#D4320C";
+            g.fillRect(630, 207, 666, 666);
+            [[630, 207], [1296, 207], [1296, 873], [630, 873]].forEach(([x, y]) => g.fillRect(x - 8, y - 8, 16, 16));
+          }, { blur: 26, alpha: 0.9, passes: 1 });
+          ctx.fillStyle = "#FBE4D6";
+          ctx.fillRect(963 - 250, 540 - 52, 500, 104);
+          ctx.fillRect(963 - 52, 540 - 250, 104, 500);
+        }
+
+        // [bg, gridColor, gridAlpha, unit, X, Y, blur, glowA, elements]
+        // element: [kind, gx, gy, glyph, scale, color]  kinds: T filled tile, O outline, D olive tile, G loose glyph, Q small square
+        const ST = {
+          12: ["#DCB2A6", "#E4502F", 0.85, 262, 822, 411, 2.5, 0.95, [["D", 0, 0], ["O", 1, 0], ["G", 1.5, 1.5, ">", 0.7, "#7C4A14"]]],
+          13: ["#C3A49B", "#E2563A", 0.8, 262, 822, 313, 14, 0.75, [["O", 1, 0], ["T", 0, 0.55, null, 1, "#C25E2A"], ["Q", 0.55, 0.47, null, 0.37, "#8C6420"], ["G", 1.55, 1.35, ">", 0.55, "#B4652A"], ["G", 0.6, 1.27, "/", 0.3, "#C87445"]]],
+          14: ["#AC7466", "#E25A3E", 0.75, 262, 822, 351, 12, 0.6, [["T", 1, -0.07, null, 1, "#C2773D"], ["Q", 0.55, 0.11, null, 0.27, "#D07A40"], ["T", 0, 0.69, "/", 1, "#CC6238"]]],
+          15: ["#855E54", "#E05A40", 0.75, 262, 822, 372, 5, 0.5, [["T", 1, -0.11, null, 1, "#D96F3E"], ["Q", 0.57, -0.1, null, 0.19, "#E08550"], ["O", 0, 0.77, ">", 0.6, "#F09A62"]]],
+          16: ["#60403A", "#E2502E", 0.7, 262, 822, 384, 0.6, 0.5, [["T", 1, -0.09, ".", 1, "#C4552E"], ["O", 0, 0.89, ">", 0.65, "#F09A62"], ["G", 0.55, -0.24, "<", 0.97, "#F2965A"]]],
+          17: ["#472824", "#E04A2A", 0.7, 260, 826, 164, 0, 0.6, [["T", 0, 0, "<", 0.74, "#EE8A4C"], ["O", 1, 0.8, "<", 0.62, "#F49A5A"], ["O", 0, 1.82, "+", 0.46, "#F49A5A"]]],
+          18: ["#28130D", "#E04A2A", 0.7, 256, 824, 162, 0, 0.5, [["T", 0, 0, "<", 0.74, "#D86C40"], ["O", 1, 0.9, "<", 0.62, "#F08E54"], ["O", 0, 1.9, ".", 0.4, "#F08E54"]]],
+          19: ["#22090A", "#D8402A", 0.7, 248, 832, 172, 0, 0.45, [["T", 0, 0, "<", 0.72, "#B04629"], ["O", 1, 1], ["O", 0, 2, ".", 0.4, "#E8784A"]]],
+          20: ["#1A0603", "#D03C26", 0.65, 232, 836, 196, 0, 0.4, [["T", 0, 0, "<", 0.72, "#7B2A19"], ["O", 1, 1], ["O", 0, 2]]],
+          21: ["#1A0603", "#C8382A", 0.6, 196, 860, 246, 0, 0.4, [["N", 0, 0], ["O", 1, 1], ["O", 0, 2]]],
+          22: ["#180501", "#C8382A", 0.55, 140, 886, 332, 0, 0.35, [["N", 0, 0], ["O", 1, 1], ["O", 0, 2]]],
+        };
+
+        // measured grid lines: [ox, oy, cell]
+        const SGRID = { 12: [822, 411, 131], 13: [822, 313, 131], 14: [822, 351, 131], 15: [822, 372, 131], 16: [822, 384, 131], 17: [826, 140, 128], 18: [824, 146, 127], 19: [834, 174, 121], 20: [836, 193, 115], 21: [856, 157, 97], 22: [886, 332, 70] };
+
+        function stairs(ctx, f, cv) {
+          const [bg, gcol, ga, u, X, Y, blur, glowA, els] = ST[f];
+          K.fill(ctx, bg);
+          const [gox, goy, cell] = SGRID[f];
+          if (f === 22) {
+            // a finite fine-grid panel with tall bars either side
+            ctx.save();
+            ctx.beginPath(); ctx.rect(330, 40, 1250, 1000); ctx.clip();
+            K.grid(ctx, { cell, ox: gox, oy: goy, color: gcol, alpha: ga, width: 1.8 });
+            ctx.restore();
+            ctx.fillStyle = K.rgba(gcol, 0.5);
+            [50, 120, 190, 260, 1640, 1720, 1800, 1880].forEach((x) => ctx.fillRect(x - 1, 0, 2.5, 1080));
+            ctx.fillRect(1580, 0, 2.5, 1080);
+          } else {
+            K.glow(ctx, (g) => K.grid(g, { cell, ox: gox, oy: goy, alpha: ga, width: f >= 17 ? 2.4 : 6, color: f <= 16 ? "#D8432C" : gcol }), { blur: 6, alpha: 0.7, sharpBlur: f <= 16 ? 2 : 0 });
+          }
+          // soft light round the staircase
+          const hx = X + u * 0.5, hy = Y + u * 0.6;
+          if (f <= 16) K.ember(ctx, hx + (f >= 14 ? u * 0.4 : 0), hy, u * (f === 12 ? 1.45 : 1.7), "#F0441A", f === 12 ? 1 : f <= 14 ? 0.8 : 0.6);
+          else if (f <= 18) K.ember(ctx, hx, Y + u * 0.5, u * 0.9, "#F06A2A", f === 17 ? 0.45 : 0.3);
+          K.glow(ctx, (g) => {
+            els.forEach(([kind, gx, gy, gl, sc, col]) => {
+              const x = X + gx * u, y = Y + gy * u;
+              const lw = f >= 21 ? 2 : 3;
+              const node = (px, py) => { g.fillStyle = gcol; g.fillRect(px - 4, py - 4, 8, 8); };
+              if (kind === "D") {
+                g.fillStyle = "#7A5418"; g.fillRect(x, y, u, u);
+                g.fillStyle = "#F2E2C4"; g.fillRect(x + u * 0.25, y + u * 0.25, u * 0.5, u * 0.5);
+              } else if (kind === "T") {
+                g.fillStyle = col; g.fillRect(x, y, u, u);
+                [[0, 0], [1, 0], [1, 1], [0, 1]].forEach(([a, b]) => { g.fillStyle = col; g.fillRect(x + a * u - 4, y + b * u - 4, 8, 8); });
+                if (gl) K.glyph(g, gl, x + u / 2, y + u / 2, gl === "." ? u * 0.4 : u * sc, gl === "/" ? "#D8763F" : "#3A1206", 0, { weight: 0.16 });
+              } else if (kind === "O") {
+                g.strokeStyle = f <= 16 ? "#E8401A" : K.rgba(gcol, 1); g.lineWidth = f <= 16 ? 6 : lw; g.strokeRect(x, y, u, u);
+                [[0, 0], [1, 0], [1, 1], [0, 1]].forEach(([a, b]) => node(x + a * u, y + b * u));
+                if (gl) K.glyph(g, gl, x + u / 2, y + u / 2, gl === "." ? u * 0.3 : u * sc, col, 0, { weight: gl === "+" ? 0.2 : 0.14 });
+              } else if (kind === "N") {
+                [[0, 0], [1, 0], [0, 1]].forEach(([a, b]) => node(x + a * u, y + b * u));
+              } else if (kind === "G") {
+                K.glyph(g, gl, x, y, u * sc, col, 0, { weight: 0.15 });
+              } else if (kind === "Q") {
+                g.fillStyle = col; g.fillRect(x - (u * sc) / 2, y - (u * sc) / 2, u * sc, u * sc);
+              }
+            });
+          }, { blur: 16, alpha: glowA, passes: 1 });
+          if (blur > 0.3) K.defocus(cv, blur);
+        }
+
+        K.mount("intro", 0, 23, (ctx, f, cv) => {
+          if (f <= 10) zoomScene(ctx, f);
+          else if (f === 11) flash11(ctx);
+          else stairs(ctx, f, cv);
+          if (f <= 10) K.bloom(cv, f <= 7 ? 0.08 : 0.2, 60);
+          if (f >= 1 && f <= 10) K.vignette(ctx, f <= 7 ? 0.25 : 0.5);
+          if (f >= 17) K.vignette(ctx, 0.3);
+          K.grain(ctx, f, 0.05);
+        });
+      })();
+    </script>
+  </div>
+</template>

@@ -1,0 +1,395 @@
+<template id="dash-template">
+  <div data-composition-id="dash" data-width="1920" data-height="1080" data-duration="2.65">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Animation frames 54-116 (24 fps). A flash bursts the last glyph into a cluster of glyph
+        // tiles that spreads into a wired constellation; the pixel cursor sweeps in trailing a pixel
+        // cloud and the dashboard builds round it; the Launchpad card fills row by row; the camera
+        // tilts into perspective while a bright row runs down the card; a white flash, the rows turn
+        // into scrolling glyph rows, and the camera pans away leaving the cursor. The camera is
+        // measured per frame from the reference (card corners), the dashboard is drawn in layout space.
+
+        // ---------------------------------------------------------- backdrop
+        const BG = { 54: "#857F7F", 55: "#FDF8F8", 56: "#FDF8F8", 100: "#847573", 101: "#FAF4F1", 102: "#E2D7D6", 103: "#C8BABA", 104: "#AE9E9D", 105: "#93827E", 106: "#786561", 107: "#644E4C", 108: "#4D3A37", 109: "#332321", 110: "#1C110E", 111: "#1A100D", 116: "#110405" };
+        // how "light" the dashboard is drawn (white flash)
+        const LIGHT = { 100: 0.55, 101: 1, 102: 0.9, 103: 0.75, 104: 0.6, 105: 0.45, 106: 0.3, 107: 0.2, 108: 0.12, 109: 0.05 };
+        const BLUR = { 54: 10, 100: 9, 101: 1.5, 102: 2.5, 103: 3.5, 104: 3, 105: 5, 106: 2.5, 107: 1.6, 108: 1.2, 109: 0.6 };
+
+        // -------------------------------------------------- constellation
+        // nodes per frame: [glyph, x, y, size px]  (size < 34 draws a small boxed node)
+        const NET = {
+          56: [["+", 850, 222, 46], [">", 990, 212, 46], ["/", 1120, 232, 70], ["/", 660, 342, 60], [">", 960, 408, 90], [">", 1290, 428, 70], [">", 1070, 564, 50], ["/", 1272, 564, 50], [">", 614, 626, 70], ["/", 836, 682, 44], ["+", 980, 728, 56], ["+", 1256, 736, 48], ["/", 796, 832, 64], [">", 1056, 882, 60], ["sq", 488, 238, 14]],
+          57: [["+", 936, 18, 44], ["/", 1086, 32, 46], [">", 716, 198, 44], ["+", 1080, 264, 30], [">", 1090, 348, 86], [">", 1416, 296, 54], ["+", 456, 416, 42], ["+", 626, 386, 24], ["/", 1100, 576, 40], ["/", 1500, 656, 52], [">", 520, 782, 82], [">", 828, 812, 40], ["+", 1346, 762, 70], ["/", 916, 892, 120], ["/", 1126, 942, 52], ["+", 746, 1044, 26], [">", 1116, 1056, 50], ["sq", 462, 218, 14]],
+          58: [["+", 660, 16, 50], ["+", 1350, 44, 24], [">", 1490, 156, 100], ["sq", 410, 190, 12], ["+", 870, 206, 30], [">", 336, 256, 70], ["/", 980, 340, 110], [">", 1310, 360, 50], ["/", 574, 464, 45], ["/", 1636, 506, 90], ["+", 1040, 610, 24], ["+", 374, 740, 45], ["+", 1410, 724, 28], ["+", 1436, 784, 40], [">", 780, 870, 45], [">", 720, 960, 100], [">", 1440, 1030, 70], ["/", 546, 1056, 40], ["/", 1106, 1050, 40]],
+          59: [["+", 1466, 76, 80], ["sq", 366, 156, 12], ["+", 996, 176, 30], [">", 302, 240, 60], [">", 722, 300, 110], [">", 1476, 330, 45], ["/", 676, 456, 40], ["/", 1752, 500, 80], ["/", 186, 576, 110], ["+", 1202, 620, 22], ["+", 406, 752, 24], ["+", 1280, 770, 35], ["+", 1590, 824, 40], [">", 890, 900, 45], ["+", 502, 1016, 80]],
+          60: [["+", 1156, 16, 26], ["sq", 300, 120, 12], ["+", 1240, 136, 24], [">", 276, 296, 110], ["+", 436, 248, 35], [">", 1700, 288, 60], [">", 940, 454, 40], ["/", 1696, 492, 90], ["/", 156, 576, 50], ["<", 1490, 632, 40], ["+", 606, 752, 25], ["+", 796, 802, 35], ["+", 1736, 896, 25], ["+", 1126, 932, 30], ["+", 240, 1012, 60]],
+          61: [["sq", 248, 84, 12], ["+", 1412, 98, 22], ["+", 1822, 246, 50], [">", 86, 298, 90], ["+", 576, 248, 30], [">", 1142, 448, 35], [">", 1520, 482, 110], ["/", 236, 572, 45], ["<", 446, 816, 100], ["+", 780, 752, 22], ["+", 1300, 962, 30], ["+", 172, 1004, 25]],
+          62: [["+", 180, 44, 18], ["+", 1520, 64, 22], ["+", 1870, 206, 50], ["+", 24, 300, 50], ["+", 680, 246, 22], [">", 1324, 474, 120], [">", 306, 576, 40], ["<", 234, 820, 80], ["<", 896, 760, 26], ["+", 160, 1000, 22]],
+          63: [["<", 1600, 30, 30], ["+", 1890, 176, 22], ["+", 762, 242, 22], ["+", 12, 304, 40], [">", 1156, 470, 120], ["+", 1380, 436, 24], [">", 372, 576, 40], ["<", 106, 824, 80], ["<", 996, 766, 24], ["+", 176, 994, 22]],
+          64: [["+", 1656, 12, 22], ["+", 1890, 152, 22], ["+", 824, 236, 22], ["+", 1004, 468, 110], ["+", 1450, 436, 24], [">", 424, 572, 40], ["<", 190, 992, 40]],
+          65: [["+", 1716, 8, 22], ["+", 1886, 128, 22], ["<", 876, 236, 35], ["+", 886, 462, 100], ["+", 1516, 432, 24], ["+", 470, 572, 35], ["<", 212, 996, 40]],
+          66: [["<", 1876, 110, 100], ["<", 914, 230, 35], ["+", 500, 576, 30], ["sq", 1560, 430, 10], ["<", 226, 990, 35], ["<", 1640, 1074, 60]],
+          67: [["<", 1866, 100, 100], ["<", 950, 230, 30], ["sq", 1600, 426, 10]],
+          68: [["<", 1850, 92, 100], ["<", 1624, 426, 35], ["<", 4, 312, 40]],
+          69: [["<", 1650, 426, 35], ["<", 6, 312, 40]],
+          70: [["<", 1660, 424, 35]],
+        };
+        // dashed links: each node to its nearest neighbours that sit roughly level with it
+        function links(nodes) {
+          const out = [];
+          nodes.forEach((a, i) => {
+            const c = nodes.map((b, j) => [j, b]).filter(([j, b]) => j !== i && Math.abs(b[2] - a[2]) < Math.abs(b[1] - a[1]) * 0.55 + 30 && b[1] > a[1])
+              .sort((p, q) => Math.hypot(p[1][1] - a[1], p[1][2] - a[2]) - Math.hypot(q[1][1] - a[1], q[1][2] - a[2]));
+            c.slice(0, 2).forEach(([j]) => out.push([i, j]));
+          });
+          return out;
+        }
+        function network(ctx, f, light) {
+          const nodes = NET[f];
+          if (!nodes) return;
+          const lc = light ? "rgba(70,30,20,0.55)" : "rgba(255,226,206,0.42)";
+          links(nodes).forEach(([i, j]) => K.dashed(ctx, nodes[i][1], nodes[i][2], nodes[j][1], nodes[j][2], { color: lc, width: 1.3 }));
+          // one long diagonal wire across the field
+          if (f >= 57 && f <= 63 && nodes.length > 6) {
+            const a = nodes[1], b = nodes[nodes.length - 2];
+            K.dashed(ctx, a[1], a[2], b[1], b[2], { color: lc, width: 1.3 });
+          }
+          if (light) {
+            // light frames: dark glyphs on soft orange tiles
+            K.ember(ctx, 960, 560, 560, "#F0441A", 0.55);
+            K.glow(ctx, (g) => nodes.forEach(([gl, x, y, s]) => { g.fillStyle = "#F0501E"; g.fillRect(x - s * 0.6, y - s * 0.6, s * 1.2, s * 1.2); }), { blur: 22, alpha: 1, passes: 3, sharp: false, mode: "source-over" });
+            nodes.forEach(([gl, x, y, s]) => {
+              if (gl === "sq") { ctx.fillStyle = "#E0301A"; ctx.fillRect(x - s / 2, y - s / 2, s, s); return; }
+              K.glyph(ctx, gl, x, y, gl === "/" ? s : s * 1.2, "#7A3A08", 0, { weight: 0.17 });
+              ctx.strokeStyle = "rgba(140,50,20,0.55)"; ctx.lineWidth = 1.4;
+              ctx.strokeRect(x - s * 0.6, y - s * 0.6, s * 1.2, s * 1.2);
+            });
+            return;
+          }
+          K.glow(ctx, (g) => nodes.forEach(([gl, x, y, s]) => {
+            if (gl === "sq") { g.fillStyle = "#FF4A2A"; g.fillRect(x - s / 2, y - s / 2, s, s); return; }
+            g.fillStyle = "rgba(255,90,40,0.22)"; g.fillRect(x - s * 0.62, y - s * 0.62, s * 1.24, s * 1.24);
+            g.strokeStyle = "rgba(255,110,60,0.7)"; g.lineWidth = 2; g.strokeRect(x - s * 0.62, y - s * 0.62, s * 1.24, s * 1.24);
+            K.glyph(g, gl, x, y, gl === "/" ? s : s * 1.2, "#FFA266", 0, { weight: s < 34 ? 0.2 : 0.16 });
+          }), { blur: 18, alpha: 1, passes: 2 });
+        }
+        function burst(ctx, f) {
+          // 54: one glyph in a soft orange bloom; 55: a tight cluster of glyph tiles in a frame
+          if (f === 54) {
+            K.ember(ctx, 960, 540, 260, "#F0441A", 0.75);
+            K.glyph(ctx, ">", 958, 538, 60, "#B4700E", 0, { weight: 0.2 });
+            return;
+          }
+          K.grid(ctx, { cell: 256, ox: 960, oy: 540, color: "#E8C8C0", alpha: 0.8, width: 1.4 });
+          K.ember(ctx, 960, 540, 330, "#F0441A", 0.95);
+          ctx.save();
+          ctx.strokeStyle = "rgba(120,40,20,0.7)"; ctx.lineWidth = 1.6;
+          ctx.strokeRect(806, 384, 306, 316);
+          ctx.restore();
+          K.dashed(ctx, 508, 253, 806, 470, { color: "rgba(80,30,20,0.6)", width: 1.3 });
+          ctx.fillStyle = "#E0301A"; ctx.fillRect(500, 245, 16, 16);
+          [["/", 900, 440, 70], [">", 980, 450, 70], ["/", 860, 540, 60], [">", 930, 530, 60], ["/", 1020, 540, 50], ["+", 1080, 535, 50], ["+", 850, 610, 46], ["/", 960, 640, 76], [">", 1030, 630, 66]]
+            .forEach(([gl, x, y, s]) => K.glyph(ctx, gl, x, y, gl === "/" ? s : s * 1.2, "#7A4210", 0, { weight: 0.19 }));
+        }
+
+        // ------------------------------------------------------- camera
+        // frames 61-86: similarity [scale, tx, ty] mapping layout -> screen
+        const SIM = {
+          61: [0.46, 520, 360], 62: [0.5, 480, 330], 63: [0.54, 440, 300], 64: [0.58, 400, 270], 65: [0.62, 360, 245],
+          66: [0.66, 327, 217], 67: [0.707, 288, 183], 68: [0.743, 251, 157], 69: [0.779, 221, 133], 70: [0.807, 184, 115],
+          71: [0.843, 156, 93], 72: [0.868, 125, 75], 73: [0.9, 102, 60], 74: [0.929, 69, 44], 75: [0.957, 53, 32],
+          76: [0.979, 28, 19], 77: [0.993, 19, 12], 78: [0.995, 8, 8], 79: [1, 6, 4], 80: [1, 0, 0], 81: [1, 4, 4],
+          82: [1.003, 0, 4], 83: [1.007, 3, 2], 84: [1.012, -1, -3], 85: [1.02, -2, -5], 86: [1.025, -4, -6],
+        };
+        // frames 87-116: the Launchpad card's corners on screen (TL, TR, BR, BL)
+        const QK = [
+          [86, [[390, 222], [964, 222], [964, 700], [390, 700]]],
+          [87, [[416, 236], [1000, 240], [1030, 704], [416, 700]]],
+          [88, [[410, 222], [1024, 238], [1060, 724], [412, 732]]],
+          [89, [[400, 196], [1106, 236], [1150, 786], [436, 812]]],
+          [90, [[366, 160], [1150, 230], [1300, 840], [510, 936]]],
+          [91, [[346, 144], [1156, 230], [1390, 900], [566, 1010]]],
+          [92, [[330, 142], [1160, 236], [1400, 912], [600, 1052]]],
+          [93, [[326, 132], [1196, 242], [1450, 920], [650, 1066]]],
+          [94, [[310, 124], [1150, 236], [1490, 940], [660, 1076]]],
+          [96, [[300, 122], [1160, 236], [1495, 940], [662, 1076]]],
+          [98, [[300, 120], [1150, 230], [1500, 940], [660, 1070]]],
+          [99, [[320, 130], [1166, 240], [1505, 945], [672, 1076]]],
+          [100, [[390, 180], [1140, 265], [1440, 930], [740, 1046]]],
+          [101, [[400, 192], [1136, 272], [1430, 930], [756, 1042]]],
+          [102, [[380, 170], [1140, 260], [1450, 935], [720, 1050]]],
+          [104, [[360, 148], [1150, 252], [1480, 940], [700, 1072]]],
+          [106, [[356, 156], [1150, 250], [1480, 940], [700, 1080]]],
+          [108, [[350, 152], [1160, 252], [1490, 945], [700, 1072]]],
+          [109, [[376, 162], [1216, 272], [1530, 940], [740, 1072]]],
+          [110, [[430, 164], [1200, 256], [1540, 930], [790, 1070]]],
+          [111, [[546, 180], [1266, 270], [1586, 910], [906, 1050]]],
+          [112, [[696, 202], [1340, 278], [1670, 902], [1060, 1022]]],
+          [113, [[912, 228], [1476, 292], [1786, 872], [1266, 962]]],
+          [114, [[1156, 256], [1640, 310], [1916, 860], [1500, 930]]],
+          [115, [[1452, 290], [1876, 330], [2130, 840], [1836, 876]]],
+          [116, [[1800, 336], [2200, 380], [2450, 860], [2140, 900]]],
+        ];
+        const QF = [0, 1, 2, 3].map((c) => [0, 1].map((d) => K.key(QK.map(([fr, q]) => [fr, q[c][d]]))));
+        const A_RECT = [[384, 222], [944, 222], [944, 686], [384, 686]];
+        function solveH(src, dst) {
+          const M = [], b = [];
+          for (let i = 0; i < 4; i++) {
+            const [x, y] = src[i], [u, v] = dst[i];
+            M.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); b.push(u);
+            M.push([0, 0, 0, x, y, 1, -v * x, -v * y]); b.push(v);
+          }
+          for (let c = 0; c < 8; c++) {
+            let p = c;
+            for (let r = c + 1; r < 8; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+            [M[c], M[p]] = [M[p], M[c]]; [b[c], b[p]] = [b[p], b[c]];
+            for (let r = 0; r < 8; r++) {
+              if (r === c) continue;
+              const k = M[r][c] / M[c][c];
+              for (let j = c; j < 8; j++) M[r][j] -= k * M[c][j];
+              b[r] -= k * b[c];
+            }
+          }
+          const h = b.map((v, i) => v / M[i][i]);
+          return (x, y) => { const w = h[6] * x + h[7] * y + 1; return [(h[0] * x + h[1] * y + h[2]) / w, (h[3] * x + h[4] * y + h[5]) / w]; };
+        }
+        function camera(f) {
+          if (f <= 86) {
+            const [s, tx, ty] = SIM[f];
+            return { sim: [s, tx, ty], map: (x, y) => [x * s + tx, y * s + ty] };
+          }
+          const dst = QF.map(([fx, fy]) => [fx(f), fy(f)]);
+          return { map: solveH(A_RECT, dst) };
+        }
+
+        // --------------------------------------------------- dashboard
+        const LAY = { a: [384, 222, 560, 464], b: [976, 222, 560, 464], c: [380, 762, 1160, 234] };
+        const HDR = K.key([[61, -49], [66, -49], [70, -12], [73, -5], [76, 0]]);
+        const COFF = { 72: 60, 73: 30, 74: 15, 75: 5 };
+        const CLINE = { 77: 124, 78: 74, 79: 24 };
+        // hatch rows: bright spans [row, from, to]; DIM = rows drawn faint underneath
+        const HB = {
+          69: [[0, 0, 0.4]], 70: [[0, 0, 1]], 71: [[0, 0, 1], [1, 0, 0.05]], 72: [[0, 0, 1], [1, 0, 0.55]], 73: [[0, 0, 1], [1, 0, 1]],
+          74: [[0, 0, 1], [1, 0, 1], [2, 0, 0.22]], 75: [[0, 0, 1], [1, 0, 1], [2, 0, 0.75]], 76: [[0, 0, 1], [1, 0, 1], [2, 0, 1]],
+          77: [[0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 0.35]], 78: [[0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 0.9]], 79: [[0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 1]],
+          80: [[0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 1], [4, 0, 0.5]], 81: [[0, 0, 1], [1, 0, 1], [2, 0, 1], [3, 0, 1], [4, 0, 0.85]],
+          82: [[3, 0, 1], [4, 0, 1], [5, 0, 0.06]], 83: [[4, 0, 1], [5, 0, 0.62]], 84: [[4, 0, 1]], 85: [[0, 0, 0.42], [5, 0, 0.25]], 86: [[0, 0, 1], [5, 0, 0.8]],
+          87: [[0, 0.25, 1], [1, 0, 0.75]], 88: [[0, 0, 1], [1, 0, 0.15], [5, 0, 0.25]], 89: [[0, 0.6, 1], [1, 0, 1]],
+          90: [[0, 0, 1], [1, 0, 0.5]], 91: [[1, 0, 1]], 92: [[1, 0.35, 1], [2, 0, 1]], 93: [[2, 0, 1], [3, 0, 0.2]], 94: [[2, 0.62, 1], [3, 0, 1]],
+          95: [[3, 0, 1], [4, 0, 0.5]], 96: [[4, 0, 1]], 97: [[4, 0.4, 1], [5, 0, 0.85]], 98: [[6, 0, 1]], 99: [[6, 0.7, 1]],
+          100: [[3, 0, 1], [4, 0, 1]], 101: [[4, 0, 0.8], [5, 0, 1]], 102: [[3, 0, 1], [4, 0, 1], [5, 0, 1]], 103: [[4, 0, 1], [5, 0, 1]], 104: [[3, 0, 1], [4, 0, 1], [5, 0, 1]], 105: [[2, 0, 1], [3, 0, 1], [4, 0, 1], [5, 0, 1], [6, 0, 1]],
+        };
+        // glyph rows after the flash (top to bottom): "." dots, "|" bars, others are glyph characters
+        const GR = {
+          106: [".", ".", ".", "|", "|", "|", "|"], 107: ["<", ".", ".", "|", "|", "|", "|"], 108: [">", "=", "<", ".", ".", "|", "|"],
+          109: ["o", ">", "=", "<", ".", ".", "|"], 110: ["?", "=", "<", ".", ".", ".", "-"], 111: ["\\", "?", "=", "<", ".", ".", "-"],
+          112: ["\\", "?", "=", "<", ".", "-", ""], 113: ["\\", "@", ">", "=", "-", "", ""], 114: ["", "", "", "@", "=", "", ""], 115: ["", "", "", "", "=", "", ""],
+        };
+        const GR_LEN = { 110: [0.45, 1, 1, 1, 1, 1, 1], 111: [0.2, 0.7, 1, 1, 1, 1, 1], 112: [0.25, 0.8, 1, 1, 1, 1, 1], 113: [0.2, 0.6, 1, 1, 1, 1, 1], 114: [0, 0, 0, 0.8, 1, 0, 0] };
+
+        function rowY(r, f) { return f >= 90 ? 236 + r * 34 : 240 + r * 40; }
+        function hatch(g, f, l) {
+          const A = LAY.a, x0 = A[0] + 14, x1 = A[0] + A[2] - 14;
+          const rows = f >= 90 ? 7 : 6, step = f >= 90 ? 19 : 15;
+          const vert = f >= 90;
+          const bar = (x, y, col) => {
+            g.fillStyle = col;
+            g.save(); g.translate(x, y);
+            if (!vert) g.transform(1, 0, -0.45, 1, 0, 0);
+            g.fillRect(0, 0, vert ? 5 : 6, vert ? 24 : 26);
+            g.restore();
+          };
+          const lit = K.mix("#FF7A36", "#E8521C", l), dim = K.mix("#5E1A0C", "#E8B8A8", l);
+          // faint full pattern once the card has filled
+          if (f >= 82) for (let r = 0; r < rows; r++) for (let x = x0; x < x1; x += step) bar(x, rowY(r, f), dim);
+          const gr = GR[f];
+          if (gr) {
+            gr.forEach((t, r) => {
+              if (!t) return;
+              const y = rowY(r, f), len = (GR_LEN[f] || [])[r] == null ? 1 : GR_LEN[f][r];
+              const xe = x0 + (x1 - x0) * len;
+              for (let x = x0; x < xe; x += step) {
+                if (t === "|") bar(x, y, lit);
+                else if (t === ".") { g.fillStyle = lit; g.fillRect(x + 1, y + 9, 5, 5); }
+                else if (t === "-") { g.fillStyle = lit; g.fillRect(x, y + 10, step - 5, 4); }
+                else if (t === "<" || t === ">" || t === "=") K.glyph(g, t, x + 7, y + 12, 26, lit, 0, { weight: 0.2 });
+                else K.text(g, t, x, y + 22, { size: 26, weight: 700, color: lit, ls: 0 });
+              }
+              if (t === "o") { g.fillStyle = K.rgba("#FF8A40", 0.8); g.fillRect(x0 + 120, y - 2, 170, 30); }
+            });
+            return;
+          }
+          (HB[f] || []).forEach(([r, a, b]) => {
+            const y = rowY(r, f);
+            for (let x = x0 + (x1 - x0) * a; x < x0 + (x1 - x0) * b; x += step) bar(x, y, lit);
+          });
+        }
+
+        function dashboard(g, f, l) {
+          const ink = K.mix(C.cream, "#2A1A12", l), sub = K.mix("#C9B5AC", "#5A463C", l);
+          const red = K.mix("#FF5A3A", "#E0401C", l);
+          const A = LAY.a, B = LAY.b, Cc = LAY.c;
+          const hy = HDR(f);
+          // header
+          K.text(g, "Good to see you", 382, 184 + hy, { size: 27, weight: 500, color: ink, ls: -0.01 });
+          g.fillStyle = red; g.fillRect(964, 168 + hy, 14, 14);
+          K.text(g, "Invite friends and split the fees →", 990, 182 + hy, { size: 21, weight: 500, color: red, ls: 0 });
+          // A: Launchpad
+          g.fillStyle = K.mix("#2C0A06", "#FBEDE8", l);
+          g.fillRect(A[0], A[1], A[2], A[3]);
+          const gr = g.createLinearGradient(A[0], A[1], A[0], A[1] + 300);
+          gr.addColorStop(0, K.rgba(K.mix("#5A140A", "#FFFFFF", l), 0.9)); gr.addColorStop(1, K.rgba(K.mix("#2C0A06", "#FBEDE8", l), 0));
+          g.fillStyle = gr; g.fillRect(A[0], A[1], A[2], 300);
+          if (f >= 66 && f <= 68) { g.fillStyle = "#FF8A4A"; g.fillRect(672, 360, 28, 28); }
+          if (f >= 69 && f <= 71) K.glyph(g, "<", 468, 422, 200, "#FF6A3A", 0, { weight: 0.16 });
+          if (f >= 69) hatch(g, f, l);
+          K.text(g, "Launchpad", A[0] + 28, A[1] + 318, { size: 24, weight: 600, color: ink, ls: -0.01 });
+          K.text(g, "Snipe new token launches the", A[0] + 28, A[1] + 360, { size: 21, weight: 400, color: sub, ls: 0 });
+          K.text(g, "moment they go live.", A[0] + 28, A[1] + 402, { size: 21, weight: 400, color: sub, ls: 0 });
+          // B: Futures
+          if (f >= 64) {
+            const bo = f <= 67 ? (68 - f) * 30 : 0;
+            g.fillStyle = K.mix("#22100C", "#F6EEEC", l);
+            if (f >= 68) g.fillRect(B[0], B[1], B[2], B[3]);
+            const ig = g.createLinearGradient(B[0], B[1], B[0], B[1] + 262);
+            ig.addColorStop(0, K.mix("#1C2034", "#E8ECF4", l)); ig.addColorStop(1, K.mix("#16241E", "#E4F2EA", l));
+            g.fillStyle = ig; g.fillRect(B[0], B[1], B[2], 262);
+            g.save();
+            g.beginPath(); g.rect(B[0], B[1], B[2], 262); g.clip();
+            g.strokeStyle = K.rgba(K.mix("#2EC07A", "#6ADCA8", l), 0.85); g.lineWidth = 2.4;
+            for (let k = 0; k < 7; k++) { g.beginPath(); g.arc(B[0] + B[2] + 30, B[1] + 262 + 60, 90 + k * 24, Math.PI * 1.03, Math.PI * 1.5); g.stroke(); }
+            g.restore();
+            K.text(g, "Futures", B[0] + 28, B[1] + 318 + bo, { size: 24, weight: 600, color: ink, ls: -0.01 });
+            if (f >= 67) {
+              K.text(g, "Trade perpetuals on majors.", B[0] + 28, B[1] + 360 + bo, { size: 21, weight: 400, color: sub, ls: 0 });
+              K.text(g, "Deep books, tight spreads.", B[0] + 28, B[1] + 402 + bo, { size: 21, weight: 400, color: sub, ls: 0 });
+            }
+            if (f >= 68) { g.fillStyle = K.rgba(K.mix("#9A8A82", "#C8BCB6", l), 0.75); g.fillRect(B[0] + B[2] - 116, B[1] + B[3] - 54, 96, 36); }
+          }
+          // C: Vaults
+          if (f >= 72) {
+            const off = COFF[f] || 0, y = Cc[1] + off;
+            g.fillStyle = K.mix("#1E0B08", "#F6ECE8", l);
+            g.fillRect(Cc[0], y, Cc[2], Cc[3]);
+            g.fillStyle = K.mix("#1A0806", "#EEE2DE", l); g.fillRect(Cc[0], y, 380, Cc[3]);
+            if (f >= 77) {
+              // frosted image with a faint grid
+              const rg = g.createRadialGradient(Cc[0] + 240, y + 190, 0, Cc[0] + 240, y + 190, 200);
+              rg.addColorStop(0, K.rgba("#C8B6A8", 0.45)); rg.addColorStop(1, K.rgba("#C8B6A8", 0));
+              g.fillStyle = rg; g.fillRect(Cc[0], y, 380, Cc[3]);
+              g.save(); g.beginPath(); g.rect(Cc[0], y, 380, Cc[3]); g.clip();
+              K.grid(g, { cell: 46, ox: Cc[0], oy: y, color: "#8A6A60", alpha: 0.25, width: 1, x0: Cc[0], x1: Cc[0] + 380, y0: y, y1: y + Cc[3] });
+              g.restore();
+            }
+            K.text(g, "Vaults", Cc[0] + 424, y + 36, { size: 22, weight: 600, color: K.mix("#B8A49A", "#3A2A24", l), ls: -0.01 });
+            K.text(g, "Put idle balances to work.", Cc[0] + 424, y + 78, { size: 20, weight: 400, color: K.mix("#8A766E", "#6A564C", l), ls: 0 });
+            g.fillStyle = K.rgba("#9A8A82", 0.6); g.fillRect(Cc[0] + Cc[2] - 180, y + Cc[3] - 62, 160, 40);
+          }
+        }
+        function outlines(g, f, l) {
+          const col = K.mix("#FF4A24", "#F23A14", l);
+          const R = (r, a, dy) => { g.strokeStyle = K.rgba(col, a); g.lineWidth = 4 + 10 * l; g.strokeRect(r[0], r[1] + (dy || 0), r[2], r[3]); };
+          if (f >= 66) R(LAY.a, 1);
+          if (f >= 70) R(LAY.b, f >= 82 ? 0.75 : 1);
+          if (f >= 77) R(LAY.c, 1, CLINE[f] || 0);
+          if (f >= 61 && f <= 65) {
+            // the selection boxes that wire the cards up
+            g.strokeStyle = K.rgba(col, 0.8); g.lineWidth = 3;
+            g.strokeRect(LAY.a[0], LAY.a[1] + 60, LAY.a[2], LAY.a[3] - 60);
+          }
+        }
+
+        // ---------------------------------------------------------- cursor
+        const CUR = {
+          61: [1736, 832, 22], 62: [1700, 940, 20], 63: [1276, 880, 13], 64: [1050, 762, 8], 65: [976, 728, 5.5], 66: [936, 704, 4.5],
+          67: [926, 690, 4.4], 68: [910, 682, 4.5], 69: [912, 672, 4.6], 70: [900, 664, 4.8], 71: [906, 650, 5], 72: [904, 648, 5],
+          73: [906, 636, 5], 74: [910, 630, 5], 75: [916, 620, 5], 76: [920, 608, 5], 77: [926, 602, 5], 78: [924, 590, 5],
+          79: [936, 584, 5], 80: [940, 582, 5], 81: [946, 572, 5], 82: [940, 574, 5], 83: [950, 570, 5], 84: [956, 564, 5.1],
+          85: [976, 556, 5.2], 86: [1000, 530, 5.5], 87: [1056, 430, 6.5], 88: [1066, 422, 7], 89: [1146, 442, 7.5], 90: [1240, 456, 8.5],
+          91: [1286, 474, 9], 92: [1300, 482, 9], 93: [1316, 492, 9], 94: [1320, 480, 9], 95: [1326, 480, 9], 96: [1336, 472, 9],
+          97: [1340, 472, 9], 98: [1336, 472, 9], 99: [1300, 486, 9], 100: [1260, 532, 9.5], 101: [1176, 572, 9.5], 102: [1236, 550, 9.5],
+          103: [1286, 524, 9.5], 104: [1300, 512, 9.5], 105: [1306, 512, 9.5], 106: [1320, 490, 9.5], 107: [1326, 490, 9.5], 108: [1324, 492, 9.5],
+          109: [1326, 492, 9.5], 110: [1330, 496, 9.5], 111: [1326, 500, 9.5], 112: [1320, 512, 9.6], 113: [1316, 512, 9.8], 114: [1300, 510, 10],
+          115: [1276, 510, 10.5], 116: [1220, 502, 11],
+        };
+        // pixel clouds: [x, y, radius, cell]
+        const CLOUD = {
+          61: [[1156, 612, 130, 16], [1560, 1000, 240, 22]], 62: [[1360, 660, 190, 18], [1700, 900, 200, 20]], 63: [[1276, 640, 80, 14], [1776, 900, 230, 16]],
+          64: [[1580, 812, 270, 18]], 65: [[1096, 812, 120, 14], [1676, 912, 200, 16]], 66: [[1000, 740, 60, 12], [1360, 900, 210, 16]],
+          67: [[1086, 790, 95, 12]], 68: [[980, 742, 62, 10]], 69: [[930, 700, 26, 9]],
+          88: [[1010, 470, 40, 10]], 89: [[1090, 470, 34, 10]], 90: [[1080, 420, 40, 10]], 91: [[1220, 470, 34, 10]],
+          100: [[1300, 520, 60, 12]], 101: [[1260, 540, 60, 12]], 102: [[1300, 510, 50, 12]], 109: [[1250, 500, 26, 9]], 110: [[1240, 500, 30, 9]],
+        };
+        function cursor(ctx, f, l) {
+          const c = CUR[f];
+          if (!c) return;
+          const [x, y, p] = c;
+          const rot = f >= 100 ? -1.57 : f >= 86 ? -0.85 : f >= 66 ? -0.35 : f >= 64 ? -0.55 : -0.75;
+          // measured points are the hand's centre; the sprite is anchored at the fingertip
+          const ax = x - Math.cos(rot) * 2.5 * p + Math.sin(rot) * 7 * p, ay = y - Math.sin(rot) * 2.5 * p - Math.cos(rot) * 7 * p;
+          const dark = f >= 101 && f <= 104;
+          K.glow(ctx, (g) => {
+            (CLOUD[f] || []).forEach(([cx, cy, r, cell], i) => K.pixelCloud(g, cx, cy, r, cell, 11 + f * 3 + i, "#FF8238", 1));
+            if (f >= 66) { g.fillStyle = "#FF7A30"; g.fillRect(x - p * 6, y - p * 5, p * 10, p * 10); }
+          }, { blur: 14, alpha: 0.8 });
+          if (!dark) K.ember(ctx, x, y, p * 16, "#FF7A30", 0.55);
+          K.glow(ctx, (g) => {
+            K.hand(g, ax, ay, p, { fill: dark ? "#14100E" : "#FFFFFF", line: dark ? "#FFFFFF" : "#1A0A05", rot });
+          }, { blur: 12, alpha: dark ? 0.2 : 0.75, mode: dark ? "source-over" : "lighter" });
+        }
+
+        // --------------------------------------------------------- render
+        function drawDash(ctx, f, l) {
+          const cam = camera(f);
+          const lay = K.buf("dashLayer"), lg = lay.getContext("2d");
+          dashboard(lg, f, l);
+          const ol = K.buf("dashOutline"), og = ol.getContext("2d");
+          outlines(og, f, l);
+          const alpha = f <= 65 ? K.inv(60, 66, f) * 0.85 + 0.15 : 1;
+          if (cam.sim) {
+            const [s, tx, ty] = cam.sim;
+            ctx.save(); ctx.globalAlpha = alpha; ctx.setTransform(s, 0, 0, s, tx, ty); ctx.drawImage(lay, 0, 0); ctx.restore();
+            K.glow(ctx, (g) => { g.setTransform(s, 0, 0, s, tx, ty); g.drawImage(ol, 0, 0); }, { blur: 22, alpha: 1, passes: 3 });
+          } else {
+            const P = (u, v) => cam.map(u * K.W, v * K.H);
+            K.drawQuad(ctx, lay, K.W, K.H, P);
+            K.glow(ctx, (g) => K.drawQuad(g, ol, K.W, K.H, P), l > 0.25 ? { blur: 34, alpha: 0.95, passes: 2, mode: "source-over" } : { blur: 24, alpha: 1, passes: 3 });
+          }
+        }
+
+        K.mount("dash", 54, 64, (ctx, f, cv) => {
+          const l = LIGHT[f] || 0;
+          K.fill(ctx, BG[f] || (f >= 57 && f <= 65 ? "#1E0907" : "#140F0B"));
+          if (f <= 56) {
+            if (f <= 55) burst(ctx, f);
+            else { K.grid(ctx, { cell: 256, ox: 960, oy: 540, color: "#E8C8C0", alpha: 0.8, width: 1.4 }); network(ctx, f, true); }
+          } else {
+            if (f <= 66) K.ember(ctx, 960, 560, 1100, "#C8401C", f <= 62 ? 0.2 : 0.18);
+            else K.ember(ctx, 900, 520, 900, "#B83A1C", 0.28 * (1 - l));
+            if (f <= 63) {
+              // the dark grid behind the network
+              K.glow(ctx, (g) => K.grid(g, { cell: 230, ox: 960, oy: 540, color: "#C8382A", alpha: 0.5, width: 2 }), { blur: 6, alpha: 0.35 });
+            }
+            if (f >= 61 && f <= 115) drawDash(ctx, f, l);
+            if (f === 116) {
+              // the camera has panned off the card onto a dark grid
+              ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 1180, 1080); ctx.clip();
+              K.glow(ctx, (g) => K.grid(g, { cell: 144, ox: 100, oy: 112, color: "#D03A2A", alpha: 0.7, width: 2 }), { blur: 6, alpha: 0.6 });
+              ctx.restore();
+              drawDash(ctx, f, l);
+            }
+            network(ctx, f, false);
+          }
+          cursor(ctx, f, l);
+          if (BLUR[f]) K.defocus(cv, BLUR[f]);
+          if (l > 0.3) K.vignette(ctx, 0, "rgba(220,60,30,0.25)");
+          K.bloom(cv, l > 0.3 ? 0.12 : 0.3, 70);
+          K.vignette(ctx, f <= 56 || l > 0.3 ? 0.06 : 0.38);
+          K.grain(ctx, f, 0.06);
+        });
+      })();
+    </script>
+  </div>
+</template>

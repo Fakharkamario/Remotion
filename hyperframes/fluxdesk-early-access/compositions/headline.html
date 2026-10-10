@@ -1,0 +1,308 @@
+<template id="headline-template">
+  <div data-composition-id="headline" data-width="1920" data-height="1080" data-duration="1.291667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        // Animation frames 23-53 (24 fps). "Early Access is open." lands word by word, each word
+        // arriving orange, a touch large and low, then cooling to cream, while the camera pulls back
+        // through the grid and glyphs pop round the line. Dotted orbits draw in, a white flash sweeps
+        // an orange highlight across the words as the camera pushes in, then back to dark the words
+        // break into glyphs that fly off. Positions are measured per frame on the reference line and
+        // re-centred for this copy.
+        const WORDS = ["Early", "Access", "is", "open."];
+        const SIZE = 116, WT = 500, LS = -0.05;
+        const REF_L = 826; // reference line width at scale 1
+        const CREAM = "#FFF4E6", ORANGE = "#FF7A3A";
+
+        // [reference line start x, scale, baseline]
+        const HL = {
+          23: [805, 1.57, 590], 24: [709, 1.4, 582], 25: [619, 1.24, 577], 26: [585, 1.16, 578], 27: [570, 1.1, 576],
+          28: [561, 1.067, 574], 29: [556, 1.04, 574], 30: [553, 1.02, 573], 31: [551, 1.01, 572], 32: [550, 1.004, 572],
+          33: [550, 1, 572], 34: [550, 1, 572], 35: [550, 1, 572], 36: [550, 1, 572], 37: [550, 1, 572],
+          38: [526, 1.05, 575], 39: [480, 1.13, 580], 40: [416, 1.32, 592], 41: [330, 1.525, 600], 42: [316, 1.574, 602],
+          43: [300, 1.62, 604], 44: [300, 1.64, 604], 45: [296, 1.63, 604], 46: [286, 1.61, 603], 47: [268, 1.6, 602],
+          48: [240, 1.6, 593], 49: [202, 1.605, 593], 50: [149, 1.6, 593], 51: [69, 1.6, 593], 52: [-50, 1.6, 593], 53: [-285, 1.6, 593],
+        };
+        // arriving words: frame -> [extra scale, drop in px]
+        const ARRIVE = [
+          { 23: [1, 0] },
+          { 24: [1.04, 32], 25: [1.04, 9] },
+          { 26: [1.08, 34], 27: [1.1, 6] },
+          { 29: [1.06, 83], 30: [1, 36], 31: [1, 18], 32: [1, 9], 33: [1, 4] },
+        ];
+        const FIRST = [23, 24, 26, 29];
+        // colour of each word in the dark part: [frame, colour] steps
+        const WCOL = [
+          [[23, ORANGE], [24, "#F7AA91"], [25, "#FCC9B0"], [26, CREAM]],
+          [[24, ORANGE], [26, "#F9B79A"], [27, "#FCD9C4"], [28, CREAM]],
+          [[26, ORANGE], [28, "#F7A27E"], [29, "#FCD0B8"], [30, CREAM]],
+          [[29, ORANGE], [31, "#F9B08A"], [32, "#FCCDB5"], [33, CREAM]],
+        ];
+        // flash: text colour ranges [p0, p1, colour] (p = word index + fraction), highlight [p0, p1, alpha]
+        const FL = {
+          36: { text: [[0, 4, "#FDE7D5"]] },
+          37: { text: [[0, 0.25, "#FF7A40"], [0.25, 4, "#D8C4BA"]], hi: [0, 0.25, 0.55], blur: 1 },
+          38: { text: [[0, 0.5, "#FF5A20"], [0.5, 4, "#B8A49A"]], hi: [0, 0.5, 0.9], blur: 4 },
+          39: { text: [[0, 0.75, "#F06020"], [0.75, 4, "#6E625E"]], hi: [0, 0.75, 1], blur: 2, boxes: [[0, 1]] },
+          40: { text: [[0, 1.2, "#D86A20"], [1.2, 4, "#3A2C28"]], hi: [0, 1.2, 1], blur: 0.8, boxes: [[0, 1.6]] },
+          41: { text: [[0, 2.55, "#963A10"], [2.55, 4, "#2A1E1A"]], hi: [0, 2.55, 1], boxes: [[0, 3]] },
+          42: { text: [[0, 0.25, "#E0381A"], [0.25, 4, "#8E3410"]], hi: [0.25, 4, 1], boxes: [[0, 0.25], [0.25, 4]], cross: [0.12] },
+          43: { text: [[0, 1.45, "#E0381A"], [1.45, 4, "#86340E"]], hi: [1.45, 4, 1], boxes: [[0, 0.27], [0.27, 0.6], [0.6, 1], [1, 4]], cross: [0.12, 0.8] },
+          44: { text: [[0, 2, "#E0381A"], [2, 4, "#7E300E"]], hi: [2, 4, 1], boxes: [[0, 0.27], [0.27, 0.62], [0.62, 1], [1, 1.45], [1.45, 2], [2, 4]], cross: [0.12, 0.8, 1.3] },
+          45: { text: [[0, 0.75, "#16100E"], [0.75, 2, "#E0381A"], [2, 4, "#7E300E"]], hi: [2, 4, 1], boxes: [[0.75, 1], [1, 1.3], [1.3, 1.7], [1.7, 2], [2, 3], [3, 4]], cross: [0.85, 1.5] },
+          46: { text: [[0, 1.5, "#4A3C38"], [1.5, 3, "#E83A20"], [3, 4, "#8A3410"]], hi: [3, 4, 1], boxes: [[1.5, 1.75], [1.75, 2], [2, 3], [3, 4]] },
+          47: { text: [[0, 2, "#CEC4C0"], [2, 3, "#E8402A"], [3, 4, "#FF5A2A"]], hi: [3, 4, 0.75], blur: 0.6 },
+          48: { text: [[0, 2, CREAM], [2, 3, "#F27A70"], [3, 4, "#FF8A40"]] },
+          49: { text: [[1, 2, CREAM], [2, 3, "#F59A84"], [3, 4, "#FF9A55"]] },
+          50: { text: [[1, 2, CREAM], [2, 3, "#F59A84"], [3, 4, "#FF9A55"]] },
+          51: { text: [[1, 2, CREAM], [2, 3, "#F7B09A"], [3, 4, "#FF9A55"]] },
+          52: { text: [[2, 3, "#FCE0D0"], [3, 4, "#FFA060"]] },
+          53: { text: [[3, 4, "#FFB070"]], letterBoxes: true },
+        };
+        const BG = { 36: "#291D1D", 37: "#4E4242", 38: "#766C6B", 39: "#9C9291", 40: "#C4BDBB", 41: "#E9E1E0", 42: "#FEF8F6", 43: "#FEF8F6", 44: "#FEF8F6", 45: "#FEF8F6", 46: "#BBB1B0", 47: "#5C4F4E" };
+        const LIGHT = (f) => f >= 39 && f <= 46;
+        const CELL = { 23: 545, 24: 447, 25: 325, 26: 260, 27: 221, 28: 192, 29: 174, 30: 162, 31: 155, 32: 150, 33: 147, 34: 145, 35: 143, 36: 142, 37: 142, 38: 149, 39: 160, 40: 188, 41: 217, 42: 223 };
+
+        // glyph particles in reference screen coords: [glyph, x, y, em, box]
+        const GP = {
+          23: [["/", 1280, 383, 174]],
+          24: [["/", 1316, 380, 140]],
+          25: [["/", 1387, 382, 140]],
+          26: [["/", 1449, 382, 140], [">", 764, 702, 107]],
+          27: [["/", 1480, 380, 140], ["+", 704, 700, 94]],
+          28: [[">", 1511, 380, 183], ["+", 606, 700, 94]],
+          29: [[">", 1530, 377, 200], ["+", 530, 698, 94]],
+          30: [[">", 1546, 382, 200], [">", 387, 500, 117], ["+", 486, 700, 70]],
+          31: [[">", 1550, 380, 200], [">", 340, 500, 117], [".", 454, 700, 50]],
+          32: [[">", 1571, 380, 200], [">", 312, 500, 117], [".", 430, 700, 50]],
+          33: [["+", 1575, 377, 172], ["+", 292, 500, 98], [".", 412, 700, 50]],
+          34: [["+", 1586, 382, 172], ["+", 278, 499, 98], [".", 398, 700, 50]],
+          35: [["+", 1585, 380, 172, 118], ["+", 268, 497, 98, 64], ["<", 388, 700, 107, 64]],
+          36: [["+", 1586, 380, 172, 118], ["sq", 262, 496, 16, 0], ["<", 386, 700, 107, 64]],
+          37: [["+", 1600, 378, 172, 118], ["sq", 240, 502, 16, 0], ["<", 360, 698, 100, 60]],
+          38: [["sq", 1628, 372, 28, 0], ["sq", 222, 502, 16, 0], ["<", 346, 706, 96, 0]],
+          39: [["sq", 1660, 366, 30, 46], ["sq", 176, 494, 16, 0], ["<", 304, 714, 96, 58]],
+          40: [["sq", 1796, 330, 34, 52], ["<", 46, 490, 110, 66], ["<", 186, 750, 100, 62]],
+          41: [["sq", 1904, 302, 34, 52]],
+        };
+        // dotted paths in reference coords: [x0, y0, cx, cy, x1, y1, arrows]
+        const ARCS = {
+          35: [[264, 498, 875, -231, 1586, 380, 1], [1586, 380, 814, 1176, 386, 700, 1], [386, 700, 236, 620, 264, 498, 1]],
+          36: [[262, 496, 875, -231, 1586, 380, 1], [1586, 380, 814, 1176, 386, 700, 1], [386, 700, 236, 620, 262, 496, 1]],
+          37: [[560, 480, 1040, -49, 1600, 378, 1], [240, 502, 400, 369, 560, 480, 1], [360, 698, 1180, 1131, 1520, 432, 1], [360, 698, 216, 640, 240, 502, 1]],
+          38: [[600, 470, 1060, -20, 1628, 372, 0]],
+          40: [[46, 490, 330, 250, 700, 470, 1], [650, 560, 860, 820, 1060, 560, 1], [700, 460, 1500, -40, 1796, 330, 1], [1796, 330, 1560, 1100, 186, 750, 1]],
+          41: [[880, 492, 1290, -230, 1904, 302, 1]],
+          42: [[396, 512, 726, 204, 1056, 512, 1]],
+          43: [[370, 520, 780, 170, 1100, 420, 1], [380, 560, 640, 700, 940, 640, 1], [690, 540, 930, 700, 1150, 560, 0]],
+          44: [[300, 520, 820, 100, 1270, 470, 1], [460, 540, 760, 360, 1080, 520, 1], [540, 580, 900, 740, 1290, 600, 1]],
+          45: [[700, 560, 960, 420, 1250, 520, 1], [700, 600, 880, 760, 1110, 620, 1], [1000, 600, 1150, 420, 1340, 540, 0]],
+          46: [[1000, 540, 1060, 470, 1260, 500, 1]],
+          47: [[1270, 470, 1360, 380, 1450, 520, 0], [1260, 560, 1350, 640, 1440, 560, 0]],
+        };
+
+        let LAY = null;
+        function layout(ctx) {
+          if (!LAY) LAY = K.layout(ctx, WORDS, SIZE, WT, LS);
+          return LAY;
+        }
+        // line placement for frame f in this copy (re-centred on the reference line's centre)
+        function place(ctx, f) {
+          const lay = layout(ctx);
+          const [rs, s, base] = HL[f];
+          const cxRef = rs + (REF_L / 2) * s;
+          const x0 = cxRef - (lay.total / 2) * s;
+          const k = lay.total / REF_L;
+          const X = (x) => cxRef + (x - cxRef) * k;
+          const xp = (p) => {
+            const w = Math.min(3, Math.floor(p)), fr = p - w;
+            return x0 + (lay[w].x + fr * lay[w].width) * s;
+          };
+          return { lay, s, base, x0, X, xp };
+        }
+        const stepCol = (tbl, f) => { let c = tbl[0][1]; for (const [a, v] of tbl) if (f >= a) c = v; return c; };
+
+        function background(ctx, f) {
+          const light = LIGHT(f);
+          K.fill(ctx, BG[f] || (f >= 48 ? "#150705" : "#120404"));
+          const cell = CELL[f] || 228;
+          if (light) {
+            K.grid(ctx, { cell, ox: 962, oy: 545, color: f === 46 ? "#E06A5A" : "#E8A090", alpha: f >= 42 && f <= 45 ? 0.35 : 0.45, width: 1.6 });
+          } else {
+            const fl = f >= 36 && f <= 38;
+            K.glow(ctx, (g) => {
+              K.grid(g, { cell, ox: 962, oy: 545, color: "#D03A2A", alpha: fl ? 0.4 : 0.36, width: 1.8 });
+              K.segGrid(g, f, { cell: f <= 26 ? cell : cell / 2, ox: 962, oy: 545, color: "#F05034", alpha: 0.5, width: 2, seed: 5 + (f >> 1), density: 0.22 });
+            }, { blur: 5, alpha: 0.5 });
+          }
+          // warm light behind the line
+          if (f <= 36 || f >= 48) K.ember(ctx, 960, 560, f >= 48 ? 820 : 700, "#C8401C", f >= 48 ? 0.3 : 0.22);
+          if (f === 53) K.ember(ctx, 760, 620, 900, "#C8401C", 0.18);
+        }
+
+        function drawLine(g, P, f, colourAt, only) {
+          const { lay, s, base, x0 } = P;
+          lay.forEach((w, i) => {
+            if (only && !only(i)) return;
+            if (f < FIRST[i]) return;
+            const ar = (ARRIVE[i] && ARRIVE[i][f]) || [1, 0];
+            const x = x0 + w.x * s, y = base + ar[1];
+            g.save();
+            g.translate(x, y);
+            g.scale(s * ar[0], s * ar[0]);
+            K.text(g, w.w, 0, 0, { size: SIZE, weight: WT, color: colourAt(i), ls: LS });
+            g.restore();
+          });
+        }
+
+        // text drawn in colour ranges: clip each range's x span
+        function drawRanges(g, P, f, ranges, words) {
+          ranges.forEach(([p0, p1, col]) => {
+            g.save();
+            const a = P.xp(p0), b = P.xp(p1);
+            const c0 = p0 <= 0 ? -4000 : a, c1 = p1 >= 4 ? 8000 : b;
+            g.beginPath(); g.rect(c0, 0, c1 - c0, K.H); g.clip();
+            drawLine(g, P, f, () => col, words);
+            g.restore();
+          });
+        }
+
+        function particles(ctx, f, P) {
+          const light = LIGHT(f);
+          const list = GP[f] || [];
+          const col = light || f === 38 ? "#E8401C" : "#FF6A34";
+          K.glow(ctx, (g) => {
+            list.forEach(([gl, rx, ry, em]) => {
+              const x = P.X(rx), y = ry;
+              if (gl === "sq") { g.fillStyle = col; g.fillRect(x - em / 2, y - em / 2, em, em); }
+              else K.glyph(g, gl, x, y, em, col, 0, { weight: gl === "/" ? 0.15 : gl === "+" ? 0.15 : 0.15 });
+            });
+          }, { blur: light ? 6 : 14, alpha: light ? 0.6 : 0.9 });
+          ctx.save();
+          ctx.strokeStyle = light ? "rgba(200,60,30,0.7)" : "rgba(255,120,80,0.55)";
+          ctx.lineWidth = 1.5;
+          list.forEach(([gl, rx, ry, em, box]) => {
+            if (!box) return;
+            const x = P.X(rx);
+            ctx.strokeRect(x - box / 2, ry - box / 2, box, box);
+          });
+          ctx.restore();
+        }
+
+        function arcs(ctx, f, P) {
+          const list = ARCS[f];
+          if (!list) return;
+          const light = LIGHT(f);
+          const col = light ? "rgba(60,30,24,0.75)" : f >= 37 ? "rgba(240,225,220,0.7)" : "rgba(240,230,226,0.7)";
+          list.forEach(([x0, y0, cx, cy, x1, y1, arrow]) => {
+            const ax = P.X(x0), bx = P.X(x1), mx = P.X(cx);
+            // express the control point as the dashed() curve parameter
+            const midx = (ax + bx) / 2, midy = (y0 + y1) / 2;
+            const dx = bx - ax, dy = y1 - y0, L2 = dx * dx + dy * dy || 1;
+            // quadratic control (mx, cy); K.dashed uses mid + perp * curve, so project
+            const qx = (mx - midx), qy = (cy - midy);
+            const curve = (qy * dx - qx * dy) / L2;
+            K.dashed(ctx, ax, y0, bx, y1, { color: col, width: 1.6, dash: [5, 6], curve, arrow: !!arrow });
+          });
+        }
+
+        function boxes(ctx, f, P, spec) {
+          if (!spec.boxes && !spec.cross) return;
+          const { s, base } = P;
+          const top = base - SIZE * 0.86 * s, bot = base + SIZE * 0.28 * s;
+          ctx.save();
+          ctx.strokeStyle = LIGHT(f) ? "rgba(150,40,20,0.55)" : "rgba(255,140,100,0.5)";
+          ctx.lineWidth = 1.5;
+          (spec.boxes || []).forEach(([a, b]) => {
+            const x0 = P.xp(a) - 6, x1 = P.xp(b) + 6;
+            ctx.strokeRect(x0, top, x1 - x0, bot - top);
+          });
+          (spec.cross || []).forEach((p) => K.glyph(ctx, "+", P.xp(p), base - SIZE * 0.36 * s, 28, "#C83A1A", 0, { weight: 0.14 }));
+          ctx.restore();
+        }
+
+        function highlight(ctx, f, P, hi) {
+          if (!hi) return;
+          const [a, b, al] = hi;
+          const { s, base } = P;
+          const x0 = P.xp(a) - 10, x1 = P.xp(b) + 10;
+          K.glow(ctx, (g) => {
+            g.fillStyle = "#FF4A12";
+            g.fillRect(x0, base - SIZE * 0.8 * s, x1 - x0, SIZE * 0.95 * s);
+          }, { blur: 30 * Math.min(1.4, s), alpha: al, passes: 2, sharp: false, mode: "source-over" });
+        }
+
+        function lineDark(ctx, f, P) {
+          const colourAt = (i) => stepCol(WCOL[i], f);
+          // orange halo under every word, stronger for words still arriving
+          K.glow(ctx, (g) => drawLine(g, P, f, (i) => (colourAt(i) === CREAM ? "#E85A22" : "#FF5A1E")), { blur: 16, alpha: 0.75, passes: 2, sharp: false });
+          drawLine(ctx, P, f, colourAt);
+        }
+
+        function slashes(ctx, f, P) {
+          // the words break into glyphs that fly out (49-53)
+          const S = {
+            49: [["/", 1155, 342, 240]],
+            50: [["/", 1111, 357, 190], ["/", 1426, 322, 100]],
+            51: [["/", 985, 410, 180], ["/", 1460, 295, 70]],
+            52: [["/", 1706, 90, 180], ["/", 1518, 235, 70], ["/", 676, 1050, 60]],
+          }[f];
+          if (S) K.glow(ctx, (g) => S.forEach(([gl, x, y, em]) => K.glyph(g, gl, P.X(x), y, em, "#FF9A5A", 0, { weight: 0.16 })), { blur: 16, alpha: 1, passes: 2 });
+          if (f === 52) {
+            // the second word has become a chevron
+            K.glow(ctx, (g) => K.glyph(g, ">", P.xp(2) - 125, P.base - SIZE * 0.36 * P.s, 268, "#FF8A48", 0, { weight: 0.16 }), { blur: 18, alpha: 1, passes: 2 });
+          }
+          if (f === 53) {
+            const T = [[">", 352, 682, 330, 200], ["/", 1450, 137, 210, 150], [">", 1600, 137, 150, 100], ["/", 1723, 912, 140, 96], ["/", 820, 1000, 96, 72]];
+            const pts = T.map(([gl, x, y]) => [x, y]);
+            const liveC = [P.xp(3.5), P.base - 60];
+            [[0, 1], [0, 3], [4, 1], [4, 3], [0, 5], [1, 2]].forEach(([a, b]) => {
+              const p = pts[a], q = b === 5 ? liveC : pts[b];
+              K.dashed(ctx, p[0], p[1], q[0], q[1], { color: "rgba(255,215,190,0.55)", width: 1.4 });
+            });
+            K.glow(ctx, (g) => T.forEach(([gl, x, y, em]) => K.glyph(g, gl, x, y, em, "#FFA060", 0, { weight: 0.16 })), { blur: 18, alpha: 1, passes: 2 });
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,130,90,0.6)"; ctx.lineWidth = 1.5;
+            T.forEach(([gl, x, y, em, box]) => ctx.strokeRect(x - box / 2, y - (gl === "/" ? box * 0.7 : box / 2), box, gl === "/" ? box * 1.4 : box));
+            ctx.restore();
+          }
+        }
+
+        K.mount("headline", 23, 31, (ctx, f, cv) => {
+          background(ctx, f);
+          const P = place(ctx, f);
+          const spec = FL[f];
+          if (!spec) {
+            lineDark(ctx, f, P);
+          } else {
+            const words = f >= 52 ? (i) => i >= 2 : f >= 49 ? (i) => i >= 1 : null;
+            highlight(ctx, f, P, spec.hi);
+            if (!LIGHT(f)) K.glow(ctx, (g) => drawRanges(g, P, f, spec.text.map(([a, b, c]) => [a, b, "#FF5A1E"]), words), { blur: 16, alpha: f >= 48 ? 0.8 : 0.5, passes: 2, sharp: false });
+            drawRanges(ctx, P, f, spec.text, words);
+            boxes(ctx, f, P, spec);
+            if (spec.letterBoxes) {
+              ctx.save();
+              ctx.strokeStyle = "rgba(255,140,100,0.6)"; ctx.lineWidth = 1.5;
+              const w = P.lay[3];
+              let x = P.x0 + w.x * P.s;
+              for (const ch of w.w) {
+                const cw = K.measure(ctx, ch, SIZE, WT, LS) * P.s;
+                ctx.strokeRect(x, P.base - SIZE * 0.78 * P.s, cw, SIZE * 0.82 * P.s);
+                x += cw;
+              }
+              ctx.restore();
+            }
+          }
+          arcs(ctx, f, P);
+          particles(ctx, f, P);
+          slashes(ctx, f, P);
+          if (spec && spec.blur) K.defocus(cv, spec.blur);
+          const light = LIGHT(f);
+          K.bloom(cv, light ? 0.06 : 0.22, 60);
+          K.vignette(ctx, light ? 0.12 : 0.5);
+          K.grain(ctx, f, 0.05);
+        });
+      })();
+    </script>
+  </div>
+</template>
