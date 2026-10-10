@@ -1,0 +1,378 @@
+<template id="market-template">
+  <div data-composition-id="market" data-width="1920" data-height="1080" data-duration="4.266667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        const C = K.C;
+        // Reference frames 21-122:
+        //  21-43   the Markets page: the header bar flares, the page settles left, rows resolve one by
+        //          one out of a blur, then the page scrolls up faster and faster, tilting closer and defocusing
+        //  44-64   black, then a field of token tiles streams past (near tiles rise, far tiles fall)
+        //  64-84   the tiles gather into a pile; the pixel cursor drops in, the amount panel slides down,
+        //          the cursor hovers the mascot tile
+        //  85-104  the camera pushes in; the cursor drags the slider to 100% and the panel flares
+        //  105-122 the camera pulls back, the tiles reshuffle, the cursor flies off; pixel letters break in
+        const GREEN = "#4CD86E", CREAM = "#FBE9DA";
+        const lin = (pts) => K.key(pts);
+        const at = (tab, f) => { let k = null; for (const p of tab) { if (p[0] <= f) k = p; } return k; };
+
+        // ================================================================ table
+        const ROWS = [
+          ["orb", "ORBT", "Orbit Cats", "12h", "$198.4K", "$19.7K", "$2.4M", "14.2K"],
+          ["dots", "??", "unnamed", "9h", "$261.3K", "$24.1K", "$1.3M", "11.8K"],
+          ["letter", "KILN", "KILN", "5h", "$48.9K", "$8.8K", "$311.6K", "6.1K"],
+          ["chev", "VOLT", "Voltage", "8h", "$152.2K", "$15.9K", "$702.5K", "8.4K"],
+          ["moon", "MOSS", "Mossy", "11h", "$41.7K", "$9.1K", "$88.3K", "2.2K"],
+          ["flame", "FLRE", "Flare", "14h", "$37.2K", "$6.4K", "$61.9K", "1.7K"],
+        ];
+        const ROW_IN = [28, 30, 33, 36, 39, 41];
+        // page -> screen: screen = page * s + (tx, ty)   (page space = the layout at frame 21)
+        const pTX = K.step([[21, 0], [22, -90], [23, -150], [24, -190], [25, -225], [26, -240], [27, -245], [28, -250], [29, -255], [30, -250]]);
+        const pTY = K.step([[21, 0], [30, -20], [31, -40], [32, -65], [33, -100], [34, -150], [35, -210], [36, -285], [37, -374], [38, -495], [39, -617], [40, -865], [41, -1206], [42, -1690], [43, -2376]]);
+        const pS = K.step([[21, 1], [38, 1.01], [39, 1.02], [40, 1.05], [41, 1.15], [42, 1.25], [43, 1.35]]);
+        const barY = K.step([[21, 480], [22, 455], [23, 435], [24, 426]]);
+
+        function tablePage(g, f) {
+          // nav
+          const navC = "rgba(250,228,212,0.85)";
+          [["Markets", 98, true], ["Pulse", 313], ["Live", 470], ["Watchlist", 614], ["Screens", 806]].forEach(([t, x, act]) =>
+            K.text(g, t, x, 200, { size: 29, weight: 500, color: act ? C.orange2 : navC, ls: 0 }));
+          g.fillStyle = K.rgba(C.orange2, 0.8); g.fillRect(67, 136, 196, 3);
+          g.strokeStyle = "rgba(250,228,212,0.6)"; g.lineWidth = 2.5;
+          g.beginPath(); g.arc(1878, 190, 8, 0, 7); g.moveTo(1884, 196); g.lineTo(1891, 203); g.stroke();
+          K.text(g, "Search tokens, CA", 1928, 200, { size: 26, weight: 400, color: "rgba(250,228,212,0.7)", ls: 0 });
+          g.fillStyle = "rgba(250,228,212,0.08)"; g.fillRect(0, 246, 2600, 2); g.fillRect(357, 246, 2, 3000);
+          // heading + tabs
+          K.text(g, "Markets", 400, 360, { size: 42, weight: 600, color: CREAM, ls: -0.005 });
+          let x = 632;
+          [["Hot", true], ["Rising"], ["Fresh"]].forEach(([t, act]) => {
+            const w = K.measure(g, t, 27, 500, 0) + 56;
+            g.strokeStyle = act ? "#F0412A" : "rgba(250,228,212,0.32)"; g.lineWidth = 2.5;
+            g.strokeRect(x, 314, w, 70);
+            K.text(g, t, x + 28, 358, { size: 27, weight: 500, color: act ? "#F0503A" : "rgba(250,228,212,0.85)", ls: 0 });
+            x += w + 12;
+          });
+          g.fillStyle = "rgba(250,228,212,0.4)"; g.beginPath(); g.arc(x + 30, 349, 12, 0, 7); g.fill();
+          // header bar
+          const by = barY(f), flare = K.step([[21, 1], [22, 0.55], [23, 0.2], [24, 0]])(f);
+          g.fillStyle = flare > 0 ? K.mix("#2A140C", "#C99A3C", flare) : "rgba(30,16,11,0.95)";
+          g.fillRect(400, by, 2400, 89);
+          g.strokeStyle = K.rgba(C.orange2, 0.25 + flare * 0.7); g.lineWidth = 2; g.strokeRect(400, by, 2400, 89);
+          [["Asset", 461], ["Mkt Cap", 1360], ["Liquidity", 1636], ["24h Vol", 1895], ["Txns", 2141]].forEach(([t, cx]) =>
+            K.text(g, t, cx, by + 55, { size: 26, weight: 500, color: flare > 0.3 ? "rgba(120,70,20,0.8)" : "rgba(250,228,212,0.7)", ls: 0 }));
+        }
+
+        function tableRow(g, r, k, f) {
+          const y = 662 + k * 266;
+          K.token(g, r[0], 438, y, 140, { outline: GREEN, side: false });
+          K.text(g, r[1], 548, y - 18, { size: 33, weight: 700, color: CREAM, ls: 0 });
+          const nx = 548 + K.measure(g, r[1], 33, 700, 0) + 20;
+          K.text(g, r[2] + " ↗", nx, y - 18, { size: 31, weight: 500, color: "rgba(250,228,212,0.9)", ls: 0 });
+          K.text(g, r[3] + "   ✕  ⌕", 548, y + 40, { size: 28, weight: 500, color: "rgba(250,228,212,0.72)", ls: 0 });
+          [[4, 1383], [5, 1694], [6, 1974]].forEach(([c, cx]) => K.text(g, r[c], cx, y + 12, { size: 35, weight: 600, color: CREAM, ls: 0, align: "center" }));
+          K.text(g, r[7], 2132, y + 12, { size: 25, weight: 600, color: GREEN, ls: 0 });
+          g.fillStyle = "rgba(250,228,212,0.09)"; g.fillRect(360, y + 132, 2400, 2);
+        }
+
+        function table(ctx, f) {
+          const warm = K.step([[21, 1], [22, 0.8], [23, 0.62], [24, 0.48], [25, 0.38], [26, 0.32], [28, 0.28], [32, 0.24], [36, 0.2], [40, 0.16], [42, 0.1]])(f);
+          K.fill(ctx, "#1A0A05");
+          const gr = ctx.createRadialGradient(560, 380, 0, 560, 380, 1500);
+          gr.addColorStop(0, K.rgba("#E2621E", 0.95 * warm));
+          gr.addColorStop(0.5, K.rgba("#9A3510", 0.7 * warm));
+          gr.addColorStop(1, K.rgba("#3A1206", 0.5 * warm));
+          ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
+          const s = pS(f), tx = pTX(f), ty = pTY(f);
+          // red guide lines above the nav
+          ctx.save();
+          ctx.strokeStyle = K.rgba("#E0301A", 0.45); ctx.lineWidth = 2;
+          for (let x = 130; x < 2600; x += 216) { ctx.beginPath(); ctx.moveTo(x * s + tx, ty); ctx.lineTo(x * s + tx, 115 * s + ty); ctx.stroke(); }
+          ctx.restore();
+          const tilt = K.step([[21, 0], [38, 0.03], [40, 0.07], [41, 0.12], [42, 0.17], [43, 0.22]])(f);
+          K.tglow(ctx, (g) => {
+            g.translate(tx, ty); g.scale(s, s);
+            // closer rows lean in: a vertical shear that widens the lower rows
+            tablePage(g, f);
+          }, { blur: 14, alpha: 0.75 + warm * 0.4, color: "#FF6A1E" });
+          ROWS.forEach((r, k) => {
+            if (f < ROW_IN[k]) return;
+            const age = f - ROW_IN[k];
+            const y = (662 + k * 266) * s + ty;
+            // depth of field: rows low in frame (nearer) blur once the camera tilts
+            const dof = tilt > 0 ? K.clamp((y - 380) / 500, 0, 1) * tilt * 40 : 0;
+            const blur = (age < 1 ? 9 : age < 2 ? 4 : 0) + dof;
+            K.tglow(ctx, (g) => {
+              g.translate(tx, ty); g.scale(s, s);
+              const ky = 662 + k * 266, grow = 1 + tilt * K.clamp((y - 200) / 900, -0.2, 1);
+              g.translate(0, ky); g.scale(grow, grow); g.translate(0, -ky);
+              g.globalAlpha = age < 1 ? 0.65 : 1;
+              tableRow(g, r, k, f);
+            }, { blur: 16, alpha: 0.95, color: "#FF6A1E", sharpBlur: blur });
+          });
+          // the page darkens as it races off
+          const dark = K.step([[21, 0], [41, 0.12], [42, 0.3], [43, 0.62]])(f);
+          if (dark) { ctx.save(); ctx.globalAlpha = dark; K.fill(ctx, "#0C0503"); ctx.restore(); }
+        }
+
+        // ================================================================ field
+        // camera scroll of the far plane (measured): tiles fall as the camera climbs
+        const FDY = { 46: 46, 47: -11, 48: 12, 49: 56, 50: 75, 51: 82, 52: 58, 53: 58, 54: 68, 55: 78, 56: 89, 57: 100, 58: 92, 59: 87, 60: 118, 61: 41, 62: -33, 63: 33, 64: -23 };
+        const FDX = { 48: -23, 49: 11, 50: 15, 64: 42 };
+        const camY = (f) => { let y = 0; for (let k = 46; k <= f; k++) y += FDY[k] || 0; return y; };
+        const camX = (f) => { let x = 0; for (let k = 46; k <= f; k++) x += FDX[k] || 0; return x; };
+        const ARTS = ["letter", "orb", "dots", "bolt", "sprout", "chev", "coin", "land", "flame", "wave", "stripes", "moon"];
+        const FR = K.rng(2024);
+        const FIELD = [];
+        for (let j = 0; j < 9; j++) for (let i = 0; i < 4; i++) {
+          if (FR() < 0.45) continue;
+          FIELD.push({
+            n: ARTS[Math.floor(FR() * ARTS.length)],
+            x: 120 + i * 470 + (FR() - 0.5) * 300 + (j % 2) * 220,
+            y: 1000 - j * 270 + (FR() - 0.5) * 140,
+            s: 112 + FR() * 30,
+            d: 0.85 + FR() * 0.3,
+            r: (FR() - 0.5) * 0.06,
+          });
+        }
+        // near tiles rush up through the frame: [art, size, [[frame, x, y], ...]]
+        const NEAR = [
+          ["land", 400, [[46, 883, 365], [47, 960, 560], [48, 1040, 760]]],
+          ["sprout", 350, [[47, 1400, 1250], [48, 1180, 900], [49, 820, 560], [50, 825, 145], [51, 830, -260]]],
+          ["dots", 460, [[56, 1430, 1300], [57, 1420, 950], [58, 1420, 615], [59, 1410, 245], [60, 1400, -140]]],
+        ];
+        function nearPos(t, f) {
+          const k = t[2];
+          if (f < k[0][0] || f > k[k.length - 1][0]) return null;
+          const p = k.find((q) => q[0] === f);
+          return p ? [p[1], p[2]] : null;
+        }
+        function gridBg(ctx, ox, oy, s, rot, a) {
+          ctx.save();
+          ctx.translate(ox, oy); ctx.rotate(rot || 0); ctx.scale(s, s);
+          K.grid(ctx, { cell: 144, ox: 0, oy: 0, color: "#7A1A0E", alpha: 0.55 * a, width: 1.6 / s, x0: -3000, y0: -3000, x1: 5000, y1: 5000 });
+          ctx.restore();
+        }
+
+        // ================================================================ cluster
+        // the pile, in world space (= screen space at frame 80); hot = the mascot under the cursor
+        const PILE = [
+          ["wave", 940, 760, 205, 0.03],
+          ["orb", 425, 730, 200, -0.04],
+          ["dots", 700, 680, 225, 0.02],
+          ["letter", 740, 505, 175, 0.0],
+          ["land", 1150, 905, 225, 0.03],
+          ["coin", 1600, 980, 200, -0.05],
+          ["flame", 175, 1055, 190, 0.04],
+          ["chev", 530, 930, 210, -0.02],
+          ["stripes", 1300, 1060, 190, 0.05],
+          ["sprout", 820, 1080, 200, -0.03],
+          ["moon", 1520, 790, 170, 0.04],
+          ["letter", 330, 920, 190, -0.03],
+          ["letter", 1350, 655, 225, 0.02],
+          ["coin", 1190, 600, 190, -0.03],
+          ["flame", 560, 610, 180, 0.03],
+          ["bolt", 975, 470, 200, 0.0],
+        ];
+        const HOT = PILE.length - 1;
+        const CAM = {66: [1.5988, 0.0646, -485.9, -74.7], 67: [1.5642, 0.0469, -486.4, 157.9], 68: [1.4275, 0.0498, -355.3, 236.5], 69: [1.2909, 0.0511, -227.9, 251.9], 70: [1.2001, 0.046, -145.0, 312.6], 71: [1.1384, 0.0633, -84.9, 334.5], 72: [1.097, 0.0731, -40.6, 309.9], 73: [1.0682, 0.0778, -11.4, 301.1], 74: [1.0465, 0.0804, 10.5, 299.3], 75: [1.0347, 0.0629, 9.5, 288.5], 76: [1.0251, 0.0516, 11.1, 280.4], 77: [1.0153, 0.031, 6.1, 111.1], 78: [1.0077, 0.0141, 0.2, 21.0], 79: [1.0019, 0.0041, -1.0, -13.6], 80: [1.0, 0.0, 0.0, 0.0], 81: [1.0004, -0.0009, 3.3, 43.4], 82: [1.0061, -0.0013, 5.3, 95.6], 83: [1.0196, -0.0012, 6.4, 139.5], 84: [1.0553, -0.0011, 4.8, 168.6], 85: [1.2171, 0.0056, -7.7, 195.8], 86: [1.3038, 0.0038, -30.5, 190.9], 87: [1.3339, 0.0012, -34.6, 176.2], 88: [1.3484, -0.0008, -35.4, 160.1], 89: [1.3555, -0.0025, -35.3, 150.7], 90: [1.3579, -0.0023, -33.2, 147.5], 91: [1.3585, -0.0026, -32.5, 152.0], 92: [1.362, 0.0036, -32.1, 148.5], 93: [1.3611, 0.0035, -34.0, 157.9], 94: [1.3609, 0.0034, -38.7, 164.5], 95: [1.3607, 0.0039, -45.8, 166.7], 96: [1.3606, 0.0045, -56.6, 165.6], 97: [1.3571, 0.0056, -68.7, 162.3], 98: [1.3498, 0.0021, -87.7, 164.6], 99: [1.3392, 0.0024, -108.7, 164.5], 100: [1.3211, 0.0025, -134.1, 170.2], 101: [1.2965, 0.0053, -168.1, 177.9], 102: [1.2704, 0.0127, -226.8, 186.7], 103: [1.2425, 0.0302, -335.7, 197.9], 104: [1.186, 0.0338, -368.7, 401.2], 105: [1.15, 0.03, -250, 330], 106: [1.0, 0.02, -30, 260], 107: [0.92, 0.0, 90, 330], 108: [0.98, -0.01, 160, 260], 109: [1.1, -0.02, -60, 330], 110: [1.2, -0.01, -200, 300], 111: [1.22, -0.005, -220, 240], 112: [1.2, 0.0, -191.0, 197.0], 113: [1.1553, 0.0025, -144.5, 209.2], 114: [1.1374, -0.0155, -138.0, 210.1], 115: [1.1199, -0.0338, -135.1, 227.7], 116: [1.1079, -0.0472, -133.3, 248.5], 117: [1.0906, -0.0596, -122.0, 282.3], 118: [1.0831, -0.0647, -117.3, 311.4], 119: [1.0792, -0.0654, -113.9, 346.5], 120: [1.0779, -0.065, -112.5, 396.8], 121: [1.0787, -0.0442, -102.9, 449.3], 122: [1.0787, -0.0447, -104.9, 628.3]};
+        // apparent tile scale while the pile forms (before the lens starts to push in at 80)
+        const TSZ = K.key([[61, 0.78], [66, 0.8], [70, 0.9], [76, 0.97], [80, 1]]);
+        const JR = K.rng(515);
+        const JIT = PILE.map(() => [(JR() - 0.5) * 520, (JR() - 0.5) * 300, (JR() - 0.5) * 0.4]);
+        // reshuffle strength 105-109: tiles jump to new spots, then settle
+        const shuffle = K.step([[0, 0], [105, 0.6], [106, 1], [107, -0.8], [108, 0.7], [109, -0.35], [110, 0.12], [111, 0]]);
+
+        function pilePos(i, f) {
+          const p = PILE[i];
+          let x = p[1], y = p[2], s = p[3], r = p[4];
+          const k = shuffle(f);
+          if (k) { const j = JIT[(i + Math.floor(f)) % PILE.length]; x += j[0] * k; y += j[1] * Math.abs(k); r += j[2] * k; }
+          return [x, y, s, r];
+        }
+
+        function cluster(ctx, f, hot) {
+          const cam = CAM[Math.max(66, f)];
+          // gather 61-67: field tiles converge into the pile
+          const g = f < 66 ? K.eo(K.inv(60, 66, f), 2) : 1;
+          K.tglow(ctx, (gc) => {
+            gc.translate(cam[2], cam[3]); gc.rotate(cam[1]); gc.scale(cam[0], cam[0]);
+            PILE.forEach((p, i) => {
+              if (i === HOT && f < 63) return;
+              let [x, y, s, r] = pilePos(i, f);
+              if (g < 1) {
+                // start from a scattered spot above/around the pile
+                const a = (i * 2.399) % 6.283, R = 900 * (1 - g);
+                x += Math.cos(a) * R; y += Math.sin(a) * R * 0.7 - 300 * (1 - g);
+                r += (1 - g) * 0.3 * Math.sin(i);
+              }
+              const sz = f >= 80 ? 1 : TSZ(f) / cam[0];
+              K.token(gc, p[0], x, y, s * sz, {
+                outline: i === HOT ? "#9C8CF0" : GREEN,
+                badgeFill: i === HOT ? "#2A2260" : null,
+                badgeGlyph: i === HOT ? "+" : null,
+                rot: r,
+                hot: i === HOT ? hot : 0,
+              });
+            });
+          }, { blur: 14, alpha: 0.55, color: "#FF7A2A" });
+        }
+
+        // ================================================================ panel
+        // anchor = the "AMOUNT" label (x, y) and the panel scale, measured per frame
+        const PANEL = [[68, 500, -95, 1], [69, 500, -20, 1], [70, 500, 25, 1], [71, 500, 55, 1], [72, 500, 80, 1], [73, 500, 95, 1], [74, 500, 105, 1], [75, 500, 115, 1], [77, 500, 125, 1], [82, 505, 130, 1], [84, 525, 140, 1.03], [85, 580, 175, 1.21], [86, 605, 190, 1.28], [87, 615, 200, 1.31], [88, 625, 205, 1.31], [89, 630, 205, 1.33], [90, 630, 205, 1.35], [93, 625, 205, 1.35], [94, 620, 207, 1.35], [95, 620, 210, 1.36], [96, 610, 210, 1.37], [97, 585, 210, 1.37], [98, 565, 210, 1.38], [99, 545, 210, 1.38], [100, 505, 205, 1.35], [101, 450, 205, 1.34], [102, 360, 205, 1.33], [103, 213, 200, 1.33], [104, 135, 195, 1.3], [105, 375, 175, 1.2], [106, 528, 163, 1.09], [107, 560, 155, 1.04], [108, 555, 150, 1.01], [109, 535, 150, 0.99], [110, 515, 150, 0.97], [111, 500, 150, 0.95], [112, 509, 150, 0.94], [113, 525, 145, 0.94], [114, 535, 130, 0.94], [115, 550, 125, 0.95], [116, 565, 120, 0.95], [117, 560, 140, 0.95], [118, 563, 171, 0.95], [119, 555, 220, 0.95], [120, 550, 295, 0.95], [121, 550, 405, 0.95], [122, 550, 585, 0.95]];
+        // value and percentage (the reference's ramp, scaled to a 2180.40 USDC balance)
+        const VAL = [[0, "0", 0], [93, "0.24001", 1], [94, "13.0918", 2], [95, "47.3762", 5], [96, "106.134", 9], [97, "193.116", 14], [98, "313.098", 21], [99, "471.736", 30], [100, "676.218", 41], [101, "1180.47", 55], [102, "1658.92", 76], [103, "2032.15", 93], [104, "2180.40", 100]];
+        const FLASH = { 100: 0.25, 101: 0.55, 102: 0.85, 103: 1, 104: 0.9, 105: 0.6, 106: 0.35, 107: 0.15 };
+
+        function panel(ctx, f) {
+          const P = at(PANEL, f);
+          if (!P) return;
+          const [, ax, ay, s] = P;
+          const [, v, pct] = at(VAL, f);
+          const fl = FLASH[f] || 0;
+          K.tglow(ctx, (g) => {
+            g.translate(ax, ay); g.scale(s, s);
+            // geometry relative to the label: row 1 (-74..994, -58..71), row 2 below, % box at right
+            g.fillStyle = "rgba(52,34,28,0.88)";
+            g.fillRect(-74, -58, 1068, 129);
+            g.fillStyle = "rgba(38,24,20,0.85)";
+            g.fillRect(-74, 90, 870, 102);
+            g.fillRect(811, 90, 183, 102);
+            K.text(g, "AMOUNT", 0, 11, { size: 30, weight: 600, color: "rgba(250,236,226,0.85)", ls: 0.02 });
+            K.text(g, v, 614, 13, { size: 42, weight: 500, color: "rgba(252,242,234,0.96)", align: "right", ls: 0 });
+            K.text(g, "USDC", 798, 11, { size: 35, weight: 600, color: "rgba(252,242,234,0.92)", ls: 0 });
+            g.strokeStyle = "rgba(252,242,234,0.92)"; g.lineWidth = 3;
+            g.beginPath(); g.moveTo(916, -6); g.lineTo(925, 3); g.lineTo(934, -6); g.stroke();
+            K.text(g, pct + "%", 902, 152, { size: 34, weight: 600, color: "rgba(252,242,234,0.92)", align: "center", ls: 0 });
+            // ticks
+            const n = 25, x0 = -20, x1 = 758;
+            for (let k = 0; k < n; k++) {
+              const x = x0 + (x1 - x0) * (k / (n - 1));
+              const lit = pct > 0 && k / (n - 1) <= pct / 100 + 1e-6;
+              const big = k % 5 === 0;
+              g.fillStyle = lit ? "#2EE6A8" : "rgba(250,236,226,0.13)";
+              g.fillRect(x - 2.5, 141 - (big ? 22 : 15), 5, big ? 44 : 30);
+            }
+            if (!pct) { g.fillStyle = "#2EE6A8"; g.fillRect(x0 - 2.5, 124, 4, 36); }
+            g.fillStyle = "#E23B2A"; g.fillRect(x1 - 3, 105, 7, 7);
+          }, { blur: 12 + fl * 34, alpha: 0.35 + fl * 0.9, color: fl > 0.3 ? "#9FFFE0" : "#FF7A3A", sharpBlur: fl * 16 });
+          if (fl > 0) {
+            // the commit flare: white-hot over the panel, green along the slider
+            ctx.save();
+            ctx.globalCompositeOperation = "screen";
+            const cx = ax + 460 * s, cy = ay + 70 * s;
+            let gr = ctx.createRadialGradient(cx + 200 * s, cy - 20, 0, cx + 200 * s, cy, 620 * s);
+            gr.addColorStop(0, `rgba(255,236,220,${0.75 * fl})`); gr.addColorStop(0.45, `rgba(255,200,170,${0.35 * fl})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
+            gr = ctx.createRadialGradient(cx - 200 * s, cy + 80 * s, 0, cx - 200 * s, cy + 80 * s, 480 * s);
+            gr.addColorStop(0, `rgba(60,240,170,${0.6 * fl})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
+            ctx.restore();
+          }
+        }
+
+        // ================================================================ cursor
+        // [frame, x, y, pixel size, pointing left]
+        const CUR = [[66, 1005, 10, 22], [67, 970, 195, 10], [68, 965, 295, 8], [69, 960, 365, 7], [70, 960, 405, 6.5], [71, 970, 440, 6.5], [72, 970, 465, 6.5], [73, 970, 490, 6.5], [74, 970, 505, 6.5], [75, 965, 520, 6.5], [76, 970, 525, 6.5], [77, 970, 535, 6.5], [80, 975, 530, 6.5], [81, 980, 545, 6.5], [83, 970, 540, 6.5], [84, 965, 540, 7], [85, 979, 566, 8.5], [86, 845, 500, 8.5], [87, 770, 460, 8.5], [88, 740, 440, 8.5], [89, 720, 435, 8.5], [90, 710, 425, 8.5], [91, 705, 425, 8.5], [94, 720, 425, 8.5], [95, 740, 420, 8.5], [96, 760, 420, 8.5], [97, 785, 410, 8.5], [98, 825, 400, 8.5], [99, 870, 390, 8.5], [100, 920, 385, 8.5], [101, 980, 365, 8.5], [102, 1035, 350, 8.5], [103, 1075, 315, 8.5], [104, 1270, 280, 8], [105, 1600, 635, 7, 1], [106, 1190, 1010, 7, 1], [107, 800, 1025, 7, 1], [108, 580, 885, 6.5, 1], [109, 470, 725, 6.5, 1], [110, 410, 570, 6.5, 1], [111, 380, 470, 6.5, 1], [112, 375, 390, 6.5, 1], [113, 360, 340, 6.5, 1], [114, 360, 305, 6.5, 1], [115, 360, 255, 6.5, 1], [116, 365, 185, 6.5, 1], [117, 415, 75, 6.5, 1]];
+        function cursor(ctx, f) {
+          if (f < 66 || f > 117) return;
+          const [, x, y, px, left] = at(CUR, f);
+          const glowR = f < 105 ? 330 : 230;
+          K.ember(ctx, x, y + 40, glowR, "#F2501E", f < 69 ? 0.75 : 0.6);
+          K.ember(ctx, x, y + 30, glowR * 0.45, "#FF9A50", 0.35);
+          K.tglow(ctx, (g) => {
+            // pixel trail
+            if (f >= 67 && f <= 70) K.pixelCloud(g, x + 5, y - 85 + (f - 67) * 6, 46, 13, 300 + f, C.orange2, 1);
+            if (f >= 86 && f <= 88) K.pixelCloud(g, x + 120 - (f - 86) * 30, y + 10, 30, 12, 310 + f, C.orange2, 1);
+            if (f >= 100 && f <= 104) K.pixelCloud(g, x - 30, y + 30, 34, 14, 320 + f, C.orange2, 0.9);
+            if (left && f >= 106) {
+              K.pixelCloud(g, x + 60, y + 100, 30, 14, 330 + f, C.orange2, 0.9);
+              if (f >= 110) K.pixelCloud(g, x + 30, y + 230, 26, 14, 340 + f, C.orange, 0.8);
+            }
+            K.hand(g, x, y, px, { rot: left ? -Math.PI / 2 : 0, alpha: 1 });
+          }, { blur: 14, alpha: 0.8, color: "#FF6A1E" });
+        }
+
+        // ============================================================ pixel letters
+        // [frame, char, x, y, cell]
+        const PL = [
+          [116, "N", 1385, 275, 82], [117, "O", 165, 675, 60], [118, "A", 330, 925, 44], [119, "V", 575, 0, 50], [119, "N", 1040, 1010, 40],
+          [120, "A", 330, 380, 44], [120, "O", 880, 400, 56], [120, "N", 1205, 700, 64], [121, "$", 1135, 745, 44], [122, "A", 975, 490, 32], [122, "N", 565, 930, 40],
+        ];
+        const SQ = { 117: [[440, 600, 60]], 118: [[700, 1000, 70], [900, 1040, 60]], 119: [[1030, 420, 60], [1110, 560, 54]], 121: [[905, 500, 90], [1430, 1010, 110]], 122: [[950, 420, 70], [960, 790, 70]] };
+        function pixels(ctx, f) {
+          if (f < 116) return;
+          K.tglow(ctx, (g) => {
+            PL.forEach(([a, ch, x, y, c], i) => { if (a === f) K.pixelLetter(g, ch, x, y, c, "#FF8A4A", { seed: 7 + i, drop: 0.05 }); });
+            (SQ[f] || []).forEach(([x, y, s]) => { g.fillStyle = "#FF6A2E"; g.fillRect(x - s / 2, y - s / 2, s, s); });
+          }, { blur: 22, alpha: 0.9, color: "#FF5A1A" });
+        }
+
+        K.mount("market", 21, 102, (ctx, f, cv) => {
+          if (f <= 43) {
+            table(ctx, f);
+            const df = K.step([[21, 2], [22, 1], [23, 0], [41, 1.5], [42, 3], [43, 6]])(f);
+            K.defocus(cv, df);
+            K.bloom(cv, f <= 23 ? 0.55 : 0.32, 70);
+            K.vignette(ctx, 0.5);
+            K.grain(ctx, f, 0.07);
+            return;
+          }
+          K.fill(ctx, "#110705");
+          if (f === 44) {
+            // near black: the field's grid only hints through
+            K.ember(ctx, 960, 540, 900, "#3A1A10", 0.4);
+            ctx.save(); ctx.strokeStyle = "rgba(120,90,70,0.25)"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(560, 0); ctx.lineTo(600, 1080); ctx.stroke(); ctx.restore();
+            K.vignette(ctx, 0.6);
+            K.grain(ctx, f, 0.06);
+            return;
+          }
+          if (f <= 65) {
+            // the streaming field
+            const cy = camY(f), cx = camX(f);
+            gridBg(ctx, cx, cy, 1, 0, 1);
+            K.ember(ctx, 960, 560, 900, "#7A2A10", 0.18);
+            const fade = f === 45 ? 0.55 : 1;
+            const fieldA = 1 - K.inv(62, 66, f);
+            K.tglow(ctx, (g) => {
+              g.globalAlpha = fade * fieldA;
+              FIELD.forEach((t) => {
+                const x = t.x + cx * t.d, y = ((t.y + cy * t.d) % 2430 + 2430) % 2430 - 300;
+                if (x < -200 || x > 2120 || y < -200 || y > 1280) return;
+                K.token(g, t.n, x, y, t.s, { outline: t.n === "bolt" ? "#9C8CF0" : GREEN, rot: t.r, badgeGlyph: t.n === "bolt" ? "+" : null, badgeFill: t.n === "bolt" ? "#2A2260" : null });
+              });
+              NEAR.forEach((t) => { const p = nearPos(t, f); if (p) K.token(g, t[0], p[0], p[1], t[1], { outline: GREEN, rot: 0.02 }); });
+              // the big chevron tile rises in and joins the pile
+              const CH = { 61: [590, 1010, 430], 62: [610, 697, 400], 63: [647, 350, 385], 64: [727, 325, 335], 65: [817, 637, 265] };
+              if (CH[f]) K.token(g, "chev", CH[f][0], CH[f][1], CH[f][2], { outline: GREEN, rot: -0.03 });
+            }, { blur: 14, alpha: 0.55, color: "#FF7A2A" });
+            if (f >= 61) cluster(ctx, f, 0);
+            if (f === 45) {
+              // a sliver of the page still overhead
+              ctx.save(); ctx.fillStyle = "rgba(14,8,6,0.92)"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1920, 0); ctx.lineTo(1920, 470); ctx.lineTo(0, 390); ctx.fill();
+              ctx.strokeStyle = "rgba(120,90,70,0.5)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 390); ctx.lineTo(1920, 470); ctx.stroke();
+              K.text(ctx, "List 1  ⌄", -20, 485, { size: 46, weight: 500, color: "rgba(240,225,215,0.75)", ls: 0 });
+              ctx.restore();
+            }
+            K.bloom(cv, 0.25, 60);
+            K.vignette(ctx, 0.55);
+            K.grain(ctx, f, 0.07);
+            return;
+          }
+          // pile, panel, cursor
+          const cam = CAM[f];
+          gridBg(ctx, cam[2] + camX(65), cam[3] + camY(65), cam[0], cam[1], 1);
+          const hot = K.step([[0, 0], [77, 1], [85, 0]])(f);
+          cluster(ctx, f, hot);
+          panel(ctx, f);
+          cursor(ctx, f);
+          pixels(ctx, f);
+          K.bloom(cv, 0.3, 70);
+          K.vignette(ctx, 0.55);
+          K.grain(ctx, f, 0.07);
+        }, 0);
+      })();
+    </script>
+  </div>
+</template>

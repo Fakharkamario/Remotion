@@ -1,0 +1,79 @@
+<template id="end-template">
+  <div data-composition-id="end" data-width="1920" data-height="1080" data-duration="0.133333">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        // Reference frames 123-125: a taupe flash over the dimmed panel with glowing letter outlines,
+        // then pale taupe with violet squares and a ghost of "Nova", then "Nova" ringed by squares on a
+        // dashed orbit.
+        const VIO = "#6A4BE0", PINK = "#9A4A9A", RED = "#D8505A";
+
+        function panelGhost(ctx, x, y, a) {
+          ctx.save();
+          ctx.globalAlpha = a;
+          ctx.fillStyle = "rgba(70,50,40,0.6)"; ctx.fillRect(x - 74, y - 58, 1068, 129);
+          K.text(ctx, "AMOUNT", x, y + 11, { size: 30, weight: 600, color: "rgba(250,236,226,0.8)", ls: 0.02 });
+          K.text(ctx, "2180.40", x + 614, y + 13, { size: 42, weight: 500, color: "rgba(252,242,234,0.85)", align: "right", ls: 0 });
+          K.text(ctx, "USDC ⌄", x + 798, y + 11, { size: 35, weight: 600, color: "rgba(252,242,234,0.8)", ls: 0 });
+          for (let k = 0; k < 25; k++) { const tx = x - 20 + 778 * (k / 24), big = k % 5 === 0; ctx.fillStyle = "#2EC890"; ctx.fillRect(tx - 2.5, y + 141 - (big ? 22 : 15), 5, big ? 44 : 30); }
+          K.text(ctx, "100%", x + 902, y + 152, { size: 34, weight: 600, color: "rgba(252,242,234,0.8)", align: "center", ls: 0 });
+          ctx.restore();
+        }
+        function sq(ctx, x, y, s, col, o) {
+          o = o || {};
+          ctx.save();
+          ctx.translate(x, y); ctx.rotate(o.rot || 0);
+          if (o.frame) { ctx.strokeStyle = "rgba(110,90,220,0.6)"; ctx.lineWidth = 2; ctx.strokeRect(-s * 0.56, -s * 0.56, s * 1.12, s * 1.12); }
+          ctx.fillStyle = col; ctx.fillRect(-s / 2, -s / 2, s, s);
+          if (o.plus) K.glyph(ctx, "+", o.px || 0, o.py || 0, s * 0.42, "#FFFFFF", 0, { weight: 0.14 });
+          ctx.restore();
+        }
+
+        K.mount("end", 123, 3, (ctx, f, cv) => {
+          if (f === 123) {
+            K.fill(ctx, "#5E4733");
+            K.ember(ctx, 900, 420, 800, "#C0603A", 0.45);
+            ctx.save(); ctx.globalAlpha = 0.5;
+            K.grid(ctx, { cell: 144, ox: 40, oy: 20, color: "#A04A2A", alpha: 0.35, width: 1.5 });
+            ctx.restore();
+            panelGhost(ctx, 513, 899, 0.9);
+            K.tglow(ctx, (g) => {
+              K.pixelLetter(g, "N", 634, 413, 44, "#F2A060");
+              K.pixelLetter(g, "V", 975, 280, 32, "#F2A060");
+              g.fillStyle = "#E06058"; g.fillRect(902, 186, 106, 102); g.fillRect(877, 317, 106, 105);
+              g.fillStyle = "#D85A80"; g.fillRect(989, 250, 96, 96);
+              g.fillStyle = "#FF5A20"; g.fillRect(912, 505, 96, 100);
+            }, { blur: 24, alpha: 0.7, color: "#FF7A3A", sharpBlur: 2 });
+          } else if (f === 124) {
+            K.fill(ctx, "#9A7B67");
+            K.ember(ctx, 860, 450, 700, "#B88A80", 0.35);
+            K.glow(ctx, (g) => K.text(g, "No", 672, 634, { size: 270, weight: 500, color: "rgba(226,140,120,0.55)", ls: -0.03 }), { blur: 10, alpha: 0.5, sharpBlur: 5 });
+            sq(ctx, 808, 197, 106, PINK + "E0");
+            sq(ctx, 1008, 125, 96, PINK + "E0");
+            sq(ctx, 777, 510, 112, "#8A48A8");
+            sq(ctx, 974, 684, 94, RED);
+            sq(ctx, 878, 776, 105, PINK);
+            K.defocus(cv, 1.5);
+          } else {
+            K.fill(ctx, "#BCA795");
+            K.ember(ctx, 900, 560, 620, "#C8B8D8", 0.5);
+            K.ember(ctx, 960, 600, 360, "#A8E0E0", 0.18);
+            // dashed orbit
+            K.orbit(ctx, 810, 481, 295, 427, 0.05, { color: "rgba(110,95,170,0.55)", width: 2, dash: [5, 7], arrows: 3 });
+            // word with a soft chromatic ghost
+            const size = 225, w = K.measure(ctx, "Nova", size, 500, -0.03), x0 = 955 - w / 2, base = 640;
+            K.text(ctx, "Nova", x0 - 6, base, { size, weight: 500, color: "rgba(120,220,220,0.35)", ls: -0.03 });
+            K.glow(ctx, (g) => K.text(g, "Nova", x0, base, { size, weight: 500, color: "rgba(160,110,140,0.75)", ls: -0.03 }), { blur: 14, alpha: 0.6, sharpBlur: 3 });
+            sq(ctx, 868, 56, 106, VIO, { frame: true, plus: true });
+            sq(ctx, 603, 317, 134, VIO, { frame: true, plus: true, rot: 0.03 });
+            sq(ctx, 645, 751, 115, VIO, { frame: true, plus: true, rot: 0.03 });
+            sq(ctx, 889, 956, 106, VIO, { frame: true, plus: true });
+            sq(ctx, 1056, 847, 92, "#7A48D0", { plus: true, px: -30, py: 25 });
+            sq(ctx, 1075, 601, 86, "#A64AB0");
+          }
+          K.grain(ctx, f, 0.06);
+        }, 0.4);
+      })();
+    </script>
+  </div>
+</template>

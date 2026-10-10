@@ -1,0 +1,186 @@
+<template id="cube-template">
+  <div data-composition-id="cube" data-width="1920" data-height="1080" data-duration="0.866667">
+    <div class="stage"></div>
+    <script>
+      (function () {
+        // Reference frames 0-20: a tumbling cube silhouette carries "Nova Network Synced" over rows of
+        // slanted strokes. The text is white where it crosses the shape and blue outside it. Frames 0, 2,
+        // 17 and 19 strobe to inverted colours; dot rows and glyph rows take over the hatch before the cut.
+        const BLUE = "#242EFE", PALE = "#FCFCFC", HATCH = "#A8A3D6";
+        // silhouette per reference frame, traced from the reference (1920x1080 space)
+        const POLY = [[[1918,105],[1918,1078],[1077,1071],[1035,154]],[[1635,66],[1748,804],[1418,1048],[722,1026],[573,255],[1239,111]],[[1413,38],[1596,784],[988,1028],[594,1004],[420,310],[762,138]],[[1218,20],[1436,770],[702,1010],[548,988],[369,354],[456,177]],[[1058,12],[1288,758],[506,994],[285,204]],[[930,3],[1158,722],[1160,762],[1136,789],[540,974],[384,988],[183,230]],[[836,0],[969,207],[1146,782],[564,968],[309,982],[129,252]],[[742,0],[770,0],[980,195],[1156,778],[590,964],[267,976],[108,267]],[[699,0],[728,0],[1000,195],[1173,772],[628,962],[252,975],[106,282]],[[670,0],[704,0],[1023,180],[1196,772],[664,962],[250,970],[123,291]],[[662,0],[694,0],[1052,174],[1222,771],[718,958],[266,968],[147,303]],[[654,0],[688,0],[1084,168],[1252,768],[753,962],[288,972],[177,310]],[[630,0],[664,0],[1112,162],[1269,768],[796,962],[296,968],[204,340]],[[228,330],[591,0],[1124,147],[1276,764],[840,962],[297,968]],[[252,345],[524,4],[1120,130],[1228,546],[1262,759],[885,958],[300,968]],[[432,18],[1100,114],[1210,753],[898,963],[294,968],[279,368]],[[316,38],[1034,86],[1096,741],[939,958],[291,964]],[[184,66],[900,56],[938,390],[927,963],[288,958],[75,741]],[[640,21],[938,369],[856,964],[300,962],[0,822],[0,262],[54,110]],[[124,0],[148,0],[777,306],[585,970],[324,960],[0,858],[0,123]],[[0,231],[376,345],[208,964],[0,972]]];
+        const INVERT = new Set([0, 2, 17, 19]);
+
+        // text: centre x offset, baseline, scale, tilt per frame (measured)
+        const TX = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 15, 100, 218, 485];
+        const TS = [1.6, 1.39, 1.21, 1.08, 1.0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+        const TB = [592, 618, 590, 584, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582, 582];
+        const TR = [0, 0.035, 0.012, 0.004, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        // "Synced" drops in at frame 4 from below and slightly larger
+        const SY = [0, 0, 0, 0, 50, 20, 10, 0];
+        const SS = [1, 1, 1, 1, 1.1, 1.04, 1.02, 1];
+        const SIZE = 105;
+        // the line's left edge settles in from the right over frames 1-6 (the scale grows from that edge)
+        const DL = [0, 110, 65, 45, 25, 15, 5];
+
+        function path(ctx, P) {
+          ctx.beginPath();
+          P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])));
+          ctx.closePath();
+        }
+
+        // ------------------------------------------------------------ hatch
+        // rows of "/" strokes, pitch 98px; each row is lit in a few runs whose strength flickers
+        function hatch(ctx, f, col, o) {
+          o = o || {};
+          const pitch = 98, sp = 40;
+          const R = K.rng(11 + Math.floor(f / 2) * 7);
+          const oy = 14 - f * 2.5, ox = -f * 5;
+          ctx.save();
+          ctx.fillStyle = col;
+          for (let j = -1; j < 13; j++) {
+            const y = oy + j * pitch;
+            const runs = [];
+            const nr = 2 + Math.floor(R() * 3);
+            for (let k = 0; k < nr; k++) { const a = R() * 2200 - 400; runs.push([a, a + 500 + R() * 1400, 0.35 + R() * 0.65]); }
+            if (R() < 0.12) continue;
+            if (o.maxY != null && y > o.maxY) continue;
+            const dotRow = o.dots && o.dots(y);
+            for (let x = ((ox % sp) + sp) % sp - sp * 2; x < K.W + sp; x += sp) {
+              let a = 0;
+              for (const r of runs) if (x >= r[0] && x <= r[1]) a = Math.max(a, r[2]);
+              if (o.full) a = Math.max(a, 0.55);
+              if (o.clearX && o.clearX(x, y)) continue;
+              if (a <= 0) continue;
+              ctx.globalAlpha = a * (o.alpha == null ? 1 : o.alpha);
+              if (dotRow) {
+                ctx.fillRect(x + 8, y + 22, 7, 7);
+                continue;
+              }
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.transform(1, 0, -0.36, 1, 0, 0);
+              ctx.fillRect(0, 0, 7, 52);
+              ctx.restore();
+            }
+          }
+          ctx.restore();
+        }
+
+        // dot field (frames 16, 18, 20): small squares, some drawn as commas
+        function dots(ctx, f, x0, x1, y0, y1, col, alpha) {
+          const R = K.rng(70 + f);
+          ctx.save();
+          ctx.fillStyle = col;
+          for (let y = y0; y <= y1; y += 57) {
+            for (let x = x0; x <= x1; x += 75) {
+              const a = R();
+              if (a < 0.15) continue;
+              ctx.globalAlpha = alpha * (0.45 + 0.55 * R());
+              ctx.fillRect(x, y, 8, 8);
+              if (a > 0.85) { ctx.fillRect(x + 2, y + 8, 4, 6); }
+            }
+          }
+          ctx.restore();
+        }
+
+        // outlined glyph rows
+        function glyphRows(ctx, rows, col) {
+          rows.forEach(([t, x, y, n]) => {
+            const s = n == null ? t : t.slice(0, n);
+            K.text(ctx, s, x, y, { size: 92, weight: 500, color: "rgba(0,0,0,0)", stroke: col, lw: 2.6, ls: -0.02 });
+          });
+        }
+
+        // ------------------------------------------------------------- text
+        function words(ctx, f) {
+          const lay = K.layout(ctx, ["Nova", "Network", "Synced"], SIZE, 500);
+          return lay;
+        }
+        function drawText(ctx, f, col) {
+          const lay = words(ctx, f);
+          const s = TS[f], cx = 960 + TX[f], base = TB[f];
+          const x0 = cx - lay.total / 2 + (DL[f] || 0);
+          ctx.save();
+          ctx.translate(x0, base);
+          ctx.rotate(TR[f]);
+          ctx.scale(s, s);
+          lay.forEach((w, i) => {
+            if (i === 2 && f < 4) return;
+            let dy = 0, sc = 1;
+            if (i === 2 && f < 8) { dy = SY[f]; sc = SS[f]; }
+            // frame 1: the line is seen in perspective, the second word nearer
+            const ps = f === 1 ? (i === 0 ? 0.9 : 1.04) : 1;
+            ctx.save();
+            ctx.translate(w.x, dy);
+            ctx.scale(sc * ps, sc * ps);
+            K.text(ctx, w.w, 0, 0, { size: SIZE, weight: 460, color: col, ls: -0.035 });
+            ctx.restore();
+          });
+          ctx.restore();
+        }
+
+        K.mount("cube", 0, 21, (ctx, f, cv) => {
+          const inv = INVERT.has(f);
+          const P = POLY[f];
+          K.fill(ctx, inv ? BLUE : PALE);
+
+          // background texture
+          if (!inv) {
+            if (f === 1) hatch(ctx, f, HATCH, { maxY: 160 });
+            else if (f === 3) hatch(ctx, f, HATCH, { maxY: 560 });
+            else if (f >= 4 && f <= 15) hatch(ctx, f, HATCH);
+            else if (f === 16) {
+              hatch(ctx, f, HATCH, { full: true, dots: (y) => y < 290 });
+            } else if (f === 18) {
+              hatch(ctx, f, HATCH, { full: true, clearX: (x, y) => y < 430 || (y < 880 && x > 860), dots: (y) => false });
+              dots(ctx, f, 900, 1900, 470, 870, HATCH, 0.9);
+              glyphRows(ctx, [["@@@@", 720, 168], [">>>>>>>>", 862, 296], ["<<<<<<<<<<", 937, 410]], "#B9B6E6");
+            } else if (f === 20) {
+              dots(ctx, f, 640, 1900, 1040, 1080, HATCH, 0.8);
+              glyphRows(ctx, [["@@@@@@@@@", 360, 752], [">>>>>>>>>>>>>>>>>>", 240, 876], ["========<<<<<<<<<<<<<<", 0, 990]], "#AFAAE4");
+            }
+          } else if (f === 17 || f === 19) {
+            hatch(ctx, f, "#FFFFFF", { alpha: 0.18, full: true });
+            if (f === 19) glyphRows(ctx, [["@@@@@@@@@", 360, 752, 6], [">>>>>>>>>>>>>>>>>>", 240, 876, 12], ["========<<<<<<<<<<<<<<", 0, 990, 14]], "rgba(225,226,255,0.75)");
+          }
+
+          // the shape
+          ctx.save();
+          path(ctx, P);
+          ctx.fillStyle = inv ? PALE : BLUE;
+          if (f <= 2) { ctx.shadowColor = inv ? "rgba(255,255,255,0.85)" : "rgba(120,130,255,0.7)"; ctx.shadowBlur = 70; }
+          ctx.fill();
+          ctx.restore();
+          if (f === 1) {
+            // soft inner haze on the first blue frame
+            ctx.save(); path(ctx, P); ctx.clip();
+            K.ember(ctx, 1180, 560, 620, "#8C95FF", 0.45);
+            ctx.restore();
+          }
+
+          // text
+          if (f === 0) {
+            // only the tail of the first word shows, inside the incoming card
+            ctx.save(); path(ctx, P); ctx.clip();
+            const lay = words(ctx, f), s = TS[0];
+            const x0 = 1112 - lay[0].width * s;
+            ctx.translate(x0, TB[0]); ctx.scale(s, s);
+            K.text(ctx, "Nova", 0, 0, { size: SIZE, weight: 500, color: BLUE });
+            ctx.restore();
+          } else {
+            const outside = inv ? PALE : BLUE;
+            const inside = f === 2 ? BLUE : inv ? PALE : PALE;
+            K.glow(ctx, (g) => drawText(g, f, outside), { blur: f <= 2 ? 10 : 0, alpha: f <= 2 ? 0.6 : 0 });
+            ctx.save(); path(ctx, P); ctx.clip();
+            K.glow(ctx, (g) => drawText(g, f, inside), { blur: f <= 2 ? 12 : 0, alpha: f <= 2 ? 0.8 : 0 });
+            ctx.restore();
+          }
+
+          if (f <= 2) K.bloom(cv, 0.35, 90);
+          K.grain(ctx, f, 0.03);
+        });
+      })();
+    </script>
+  </div>
+</template>
