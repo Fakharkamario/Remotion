@@ -175,6 +175,41 @@
     ctx.restore();
   };
 
+  // Lens/film finish shared by every scene: warm black lift, tinted halation from the bright parts,
+  // a wide bloom and a slight softness, so the frame reads as filmed rather than drawn.
+  K.post = function (cv, o) {
+    o = Object.assign({ halo: 0.6, haloColor: "#FF6A1E", bloom: 0.35, soften: 0.9, lift: 0.08, liftColor: "#3A1A0C" }, o || {});
+    const ctx = cv.getContext("2d");
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (o.halo > 0) {
+      const s = K.buf("halo", 480, 270), g = s.getContext("2d");
+      g.filter = "blur(10px) brightness(1.35)";
+      g.drawImage(cv, 0, 0, 480, 270);
+      g.filter = "none";
+      g.globalCompositeOperation = "multiply";
+      g.fillStyle = o.haloColor; g.fillRect(0, 0, 480, 270);
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = o.halo;
+      ctx.drawImage(s, 0, 0, K.W, K.H);
+    }
+    if (o.bloom > 0) {
+      const s = K.buf("bloom2", 240, 135), g = s.getContext("2d");
+      g.filter = "blur(14px)";
+      g.drawImage(cv, 0, 0, 240, 135);
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = o.bloom;
+      ctx.drawImage(s, 0, 0, K.W, K.H);
+    }
+    if (o.lift > 0) {
+      ctx.globalCompositeOperation = "lighter";
+      ctx.globalAlpha = o.lift;
+      ctx.fillStyle = o.liftColor; ctx.fillRect(0, 0, K.W, K.H);
+    }
+    ctx.restore();
+    if (o.soften > 0.3) K.defocus(cv, o.soften);
+  };
+
   // Blur the whole frame in place (defocus / motion smear).
   K.defocus = function (cv, px, o) {
     if (!(px > 0.3)) return;

@@ -27,7 +27,7 @@
         ];
         const ROW_IN = [28, 30, 33, 36, 39, 41];
         // page -> screen: screen = page * s + (tx, ty)   (page space = the layout at frame 21)
-        const pTX = K.step([[21, 0], [22, -90], [23, -150], [24, -190], [25, -225], [26, -240], [27, -245], [28, -250], [29, -255], [30, -250]]);
+        const pTX = K.step([[21, 0], [22, -88], [23, -148], [24, -189], [25, -217], [26, -235], [27, -245], [28, -248], [29, -247], [30, -246], [31, -243], [32, -239], [33, -234], [34, -226], [35, -216], [36, -204], [37, -189], [38, -171], [39, -147], [40, -112], [41, -55], [42, -9], [43, 72]]);
         const pTY = K.step([[21, 0], [30, -20], [31, -40], [32, -65], [33, -100], [34, -150], [35, -210], [36, -285], [37, -374], [38, -495], [39, -617], [40, -865], [41, -1206], [42, -1690], [43, -2376]]);
         const pS = K.step([[21, 1], [38, 1.01], [39, 1.02], [40, 1.05], [41, 1.15], [42, 1.25], [43, 1.35]]);
         const barY = K.step([[21, 480], [22, 455], [23, 435], [24, 426]]);
@@ -64,23 +64,23 @@
 
         function tableRow(g, r, k, f) {
           const y = 662 + k * 266;
-          K.token(g, r[0], 438, y, 140, { outline: GREEN, side: false });
-          K.text(g, r[1], 548, y - 18, { size: 33, weight: 700, color: CREAM, ls: 0 });
-          const nx = 548 + K.measure(g, r[1], 33, 700, 0) + 20;
-          K.text(g, r[2] + " ↗", nx, y - 18, { size: 31, weight: 500, color: "rgba(250,228,212,0.9)", ls: 0 });
-          K.text(g, r[3] + "   ✕  ⌕", 548, y + 40, { size: 28, weight: 500, color: "rgba(250,228,212,0.72)", ls: 0 });
-          [[4, 1383], [5, 1694], [6, 1974]].forEach(([c, cx]) => K.text(g, r[c], cx, y + 12, { size: 35, weight: 600, color: CREAM, ls: 0, align: "center" }));
-          K.text(g, r[7], 2132, y + 12, { size: 25, weight: 600, color: GREEN, ls: 0 });
+          K.token(g, r[0], 438, y, 158, { outline: GREEN, side: false });
+          K.text(g, r[1], 548, y - 14, { size: 40, weight: 700, color: CREAM, ls: 0 });
+          const nx = 548 + K.measure(g, r[1], 40, 700, 0) + 22;
+          K.text(g, r[2] + " ↗", nx, y - 14, { size: 38, weight: 600, color: "rgba(252,232,216,0.92)", ls: 0 });
+          K.text(g, r[3] + "   ✕  ⌕", 548, y + 46, { size: 33, weight: 500, color: "rgba(250,228,212,0.75)", ls: 0 });
+          [[4, 1383], [5, 1694], [6, 1974]].forEach(([c, cx]) => K.text(g, r[c], cx, y + 16, { size: 44, weight: 700, color: CREAM, ls: 0, align: "center" }));
+          K.text(g, r[7], 2132, y + 14, { size: 30, weight: 700, color: GREEN, ls: 0 });
           g.fillStyle = "rgba(250,228,212,0.09)"; g.fillRect(360, y + 132, 2400, 2);
         }
 
         function table(ctx, f) {
-          const warm = K.step([[21, 1], [22, 0.8], [23, 0.62], [24, 0.48], [25, 0.38], [26, 0.32], [28, 0.28], [32, 0.24], [36, 0.2], [40, 0.16], [42, 0.1]])(f);
-          K.fill(ctx, "#1A0A05");
-          const gr = ctx.createRadialGradient(560, 380, 0, 560, 380, 1500);
-          gr.addColorStop(0, K.rgba("#E2621E", 0.95 * warm));
-          gr.addColorStop(0.5, K.rgba("#9A3510", 0.7 * warm));
-          gr.addColorStop(1, K.rgba("#3A1206", 0.5 * warm));
+          const warm = K.step([[21, 1], [22, 0.85], [23, 0.72], [24, 0.55], [25, 0.46], [26, 0.4], [28, 0.38], [30, 0.4], [32, 0.5], [34, 0.62], [36, 0.76], [38, 0.86], [39, 0.88], [40, 0.84], [41, 0.78], [42, 0.6], [43, 0.36]])(f);
+          K.fill(ctx, "#1E0C06");
+          const gr = ctx.createRadialGradient(760, 460, 0, 760, 460, 1600);
+          gr.addColorStop(0, K.rgba("#B04E1C", 0.62 * warm));
+          gr.addColorStop(0.45, K.rgba("#5E240C", 0.6 * warm));
+          gr.addColorStop(1, K.rgba("#261008", 0.5 * warm));
           ctx.fillStyle = gr; ctx.fillRect(0, 0, K.W, K.H);
           const s = pS(f), tx = pTX(f), ty = pTY(f);
           // red guide lines above the nav
@@ -93,13 +93,13 @@
             g.translate(tx, ty); g.scale(s, s);
             // closer rows lean in: a vertical shear that widens the lower rows
             tablePage(g, f);
-          }, { blur: 14, alpha: 0.75 + warm * 0.4, color: "#FF6A1E" });
+          }, { blur: 16, alpha: 0.95 + warm * 0.4, color: "#FF7A2A", sharpBlur: 0.6 });
           ROWS.forEach((r, k) => {
             if (f < ROW_IN[k]) return;
             const age = f - ROW_IN[k];
             const y = (662 + k * 266) * s + ty;
             // depth of field: rows low in frame (nearer) blur once the camera tilts
-            const dof = tilt > 0 ? K.clamp((y - 380) / 500, 0, 1) * tilt * 40 : 0;
+            const dof = K.clamp((y - 560) / 420, 0, 1) * (f >= 30 ? 5 : 3) + (tilt > 0 ? K.clamp((y - 380) / 500, 0, 1) * tilt * 40 : 0);
             const blur = (age < 1 ? 9 : age < 2 ? 4 : 0) + dof;
             K.tglow(ctx, (g) => {
               g.translate(tx, ty); g.scale(s, s);
@@ -107,7 +107,7 @@
               g.translate(0, ky); g.scale(grow, grow); g.translate(0, -ky);
               g.globalAlpha = age < 1 ? 0.65 : 1;
               tableRow(g, r, k, f);
-            }, { blur: 16, alpha: 0.95, color: "#FF6A1E", sharpBlur: blur });
+            }, { blur: 22, alpha: 1.9, color: "#FF7A2A", sharpBlur: blur + 0.6 });
           });
           // the page darkens as it races off
           const dark = K.step([[21, 0], [41, 0.12], [42, 0.3], [43, 0.62]])(f);
@@ -116,8 +116,8 @@
 
         // ================================================================ field
         // camera scroll of the far plane (measured): tiles fall as the camera climbs
-        const FDY = { 46: 46, 47: -11, 48: 12, 49: 56, 50: 75, 51: 82, 52: 58, 53: 58, 54: 68, 55: 78, 56: 89, 57: 100, 58: 92, 59: 87, 60: 118, 61: 41, 62: -33, 63: 33, 64: -23 };
-        const FDX = { 48: -23, 49: 11, 50: 15, 64: 42 };
+        const FDY = { 46: 46, 47: -11, 48: 12, 49: 56, 50: 75, 51: 82, 52: 58, 53: 58, 54: 68, 55: 78, 56: 89, 57: 100, 58: 92, 59: 87, 60: 118, 61: 169, 62: 196, 63: 159, 64: -53, 65: 53 };
+        const FDX = { 48: -23, 49: 11, 50: 15, 63: -18, 64: 30, 65: -54 };
         const camY = (f) => { let y = 0; for (let k = 46; k <= f; k++) y += FDY[k] || 0; return y; };
         const camX = (f) => { let x = 0; for (let k = 46; k <= f; k++) x += FDX[k] || 0; return x; };
         const ARTS = ["letter", "orb", "dots", "bolt", "sprout", "chev", "coin", "land", "flame", "wave", "stripes", "moon"];
@@ -149,7 +149,7 @@
         function gridBg(ctx, ox, oy, s, rot, a) {
           ctx.save();
           ctx.translate(ox, oy); ctx.rotate(rot || 0); ctx.scale(s, s);
-          K.grid(ctx, { cell: 144, ox: 0, oy: 0, color: "#7A1A0E", alpha: 0.55 * a, width: 1.6 / s, x0: -3000, y0: -3000, x1: 5000, y1: 5000 });
+          K.grid(ctx, { cell: 144, ox: 0, oy: 0, color: "#A82614", alpha: 0.6 * a, width: 2.2 / s, x0: -3000, y0: -3000, x1: 5000, y1: 5000 });
           ctx.restore();
         }
 
@@ -190,27 +190,32 @@
           return [x, y, s, r];
         }
 
+        // 63-74: the field tightens into a wide scatter, which then sinks into the pile under the camera
+        const SPREAD = K.key([[62, 0], [63, 0], [65, 0.15], [66, 0.3], [67, 0.5], [68, 0.65], [69, 0.78], [70, 0.87], [72, 0.95], [74, 1]]);
         function cluster(ctx, f, hot) {
           const cam = CAM[Math.max(66, f)];
-          // gather 61-67: field tiles converge into the pile
-          const g = f < 66 ? K.eo(K.inv(60, 66, f), 2) : 1;
+          const cs = cam[0], cr = Math.cos(cam[1]), sr = Math.sin(cam[1]);
+          const e = SPREAD(f);
+          const tsz = f >= 80 ? cs : TSZ(f);
           K.tglow(ctx, (gc) => {
-            gc.translate(cam[2], cam[3]); gc.rotate(cam[1]); gc.scale(cam[0], cam[0]);
             PILE.forEach((p, i) => {
-              if (i === HOT && f < 63) return;
               let [x, y, s, r] = pilePos(i, f);
-              if (g < 1) {
-                // start from a scattered spot above/around the pile
-                const a = (i * 2.399) % 6.283, R = 900 * (1 - g);
-                x += Math.cos(a) * R; y += Math.sin(a) * R * 0.7 - 300 * (1 - g);
-                r += (1 - g) * 0.3 * Math.sin(i);
+              // pile position on screen through the measured camera
+              let px = cs * (cr * x - sr * y) + cam[2], py = cs * (sr * x + cr * y) + cam[3];
+              let size = s * tsz * 1.13, rot = r + cam[1];
+              if (e < 1) {
+                // the wide scatter the field tightens into
+                const sx = 960 + (x - 960) * 1.3 + Math.sin(i * 1.7) * 90, sy = 330 + (y - 470) * 1.05 + Math.cos(i * 2.3) * 60;
+                px = K.lerp(sx, px, e); py = K.lerp(sy, py, e);
+                size = K.lerp(s * 0.9, size, e);
+                rot = K.lerp(r + 0.12 * Math.sin(i * 3.1), rot, e);
               }
-              const sz = f >= 80 ? 1 : TSZ(f) / cam[0];
-              K.token(gc, p[0], x, y, s * sz, {
+              if (f < 64) return;
+              K.token(gc, p[0], px, py, size, {
                 outline: i === HOT ? "#9C8CF0" : GREEN,
                 badgeFill: i === HOT ? "#2A2260" : null,
                 badgeGlyph: i === HOT ? "+" : null,
-                rot: r,
+                rot,
                 hot: i === HOT ? hot : 0,
               });
             });
@@ -273,13 +278,13 @@
 
         // ================================================================ cursor
         // [frame, x, y, pixel size, pointing left]
-        const CUR = [[66, 1005, 10, 22], [67, 970, 195, 10], [68, 965, 295, 8], [69, 960, 365, 7], [70, 960, 405, 6.5], [71, 970, 440, 6.5], [72, 970, 465, 6.5], [73, 970, 490, 6.5], [74, 970, 505, 6.5], [75, 965, 520, 6.5], [76, 970, 525, 6.5], [77, 970, 535, 6.5], [80, 975, 530, 6.5], [81, 980, 545, 6.5], [83, 970, 540, 6.5], [84, 965, 540, 7], [85, 979, 566, 8.5], [86, 845, 500, 8.5], [87, 770, 460, 8.5], [88, 740, 440, 8.5], [89, 720, 435, 8.5], [90, 710, 425, 8.5], [91, 705, 425, 8.5], [94, 720, 425, 8.5], [95, 740, 420, 8.5], [96, 760, 420, 8.5], [97, 785, 410, 8.5], [98, 825, 400, 8.5], [99, 870, 390, 8.5], [100, 920, 385, 8.5], [101, 980, 365, 8.5], [102, 1035, 350, 8.5], [103, 1075, 315, 8.5], [104, 1270, 280, 8], [105, 1600, 635, 7, 1], [106, 1190, 1010, 7, 1], [107, 800, 1025, 7, 1], [108, 580, 885, 6.5, 1], [109, 470, 725, 6.5, 1], [110, 410, 570, 6.5, 1], [111, 380, 470, 6.5, 1], [112, 375, 390, 6.5, 1], [113, 360, 340, 6.5, 1], [114, 360, 305, 6.5, 1], [115, 360, 255, 6.5, 1], [116, 365, 185, 6.5, 1], [117, 415, 75, 6.5, 1]];
+        const CUR = [[66, 1005, 0, 18], [67, 970, 195, 10], [68, 965, 295, 8], [69, 960, 365, 7], [70, 960, 405, 6.5], [71, 970, 440, 6.5], [72, 970, 465, 6.5], [73, 970, 490, 6.5], [74, 970, 505, 6.5], [75, 965, 520, 6.5], [76, 970, 525, 6.5], [77, 970, 535, 6.5], [80, 975, 530, 6.5], [81, 980, 545, 6.5], [83, 970, 540, 6.5], [84, 965, 540, 7], [85, 979, 566, 8.5], [86, 845, 500, 8.5], [87, 770, 460, 8.5], [88, 740, 440, 8.5], [89, 720, 435, 8.5], [90, 710, 425, 8.5], [91, 705, 425, 8.5], [94, 720, 425, 8.5], [95, 740, 420, 8.5], [96, 760, 420, 8.5], [97, 785, 410, 8.5], [98, 825, 400, 8.5], [99, 870, 390, 8.5], [100, 920, 385, 8.5], [101, 980, 365, 8.5], [102, 1035, 350, 8.5], [103, 1075, 315, 8.5], [104, 1270, 280, 8], [105, 1600, 635, 7, 1], [106, 1190, 1010, 7, 1], [107, 800, 1025, 7, 1], [108, 580, 885, 6.5, 1], [109, 470, 725, 6.5, 1], [110, 410, 570, 6.5, 1], [111, 380, 470, 6.5, 1], [112, 375, 390, 6.5, 1], [113, 360, 340, 6.5, 1], [114, 360, 305, 6.5, 1], [115, 360, 255, 6.5, 1], [116, 365, 185, 6.5, 1], [117, 415, 75, 6.5, 1]];
         function cursor(ctx, f) {
           if (f < 66 || f > 117) return;
           const [, x, y, px, left] = at(CUR, f);
-          const glowR = f < 105 ? 330 : 230;
-          K.ember(ctx, x, y + 40, glowR, "#F2501E", f < 69 ? 0.75 : 0.6);
-          K.ember(ctx, x, y + 30, glowR * 0.45, "#FF9A50", 0.35);
+          const glowR = f < 105 ? 470 : 320;
+          K.ember(ctx, x, y + 40, glowR, "#F2501E", f < 69 ? 0.8 : 0.58);
+          K.ember(ctx, x, y + 30, glowR * 0.42, "#FFA060", 0.45);
           K.tglow(ctx, (g) => {
             // pixel trail
             if (f >= 67 && f <= 70) K.pixelCloud(g, x + 5, y - 85 + (f - 67) * 6, 46, 13, 300 + f, C.orange2, 1);
@@ -289,7 +294,7 @@
               K.pixelCloud(g, x + 60, y + 100, 30, 14, 330 + f, C.orange2, 0.9);
               if (f >= 110) K.pixelCloud(g, x + 30, y + 230, 26, 14, 340 + f, C.orange, 0.8);
             }
-            K.hand(g, x, y, px, { rot: left ? -Math.PI / 2 : 0, alpha: 1 });
+            K.hand(g, x, y, px * 1.3, { rot: left ? -Math.PI / 2 : 0, alpha: 1 });
           }, { blur: 14, alpha: 0.8, color: "#FF6A1E" });
         }
 
@@ -313,8 +318,10 @@
             table(ctx, f);
             const df = K.step([[21, 2], [22, 1], [23, 0], [41, 1.5], [42, 3], [43, 6]])(f);
             K.defocus(cv, df);
-            K.bloom(cv, f <= 23 ? 0.55 : 0.32, 70);
-            K.vignette(ctx, 0.5);
+            const sm = { 40: 18, 41: 30, 42: 40, 43: 60 }[f];
+            if (sm) K.defocus(cv, 1, { dy: sm, dx: sm * 0.25 });
+            K.post(cv, { halo: f <= 23 ? 0.4 : 0.28, bloom: f <= 23 ? 0.3 : 0.2, soften: 1.1, lift: 0.03 });
+            K.vignette(ctx, 0.45);
             K.grain(ctx, f, 0.07);
             return;
           }
@@ -334,7 +341,7 @@
             gridBg(ctx, cx, cy, 1, 0, 1);
             K.ember(ctx, 960, 560, 900, "#7A2A10", 0.18);
             const fade = f === 45 ? 0.55 : 1;
-            const fieldA = 1 - K.inv(62, 66, f);
+            const fieldA = f <= 63 ? 1 : 0;
             K.tglow(ctx, (g) => {
               g.globalAlpha = fade * fieldA;
               FIELD.forEach((t) => {
@@ -347,7 +354,7 @@
               const CH = { 61: [590, 1010, 430], 62: [610, 697, 400], 63: [647, 350, 385], 64: [727, 325, 335], 65: [817, 637, 265] };
               if (CH[f]) K.token(g, "chev", CH[f][0], CH[f][1], CH[f][2], { outline: GREEN, rot: -0.03 });
             }, { blur: 14, alpha: 0.55, color: "#FF7A2A" });
-            if (f >= 61) cluster(ctx, f, 0);
+            if (f >= 64) cluster(ctx, f, 0);
             if (f === 45) {
               // a sliver of the page still overhead
               ctx.save(); ctx.fillStyle = "rgba(14,8,6,0.92)"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(1920, 0); ctx.lineTo(1920, 470); ctx.lineTo(0, 390); ctx.fill();
@@ -355,8 +362,10 @@
               K.text(ctx, "List 1  ⌄", -20, 485, { size: 46, weight: 500, color: "rgba(240,225,215,0.75)", ls: 0 });
               ctx.restore();
             }
-            K.bloom(cv, 0.25, 60);
-            K.vignette(ctx, 0.55);
+            const fsm = FDY[f] ? Math.abs(FDY[f]) * 0.35 : 0;
+            if (fsm > 6 && Math.abs(FDY[f]) > 80) K.defocus(cv, 1, { dy: fsm * 0.6 * Math.sign(FDY[f]) });
+            K.post(cv, { halo: 0.25, bloom: 0.18, soften: 0.9, lift: 0.02 });
+            K.vignette(ctx, 0.5);
             K.grain(ctx, f, 0.07);
             return;
           }
@@ -367,9 +376,20 @@
           cluster(ctx, f, hot);
           panel(ctx, f);
           cursor(ctx, f);
+          if (f >= 66 && f <= 117) {
+            // the cursor's light washes over the pile
+            const [, lx, ly] = at(CUR, f);
+            ctx.save(); ctx.globalCompositeOperation = "screen";
+            const lg = ctx.createRadialGradient(lx, ly + 120, 0, lx, ly + 120, 640);
+            lg.addColorStop(0, "rgba(255,120,50,0.3)"); lg.addColorStop(0.5, "rgba(200,70,20,0.1)"); lg.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.fillStyle = lg; ctx.fillRect(0, 0, K.W, K.H); ctx.restore();
+          }
           pixels(ctx, f);
-          K.bloom(cv, 0.3, 70);
-          K.vignette(ctx, 0.55);
+          // smear on the fast camera moves (push-in, pull-back, reshuffle)
+          const msm = { 77: [0, -60], 78: [0, -40], 85: [40, 30], 86: [24, 10], 104: [-20, 35], 105: [25, 15], 106: [20, -10], 107: [-15, 10], 108: [10, -15], 109: [-20, 5], 110: [-15, -20] }[f];
+          if (msm) K.defocus(cv, 1, { dx: msm[0], dy: msm[1] });
+          K.post(cv, { halo: 0.3, bloom: 0.2, soften: 0.9, lift: 0.03 });
+          K.vignette(ctx, 0.45);
           K.grain(ctx, f, 0.07);
         }, 0);
       })();

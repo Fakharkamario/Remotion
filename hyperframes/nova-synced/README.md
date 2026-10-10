@@ -25,6 +25,10 @@ How it is measured:
 - **Panel anchor and scale, cursor track, values and percentages** are read off the reference frame by frame.
   The values follow the reference's ramp, scaled to the 2180.40 USDC balance.
 
+The look follows the reference's measured exposure (per-phase luminance within about 25%): `K.post` in the kit adds a
+warm black lift, tinted halation, a wide bloom and a slight softness, and directional smear is applied only on
+the fast camera moves (table run-out, field rush, push-in, pull-back, reshuffle).
+
 Every scene is drawn on a canvas as a pure function of the reference frame number. `K.mount` maps time to
 `floor(t * 24 + 0.2)`, so the 30 fps output repeats every fifth frame exactly where the reference does.
 `assets/kit.js` holds the shared helpers (with a tinted-glow `K.tglow` added), and `assets/tokens.js` holds the original token art.

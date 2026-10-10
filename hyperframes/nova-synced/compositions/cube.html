@@ -178,6 +178,10 @@
           }
 
           if (f <= 2) K.bloom(cv, 0.35, 90);
+          // lens finish: the reference's cube scene is soft, with a faint cool bloom
+          K.post(cv, { halo: 0.12, haloColor: "#8A90FF", bloom: 0.12, soften: 1.2, lift: 0 });
+          const csm = { 1: [-50, 10], 2: [-40, 8], 3: [-30, 6], 17: [30, 0], 18: [40, 0], 19: [60, 0], 20: [90, 0] }[f];
+          if (csm) K.defocus(cv, 1, { dx: csm[0], dy: csm[1] });
           K.grain(ctx, f, 0.03);
         });
       })();
