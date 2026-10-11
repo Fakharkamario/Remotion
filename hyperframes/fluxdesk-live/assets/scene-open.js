@@ -62,7 +62,8 @@
   }
 
   K.SCENES = K.SCENES || {};
-  K.SCENES.open = function (ctx, f, cv) {
+  K.SCENES.open = function (ctx, f, cv, t) {
+    if (t == null) t = f;
     const word = K.BRAND.lead;
     const flash = f === 0 ? 1 : 0;
     // ground: a beige flash on the first frame, then near-white, cooling to taupe at the end
@@ -73,14 +74,15 @@
 
     // positions this frame
     const P = {};
-    TILES.forEach((t) => { P[t.id] = t.at(f); });
-    const ts = TS(f), tw = K.measure(ctx, word, ts, 600, -0.03), tx = TX(f) - tw / 2, tb = TB(f);
-    P.W = [TX(f), tb - ts * 0.36];
+    TILES.forEach((o) => { P[o.id] = o.at(t); });
+    const ts = TS(t), tw = K.measure(ctx, word, ts, 600, -0.03), tx = TX(t) - tw / 2, tb = TB(t);
+    P.W = [TX(t), tb - ts * 0.36];
 
     // blue haze: around the word and the big tiles
     const haze = (f >= 15 ? 0.5 : 1) * (flash ? 0.55 : 1);
-    K.ember(ctx, P.W[0], P.W[1], 520, "#8FB4FF", 0.34 * haze);
-    TILES.forEach((t) => { const [x, y] = P[t.id], s = t.side(f); K.ember(ctx, x, y, s * (t.big ? 0.95 : 0.9), K.mix("#5560FF", "#B060C0", warmK(f)), 0.45 * haze); });
+    K.ember(ctx, P.W[0], P.W[1], 700, "#9CC0FF", 0.5 * haze);
+    K.ember(ctx, P.W[0], P.W[1], 380, "#A8D0FF", 0.45 * haze);
+    TILES.forEach((o) => { const [x, y] = P[o.id], s = o.side(t); K.ember(ctx, x, y, s * (o.big ? 1.15 : 1.0), K.mix("#6070FF", "#B060C0", warmK(t)), 0.5 * haze); });
 
     // dashed links
     if (f <= 15) {
@@ -92,20 +94,20 @@
     }
 
     // tiles: bracket frame (axis aligned), filled square, "+"
-    TILES.forEach((t) => {
-      const [x, y] = P[t.id], s = t.side(f), r = (t.rot(f) * Math.PI) / 180;
-      const col = tileColor(f, t.warm);
+    TILES.forEach((o) => {
+      const [x, y] = P[o.id], s = o.side(t), r = (o.rot(t) * Math.PI) / 180;
+      const col = tileColor(t, o.warm);
       const bb = s * (Math.abs(Math.cos(r)) + Math.abs(Math.sin(r)));
-      if (f <= 16 && (f <= 15 || t.big)) bracket(ctx, x, y, t.big ? bb * 1.04 : s * 1.18, K.rgba(K.mix("#5A60C8", col, 0.3), 0.75), 1.4);
-      K.glow(ctx, (g) => K.tile(g, x, y, s, { fill: col, rot: r }), { blur: t.big ? 34 : 16, alpha: 0.75, passes: 2, mode: "source-over", sharpAlpha: f >= 16 ? 0.85 : 1 });
-      if (f <= 15 || t.big) plus(ctx, x, y, t.big ? 22 : 20, "rgba(255,255,255,0.95)");
+      if (f <= 16 && (f <= 15 || o.big)) bracket(ctx, x, y, o.big ? bb * 1.04 : s * 1.18, "rgba(70,72,112,0.7)", 1.4);
+      K.glow(ctx, (g) => K.tile(g, x, y, s, { fill: col, rot: r, radius: 0.06 }), { blur: o.big ? 26 : 12, alpha: 0.55, passes: 2, mode: "source-over", sharpAlpha: f >= 16 ? 0.85 : 1 });
+      if (f <= 15 || o.big) plus(ctx, x, y, o.big ? 22 : 20, "rgba(255,255,255,0.95)");
     });
 
     // the word: pale blue fill, blue outline, letter boxes with "+" marks
     if (f <= 15) {
       const a = f === 15 ? 0.72 : 1;
-      const fill = flash ? "#8486C8" : f === 15 ? "#8D95E0" : "#8AA2FF";
-      K.glow(ctx, (g) => K.text(g, word, tx, tb, { size: ts, weight: 600, color: K.rgba(fill, a), ls: -0.03, stroke: K.rgba(flash ? "#6A6CB8" : "#3E52EE", 0.95 * a), lw: 2.6 }), { blur: 26, alpha: 0.9, passes: 2, mode: "source-over" });
+      const fill = flash ? "#6A6EC0" : f === 15 ? "#7880D8" : "#4858E8";
+      K.glow(ctx, (g) => K.text(g, word, tx, tb, { size: ts, weight: 600, color: K.rgba(fill, a), ls: -0.03, stroke: K.rgba(flash ? "#9A9CD8" : "#8FA6FF", 0.8 * a), lw: 1.6 }), { blur: 18, alpha: 0.35, mode: "source-over" });
       ctx.save();
       ctx.strokeStyle = K.rgba("#5868D8", 0.55 * a); ctx.lineWidth = 1.3;
       let cx = tx;
@@ -122,7 +124,7 @@
     // the second word of the headline falls in from lower right
     if (f >= 13) {
       const w2 = K.BRAND.line[1];
-      const X = K.key([[13, 1260], [15, 1190], [16, 1040]])(f), Y = K.key([[13, 885], [15, 712], [16, 600]])(f), S = K.key([[13, 205], [15, 172], [16, 122]])(f);
+      const X = K.key([[13, 1260], [15, 1190], [16, 1040]])(Math.max(13, t)), Y = K.key([[13, 885], [15, 712], [16, 600]])(Math.max(13, t)), S = K.key([[13, 205], [15, 172], [16, 122]])(Math.max(13, t));
       const ww = K.measure(ctx, w2, S, 500, -0.03);
       K.glow(ctx, (g) => K.text(g, w2, X - ww / 2, Y, { size: S, weight: 500, color: f >= 16 ? "rgba(150,120,100,0.45)" : "#5A3420", ls: -0.03 }), { blur: f >= 16 ? 10 : 22, alpha: 0.8, mode: "source-over", sharpBlur: f >= 16 ? 3 : 1.2 });
     }
@@ -131,4 +133,6 @@
     K.defocus(cv, f >= 16 ? 3 : f === 15 ? 1.4 : 0.6);
     K.grain(ctx, f, 0.05);
   };
+  // motion blur span (frames): the field moves fastest on the push-in and the hand-over
+  K.SCENES.open.shutter = (f) => (f >= 15 ? 0.45 : 0);
 })();

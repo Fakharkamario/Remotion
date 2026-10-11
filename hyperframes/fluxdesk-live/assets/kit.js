@@ -190,6 +190,7 @@
   // film grain, seeded per frame
   const grainTiles = [];
   K.grain = function (ctx, f, a) {
+    if (K.sampling) { K.pendingGrain = [f, a]; return; }
     if (!grainTiles.length) {
       for (let k = 0; k < 4; k++) {
         const c = K.canvas(256, 256), g = c.getContext("2d"), im = g.createImageData(256, 256), r = K.rng(99 + k);
@@ -313,7 +314,11 @@
     ctx.translate(x, y);
     ctx.rotate(o.rot);
     ctx.globalAlpha *= o.alpha;
-    if (o.fill) { ctx.fillStyle = o.fill; ctx.fillRect(-size / 2, -size / 2, size, size); }
+    if (o.fill) {
+      ctx.fillStyle = o.fill;
+      if (o.radius) { ctx.beginPath(); ctx.roundRect(-size / 2, -size / 2, size, size, o.radius * size); ctx.fill(); }
+      else ctx.fillRect(-size / 2, -size / 2, size, size);
+    }
     if (o.stroke) { ctx.strokeStyle = o.stroke; ctx.lineWidth = o.lw || 3; ctx.strokeRect(-size / 2, -size / 2, size, size); }
     if (o.glyph) K.glyph(ctx, o.glyph, 0, 0, size * o.gsize, o.gcolor, 0, { weight: o.gweight });
     if (o.corners) {
@@ -557,6 +562,30 @@
   // ----------------------------------------------------------------- mount
   // Mounts a canvas scene into the composition root `id`. draw(ctx, f, cv) is called with the
   // reference frame number f = base + local frame. Driven by a GSAP setter tween so seeks redraw.
+  // Render one frame. A scene may expose draw.shutter(f) -> span in frames; when it is non-zero the
+  // frame is the average of several sub-frame samples over [f - span, f] (motion blur). Scenes get
+  // the integer frame f for discrete states and the continuous time t for anything that moves.
+  const SAMPLES = 7;
+  K.frame = function (ctx, cv, draw, f) {
+    const span = draw.shutter ? draw.shutter(f) : 0;
+    const reset = (g) => { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; g.filter = "none"; g.clearRect(0, 0, K.W, K.H); };
+    reset(ctx);
+    if (!(span > 0)) { draw(ctx, f, cv, f); return; }
+    if (!K._sample) { K._sample = K.canvas(K.W, K.H); K._acc = K.canvas(K.W, K.H); }
+    const sc = K._sample, sg = sc.getContext("2d"), ac = K._acc, ag = ac.getContext("2d");
+    reset(ag);
+    K.sampling = true; K.pendingGrain = null;
+    for (let i = 0; i < SAMPLES; i++) {
+      reset(sg);
+      draw(sg, f, sc, f - span * (1 - i / (SAMPLES - 1)));
+      ag.globalAlpha = 1 / (i + 1);
+      ag.drawImage(sc, 0, 0);
+    }
+    K.sampling = false;
+    ctx.drawImage(ac, 0, 0);
+    if (K.pendingGrain) K.grain(ctx, K.pendingGrain[0], K.pendingGrain[1]);
+  };
+
   K.mount = function (id, base, frames, draw) {
     const host = document.querySelector(`[data-composition-id="${id}"] .stage`);
     const cv = K.canvas(K.W, K.H);
@@ -567,12 +596,7 @@
     const render = (lf) => {
       const f = K.cadence(base + Math.min(frames - 1, Math.max(0, Math.round(lf))));
       cur = lf;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = "source-over";
-      ctx.filter = "none";
-      ctx.clearRect(0, 0, K.W, K.H);
-      draw(ctx, f, cv);
+      K.frame(ctx, cv, draw, f);
     };
     const R = { frame(v) { if (v === undefined) return cur; render(v); } };
     const tl = gsap.timeline({ paused: true });

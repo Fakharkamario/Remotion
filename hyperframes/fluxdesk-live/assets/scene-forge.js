@@ -72,6 +72,14 @@
     cx: K.key([[53, 960], [55, 960], [58, 956], [63, 958], [70, 960], [71, 967], [72, 958], [73, 950], [75, 954], [76, 820]]),
     cy: K.key([[53, 545], [55, 537], [58, 539], [70, 540], [71, 560], [72, 540], [73, 540], [75, 540], [76, 560]]),
   };
+  const DIVE = {
+    rx: K.key([[73, 16.4], [75, 32.5], [76, 16.4]]),
+    ry: K.key([[73, -40.8], [75, -49.2], [76, -41]]),
+    rz: K.key([[73, 20], [75, 2.4], [76, -17.4]]),
+    s: K.key([[73, 1.42], [75, 1.61], [76, 1.69]]),
+    cx: K.key([[73, 1186], [75, 1190], [76, 1000]]),
+    cy: K.key([[73, 573], [75, 409], [76, 392]]),
+  };
   const GLY = K.step([[53, ">"], [58, "+"], [63, "."], [68, "<"], [74, null]]);
   const GSZ = K.key([[53, 480], [55, 480], [56, 430], [57, 400], [58, 345], [60, 330], [62, 300], [63, 170], [67, 170], [68, 380], [70, 340], [73, 240]]);
 
@@ -86,9 +94,14 @@
     const gcell = K.key([[53, 226], [63, 250], [70, 270], [75, 340]])(f);
     darkGrid(ctx, f, gcell, 960 - gcell * 2, 540 - gcell);
     if (f <= 54) orangePhase(ctx, 53);
-    const cam = { rx: CAM.rx(f) * D2R, ry: CAM.ry(f) * D2R, rz: CAM.rz(f) * D2R, d: 1700, s: CAM.s(f), cx: CAM.cx(f), cy: CAM.cy(f) };
-    const e = 250;
-    const cubes = f >= 75 ? [0, 2.15 * e] : [0];
+    // from 73 the dive uses the solid-cube camera (fitted to the reference), with the second cube
+    // beside the first, so the cut to the solid cubes at 77 is seamless
+    const dive = f >= 73;
+    const cam = dive
+      ? { rx: DIVE.rx(f) * D2R, ry: DIVE.ry(f) * D2R, rz: DIVE.rz(f) * D2R, d: 2200, s: DIVE.s(f), cx: DIVE.cx(f), cy: DIVE.cy(f) }
+      : { rx: CAM.rx(f) * D2R, ry: CAM.ry(f) * D2R, rz: CAM.rz(f) * D2R, d: 1700, s: CAM.s(f), cx: CAM.cx(f), cy: CAM.cy(f) };
+    const e = dive ? 200 : 250;
+    const cubes = dive ? [-200, 200 + K.key([[73, 170], [75, 180], [76, 60]])(f)] : [0];
     const front = f <= 54;
     if (front) {
       // dark face filling the turning square
@@ -98,18 +111,33 @@
     }
     const showBack = f >= 70;
     K.glow(ctx, (g) => {
-      g.strokeStyle = WIRE; g.lineWidth = 6.5; g.lineJoin = "round";
-      cubes.forEach((off) => {
+      g.strokeStyle = WIRE; g.lineWidth = dive ? 8 : 6.5; g.lineJoin = "round";
+      cubes.forEach((off, ci) => {
         const V = cubeVerts(e, cam, off);
         const far = V.reduce((m, p, i) => (p[2] < V[m][2] ? i : m), 0);
+        // the second cube shows only its front face and its outer side, as in the reference
+        const keep2 = [0, 1, 2, 3, 9, 11, 5];
         EDGES.forEach(([a, b], i) => {
+          if (ci === 1 && !keep2.includes(i)) return;
           if (!showBack && i >= 4) return;
           if (f >= 72 && (a === far || b === far)) return;
           g.beginPath(); g.moveTo(V[a][0], V[a][1]); g.lineTo(V[b][0], V[b][1]); g.stroke();
         });
         const n = 22 * Math.min(1.8, Math.sqrt(cam.s));
         g.fillStyle = NODE;
-        V.forEach((p, i) => { if ((!showBack && i >= 4) || (f >= 72 && i === far)) return; g.fillRect(p[0] - n / 2, p[1] - n / 2, n, n); });
+        V.forEach((p, i) => {
+          if ((!showBack && i >= 4) || (f >= 72 && i === far)) return;
+          if (ci === 1 && (i === 4 || i === 6)) return;
+          if (!dive) { g.fillRect(p[0] - n / 2, p[1] - n / 2, n, n); return; }
+          // hexagon nodes with small corner brackets once the cube is close
+          const r = 27 * cam.s / 1.5;
+          g.beginPath();
+          for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2 + Math.PI / 6; k ? g.lineTo(p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r) : g.moveTo(p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r); }
+          g.fill();
+          g.save(); g.strokeStyle = K.rgba(NODE, 0.6); g.lineWidth = 1.5; const b = r * 1.45, l = r * 0.5;
+          [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => { g.beginPath(); g.moveTo(p[0] + sx * b, p[1] + sy * (b - l)); g.lineTo(p[0] + sx * b, p[1] + sy * b); g.lineTo(p[0] + sx * (b - l), p[1] + sy * b); g.stroke(); });
+          g.restore();
+        });
       });
       const gl = GLY(f);
       if (gl) {
@@ -148,12 +176,15 @@
     const V = [];
     for (const z of [-ez, ez]) for (const y of [-ey, ey]) for (const x of [-ex, ex]) V.push(K.proj([x + o[0], y + o[1], z + o[2]], cam));
     const F = [[0, 1, 3, 2], [4, 5, 7, 6], [0, 1, 5, 4], [2, 3, 7, 6], [0, 2, 6, 4], [1, 3, 7, 5]];
-    // painter's order: farthest faces first (k grows toward the camera)
-    F.map((idx) => ({ idx, k: idx.reduce((a, i) => a + V[i][2], 0) })).sort((a, b) => a.k - b.k).forEach(({ idx }) => {
+    // painter's order: farthest faces first (k grows toward the camera); fills first, then the
+    // three faces toward the camera get their lit edges, so no fill cuts a stroke in half
+    const faces = F.map((idx) => ({ idx, k: idx.reduce((a, i) => a + V[i][2], 0) })).sort((a, b) => a.k - b.k);
+    const path = (P) => { ctx.beginPath(); P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); };
+    faces.forEach(({ idx }) => {
       const P = idx.map((i) => V[i]);
       const mx = P.reduce((a, p) => a + p[0], 0) / 4, my = P.reduce((a, p) => a + p[1], 0) / 4;
       const r = Math.max(...P.map((p) => Math.hypot(p[0] - mx, p[1] - my)));
-      ctx.beginPath(); P.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath();
+      path(P);
       if (st.flat) ctx.fillStyle = st.flat;
       else {
         const gr = ctx.createRadialGradient(mx, my, 0, mx, my, r);
@@ -161,29 +192,38 @@
         ctx.fillStyle = gr;
       }
       ctx.fill();
-      ctx.strokeStyle = st.edge || "#F2602E"; ctx.lineWidth = st.lw || 3; ctx.lineJoin = "round"; ctx.stroke();
+      if (st.flat) { ctx.strokeStyle = st.edge || "#F2602E"; ctx.lineWidth = st.lw || 3; ctx.lineJoin = "round"; ctx.stroke(); }
     });
+    if (!st.flat) {
+      ctx.save();
+      ctx.strokeStyle = st.edge || "#F2602E"; ctx.lineWidth = st.lw || 3; ctx.lineJoin = "round";
+      ctx.shadowColor = "rgba(255,110,60,0.8)"; ctx.shadowBlur = st.lw * 1.6;
+      faces.slice(3).forEach(({ idx }) => { path(idx.map((i) => V[i])); ctx.stroke(); });
+      ctx.restore();
+    }
     if (st.nodes) {
-      ctx.fillStyle = "#F2602E";
-      const far = V.reduce((m, p, i) => (p[2] < V[m][2] ? i : m), 0);
-      V.forEach((p, vi) => {
-        if (vi === far) return;
-        ctx.beginPath();
-        for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2 + Math.PI / 6; const x = p[0] + Math.cos(a) * st.nodes, y = p[1] + Math.sin(a) * st.nodes; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
-        ctx.fill();
-      });
+      // a hexagon node on the corner nearest the camera
+      const near = V.reduce((m, p, i) => (p[2] > V[m][2] ? i : m), 0), p = V[near];
+      ctx.save();
+      ctx.fillStyle = "#F4683A"; ctx.shadowColor = "rgba(255,120,70,0.9)"; ctx.shadowBlur = 14;
+      ctx.beginPath();
+      for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2 + Math.PI / 6; const x = p[0] + Math.cos(a) * st.nodes, y = p[1] + Math.sin(a) * st.nodes; k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.fill();
+      ctx.restore();
     }
   }
 
   // two solid cubes on orange, slowly settling to an iso view
+  // camera fitted to corner positions measured on the reference; dz slides the right cube forward
   const SOL = {
-    rz: K.key([[77, -34], [80, -24], [83, -8], [85, -2], [88, 0], [91, 0]]),
-    rx: K.key([[77, 20], [80, 26], [85, 33], [91, 35]]),
-    ry: K.key([[77, -56], [80, -50], [85, -46], [91, -45]]),
-    s: K.key([[77, 2.1], [80, 2.0], [85, 1.78], [88, 1.68], [91, 1.62]]),
-    cx: K.key([[77, 900], [80, 800], [85, 694], [88, 700], [91, 830]]),
-    cy: K.key([[77, 600], [80, 680], [85, 819], [88, 790], [91, 830]]),
-    gap: K.key([[77, 40], [82, 18], [86, 6], [88, 14], [91, 0]]),
+    rx: K.key([[77, 48], [78, 45.1], [80, 40], [81, 38.5], [83, 36.5], [85, 35.2], [86, 35], [88, 34], [90, 33], [91, 32.5]]),
+    ry: K.key([[77, -57], [78, -55.2], [80, -50.9], [81, -48.5], [83, -45.5], [85, -43.3], [86, -43.3], [88, -43.3], [90, -43.3], [91, -43.3]]),
+    rz: K.key([[77, 20], [78, 14.2], [80, 6.4], [81, 4], [83, 1], [85, -0.8], [86, -0.8], [88, -0.5], [90, 0], [91, 0]]),
+    s: K.key([[77, 2.15], [78, 2.05], [80, 1.9], [81, 1.88], [83, 1.82], [85, 1.8], [86, 1.8], [88, 1.79], [90, 1.79], [91, 1.79]]),
+    cx: K.key([[77, 820], [78, 800], [80, 771], [81, 760], [83, 740], [85, 726], [86, 726], [88, 722], [90, 715], [91, 712]]),
+    cy: K.key([[77, 470], [78, 540], [80, 632], [81, 670], [83, 718], [85, 745], [86, 750], [88, 760], [90, 770], [91, 775]]),
+    gap: K.key([[77, 30], [78, 30], [80, 45], [81, 30], [83, 10], [85, 0], [86, 0], [88, 0], [90, 0], [91, 0]]),
+    dz: K.key([[77, 0], [78, 0], [80, 0], [81, 0], [83, 0], [85, 0], [86, -40], [88, -160], [90, -320], [91, -400]]),
   };
   function solids(ctx, f) {
     K.fill(ctx, "#F15E31");
@@ -191,9 +231,13 @@
     K.grid(ctx, { cell: gc, ox: 230 - (f - 77) * 6, oy: 130 - (f - 77) * 4, color: "#4A0E04", alpha: 0.7, width: 2.2 });
     const cam = { rx: SOL.rx(f) * D2R, ry: SOL.ry(f) * D2R, rz: SOL.rz(f) * D2R, d: 2200, s: SOL.s(f), cx: SOL.cx(f), cy: SOL.cy(f) };
     const e = 200, gp = SOL.gap(f);
-    const st = { nodes: 16, lw: 9 };
-    solidBox(ctx, cam, [e + gp / 2, 0, 0], e, e, e, st);
-    solidBox(ctx, cam, [-e - gp / 2, 0, 0], e, e, e, st);
+    const st = { nodes: 28, lw: 8 };
+    // farther cube first
+    const dz = SOL.dz(f) / 2;
+    [[e + gp / 2, 0, dz], [-e - gp / 2, 0, -dz]]
+      .map((o) => ({ o, k: K.proj(o, cam)[2] }))
+      .sort((a, b) => a.k - b.k)
+      .forEach(({ o }) => solidBox(ctx, cam, o, e, e, e, st));
   }
 
   // ------------------------------------------------- pull back into the mark

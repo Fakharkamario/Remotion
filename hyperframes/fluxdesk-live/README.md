@@ -12,7 +12,11 @@ Terminal." spot beat for beat, measured frame by frame, with the Fluxdesk copy a
 | 102–174 | `logo`  | white flash, the wordmark types in with focus pulling in; hold; dashed arcs and glyphs ( / > + . ) eat the word; "fluxdesk.trade" types out behind a glyph cursor |
 
 The reference is 24 fps motion delivered at 30 fps (every fifth frame repeats the one before); `K.cadence`
-reproduces that, so the clip lines up with the reference frame for frame. Every scene is drawn on a canvas
+reproduces that, so the clip lines up with the reference frame for frame. The 3D cube cameras (wire dive
+and solid cubes, frames 73–91) are fitted to corner positions measured on the reference, including the right
+cube sliding forward from side-by-side to corner-to-corner. `K.frame` supports per-scene motion blur
+(`draw.shutter`), used only on the opening hand-off. The wipe uses a per-pixel dithered gradient for the
+reference's film-grain dissolve. Every scene is drawn on a canvas
 as a pure function of the frame number (`assets/scene-*.js`), mounted by the compositions through
 `K.mount`. Text is Inter condensed to the reference's set width (`K.SX`). No soundtrack is included.
 

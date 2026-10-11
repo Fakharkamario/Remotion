@@ -37,10 +37,11 @@
     const lt = letters(ctx, word, size);
     const light = !!BG[f] && f <= 104;
     const draw = (g) => {
-      K.mark(g, markCx - (ms - 1) * L.markW * 0.35, markCy, L.b * ms, RED);
+      const col = light ? "#F23A12" : RED;
+      K.mark(g, markCx - (ms - 1) * L.markW * 0.35, markCy, L.b * ms, col);
       for (let j = 0; j < n; j++) {
         const drop = NEWAT[j] === f && (f === 105 || f === 106 || f === 110) ? 34 : 0;
-        K.text(g, lt[j].ch, L.tx + lt[j].x, base + drop, { size, weight: K.LOCK.weight, color: RED, ls: K.LOCK.ls });
+        K.text(g, lt[j].ch, L.tx + lt[j].x, base + drop, { size, weight: K.LOCK.weight, color: col, ls: K.LOCK.ls });
       }
     };
     K.glow(ctx, draw, { blur: light ? 40 : 24, alpha: light ? 0.9 : 0.6, passes: 2, mode: light ? "source-over" : "lighter", sharpBlur: BLUR[f] || 0 });
@@ -142,7 +143,7 @@
     if (f <= 132) typing(ctx, f);
     else if (f <= 142) scramble(ctx, f);
     else domain(ctx, f);
-    K.vignette(ctx, BG[f] ? 0.15 : 0.6);
+    if (!BG[f]) K.vignette(ctx, 0.6);
     if (!BG[f]) K.bloom(cv, 0.15, 60);
     K.grain(ctx, f, 0.05);
   };
