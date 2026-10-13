@@ -139,14 +139,13 @@ def main():
     at(194, ding(1318.5, 0.6), 0.10)
     for f in (181, 186, 194, 199, 204):
         at(f, click(3000, 0.02), 0.06)
-    # R3: white card; the box opens; the line draws; the high line; the sag
+    # R3: white card; the box opens; the line draws; the high line
     at(275 - 0.3 * 0.55 * FPS, whoosh(0.3, 2000, 9000, 0.25), 0.14)
     at(274, pop(1200, 400, 0.06), 0.12)
     at(276, riser(2.3, 220, 520), 0.05)
     for f in (275, 280, 291, 294, 302, 307, 318, 323, 330, 336):
         at(f, click(2600, 0.02), 0.06)
     at(316, whoosh(0.4, 800, 5000, 0.5), 0.08)
-    at(346, pop(500, 160, 0.14), 0.10)
     # R4: thin words; each box opens; 的公司
     for f in (399, 402, 473, 478, 482):
         at(f, click(3000, 0.02), 0.06)

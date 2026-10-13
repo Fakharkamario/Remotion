@@ -9,7 +9,7 @@
 //   50–73    1          74–125   dark: 亏损的公司 typed huge chasing the caret, cut wide, struck
 //   126–148  2          149–249  dark: 本月成长率 pill, a row of ten cells fills short of the green 40% mark, 低于40%, struck
 //   250–274  3          275–375  white: a price line creeps up to the dashed 一年新高 line and never breaks it;
-//                                 black box 股价没有创近一年新高, struck
+//                                 black box 股价没有创近一年新高, struck (the dot stays on the end of the line)
 //   376–398  4          399–514  on the wall: 没有 / three boxes open from a line (新产品 新服务 新市场) / 的公司, struck
 //   515–557  5 with the pill 第五点 最重要   558–648  tight: 产品没有 / 供不应求 / 的公司, struck
 //
@@ -274,7 +274,7 @@
     r3HiLab.style.fontWeight = "700"; r3HiLab.style.fontSize = "50px"; r3HiLab.style.lineHeight = "1"; r3HiLab.style.whiteSpace = "nowrap";
     const r3HiLabC = chars(r3HiLab, "一年新高");
     const R3_HI = [318, 323, 330, 336];
-    // price runs along the line as he speaks, stalls just under the high, then dips
+    // price runs along the line as he speaks and stalls just under the high
     const r3Run = spline([[275, 0], [300, 0.45], [325, 0.8], [340, 0.93], [346, 1]]);
     const r3Box = el("div", "dbox", r3World);
     r3Box.innerHTML =
@@ -475,8 +475,6 @@
           if (run >= PTS[i][0] && run <= PTS[i + 1][0]) { const u = (run - PTS[i][0]) / (PTS[i + 1][0] - PTS[i][0]); tipY = py(lerp(PTS[i][1], PTS[i + 1][1], u)); }
         }
         if (run >= 1) tipY = py(PTS[PTS.length - 1][1]);
-        // after it reaches the end it sags a little: no breakout
-        tipY += 26 * inOut(prog(f, 346, 360));
         r3tip.setAttribute("cx", xr.toFixed(1)); r3tip.setAttribute("cy", tipY.toFixed(1));
         r3tip.setAttribute("r", (14 * outExpo(prog(f, 276, 280))).toFixed(2));
         // the dashed high line draws across when 一年新高 is said
