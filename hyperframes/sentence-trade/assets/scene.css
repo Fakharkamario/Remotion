@@ -16,14 +16,9 @@
   transform: scale(1.627907); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
   font-family: "Inter", system-ui, sans-serif;
 }
-.status { position: absolute; left: 0; top: 0; width: 430px; height: 54px; }
-.clock { position: absolute; left: 37px; top: 15px; font-size: 17.5px; font-weight: 600; color: #111; letter-spacing: -0.01em; }
-.bell { position: absolute; left: 83px; top: 18px; width: 15px; height: 15px; }
-.wifi { position: absolute; left: 319px; top: 20px; width: 17px; height: 13px; }
-.batt { position: absolute; left: 347px; top: 17px; width: 28px; height: 15px; border-radius: 5px; background: #111; }
-.batt::before { content: ""; position: absolute; right: 0; top: 0; width: 8px; height: 15px; border-radius: 0 5px 5px 0; background: #bdbdbd; }
-.batt::after { content: ""; position: absolute; right: -3.5px; top: 5px; width: 2px; height: 5px; border-radius: 0 2px 2px 0; background: #c8c8c8; }
-.batt span { position: absolute; left: 3px; top: 1px; font-size: 11px; font-weight: 700; color: #fff; z-index: 1; }
+.status { position: absolute; left: 0; top: 0; overflow: visible; }
+.status .sb-time { font-family: "Inter", system-ui, sans-serif; font-size: 17.6px; font-weight: 640; fill: #111; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.status .sb-batt { font-family: "Inter", system-ui, sans-serif; font-size: 11.6px; font-weight: 750; fill: #fff; text-anchor: middle; letter-spacing: -0.01em; }
 
 .search {
   position: absolute; left: 16px; top: 71px; width: 398px; height: 44px; border-radius: 22px; background: #efefef;

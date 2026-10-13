@@ -71,11 +71,33 @@
     host.innerHTML = `
       <div class="phone">
         <div class="screen">
-          <div class="status"><span class="clock">10:06</span>
-            <svg class="bell" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0" fill="#111"/><path d="M3 3 21 21" stroke="#f9f8f4" stroke-width="4"/><path d="M3.5 3.5 20.5 20.5" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg>
-            <svg class="wifi" viewBox="0 0 24 18"><path d="M12 17.5 15.2 13.6a5 5 0 0 0-6.4 0z M12 2C7.6 2 3.6 3.7.8 6.6l2.4 2.9A12 12 0 0 1 12 6c3.4 0 6.5 1.3 8.8 3.5l2.4-2.9C20.4 3.7 16.4 2 12 2z M12 8.2c-2.6 0-4.9 1-6.6 2.6l2.4 2.9A6.5 6.5 0 0 1 12 12c1.6 0 3.1.6 4.2 1.7l2.4-2.9C16.9 9.2 14.6 8.2 12 8.2z" fill="#111"/></svg>
-            <div class="batt"><span>66</span></div>
-          </div>
+          <svg class="status" viewBox="0 0 430 54" width="430" height="54">
+            <!-- measured off the 1290 px screenshot (px / 3 = pt) -->
+            <text x="47.4" y="36.2" class="sb-time">10:06</text>
+            <g transform="translate(99.6 22.2)">
+              <!-- bell with slash -->
+              <path d="M7.2 1.2c-2.6 0-4.5 2-4.5 4.6v3.1c0 .9-.3 1.7-.9 2.4l-.8 1c-.3.4 0 1 .5 1h11.4c.5 0 .8-.6.5-1l-.8-1c-.6-.7-.9-1.5-.9-2.4V5.8c0-2.6-1.9-4.6-4.5-4.6z" fill="#111"/>
+              <path d="M5.1 14.2a2.2 2.2 0 0 0 4.2 0z" fill="#111"/>
+              <path d="M0.4 0.9 14.1 14.6" stroke="#f9f8f4" stroke-width="3.6" stroke-linecap="round"/>
+              <path d="M1.1 1.6 13.4 13.9" stroke="#111" stroke-width="1.55" stroke-linecap="round"/>
+            </g>
+            <g transform="translate(329.6 35.4)" fill="#111">
+              <!-- wifi: three wedge arcs about a common origin -->
+              <path d="M0 0 -3.1 -3.1A4.4 4.4 0 0 1 3.1 -3.1Z"/>
+              <path d="M-4.6 -4.6A6.5 6.5 0 0 1 4.6 -4.6L6.3 -6.3A8.9 8.9 0 0 0 -6.3 -6.3Z"/>
+              <path d="M-7.8 -7.8A11 11 0 0 1 7.8 -7.8L9.5 -9.5A13.4 13.4 0 0 0 -9.5 -9.5Z"/>
+            </g>
+            <g transform="translate(346.7 21.4)">
+              <!-- battery: 66% fill, bold level centred across the body, nub -->
+              <defs><clipPath id="sb-batt"><rect width="28.3" height="14.9" rx="4.4"/></clipPath></defs>
+              <g clip-path="url(#sb-batt)">
+                <rect width="28.3" height="14.9" fill="#b3b2ae"/>
+                <rect width="18.4" height="14.9" fill="#111"/>
+              </g>
+              <path d="M29.3 5.1c1 .3 1.6 1.2 1.6 2.35s-.6 2.05-1.6 2.35z" fill="#b3b2ae"/>
+              <text x="14.15" y="11.35" class="sb-batt">66</text>
+            </g>
+          </svg>
           <div class="search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7" fill="none" stroke="#666" stroke-width="2"/><path d="M15.8 15.8 21 21" stroke="#666" stroke-width="2" stroke-linecap="round"/></svg><span>Search or paste mint</span></div>
           <div class="chips"><span class="on">Crypto</span><span>Stocks</span><span>ETFs</span><span>Metals</span><span>Treasuries</span><span>Currencies</span></div>
           <div class="list">${rows}</div>
