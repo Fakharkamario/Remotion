@@ -63,11 +63,15 @@
         ? { text: "Your next", size }
         : { text: "Your next trade", size, gap, join: { at: 7, prev: "Your next" } };
     }
+    // a beat's motion starts at its cut: blur samples taken just before the cut must not run its
+    // curve backwards (that doubles the outline on the cut frame)
     if (fi < 47) {
+      f = Math.max(f, 27);
       const size = 140 + 76 * Math.exp(-(f - 27) / 1.6) - 0.35 * (f - 27);
       return fi < 35 ? { text: "starts", size } : { text: "starts with a", size, join: { at: 35, prev: "starts", k: 0.14 } };
     }
     // the hero word arrives low and rises into place, decelerating, then keeps a slow drift
+    f = Math.max(f, 47);
     if (fi < 90) return { text: WORD, size: 258 + 0.12 * (f - 47), blue: true, dy: 89 * Math.exp(-(f - 47) / 3.4) - 0.45 * (f - 47) };
     return null;
   }
