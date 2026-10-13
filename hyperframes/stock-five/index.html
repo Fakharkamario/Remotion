@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>avoid these 5 companies</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "ZCOOL QingKe"; src: url("assets/fonts/zcool-qingke-subset.woff2") format("woff2"); font-display: block; }
+      @font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/noto-sans-sc-subset-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Anton"; src: url("assets/fonts/anton-digits.woff2") format("woff2"); font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #1c1c1c; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #1c1c1c; font-family: "Noto Sans SC", system-ui, sans-serif; }
+      .layer { position: absolute; inset: 0; }
+      #cam { transform-origin: 0 0; will-change: transform; }
+      #cam video { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
+      /* keeps the fonts loaded before the first frame is drawn */
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+    </style>
+    <link rel="stylesheet" href="assets/scene.css" />
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="7" data-width="1920" data-height="1080">
+      <div class="fontwarm">
+        <span style="font-family:'ZCOOL QingKe'">股票</span><span style="font-weight:500">你的</span><span style="font-weight:700">你的</span><span style="font-family:Anton">90%</span>
+      </div>
+      <div id="cam" class="layer">
+        <video id="aroll" src="assets/aroll.mp4" data-start="0" data-duration="7" data-track-index="0" muted playsinline></video>
+      </div>
+      <div id="stage" class="layer"></div>
+      <audio id="soundtrack" src="assets/audio.m4a" data-start="0" data-duration="7" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"), document.getElementById("cam"));
+    </script>
+  </body>
+</html>
