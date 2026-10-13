@@ -7,7 +7,7 @@ with the copy "Your next trade starts with a sentence" and the Trade screen from
 |---------|-------------|------|
 | 0–26    | 0.00–0.90   | "Your next" grows, "trade" joins, the line squeezes shut |
 | 27–46   | 0.90–1.56   | "starts" punches in big and settles, "with a" joins |
-| 47–74   | 1.56–2.50   | "sentence" in blue with a lavender sweep; Solana, Bitcoin, Ethereum and Zcash coins tumble in |
+| 47–74   | 1.56–2.50   | "sentence" rises into place with a warm-grey sweep; Solana, Bitcoin, Ethereum and Zcash coins flip in |
 | 74–88   | 2.47–2.96   | the word dissolves letter by letter, the Solana coin flips toward the phone |
 | 81–108  | 2.70–3.60   | the Trade screen rises; each coin flies down and becomes its row icon |
 | 96–152  | 3.20–5.10   | prices tick, the screen scrolls to the AI input + keyboard and "Buy $100 of SOL" is typed |
@@ -18,6 +18,14 @@ with the copy "Your next trade starts with a sentence" and the Trade screen from
 - `assets/scene.js` draws every element as a pure function of the frame number. All motion runs on monotone
   cubic splines, so velocity is continuous and nothing parks between beats, matching the reference cadence. Coins are CSS 3D discs
   (stacked rim layers + two faces) that blend onto their row icon's live position as they land.
+
+Palette: taken from the Acend Trade screen (warm paper `#F9F8F4`, ink `#1C1D21`, warm grey sweep). The hero
+word's colour is the `INK` token in `assets/scene.js`. acend.fi itself could not be reached from the build
+environment, so swap that token once the site's exact brand values are confirmed.
+
+Coin choreography is tracked off the reference frame by frame: the toss-flip of the top coin, the side coin
+lying flat then tipping edge-on and flying away in depth, the right coin's edge-on flip from back to face, and
+the big coin swinging in as a rim wall. Coins show a plain back, and rim shading follows each coin's spin.
 
 There is no soundtrack.
 

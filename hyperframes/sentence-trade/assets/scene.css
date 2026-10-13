@@ -1,15 +1,15 @@
 /* ---------------------------------------------------------------- headline */
 #line {
   position: absolute; left: 960px; top: 540px; white-space: pre; transform-origin: 50% 50%;
-  font-weight: 620; color: #0b0b0c; letter-spacing: -0.025em; line-height: 1;
+  font-weight: 620; color: #1c1d21; letter-spacing: -0.025em; line-height: 1;
 }
 #line.blue { font-weight: 680; letter-spacing: -0.03em; }
 
 /* ---------------------------------------------------------------- phone */
-#phoneWrap { position: absolute; left: 585px; top: 0; width: 750px; height: 1567px; }
+#phoneWrap { position: absolute; left: 585px; top: 0; width: 750px; height: 1567px; transform-origin: 50% 0; }
 .phone {
-  position: absolute; inset: 0; border-radius: 116px; background: #efeff1;
-  box-shadow: inset 0 0 0 1.5px #e3e3e6, 0 30px 80px rgba(20, 20, 40, 0.06);
+  position: absolute; inset: 0; border-radius: 116px; background: #efeeea;
+  box-shadow: inset 0 0 0 1.5px #e2e0da, 0 30px 80px rgba(40, 30, 10, 0.07);
 }
 .screen {
   position: absolute; left: 25px; top: 25px; width: 430px; height: 932px; transform-origin: 0 0;
@@ -94,6 +94,7 @@
 .coin { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-style: preserve-3d; }
 .coin > div { position: absolute; inset: 0; border-radius: var(--r, 50%); backface-visibility: visible; }
 .coin .face { overflow: hidden; }
+.coin .back .bevel { background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), rgba(0,0,0,.08) 70%); }
 .coin .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .coin .bevel { position: absolute; inset: 0; border-radius: inherit; }
 
