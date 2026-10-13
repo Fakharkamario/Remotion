@@ -1,0 +1,100 @@
+/* ---------------------------------------------------------------- headline */
+#line {
+  position: absolute; left: 960px; top: 540px; white-space: pre; transform-origin: 50% 50%;
+  font-weight: 620; color: #0b0b0c; letter-spacing: -0.025em; line-height: 1;
+}
+#line.blue { font-weight: 680; letter-spacing: -0.03em; }
+
+/* ---------------------------------------------------------------- phone */
+#phoneWrap { position: absolute; left: 585px; top: 0; width: 750px; height: 1567px; }
+.phone {
+  position: absolute; inset: 0; border-radius: 116px; background: #efeff1;
+  box-shadow: inset 0 0 0 1.5px #e3e3e6, 0 30px 80px rgba(20, 20, 40, 0.06);
+}
+.screen {
+  position: absolute; left: 25px; top: 25px; width: 430px; height: 932px; transform-origin: 0 0;
+  transform: scale(1.627907); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
+  font-family: "Inter", system-ui, sans-serif;
+}
+.status { position: absolute; left: 0; top: 0; width: 430px; height: 54px; }
+.clock { position: absolute; left: 37px; top: 15px; font-size: 17.5px; font-weight: 600; color: #111; letter-spacing: -0.01em; }
+.bell { position: absolute; left: 83px; top: 18px; width: 15px; height: 15px; }
+.wifi { position: absolute; left: 319px; top: 20px; width: 17px; height: 13px; }
+.batt { position: absolute; left: 347px; top: 17px; width: 28px; height: 15px; border-radius: 5px; background: #111; }
+.batt::before { content: ""; position: absolute; right: 0; top: 0; width: 8px; height: 15px; border-radius: 0 5px 5px 0; background: #bdbdbd; }
+.batt::after { content: ""; position: absolute; right: -3.5px; top: 5px; width: 2px; height: 5px; border-radius: 0 2px 2px 0; background: #c8c8c8; }
+.batt span { position: absolute; left: 3px; top: 1px; font-size: 11px; font-weight: 700; color: #fff; z-index: 1; }
+
+.search {
+  position: absolute; left: 16px; top: 71px; width: 398px; height: 44px; border-radius: 22px; background: #efefef;
+  display: flex; align-items: center;
+}
+.search svg { width: 17px; height: 17px; margin-left: 13px; }
+.search span { margin-left: 10px; font-size: 16px; color: #8b8b8b; letter-spacing: 0.005em; }
+.chips {
+  position: absolute; left: 16px; top: 127px; width: 398px; height: 40px; border-radius: 20px; background: #efefef;
+  overflow: hidden; white-space: nowrap; font-size: 16px; color: #8a8a88; line-height: 40px;
+}
+.chips span { position: absolute; top: 0; }
+.chips span:nth-child(1) { left: 14px; color: #262626; }
+.chips span:nth-child(2) { left: 83px; }
+.chips span:nth-child(3) { left: 154px; }
+.chips span:nth-child(4) { left: 210px; }
+.chips span:nth-child(5) { left: 279px; }
+.chips span:nth-child(6) { left: 373px; }
+
+.row { position: absolute; left: 0; width: 430px; height: 40px; }
+.ic-slot { position: absolute; left: 16px; top: 0; width: 40px; height: 40px; }
+.ic { width: 40px; height: 40px; border-radius: 9px; overflow: hidden; }
+.ic svg { width: 100%; height: 100%; display: block; }
+.nm { position: absolute; left: 68.3px; top: 2px; font-size: 16.5px; color: #262626; letter-spacing: 0.005em; }
+.vol { position: absolute; left: 68.3px; top: 24px; font-size: 13.5px; color: #77776f; letter-spacing: 0.01em; }
+.spark { position: absolute; top: 2px; width: 72px; height: 32px; }
+.px { position: absolute; right: 16.5px; top: 1px; font-size: 16.5px; color: #262626; letter-spacing: 0.005em; font-variant-numeric: tabular-nums; }
+.pc { position: absolute; right: 16.5px; top: 24px; font-size: 13.5px; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; }
+.pc .ar { font-size: 11px; margin-right: 3px; position: relative; top: -0.5px; }
+.pc.up { color: #4f8c68; }
+.pc.dn { color: #c0605a; }
+
+.composer {
+  position: absolute; left: 0; top: 585px; width: 430px; height: 56px; background: #f9f8f4;
+  box-shadow: 0 -0.5px 0 #e2e1dc;
+}
+.field {
+  position: absolute; left: 12px; top: 8px; width: 362px; height: 40px; border-radius: 20px; background: #efefef;
+  display: flex; align-items: center; font-size: 15.5px; white-space: pre;
+}
+.field .spk { order: -2; width: 18px; height: 18px; margin: 0 9px 0 12px; flex: none; }
+.field .ph { color: #9a9a98; }
+.field .typed { color: #1a1a1a; }
+.field .caret { width: 2px; height: 20px; background: #2f6bff; border-radius: 1px; margin-left: 1px; }
+.send { position: absolute; left: 382px; top: 10px; width: 36px; height: 36px; border-radius: 18px; background: #1a1a1a; }
+.send svg { width: 20px; height: 20px; margin: 8px; }
+
+.kbd { position: absolute; left: 0; top: 641px; width: 430px; height: 291px; background: #e5e6ea; padding-top: 9px; }
+.krow { display: flex; justify-content: center; gap: 6px; height: 43px; margin-bottom: 11px; padding: 0 3px; }
+.krow.mid { padding: 0 22px; }
+.key {
+  flex: 1; max-width: 36.6px; border-radius: 8.5px; background: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  display: flex; align-items: center; justify-content: center; font-size: 22.5px; color: #111; font-weight: 400;
+}
+.key.fn { max-width: 45px; flex: 1.3; background: #abb0ba; font-size: 18px; }
+.krow:nth-child(3) .key.fn:first-child { margin-right: 8px; }
+.krow:nth-child(3) .key.fn:last-child { margin-left: 8px; }
+.krow.last .key { max-width: none; font-size: 16px; }
+.krow.last .n123 { flex: none; width: 92px; }
+.krow.last .space { flex: 1; }
+.krow.last .go { flex: none; width: 92px; background: #2f6bff; color: #fff; font-weight: 500; }
+.kfoot { display: flex; justify-content: space-between; padding: 6px 28px 0; }
+.kfoot svg { width: 26px; height: 26px; }
+.home-ind { position: absolute; left: 148px; top: 918px; width: 134px; height: 5px; border-radius: 3px; background: #111; }
+
+/* ---------------------------------------------------------------- coins */
+.coinWrap { position: absolute; inset: 0; perspective: 2200px; pointer-events: none; }
+.coin { position: absolute; left: 0; top: 0; width: 600px; height: 600px; transform-style: preserve-3d; }
+.coin > div { position: absolute; inset: 0; border-radius: var(--r, 50%); backface-visibility: visible; }
+.coin .face { overflow: hidden; }
+.coin .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.coin .bevel { position: absolute; inset: 0; border-radius: inherit; }
+
+#black { position: absolute; inset: 0; background: #000; }
