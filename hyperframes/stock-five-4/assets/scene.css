@@ -1,0 +1,58 @@
+/* Two references, two type systems.
+   Talking-head reference: bold sans captions that pop word by word, one huge heavy condensed key word that
+   flashes purple -> gold -> settled colour, a red strike.
+   Animation reference: charcoal ground, white medium grotesk, letters written on green and washed to white,
+   thin widely spaced helper words, lime highlighter, outline boxes that open from a line, grey gradient pill.
+   His wall is light cream, so words standing on the wall settle to ink instead of white. */
+:root {
+  --bg: #1b1b1b;
+  --panel: #333333;
+  --ink: #161616;
+  --white: #ffffff;
+  --cream: #fff4e2;
+  --green: #0cd866;
+  --lime: #a0f72e;
+  --yellow: #e9f53c;
+  --red: #c4161c;
+}
+
+.scene { position: absolute; inset: 0; display: none; }
+.ch { display: inline-block; white-space: pre; will-change: transform, opacity; }
+.abs { position: absolute; left: 0; top: 0; white-space: nowrap; }
+
+/* ------------------------------------------------ talking-head reference */
+/* small caption line: words pop on whole, soft shadow */
+.cap { font-weight: 700; font-size: 60px; line-height: 1; color: var(--white); letter-spacing: 0.01em;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3); }
+/* the huge key word: Black weight, squeezed to a condensed cut */
+.hero { font-weight: 900; line-height: 0.9; letter-spacing: -0.01em; transform-origin: 0 0; }
+.hero.light { color: var(--cream); text-shadow: 0 0 34px rgba(255, 214, 150, 0.35), 0 8px 24px rgba(0, 0, 0, 0.35); }
+.hero.ink { color: var(--ink); }
+.strike { position: absolute; left: -3%; height: 26px; width: 106%; background: var(--red); transform-origin: 0 50%; }
+
+/* ------------------------------------------------ animation reference */
+.grot { font-weight: 500; letter-spacing: -0.045em; line-height: 1; }
+.thin { font-weight: 300; font-size: 50px; line-height: 1; letter-spacing: 0.02em; }
+.caret { position: absolute; width: 0.03em; background: var(--white); }
+.hl { position: absolute; transform-origin: 0 50%; }
+.box { position: absolute; overflow: hidden; border: 3px solid #7fdc5c; background: rgba(104, 204, 72, 0.9); }
+.box .txt { position: absolute; top: 50%; left: 50%; font-weight: 400; color: var(--white); white-space: nowrap; line-height: 1;
+  letter-spacing: -0.02em; }
+.cell { position: absolute; left: 0; top: 0; background: #f4f4f4; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 1.5px rgba(120, 120, 120, 0.45); }
+.pdot { position: absolute; left: 0; top: 0; border-radius: 50%; background: #9a9a9a; }
+.pill { position: absolute; overflow: hidden; border: 2px solid rgba(160, 220, 110, 0.75); white-space: nowrap;
+  background: linear-gradient(90deg, rgba(150, 150, 150, 0.96), rgba(92, 92, 92, 0.96) 70%, rgba(70, 70, 70, 0.96)); }
+.pill .txt { position: absolute; top: 50%; left: 50%; font-weight: 400; color: var(--white); line-height: 1; letter-spacing: -0.02em; }
+
+/* ------------------------------------------------ part 2 additions (animation reference) */
+/* AUTOPILOT: dark room with neon arcs, a photo card that opens from inside the word */
+.neon { position: absolute; inset: 0; }
+.card2 { position: absolute; overflow: hidden; }
+.card2 svg { position: absolute; left: 0; top: 0; }
+/* augmentation: white ground, a box that opens green and turns black */
+.dbox { position: absolute; overflow: hidden; }
+.dbox .tex { position: absolute; inset: 0; opacity: 0.55; mix-blend-mode: screen; }
+.dbox .txt { position: absolute; top: 50%; left: 0; font-weight: 500; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+/* 2X pipe line: a huge number standing behind him */
+.bignum { font-weight: 900; line-height: 0.8; letter-spacing: -0.04em; }
