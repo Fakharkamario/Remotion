@@ -31,9 +31,9 @@ There is no soundtrack.
 
 ```bash
 npx hyperframes preview
-./scripts/render-mb.sh        # final: 120 fps samples blended to 30 fps with a 180-degree shutter
+./scripts/render-mb.sh        # final: 240 fps samples blended to 30 fps with a 180-degree shutter
 ```
 
-The scene takes a continuous frame number, so `scripts/render-mb.sh` samples it at 120 fps and averages
-the three samples around each 30 fps frame. Fast coin flips smear like a real camera instead of strobing.
+The scene takes a continuous frame number, so `scripts/render-mb.sh` samples it at 240 fps and averages
+the five samples around each 30 fps frame. Fast coin flips smear like a real camera instead of strobing.
 Words, price ticks and typing round to the nearest whole frame, so cuts stay clean.
