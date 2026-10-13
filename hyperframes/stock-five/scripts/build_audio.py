@@ -110,41 +110,44 @@ def main():
         i = int(round(t_of(frame) * SR))
         sfx[i:i + len(sig)] += gain * sig / (np.max(np.abs(sig)) + 1e-9)
 
-    # cuts into the animated scenes get a full whoosh (peaking on the cut), cuts back to camera a lighter one
-    for f, g, d in [(48, 0.30, 0.40), (70, 0.16, 0.30), (102, 0.30, 0.40), (139, 0.16, 0.30), (173, 0.32, 0.45)]:
+    # hard cuts: a full whoosh into each dark scene, lighter ones back to camera
+    for f, g, d in [(48, 0.30, 0.40), (70, 0.16, 0.30), (173, 0.30, 0.45)]:
         at(f - d * 0.55 * FPS, whoosh(d), g)
-    # beat 1: the four big characters land
-    for f in (18, 22, 30, 34):
-        at(f, pop(700, 200), 0.10)
-    # beat 2: typing, then the highlighter swipe
-    for f in (50, 53, 57, 61, 64, 67):
-        at(f, click(2400 + 150 * (f % 3)), 0.16)
-    at(64, whoosh(0.18, 900, 7000, 0.5), 0.12)
-    # beat 3: the 5 hits, the rest pops in, the strike swipes
+    # beat A: the key word flashes in
+    at(18, hit(0.4), 0.22)
+    at(18, pop(900, 260), 0.10)
+    # beat B: typing; the cut wide; the highlighter; the smear out
+    for f in (48, 53, 57, 61, 64, 67):
+        at(f, click(2400 + 150 * (f % 3)), 0.17)
+    at(63, whoosh(0.16, 900, 7000, 0.5), 0.12)
+    at(66.5, whoosh(0.22, 600, 6000, 0.7), 0.18)
+    # beat C: 避开这 pops, the 5 hits, the strike swipes
+    for f in (70, 71):
+        at(f, pop(760, 230), 0.08)
     at(75, hit(), 0.34)
-    for f in (81, 86, 89):
-        at(f, pop(800, 240), 0.10)
-    at(92, whoosh(0.2, 1200, 8000, 0.35), 0.18)
-    # beat 4: the dot pops, the chart rises, the tip lands
-    at(102, pop(1100, 300), 0.16)
-    at(108, pop(600, 160, 0.12), 0.12)
-    at(111, riser(0.74), 0.07)
-    at(132, ding(1568), 0.12)
-    # beat 5: 高 / 于
+    at(90, whoosh(0.2, 1200, 8000, 0.35), 0.18)
+    # beat D: thin words tick on, the box opens, the picture washes out, flashes back in for E
+    for f in (105, 109):
+        at(f, click(3000, 0.02), 0.08)
+    at(114, pop(1200, 400, 0.06), 0.12)
+    at(116, whoosh(0.18, 1500, 7000, 0.4), 0.09)
+    at(124, riser(0.47, 400, 1400), 0.08)
+    at(138.5, whoosh(0.3, 2000, 9000, 0.25), 0.16)
+    # beat E: the thin words, then the huge 高 / 于
+    for f in (142, 149, 155):
+        at(f, click(3000, 0.02), 0.07)
     for f in (163, 167):
-        at(f, pop(760, 210), 0.11)
-    # beat 6: the grid fills, the counter ticks as the digits change, the top row lights, the tag pops
-    for f in np.arange(173, 183, 0.75):
-        at(f, pop(1400 + 30 * (f - 173), 500, 0.04), 0.035)
-    last = 0
-    for f in np.arange(175, 194, 0.25):
-        p = min(1, max(0, (f - 175) / (193 - 175)))
-        v = round(90 * (1 - (1 - p) ** 3))
-        if v // 6 != last // 6:
-            at(f, click(3200, 0.02), 0.10)
-        last = v
-    at(191, ding(1318.5, 0.9), 0.16)
-    at(199, pop(950, 320), 0.14)
+        at(f, pop(700, 190, 0.11), 0.14)
+    # beat F: the dot, the square, each split cracks open, the caret and typing, the dim sweep, the green row
+    at(173, pop(1300, 500, 0.05), 0.12)
+    at(175, pop(500, 160, 0.14), 0.12)
+    for f in (179, 182, 186):
+        at(f, click(1800, 0.03), 0.14)
+        at(f, pop(1500, 900, 0.04), 0.06)
+    for f in (185, 186, 187, 194, 200):
+        at(f, click(2800, 0.025), 0.12)
+    at(194, whoosh(0.3, 300, 2500, 0.4), 0.08)
+    at(199, ding(1318.5, 0.9), 0.16)
 
     voice = read_voice(os.path.join(ASSETS, "voice.wav"))
     mix = np.zeros(total)

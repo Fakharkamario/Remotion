@@ -5,18 +5,19 @@
     <meta name="viewport" content="width=1920, height=1080" />
     <title>avoid these 5 companies</title>
     <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/cutouts.js"></script>
     <script src="assets/scene.js"></script>
     <style>
-      @font-face { font-family: "ZCOOL QingKe"; src: url("assets/fonts/zcool-qingke-subset.woff2") format("woff2"); font-display: block; }
       @font-face { font-family: "Noto Sans SC"; src: url("assets/fonts/noto-sans-sc-subset-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
-      @font-face { font-family: "Anton"; src: url("assets/fonts/anton-digits.woff2") format("woff2"); font-display: block; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #1c1c1c; }
-      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #1c1c1c; font-family: "Noto Sans SC", system-ui, sans-serif; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #1b1b1b; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #1b1b1b; font-family: "Noto Sans SC", system-ui, sans-serif; }
       .layer { position: absolute; inset: 0; }
-      #cam { transform-origin: 0 0; will-change: transform; }
+      .camlayer { transform-origin: 0 0; will-change: transform; }
       #cam video { position: absolute; inset: 0; width: 1920px; height: 1080px; object-fit: cover; }
-      /* keeps the fonts loaded before the first frame is drawn */
+      #cut img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: none; }
+      #wash { background: #fff; opacity: 0; pointer-events: none; }
+      /* keeps the font weights loaded before the first frame is drawn */
       .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
     </style>
     <link rel="stylesheet" href="assets/scene.css" />
@@ -24,17 +25,32 @@
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="7" data-width="1920" data-height="1080">
       <div class="fontwarm">
-        <span style="font-family:'ZCOOL QingKe'">股票</span><span style="font-weight:500">你的</span><span style="font-weight:700">你的</span><span style="font-family:Anton">90%</span>
+        <span style="font-weight:300">你的</span><span style="font-weight:400">你的</span><span style="font-weight:500">你的</span><span style="font-weight:700">你的</span><span style="font-weight:900">你的</span>
       </div>
-      <div id="cam" class="layer">
+      <svg width="0" height="0" style="position:absolute">
+        <filter id="smear" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur id="smearBlur" stdDeviation="0 0" /></filter>
+      </svg>
+      <!-- the take, then words that sit behind him, then his cutout, then everything in front -->
+      <div id="cam" class="layer camlayer">
         <video id="aroll" src="assets/aroll.mp4" data-start="0" data-duration="7" data-track-index="0" muted playsinline></video>
       </div>
+      <div id="behind" class="layer"></div>
+      <div id="cut" class="layer camlayer"></div>
+      <div id="front" class="layer"></div>
+      <div id="wash" class="layer"></div>
       <div id="stage" class="layer"></div>
       <audio id="soundtrack" src="assets/audio.m4a" data-start="0" data-duration="7" data-track-index="30" data-volume="1"></audio>
     </div>
     <script>
       window.__timelines = window.__timelines || {};
-      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"), document.getElementById("cam"));
+      window.__timelines["main"] = SCENE.mount({
+        cam: document.getElementById("cam"),
+        behind: document.getElementById("behind"),
+        cut: document.getElementById("cut"),
+        front: document.getElementById("front"),
+        wash: document.getElementById("wash"),
+        stage: document.getElementById("stage"),
+      });
     </script>
   </body>
 </html>
