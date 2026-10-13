@@ -89,21 +89,49 @@
     return mix(GOLD, settled, outCubic(prog(f, at + 3, at + 7)));
   }
   const writeColor = (f, at, settled, hold = 2, wash = 7) => mix(GREEN, settled, inOut(prog(f, at + hold, at + hold + wash)));
+  // letters write on: a fast fade and a small rise that decays, landing green and washing to their colour
   function writeOn(cs, ats, f, fi, settled, hold, wash) {
     cs.forEach((c, i) => {
-      show(c, fi >= ats[i]);
+      show(c, f >= ats[i] - 0.5);
+      c.style.opacity = Math.min(1, settle(f, ats[i] - 0.5, 1.1) * 1.15).toFixed(3);
+      c.style.transform = `translateY(${(14 * (1 - settle(f, ats[i] - 0.5, 2.6))).toFixed(2)}px)`;
       c.style.color = rgb(writeColor(f, ats[i], Array.isArray(settled[0]) ? settled[i] : settled, hold, wash));
     });
   }
+  // a key word lands about a third too large, out of a blur, and decays toward rest (scaled about its own centre;
+  // the condensed squeeze stays anchored at its left edge)
   function heroIn(e, f, at, settled, x, y, sx, extra) {
-    const hp = outExpo(prog(f, at, at + 6));
+    const k = settle(f, at, 4.5);
     disp(e, f >= at);
     e.style.color = rgb(flashColor(f, at, settled));
-    e.style.filter = hp < 1 ? `blur(${(9 * (1 - hp)).toFixed(2)}px)` : "none";
-    place(e, x, y + 60 * (1 - hp), ` scaleX(${(sx === undefined ? 0.8 : sx).toFixed(4)})${extra || ""}`);
-    return hp;
+    const bl = 11 * (1 - settle(f, at, 2.6));
+    e.style.filter = bl > 0.2 ? `blur(${bl.toFixed(2)}px)` : "none";
+    const q = sx === undefined ? 0.8 : sx;
+    const sc = 1 + 0.25 * (1 - k);
+    const vw = e.offsetWidth * Math.abs(q), vh = e.offsetHeight;
+    e.style.transformOrigin = "0 0";
+    // grow about the centre, but never past the frame's right edge
+    let left = x - ((sc - 1) * vw) / 2;
+    const over = left + vw * sc - 1890;
+    if (over > 0 && x + vw <= 1890) left -= over;
+    place(e, left + (q < 0 ? vw * sc : 0), y + 30 * (1 - k) - ((sc - 1) * vh) / 2, ` scale(${sc.toFixed(4)}) scaleX(${q.toFixed(4)})${extra || ""}`);
+    return k;
   }
   const popWords = (ws, ats, fi) => ws.forEach((w, i) => show(w, fi >= ats[i]));
+  // Motion measured off the reference (tracked frame by frame):
+  //  - things land large and decay toward rest exponentially and never park (AUTOPILOT: 130 -> 122 -> 117 -> ... -> 89 px);
+  //  - things grow from nothing on a slow-in/slow-out S-curve on a log scale, with no overshoot (the grid square:
+  //    7 -> 13 -> 24 -> 41 -> 68 -> 103 -> 128 -> 144 -> 152 -> 158 px), and dip a little before a big move.
+  const settle = (f, at, tau) => (f <= at ? 0 : 1 - Math.exp(-(f - at) / tau));
+  const grow = (f, a, b, s0 = 0.04) => (f <= a ? 0 : Math.pow(s0, 1 - inOut(prog(f, a, b))));
+  const bump = (f, a, b) => Math.sin(Math.PI * prog(f, a, b));
+  // the reference's exit: the layer slides and smears sideways over the last frames before the cut
+  function smearOut(e, f, a, b, base) {
+    const out = prog(f, a, b);
+    if (out > 0) { document.getElementById("smearBlur").setAttribute("stdDeviation", `${(52 * out).toFixed(1)} 0`); e.style.filter = "url(#smear)"; }
+    else e.style.filter = "none";
+    e.style.transform = `translateX(${(-150 * out * out).toFixed(2)}px) ${base || ""}`;
+  }
 
   // Camera: each A-roll beat lands with a small punch and keeps pushing.
   const LEFT = [[1004, 502, 1.1], [990, 492, 1.16]];
@@ -232,7 +260,7 @@
       `<line x1="0" y1="62" x2="0" y2="-62"/><polyline points="-40,-22 0,-62 40,-22"/></g></svg>`;
     const s4Arrow = s4Circle.querySelector("#arr");
     // up while the line builds, then a hard swing to down on 跌 with an overshoot
-    const s4Angle = spline([[197, 90], [204, 10], [209, 0], [221, 0], [223.5, 196], [226, 174], [229, 182], [232, 180], [248, 180]]);
+    const s4Angle = spline([[197, 90], [205, 6], [211, 0], [219, 0], [221.2, -10], [226.5, 180], [248, 180]]);
     const s4Left = el("div", "abs grot", s4World);
     s4Left.style.fontSize = "104px"; s4Left.style.textAlign = "right";
     const s4LeftC = chars(s4Left, "大家都在");
@@ -308,7 +336,7 @@
       return c;
     });
     // which card is centre-stage: card 1, then 2 on 下, then 3 (the good one) on 档
-    const s9Pos = spline([[488, 0.6], [492, 1], [508, 1], [512, 2], [515, 2], [519, 3], [526, 3.15]]);
+    const s9Pos = spline([[486, 0.5], [493, 1], [507, 1.02], [509, 0.95], [513.5, 2], [516, 1.97], [517.5, 1.93], [522, 3], [526, 3.08]]);
     const s9Pill = el("div", "pill", s9World);
     const s9PillT = el("div", "txt", s9Pill);
     s9PillT.style.fontSize = "70px";
@@ -394,7 +422,8 @@
       });
       const k = cam(f);
       if (k) L.cam.style.transform = L.cut.style.transform = camCss(k);
-      const cutNow = cutImgs[fi] ? fi : null;
+      const vf = Math.floor(f + 1e-4);
+      const cutNow = cutImgs[vf] ? vf : null;
       if (cutNow !== shownCut) {
         if (shownCut !== null) cutImgs[shownCut].style.display = "none";
         if (cutNow !== null) cutImgs[cutNow].style.display = "block";
@@ -411,9 +440,9 @@
         place(s1L1, CHIP_X, 86);
         popWords(s1L1W, [9, 18], fi);
         s1Chips.forEach((c, i) => {
-          const q = prog(f, S1_CHIPS[i], S1_CHIPS[i] + 6);
+          const q = prog(f, S1_CHIPS[i], S1_CHIPS[i] + 9);
           disp(c, q > 0, "flex");
-          place(c, CHIP_X + i * CHIP_STEP, CHIP_Y, ` scale(${outBack(q, 2.4).toFixed(4)})`);
+          place(c, CHIP_X + i * CHIP_STEP, CHIP_Y, ` scale(${grow(f, S1_CHIPS[i], S1_CHIPS[i] + 9).toFixed(4)})`);
         });
         heroIn(s1Hero, f, 52, INK, 1000, 324);
       }
@@ -428,8 +457,7 @@
         const hw = 280 * 2 * 0.8;
         // 死拿: it lands, then grips — a hard squeeze as the second 拿 is said, and it holds
         const grip = Math.sin(Math.PI * prog(f, 144, 150)) * 0.09;
-        heroIn(s2Hero, f, 137, CREAM, 900 - hw / 2, 806, 0.8 - grip, ` scaleY(${(1 + grip * 0.6).toFixed(4)})`);
-        s2Hero.style.transformOrigin = "50% 70%";
+        heroIn(s2Hero, f, 137, CREAM, 900 - hw / 2 + (grip * 280 * 2) / 2, 806, 0.8 - grip, ` scaleY(${(1 + grip * 0.6).toFixed(4)})`);
       }
 
       // ---------------------------------------------------------- S3
@@ -437,7 +465,7 @@
         const X = 150, Y = 770;
         place(s3Pre, X + 46, Y - 74);
         writeOn(s3PreC, [155, 160], f, fi, WHITE);
-        const bq = outBack(prog(f, 166, 171), 2.4);
+        const bq = grow(f, 165, 173);
         disp(s3Bullet, f >= 166);
         place(s3Bullet, X, Y + 30, ` scale(${bq.toFixed(4)})`);
         place(s3Title, X + 46, Y);
@@ -452,8 +480,8 @@
       // ---------------------------------------------------------- S4
       if (fi >= 197 && fi <= 247) {
         const p = prog(f, 197, 248);
-        s4World.style.transform = `scale(${lerp(1.0, 1.07, p).toFixed(4)})`;
-        const cq = outBack(prog(f, 197, 204), 2.0);
+        smearOut(s4World, f, 244.5, 247.5, `scale(${lerp(1.0, 1.07, p).toFixed(4)})`);
+        const cq = grow(f, 197, 207);
         place(s4Circle, 960 - 125, 540 - 125, ` scale(${cq.toFixed(4)})`);
         s4Arrow.setAttribute("transform", `rotate(${s4Angle(f).toFixed(2)})`);
         // pixels flicker in around the circle, jittering on twos, bursting outward on 跌
@@ -549,6 +577,7 @@
 
       // ---------------------------------------------------------- S9
       if (fi >= 488 && fi <= 525) {
+        smearOut(s9World, f, 523, 525.8);
         const pos = s9Pos(f);
         s9Cards.forEach((c, i) => {
           const d = i - pos;
@@ -570,7 +599,7 @@
       // ---------------------------------------------------------- S10
       if (fi >= 526 && fi <= 548) {
         const p = prog(f, 526, 549);
-        s10World.style.transform = `scale(${lerp(1.06, 1.0, outCubic(p)).toFixed(4)})`;
+        smearOut(s10World, f, 545.5, 548.5, `scale(${lerp(1.06, 1.0, outCubic(p)).toFixed(4)})`);
         const spin = (f - 526) * 0.07;
         s10Dots.forEach((d) => {
           const a = d.a + spin;
@@ -588,9 +617,9 @@
         place(s11L1, CHIP_X, 86);
         popWords(s11L1W, [555, 564], fi);
         s11Chips.forEach((c, i) => {
-          const q = outBack(prog(f, 549 + i, 555 + i), 2.4);
+          const q = grow(f, 548 + i * 1.5, 557 + i * 1.5);
           const lit = prog(f, S11_LIT[i], S11_LIT[i] + 3);
-          const pulse = Math.sin(Math.PI * prog(f, S11_LIT[i], S11_LIT[i] + 6)) * 0.14;
+          const pulse = -0.07 * bump(f, S11_LIT[i] - 3, S11_LIT[i]) + 0.1 * bump(f, S11_LIT[i], S11_LIT[i] + 8);
           c.style.background = rgb(mix([244, 244, 244], GREEN, lit));
           c.style.color = rgb(mix(INK, WHITE, lit));
           c.style.boxShadow = lit > 0 ? `0 0 ${(26 * lit).toFixed(1)}px rgba(12,216,102,${(0.55 * lit).toFixed(2)})` : "";

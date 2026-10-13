@@ -26,10 +26,18 @@ Voice: 你就按照这5点去筛选股票。对了，就拿住，而且是死拿
 
 - `assets/cut/` holds his cutout where words stand behind him (BiRefNet-portrait mattes on even frames, odd
   frames averaged). Rebuild with `CUT_FRAMES=<frames> python3 scripts/build_cutouts.py assets/aroll.mp4 <mattes>`.
+- Motion follows curves tracked frame by frame off the animation reference: things grow from nothing on a
+  slow-in/slow-out S-curve on a log scale with no overshoot (its grid square: 7 → 13 → 24 → 41 → 68 → 103 → 128 →
+  144 → 152 → 158 px) and dip slightly before a big move; key words land about a quarter too large out of a blur and
+  decay toward rest exponentially, never parking (its AUTOPILOT: 130 → 122 → 117 → … → 89 px); dark scenes leave
+  with a sideways smear.
+- `scripts/render-mb.sh` is the final render: the timeline is sampled at 120 fps and each 30 fps frame averages the
+  three samples around it (a 180-degree shutter), so fast moves blur like camera footage. Cutouts key off the video
+  frame, words and cuts off whole frames, so nothing ghosts.
 - `scripts/build_audio.py` mixes `assets/voice.wav` with synthesized sound design cued to the beats (-15 LUFS).
   No music bed.
 
 ```bash
 npx hyperframes preview
-npx --yes hyperframes@0.8.114 render -q high -o renders/stock-five-4.mp4
+./scripts/render-mb.sh        # final, motion-blurred
 ```
