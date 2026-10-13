@@ -10,13 +10,13 @@ with the copy "Your next trade starts with a sentence" and the Trade screen from
 | 47–74   | 1.56–2.50   | "sentence" in blue with a lavender sweep; Solana, Bitcoin, Ethereum and Zcash coins tumble in |
 | 74–88   | 2.47–2.96   | the word dissolves letter by letter, the Solana coin flips toward the phone |
 | 81–108  | 2.70–3.60   | the Trade screen rises; each coin flies down and becomes its row icon |
-| 96–141  | 3.20–4.70   | prices tick, the screen pans to the AI input + keyboard and "Buy $100 of SOL" is typed |
-| 142–152 | 4.73–5.10   | black |
+| 96–152  | 3.20–5.10   | prices tick, the screen scrolls to the AI input + keyboard and "Buy $100 of SOL" is typed |
 
 - `assets/phone.js` rebuilds the Trade screen in DOM at iPhone point size (430 x 932 pt), measured off the
   1290 x 2512 screenshot, with the keyboard and an AI input bar below the list.
 - `assets/logos.js` holds the token art; the same face is used for the row icon and the 3D coin.
-- `assets/scene.js` draws every element as a pure function of the frame number. Coins are CSS 3D discs
+- `assets/scene.js` draws every element as a pure function of the frame number. All motion runs on monotone
+  cubic splines, so velocity is continuous and nothing parks between beats, matching the reference cadence. Coins are CSS 3D discs
   (stacked rim layers + two faces) that blend onto their row icon's live position as they land.
 
 There is no soundtrack.

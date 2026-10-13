@@ -6,8 +6,7 @@
 //   47–74   "sentence" in blue with a lavender sweep; four coins tumble in and idle
 //   74–88   the word dissolves letter by letter, the Solana coin flips toward the phone
 //   81–108  the Trade screen rises; each coin flies down and becomes its row icon
-//   96–141  prices tick, the screen pans to the AI input + keyboard and a prompt is typed
-//   142–152 black
+//   96–152  prices tick, the screen scrolls to the AI input + keyboard and a prompt is typed
 (function () {
   const FPS = 30;
   const FRAMES = 153;
@@ -15,24 +14,30 @@
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
-  const E = {
-    lin: (t) => t,
-    out: (t) => 1 - Math.pow(1 - t, 3),
-    in: (t) => t * t * t,
-    io: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
-    sine: (t) => 0.5 - 0.5 * Math.cos(Math.PI * t),
-  };
-  // keys: [[frame, value, ease?], ...]; the ease on a key shapes the segment that ends on it
-  function track(keys, f) {
-    if (f <= keys[0][0]) return keys[0][1];
-    for (let i = 1; i < keys.length; i++) {
-      const [f1, v1, e] = keys[i];
-      if (f <= f1) {
-        const [f0, v0] = keys[i - 1];
-        return lerp(v0, v1, (E[e || "io"])((f - f0) / (f1 - f0)));
+  const smoother = (t) => (t = clamp(t, 0, 1), t * t * t * (t * (t * 6 - 15) + 10));
+
+  // Smooth motion: a monotone cubic (PCHIP) through [frame, value] keys. Velocity is continuous at
+  // every key, so nothing stops and restarts between keys; a turn-around eases through zero.
+  function spline(keys) {
+    const n = keys.length, x = keys.map((k) => k[0]), y = keys.map((k) => k[1]);
+    const h = [], d = [], m = new Array(n);
+    for (let i = 0; i < n - 1; i++) { h[i] = x[i + 1] - x[i]; d[i] = (y[i + 1] - y[i]) / h[i]; }
+    m[0] = d[0]; m[n - 1] = d[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+      if (d[i - 1] * d[i] <= 0) m[i] = 0;
+      else {
+        const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1];
+        m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
       }
     }
-    return keys[keys.length - 1][1];
+    return (f) => {
+      if (f <= x[0]) return y[0];
+      if (f >= x[n - 1]) return y[n - 1];
+      let i = 0;
+      while (f > x[i + 1]) i++;
+      const t = (f - x[i]) / h[i], t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * y[i] + (t3 - 2 * t2 + t) * h[i] * m[i] + (-2 * t3 + 3 * t2) * y[i + 1] + (t3 - t2) * h[i] * m[i + 1];
+    };
   }
   const mix = (c0, c1, t) => c0.map((v, i) => Math.round(lerp(v, c1[i], t)));
   const rgb = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a === undefined ? 1 : a})`;
@@ -43,41 +48,49 @@
   const PALE = [226, 224, 252];
   const WORD = "sentence";
 
+  // Font size runs as one continuous curve per phrase, as in the reference: it keeps easing and never
+  // parks. When a word joins, the line starts nudged right (the old words barely move) and glides to centre.
   function headline(f) {
-    // returns { text, size, gap, blue }
-    if (f < 7) return { text: "Your next", size: track([[0, 142], [6, 199, "out"]], f) };
     if (f < 27) {
-      const size = track([[7, 189], [21, 203, "out"], [22, 203], [23, 200, "lin"], [24, 194, "lin"], [25, 188, "lin"], [26, 176, "lin"]], f);
-      const gap = track([[24, 0], [25, -0.12, "lin"], [26, -0.27, "lin"]], f);
-      return { text: "Your next trade", size, gap };
+      let size = 142 + 50 * (1 - Math.exp(-f / 4)) + 0.95 * f;
+      let gap = 0;
+      if (f > 19) size *= 1 - 0.15 * Math.pow((f - 19) / 7, 2.6);
+      if (f > 22) gap = -0.27 * Math.pow((f - 22) / 4, 1.8);
+      return f < 7
+        ? { text: "Your next", size }
+        : { text: "Your next trade", size, gap, join: { at: 7, prev: "Your next" } };
     }
-    if (f < 35) return { text: "starts", size: track([[27, 216], [28, 182, "lin"], [29, 166, "lin"], [32, 147, "out"], [34, 144, "lin"]], f) };
-    if (f < 47) return { text: "starts with a", size: track([[35, 141], [46, 134, "lin"]], f) };
-    if (f < 90) return { text: WORD, size: 262, blue: true };
+    if (f < 47) {
+      const size = 140 + 76 * Math.exp(-(f - 27) / 1.6) - 0.35 * (f - 27);
+      return f < 35 ? { text: "starts", size } : { text: "starts with a", size, join: { at: 35, prev: "starts", k: 0.14 } };
+    }
+    if (f < 90) return { text: WORD, size: 258 + 0.12 * (f - 47), blue: true };
     return null;
   }
 
   function letterColor(i, f) {
-    // lavender sweep left to right while the coins land, then a dissolve left to right
+    // lavender sweep left to right while the coins arrive, then a dissolve left to right
     const c = (f - 47) / 1.9;
-    let t = Math.max(0, 1 - Math.abs(i - c) / 1.3) * 0.9;
-    if (f > 58 && i >= WORD.length - 2) t = Math.max(t, 0.35 * (1 - clamp((f - 66) / 8, 0, 1)));
+    let t = Math.exp(-Math.pow((i - c) / 1.1, 2)) * 0.85;
+    if (i >= WORD.length - 2) t = Math.max(t, 0.32 * smoother((f - 58) / 4) * (1 - smoother((f - 64) / 10)));
     let col = mix(BLUE, LAV, t);
     const s = 74 + i * 1.25;
-    if (f >= s) {
-      const u = (f - s) / 3;
-      col = u < 1 ? mix(col, LAV, u) : mix(LAV, PALE, clamp(u - 1, 0, 1));
-      const a = 1 - clamp((f - s - 4) / 3, 0, 1);
-      return rgb(col, a);
-    }
-    return rgb(col);
+    const u = (f - s) / 3;
+    if (u <= 0) return rgb(col);
+    col = u < 1 ? mix(col, LAV, smoother(u)) : mix(LAV, PALE, smoother(u - 1));
+    return rgb(col, 1 - smoother((f - s - 3.5) / 3.5));
   }
 
   // ------------------------------------------------------------------ phone
   const K = 700 / PHONE.W; // pt -> px on screen
   const PHONE_LEFT = 585;
-  const phoneTop = (f) =>
-    track([[81, 560], [84, 440, "lin"], [90, 210, "out"], [96, 128, "out"], [100, 104, "out"], [117, 66, "lin"], [126, -418, "io"], [141, -446, "lin"]], f);
+  // rise, slow drift, a long scroll that peaks around frame 120, settle, then the next scroll starts
+  const phoneTop = spline([
+    [81, 640], [84, 480], [88, 285], [92, 182], [96, 134], [100, 112], [108, 78],
+    [114, 38], [118, -112], [121, -250], [124, -348], [128, -404], [134, -428], [140, -440], [146, -454], [152, -500],
+  ]);
+  const phoneOpacity = (f) => smoother((f - 81) / 8);
+  const phoneBlur = (f) => 12 * (1 - smoother((f - 81) / 9));
   const iconPos = (i, f) => ({
     x: PHONE_LEFT + 25 + (PHONE.ICON_X + PHONE.ICON / 2) * K,
     y: phoneTop(f) + 25 + (PHONE.ROW0 + i * PHONE.PITCH + PHONE.ICON / 2) * K,
@@ -85,64 +98,61 @@
   const ICON_D = PHONE.ICON * K;
 
   // ------------------------------------------------------------------ coins
-  // Free pose tracks in viewport px / degrees, then a landing blend onto the row icon.
-  const wob = (f, a, p, ph) => a * Math.sin((f + ph) / p);
+  // Free flight as splines (viewport px / degrees); coins never hold still — after the tumble they keep
+  // drifting and turning at a steady rate. Landing blends onto the row icon's live position.
   const COINS = [
     {
       key: "solana", row: 0, from: 47,
-      x: [[47, 966], [76, 962], [87, 884], [95, 820]],
-      y: [[47, 348], [53, 342, "out"], [76, 342], [87, 436], [95, 520]],
-      d: [[47, 26], [49, 120, "out"], [53, 205, "out"], [76, 205], [87, 175], [95, 120]],
-      rx: (f) => (f < 53 ? 0 : wob(f, 9, 5, 0) * clamp((80 - f) / 6, 0, 1)),
-      ry: (f) => track([[47, -300], [53, 0, "out"], [76, 0], [81, 90, "in"], [87, 165, "lin"], [95, 330, "out"]], f) + (f > 53 && f < 76 ? wob(f, 12, 6, 2) : 0),
-      rz: () => 0,
-      land: [[86, 0], [96, 1, "io"]],
+      x: [[47, 966], [53, 964], [76, 956], [81, 935], [87, 884], [95, 820]],
+      y: [[47, 350], [53, 343], [76, 336], [81, 370], [87, 436], [95, 520]],
+      d: [[47, 26], [49, 118], [53, 198], [60, 206], [76, 212], [87, 178], [95, 124]],
+      rx: [[47, 0], [53, 6], [76, -8], [87, -14], [95, -6]],
+      ry: [[47, -300], [50, -90], [53, -18], [60, -2], [76, 24], [81, 82], [87, 172], [95, 330]],
+      rz: [[47, 0], [95, 0]],
+      land: [86, 96], ryEnd: 360,
     },
     {
       key: "bitcoin", row: 1, from: 48,
-      x: [[48, -200], [51, 150, "out"], [54, 240, "out"], [60, 330, "out"], [75, 330, "sine"], [86, 340, "lin"]],
-      y: [[48, 1200], [51, 900, "out"], [54, 820, "out"], [60, 720, "out"], [75, 575, "sine"], [86, 560, "lin"]],
-      d: [[48, 430], [60, 400], [75, 300, "sine"], [86, 285]],
-      rx: (f) => track([[48, 85], [52, 50, "out"], [60, 64], [75, 38, "sine"], [86, 30]], f),
-      ry: (f) => track([[48, -230], [53, -40, "out"], [60, -22], [75, -42, "sine"], [86, -36]], f) + wob(f, 4, 7, 1),
-      rz: (f) => track([[48, -70], [60, -40, "out"], [75, -28], [86, -22]], f),
-      land: [[86, 0], [99, 1, "io"]],
+      x: [[48, -200], [51, 140], [54, 235], [60, 318], [75, 346], [86, 362], [99, 380]],
+      y: [[48, 1200], [51, 900], [54, 815], [60, 728], [75, 590], [86, 552], [99, 530]],
+      d: [[48, 430], [60, 402], [75, 306], [86, 286], [99, 270]],
+      rx: [[48, 85], [53, 62], [60, 54], [75, 38], [86, 30], [99, 24]],
+      ry: [[48, -230], [53, -72], [60, -40], [75, -24], [86, -14], [99, -6]],
+      rz: [[48, -70], [60, -42], [75, -30], [86, -24], [99, -18]],
+      land: [86, 99], ryEnd: 0,
     },
     {
       key: "ethereum", row: 2, from: 50,
-      x: [[50, 2160], [53, 1962, "out"], [57, 1832, "out"], [60, 1752, "out"], [86, 1680, "sine"]],
-      y: [[50, 1110], [53, 882, "out"], [57, 862], [60, 872], [86, 866]],
-      d: [[50, 440], [60, 430], [86, 410]],
-      rx: (f) => track([[50, 34], [57, 14, "out"], [60, 22], [86, 16]], f) + wob(f, 4, 6, 3),
-      ry: (f) => track([[50, 260], [57, 100, "out"], [60, 58, "out"], [70, 48], [86, 40]], f) + wob(f, 5, 7, 0),
-      rz: (f) => track([[50, 42], [60, 12, "out"], [86, 8]], f),
-      land: [[88, 0], [102, 1, "io"]],
+      x: [[50, 2160], [53, 1965], [57, 1842], [60, 1778], [86, 1690], [102, 1640]],
+      y: [[50, 1110], [53, 890], [57, 858], [60, 856], [86, 846], [102, 840]],
+      d: [[50, 440], [60, 430], [86, 405], [102, 390]],
+      rx: [[50, 34], [57, 21], [60, 18], [86, 10], [102, 6]],
+      ry: [[50, 260], [55, 130], [60, 64], [70, 50], [86, 32], [102, 20]],
+      rz: [[50, 42], [60, 16], [86, 6], [102, 2]],
+      land: [88, 102], ryEnd: 0,
     },
     {
       key: "zcash", row: 3, from: 59,
-      x: [[59, -360], [62, 150, "out"], [66, 380, "out"], [70, 452, "out"], [86, 482, "sine"], [97, 560]],
-      y: [[59, 1360], [62, 1052, "out"], [66, 962, "out"], [70, 950], [86, 940], [97, 962]],
-      d: [[59, 660], [70, 650], [86, 620], [97, 420]],
-      rx: (f) => track([[59, 62], [64, 26, "out"], [70, 18], [86, 12], [97, 8]], f) + wob(f, 3, 7, 4),
-      ry: (f) => track([[59, 115], [62, 76, "out"], [66, 42, "out"], [70, 32], [86, 24], [97, 12]], f),
-      rz: (f) => track([[59, -22], [70, -8, "out"], [97, -4]], f),
-      land: [[97, 0], [108, 1, "io"]],
+      x: [[59, -360], [62, 130], [66, 360], [70, 440], [86, 492], [97, 556], [108, 590]],
+      y: [[59, 1360], [62, 1060], [66, 966], [70, 948], [86, 936], [97, 952], [108, 960]],
+      d: [[59, 660], [70, 648], [86, 614], [97, 430], [108, 300]],
+      rx: [[59, 62], [64, 30], [70, 21], [86, 12], [97, 6], [108, 3]],
+      ry: [[59, 115], [62, 78], [66, 47], [70, 37], [86, 22], [97, 10], [108, 4]],
+      rz: [[59, -22], [70, -10], [97, -3], [108, -1]],
+      land: [97, 108], ryEnd: 0,
     },
   ];
+  COINS.forEach((c) => ["x", "y", "d", "rx", "ry", "rz"].forEach((k) => (c[k] = spline(c[k]))));
 
   function coinPose(c, f) {
-    let p = {
-      x: track(c.x, f), y: track(c.y, f), d: track(c.d, f),
-      rx: c.rx(f), ry: c.ry(f), rz: c.rz(f), r: 50,
-    };
-    const L = track(c.land, f);
+    let p = { x: c.x(f), y: c.y(f), d: c.d(f), rx: c.rx(f), ry: c.ry(f), rz: c.rz(f), r: 50 };
+    const L = smoother((f - c.land[0]) / (c.land[1] - c.land[0]));
     if (L > 0) {
       const t = iconPos(c.row, f);
-      const ryT = Math.round(p.ry / 360) * 360 || (c.key === "solana" ? 360 : 0);
       p = {
-        x: lerp(p.x, t.x, L), y: lerp(p.y, t.y, L), d: lerp(p.d, ICON_D, E.out(L)),
-        rx: lerp(p.rx, 0, L), ry: lerp(p.ry, ryT, L), rz: lerp(p.rz, 0, L),
-        r: lerp(50, 22.5, clamp((L - 0.55) / 0.45, 0, 1)),
+        x: lerp(p.x, t.x, L), y: lerp(p.y, t.y, L), d: lerp(p.d, ICON_D, L),
+        rx: lerp(p.rx, 0, L), ry: lerp(p.ry, c.ryEnd, L), rz: lerp(p.rz, 0, L),
+        r: lerp(50, 22.5, smoother((L - 0.5) / 0.5)),
       };
     }
     p.landed = L >= 1;
@@ -175,11 +185,17 @@
   SCENE.FRAMES = FRAMES;
 
   SCENE.mount = function (stage) {
-    stage.innerHTML = `<div id="phoneWrap"></div><div id="line"></div><div id="coins"></div><div id="black"></div>`;
+    stage.innerHTML = `<div id="phoneWrap"></div><div id="line"></div><div id="coins"></div><span id="meas"></span>`;
     const phoneWrap = stage.querySelector("#phoneWrap");
     const ui = PHONE.build(phoneWrap);
     const line = stage.querySelector("#line");
-    const black = stage.querySelector("#black");
+    const meas = stage.querySelector("#meas");
+    const widthOf = (text, size, gap) => {
+      meas.textContent = text;
+      meas.style.fontSize = size + "px";
+      meas.style.wordSpacing = (gap || 0) + "em";
+      return meas.getBoundingClientRect().width;
+    };
     const coinHost = stage.querySelector("#coins");
 
     const coins = COINS.map((c) => {
@@ -214,18 +230,23 @@
         }
         line.style.fontSize = h.size + "px";
         line.style.wordSpacing = (h.gap || 0) + "em";
-        line.style.transform = `translate(-50%, -54%)`;
+        let dx = 0;
+        if (h.join) {
+          const grow = widthOf(h.text, h.size, h.gap) - widthOf(h.join.prev, h.size, h.gap);
+          dx = (h.join.k || 0.3) * (grow / 2) * Math.exp(-(f - h.join.at) / 1.5);
+        }
+        line.style.transform = `translate(calc(-50% + ${dx.toFixed(2)}px), -54%)`;
         if (h.blue) [...line.children].forEach((s, i) => (s.style.color = letterColor(i, f)));
         else line.style.color = "#0b0b0c";
       }
 
       // phone
       const top = phoneTop(f);
-      const op = track([[81, 0], [86, 0.6, "lin"], [90, 1, "out"]], f);
+      const op = phoneOpacity(f);
       phoneWrap.style.display = op > 0 ? "block" : "none";
       phoneWrap.style.transform = `translateY(${top}px)`;
       phoneWrap.style.opacity = op;
-      const blur = track([[81, 10], [89, 0, "out"]], f);
+      const blur = phoneBlur(f);
       phoneWrap.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
 
       // live prices: tick every other frame once the screen is up
@@ -261,7 +282,6 @@
           `rotateZ(${p.rz.toFixed(2)}deg) rotateX(${p.rx.toFixed(2)}deg) rotateY(${p.ry.toFixed(2)}deg)`;
       });
 
-      black.style.display = f >= 142 ? "block" : "none";
     }
 
     // GSAP proxy tween drives the frame so HyperFrames seeks redraw deterministically
