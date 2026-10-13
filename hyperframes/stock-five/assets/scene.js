@@ -166,7 +166,7 @@
     const cSmallW = [el("span", "ch", cSmall, "避开"), el("span", "ch", cSmall, "这")];
     const cHeroBox = el("div", "abs", cWrap);
     const cHero = el("div", "abs hero light", cHeroBox, "5种公司");
-    cHero.style.fontSize = "250px";
+    cHero.style.fontSize = "224px";
     const cStrike = el("div", "strike", cHeroBox);
     const C_AT = { small: [70, 71], hero: 75, strike: [90, 98] };
 
@@ -263,7 +263,7 @@
         aHero.style.color = rgb(flashColor(f, A_AT.hero, INK));
         aHero.style.filter = hp < 1 ? `blur(${(9 * (1 - hp)).toFixed(2)}px)` : "none";
         place(aHero, 984, 200 + 60 * (1 - hp), " scaleX(0.8)");
-        place(aTail, 1010, 470);
+        place(aTail, 1806, 466);
         show(aTailW[0], fi >= A_AT.tail);
       }
 
@@ -308,17 +308,17 @@
         cWrap.style.transformOrigin = "990px 820px";
         cWrap.style.transform = `translateY(${lerp(0, -14, p).toFixed(2)}px) scale(${lerp(1.02, 0.975, p).toFixed(4)})`;
         cSmallW.forEach((w, i) => show(w, fi >= C_AT.small[i]));
-        cSmall.style.fontSize = "66px";
-        place(cSmall, 990 - (3 * 66) / 2, 632);
+        cSmall.style.fontSize = "62px";
+        place(cSmall, 990 - (3 * 62) / 2, 668);
         const hp = outExpo(prog(f, C_AT.hero, C_AT.hero + 6));
         disp(cHeroBox, fi >= C_AT.hero);
         cHero.style.color = rgb(flashColor(f, C_AT.hero, CREAM));
         cHero.style.filter = hp < 1 ? `blur(${(9 * (1 - hp)).toFixed(2)}px)` : "none";
         cHero.style.transform = "scaleX(0.8)";
-        const heroW = 250 * 3.62 * 0.8;
-        place(cHeroBox, 990 - heroW / 2, 712 + 50 * (1 - hp));
+        const heroW = 224 * 3.62 * 0.8;
+        place(cHeroBox, 990 - heroW / 2, 738 + 50 * (1 - hp));
         const sp = outCubic(prog(f, C_AT.strike[0], C_AT.strike[1]));
-        cStrike.style.top = 250 * 0.42 + "px";
+        cStrike.style.top = 224 * 0.42 + "px";
         cStrike.style.width = heroW * 1.06 + "px";
         cStrike.style.left = -heroW * 0.03 + "px";
         cStrike.style.transform = `scaleX(${sp.toFixed(4)})`;
@@ -329,10 +329,10 @@
       if (fi >= 102 && fi <= 138) {
         const drift = 30 * prog(f, 102, 139);
         dThin.style.letterSpacing = "0.5em";
-        place(dThin, 800 - 56 - drift, 724);
+        place(dThin, 1430 - 56 - drift, 300);
         dThinC.forEach((c, i) => {
           show(c, fi >= D_AT.thin[i]);
-          c.style.color = rgb(writeColor(f, D_AT.thin[i], WHITE));
+          c.style.color = rgb(writeColor(f, D_AT.thin[i], INK));
         });
         const on = f >= 114;
         dBox.style.display = on ? "block" : "none";
@@ -341,14 +341,14 @@
           const h = D_BOX_H * outCubic(prog(f, 114, 116));
           const w = dBoxW(f);
           dBox.style.width = w + "px"; dBox.style.height = h + "px";
-          place(dBox, 800 - drift - w / 2, 862 - h / 2);
+          place(dBox, 1430 - drift - w / 2, 438 - h / 2);
           dTxt.style.transform = "translate(-50%, -54%)";
         }
       }
 
       // ---------------------------------------------------------- E
       if (fi >= 139 && fi <= 172) {
-        place(eThin, 1012, 150);
+        place(eThin, 1090, 150);
         eThinC.forEach((c, i) => {
           const at = E_THIN_AT[i];
           if (at === null) return;

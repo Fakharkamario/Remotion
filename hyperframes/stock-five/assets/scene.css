@@ -35,7 +35,7 @@
 .thin { font-weight: 300; font-size: 50px; line-height: 1; letter-spacing: 0.02em; }
 .caret { position: absolute; width: 0.03em; background: var(--white); }
 .hl { position: absolute; transform-origin: 0 50%; }
-.box { position: absolute; overflow: hidden; border: 3px solid #9bea7c; background: rgba(150, 232, 118, 0.62); }
+.box { position: absolute; overflow: hidden; border: 3px solid #7fdc5c; background: rgba(104, 204, 72, 0.9); }
 .box .txt { position: absolute; top: 50%; left: 50%; font-weight: 400; color: var(--white); white-space: nowrap; line-height: 1;
   letter-spacing: -0.02em; }
 .cell { position: absolute; left: 0; top: 0; background: #f4f4f4; border-radius: 6px;
