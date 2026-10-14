@@ -1,0 +1,35 @@
+#gl { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
+#ghost { position: absolute; left: 960px; top: 28px; font-size: 92px; font-weight: 400; color: #1e1e1e; letter-spacing: -0.02em; white-space: nowrap; }
+#ghost span { font-size: 40px; color: #6e6e6c; margin-left: 28px; letter-spacing: 0; }
+
+/* ---------------------------------------------------------------- the pop-up */
+#cardScene { position: absolute; inset: 0; background: #f9f8f4; display: none; }
+#card {
+  position: absolute; left: 0; top: 0; width: 828px; height: 236px; transform-origin: 50% 50%;
+  border-radius: 30px; background: #ffffff; box-shadow: 0 0 0 1.5px #e7e5e0, 0 24px 70px rgba(40, 30, 10, 0.08);
+  font-family: "Inter", system-ui, sans-serif; color: #262626;
+}
+.c-row1 { position: absolute; left: 30px; right: 30px; top: 26px; height: 34px; display: flex; justify-content: space-between; align-items: center; }
+.tag { height: 34px; line-height: 34px; padding: 0 13px; border-radius: 9px; background: #e3efe7; color: #3f7a57; font-size: 21px; font-weight: 600; letter-spacing: 0.005em; }
+.done { font-size: 23px; font-weight: 600; color: #262626; }
+.c-row2 { position: absolute; left: 30px; right: 30px; top: 82px; height: 48px; display: flex; align-items: center; font-size: 32px; letter-spacing: -0.01em; }
+.c-row2 img { width: 44px; height: 44px; border-radius: 11px; margin-right: 16px; }
+.c-row2 b { font-weight: 600; }
+.c-row2 i { font-style: normal; color: #b3b2ae; font-size: 24px; margin: 0 12px; }
+.stat { margin-left: auto; position: relative; height: 32px; display: flex; align-items: center; min-width: 190px; justify-content: flex-end; }
+.stat svg { width: 30px; height: 30px; position: absolute; left: 8px; top: 1px; }
+.stat .ok { opacity: 0; transform-origin: 50% 50%; }
+.pct, .bought { position: absolute; left: 50px; font-size: 22px; white-space: nowrap; }
+.pct { color: #9a9995; font-variant-numeric: tabular-nums; }
+.bought { color: #3f7a57; font-weight: 600; font-size: 24px; opacity: 0; }
+.c-div { position: absolute; left: 30px; right: 30px; top: 152px; border-top: 2px dashed #e6e4df; }
+.c-row3 { position: absolute; left: 30px; right: 30px; top: 176px; display: flex; justify-content: space-between; font-size: 22px; color: #8b8a86; }
+.c-row3 b { font-weight: 550; color: #262626; font-size: 27px; margin-left: 12px; }
+
+/* ---------------------------------------------------------------- text + logo */
+#textScene { position: absolute; inset: 0; background: #f9f8f4; display: none; }
+#line { position: absolute; left: 0; top: 540px; white-space: pre; transform-origin: 0 50%; font-size: 72px; font-weight: 500; color: #1c1d21; letter-spacing: -0.02em; line-height: 1; }
+#line span { display: inline-block; }
+#meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-size: 72px; font-weight: 500; letter-spacing: -0.02em; }
+#logoScene { position: absolute; inset: 0; background: #f9f8f4; display: none; align-items: center; justify-content: center; }
+#logoScene img { width: 430px; height: auto; display: block; }
