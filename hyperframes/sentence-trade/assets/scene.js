@@ -134,7 +134,7 @@
       rx: [[47, -360], [48, -220], [50, -100], [52, -30], [55, -6], [62, 4], [72, 7], [84, 3], [92, 0]],
       ry: [[47, 0], [58, -14], [64, -24], [70, -10], [76, 16], [80, 62], [84, 130], [88, 206], [92, 320]],
       rz: [[47, 0], [60, -4], [80, 4], [92, 0]],
-      land: [89, 95], ryEnd: 360, // top coin
+      land: [86, 98],
     },
     {
       key: "solana", row: 0, from: 48, thick: 0.11,
@@ -144,7 +144,7 @@
       rx: [[48, 96], [51, 138], [53, 150], [55, 120], [58, 101], [62, 89], [64, 78], [67, 54], [74, 32], [86, 16]],
       ry: [[48, -30], [52, -6], [56, 0], [66, -8], [76, 10], [86, 18]],
       rz: [[48, 42], [50, 84], [53, 58], [55, 6], [58, -34], [62, -58], [65, -60], [70, -38], [80, -20], [86, -14]],
-      land: [86, 97], ryEnd: 0,
+      land: [84, 100],
     },
     {
       key: "zcash", row: 3, from: 49, thick: 0.13,
@@ -154,7 +154,7 @@
       rx: [[49, 160], [52, 140], [55, 110], [57, 90], [59, 52], [62, 25], [66, 14], [80, 10], [92, 6]],
       ry: [[49, 0], [56, -4], [59, -38], [64, -38], [72, -18], [78, 0], [84, 18], [92, 26]],
       rz: [[49, 10], [53, 24], [57, 40], [59, 27], [62, 11], [66, 6], [92, 2]],
-      land: [90, 102], ryEnd: 0,
+      land: [88, 104],
     },
     {
       key: "ethereum", row: 2, from: 60, thick: 0.17,
@@ -164,24 +164,54 @@
       rx: [[60, 10], [66, 14], [80, 12], [101, 6]],
       ry: [[60, -86], [62, -58], [64, -41], [66, -32], [72, -20], [84, -2], [92, 8], [101, 12]],
       rz: [[60, 6], [66, 2], [101, -2]],
-      land: [99, 109], ryEnd: 0,
+      land: [96, 111],
     },
   ];
   COINS.forEach((c) => ["x", "y", "d", "rx", "ry", "rz"].forEach((k) => (c[k] = spline(c[k]))));
 
+  // Landing: one quintic Hermite per channel, worked out in the phone's own frame. It starts from the
+  // coin's position, velocity *and acceleration* at the start of the landing (so the hand-over has no
+  // jolt and the coin picks up speed gradually) and ends on the card icon at rest relative to the phone
+  // (a soft arrival that rides along with the rising screen). Spins finish on the nearest whole turn.
+  const q0 = (u) => 1 - 10 * u ** 3 + 15 * u ** 4 - 6 * u ** 5;
+  const q1 = (u) => u - 6 * u ** 3 + 8 * u ** 4 - 3 * u ** 5;
+  const q2 = (u) => 0.5 * u * u - 1.5 * u ** 3 + 1.5 * u ** 4 - 0.5 * u ** 5;
+  const q5 = (u) => 10 * u ** 3 - 15 * u ** 4 + 6 * u ** 5;
+  const ICON_R = (9.5 / 40) * 100; // the card icon's corner radius, % of its size
+  function freePose(c, f) {
+    return { x: c.x(f), y: c.y(f), d: c.d(f), rx: c.rx(f), ry: c.ry(f), rz: c.rz(f) };
+  }
+  function landingStart(c) {
+    if (c._ls) return c._ls;
+    const t0 = c.land[0], D = c.land[1] - c.land[0], e = 0.5;
+    // backward differences (the free tracks end soon after t0), relative to the phone for position
+    const p = freePose(c, t0), q = freePose(c, t0 - e), r = freePose(c, t0 - 2 * e);
+    const i0 = iconPos(c.row, t0), i1 = iconPos(c.row, t0 - e), i2 = iconPos(c.row, t0 - 2 * e);
+    p.x -= i0.x; q.x -= i1.x; r.x -= i2.x;
+    p.y -= i0.y; q.y -= i1.y; r.y -= i2.y;
+    const v = {}, a = {};
+    for (const k in p) { v[k] = (p[k] - q[k]) / e; a[k] = (p[k] - 2 * q[k] + r[k]) / (e * e); }
+    const spinEnd = (r, vr) => Math.round((r + vr * D * 0.35) / 360) * 360;
+    c._ls = { t0, D, p, v, a,
+      end: { rx: spinEnd(p.rx, v.rx), ry: spinEnd(p.ry, v.ry), rz: spinEnd(p.rz, v.rz) } };
+    return c._ls;
+  }
   function coinPose(c, f) {
-    let p = { x: c.x(f), y: c.y(f), d: c.d(f), rx: c.rx(f), ry: c.ry(f), rz: c.rz(f), r: 50 };
-    const L = smoother((f - c.land[0]) / (c.land[1] - c.land[0]));
-    if (L > 0) {
-      const t = iconPos(c.row, f);
-      p = {
-        x: lerp(p.x, t.x, L), y: lerp(p.y, t.y, L), d: lerp(p.d, ICON_D * t.s, L),
-        rx: lerp(p.rx, 0, L), ry: lerp(p.ry, c.ryEnd, L), rz: lerp(p.rz, 0, L),
-        r: lerp(50, 22.5, smoother((L - 0.5) / 0.5)),
-      };
-    }
-    p.landed = L >= 1;
-    return p;
+    if (f <= c.land[0]) return { ...freePose(c, f), r: 50, bevel: 1, landed: false };
+    const L = landingStart(c), u = clamp((f - L.t0) / L.D, 0, 1), D = L.D;
+    const t = iconPos(c.row, f);
+    const herm = (k, p1) => q0(u) * L.p[k] + q1(u) * D * L.v[k] + q2(u) * D * D * L.a[k] + q5(u) * p1;
+    return {
+      x: t.x + herm("x", 0),
+      y: t.y + herm("y", 0),
+      d: herm("d", ICON_D * t.s),
+      rx: herm("rx", L.end.rx),
+      ry: herm("ry", L.end.ry),
+      rz: herm("rz", L.end.rz),
+      r: lerp(50, ICON_R, smoother((u - 0.45) / 0.55)),
+      bevel: 1 - smoother((u - 0.4) / 0.6), // the face settles into the flat icon art
+      landed: u >= 1,
+    };
   }
 
   const BASE = 600, LAYERS = 64;
@@ -208,6 +238,7 @@
   // ------------------------------------------------------------------ mount
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
+  SCENE._debug = { COINS, coinPose, iconPos }; // for offline checks of the coin paths
 
   SCENE.mount = function (stage) {
     stage.innerHTML = `<div id="phoneWrap"></div><div id="line"></div><div id="coins"></div><span id="meas"></span>`;
@@ -308,6 +339,7 @@
         wrap.style.display = "block";
         wrap.style.perspectiveOrigin = `${p.x}px ${p.y}px`;
         el.style.setProperty("--r", p.r + "%");
+        el.style.setProperty("--bevel", p.bevel.toFixed(3));
         el.style.setProperty("--lit", (200 - p.rz - p.ry * 0.5).toFixed(1) + "deg");
         el.style.transform =
           `translate3d(${(p.x - BASE / 2).toFixed(2)}px, ${(p.y - BASE / 2).toFixed(2)}px, 0) scale(${(p.d / BASE).toFixed(4)}) ` +

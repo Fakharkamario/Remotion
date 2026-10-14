@@ -101,6 +101,6 @@
 .coin .face { overflow: hidden; }
 .coin .back .bevel { background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), rgba(0,0,0,.08) 70%); }
 .coin .face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.coin .bevel { position: absolute; inset: 0; border-radius: inherit; }
+.coin .bevel { position: absolute; inset: 0; border-radius: inherit; opacity: var(--bevel, 1); }
 
 #meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-weight: 620; letter-spacing: -0.025em; }
