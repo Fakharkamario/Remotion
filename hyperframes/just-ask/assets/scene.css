@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------- headline (same type as the earlier clips) */
 #words { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
-#just, #ask { position: absolute; left: 0; top: 0; white-space: pre; font-weight: 640; letter-spacing: -0.03em; line-height: 1; }
+#just, #ask { position: absolute; left: 0; top: 0; white-space: pre; font-weight: 620; letter-spacing: -0.025em; line-height: 1; }
 #just { color: #1c1d21; }
 #ask { color: #f9f8f4; }
 #meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-weight: 640; letter-spacing: -0.03em; line-height: 1; }
