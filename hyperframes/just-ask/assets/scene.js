@@ -2,20 +2,20 @@
 // motion language. 30 fps, 500 frames. Every element is a pure function of a continuous frame number so the 240 fps
 // motion-blur render can sample between frames; discrete state (typed characters, words) uses whole frames.
 //
-//   0–30    the camera pushes into the Pre-IPO button while a feathered mask dissolves the screen around it; the
-//           button floats free as a dark circle and collapses
-//   31–75   cut: "just" punches in big and settles, "ask" joins; a dark pill grows behind "ask" and its label fades
-//   75–118  the pill rounds into a circle that becomes the "M" avatar on Home while the camera pulls back and a
-//           feathered circle reveals Home; the balance counts up to $1,350.00
-//   118–200 the camera glides down to the tab bar; the cursor taps AI; it snaps up as the AI screen builds in
+//   0–37    the camera pushes into the Pre-IPO button while a feathered mask dissolves the screen around it; the
+//           button eases down and fades as "just" rises in letter by letter
+//   44–74   "ask" joins and the line re-centres; a dark pill grows behind "ask" as it turns white
+//   66–118  the letters lift away and the pill rounds into the circle that becomes the "M" avatar on Home while the
+//           camera pulls back and a feathered circle reveals Home; the balance counts up to $1,350.00
+//   118–200 the camera eases out to frame the screen; the cursor taps AI and the AI screen crossfades in
 //   200–262 tap the input: the keyboard slides up and the prompt types itself with key presses; tap send
 //   262–330 the message flies up into a bubble, a typing indicator, a streamed reply and three low-risk asset cards
-//   342–392 the cursor taps Coca-Cola: the trade panel slides up; it taps 3, 7, 5 and the amount builds
-//   392–432 "Slide to buy": the camera pushes in on the slider and the cursor drags the knob across
-//   437–499 cut to the top of the screen: a live-activity pill drops in, "Buying 4.00 KO", then "Bought"
+//   342–392 the cursor taps Coca-Cola: the trade panel rises in; it taps 3, 7, 5 and the amount builds
+//   394–444 "Slide to buy": the camera pushes in gently on the slider and the cursor drags the knob across
+//   444–515 the camera eases back to the whole phone: a live-activity pill drops in, "Buying 4.00 KO", then "Bought"
 (function () {
   const FPS = 30;
-  const FRAMES = 500;
+  const FRAMES = 516;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -62,43 +62,60 @@
   const C0 = { x: 960 + Z_END * (P1.x - 960), y: 506 + Z_END * (P1.y - 520) };
 
   // ---- transition 1: one path (centre + diameter) for the Pre-IPO button, driving the push-in and then the pill
-  const D1 = spline([[0, BTN_D * Z_END], [3, BTN_D * Z_END + 0.8], [8, 112], [13, 140], [18, 170], [22, 192], [27, 206]]);
-  const X1 = spline([[0, C0.x], [3, C0.x - 1.5], [8, C0.x - 30], [13, 1160], [18, 1094], [22, 1062], [27, 1048]]);
-  const Y1 = spline([[0, C0.y], [3, C0.y + 1], [8, C0.y + 24], [13, 412], [18, 474], [22, 512], [27, 536]]);
+  const D1 = spline([[0, BTN_D * Z_END], [3.7, BTN_D * Z_END + 0.8], [10, 104], [17, 128], [24, 146], [33, 158]]);
+  const X1 = spline([[0.0, C0.x], [3.7, C0.x - 1.5], [9.8, C0.x - 30], [15.9, 1160], [22.0, 1094], [26.9, 1062], [33.0, 1048]]);
+  const Y1 = spline([[0.0, C0.y], [3.7, C0.y + 1], [9.8, C0.y + 24], [15.9, 412], [22.0, 474], [26.9, 512], [33.0, 536]]);
 
   // ---- transition 2: pill -> circle -> the M avatar, driving the pull-back onto Home
-  const D2 = spline([[75, 152], [80, 146], [85, 138], [90, 128], [94, 114], [98, 100], [102, 86], [106, 75], [110, 66.5], [114, 61], [118, AV_D]]);
-  const X2 = spline([[75, 1088], [80, 1092], [85, 1103], [90, 1120], [94, 1148], [98, 1183], [102, 1214], [106, 1235], [110, 1247], [114, 1252.6], [118, AV.x]]);
-  const Y2 = spline([[75, 545], [80, 538], [85, 522], [90, 500], [94, 460], [98, 410], [102, 354], [106, 301], [110, 262], [114, 234], [118, AV.y - 20]]);
+  const D2 = spline([[75, 138], [84, 128], [94, 110], [104, 90], [113, 74], [121, 64.5], [130, AV_D]]);
+  const X2 = spline([[75.0, 1088], [81.4, 1092], [87.8, 1103], [94.2, 1120], [99.3, 1148], [104.4, 1183], [109.5, 1214], [114.7, 1235], [119.8, 1247], [124.9, 1252.6], [130.0, AV.x]]);
+  const Y2 = spline([[75.0, 545], [81.4, 538], [87.8, 522], [94.2, 500], [99.3, 460], [104.4, 410], [109.5, 354], [114.7, 301], [119.8, 262], [124.9, 234], [130.0, AV.y - 20]]);
 
-  // ---- camera shots after the reveal: always close on the phone, moves snap in and settle (expo-out), and the
-  // slider macro cuts straight to the confirmation shot. [frame, world focus y, zoom, ease of the move INTO it]
-  const SHOT = [
-    [118, 560, 1.0], [150, 604, 1.0, "lin"], [168, 1190, 1.0, "io"], [176, 1204, 1.0, "lin"],
-    [190, 690, 1.04, "eo"], [197, 704, 1.05, "lin"], [208, 1186, 1.08, "eo"], [224, 1130, 1.16, "eo"],
-    [262, 1142, 1.18, "lin"], [282, 660, 1.06, "eo"], [342, 694, 1.1, "lin"],
-    [360, 880, 1.08, "eo"], [392, 892, 1.12, "lin"], [410, 1378, 2.1, "eo"], [437, 1380, 2.2, "lin"],
-    [437, 420, 1.18, "cut"], [499, 394, 1.25, "lin"],
+  // ---- camera after the reveal: ONE continuous path. Keyframes [frame, world focus y, zoom] are joined linearly,
+  // then Gaussian-smoothed (sigma 7 frames), so velocity and acceleration are continuous everywhere: moves can't
+  // start or stop abruptly and the peak speed stays low. Framing keeps whole screens in view (zoom ~0.8–0.95) so
+  // the camera travels less; the only close-up is a gentle push-in on "Slide to buy".
+  const CAMK = [
+    [100, 560, 1.0], [140, 600, 1.0], [178, 980, 0.9], [206, 990, 0.9], [230, 1040, 0.885], [258, 1046, 0.885],
+    [298, 700, 0.95], [342, 712, 0.95], [372, 860, 0.885], [394, 872, 0.89], [422, 1300, 1.42], [444, 1312, 1.46],
+    [482, 715, 0.8], [520, 700, 0.83],
   ];
-  const EASE = { lin: (t) => t, io: smoother, eo: expoOut };
-  // `fi` picks the side of a cut, so motion-blur samples never mix the two shots
-  function shotAt(f, fi) {
-    let i = 0;
-    while (i < SHOT.length - 1 && (SHOT[i + 1][3] === "cut" ? fi >= SHOT[i + 1][0] : f > SHOT[i + 1][0])) i++;
-    const A = SHOT[i], B = SHOT[i + 1];
-    if (!B || B[3] === "cut") return { y: A[1], z: A[2] };
-    const t = EASE[B[3]]((f - A[0]) / (B[0] - A[0]));
-    return { y: lerp(A[1], B[1], t), z: lerp(A[2], B[2], t) };
-  }
+  const CAM = (() => {
+    const STEP = 0.1, F0 = 60, F1 = 540, n = Math.round((F1 - F0) / STEP) + 1;
+    const raw = (f, k) => {
+      if (f <= CAMK[0][0]) return CAMK[0][k];
+      for (let i = 1; i < CAMK.length; i++) if (f <= CAMK[i][0]) {
+        const t = (f - CAMK[i - 1][0]) / (CAMK[i][0] - CAMK[i - 1][0]);
+        return lerp(CAMK[i - 1][k], CAMK[i][k], t);
+      }
+      return CAMK[CAMK.length - 1][k];
+    };
+    const sig = 7, R = Math.round((3 * sig) / STEP), w = [];
+    for (let j = -R; j <= R; j++) w.push(Math.exp(-0.5 * Math.pow((j * STEP) / sig, 2)));
+    const ws = w.reduce((x, y) => x + y, 0);
+    const Y = new Float64Array(n), Zl = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+      let y = 0, z = 0;
+      for (let j = -R; j <= R; j++) {
+        const f = F0 + (i + j) * STEP;
+        y += w[j + R] * raw(f, 1); z += w[j + R] * Math.log(raw(f, 2)); // zoom smoothed in log space
+      }
+      Y[i] = y / ws; Zl[i] = z / ws;
+    }
+    return (f) => {
+      const x = clamp((f - F0) / STEP, 0, n - 1.001), i = Math.floor(x), t = x - i;
+      return { y: lerp(Y[i], Y[i + 1], t), z: Math.exp(lerp(Zl[i], Zl[i + 1], t)) };
+    };
+  })();
 
   // camera as screen = O + Z * world
-  function camera(f, fi = Math.round(f)) {
+  function camera(f) {
     const fromPath = (Z, W, C) => ({ Z, O: { x: C.x - Z * W.x, y: C.y - Z * W.y } });
-    if (f <= 24) return fromPath(D1(f) / BTN_D, P1, { x: X1(f), y: Y1(f) });
+    if (f <= 28) return fromPath(D1(f) / BTN_D, P1, { x: X1(f), y: Y1(f) });
     const t2 = fromPath(D2(f) / AV_D, AV, { x: X2(f), y: Y2(f) });
-    const sh = shotAt(f, fi);
+    const sh = CAM(f);
     const shot = fromPath(sh.z, { x: 960, y: sh.y }, { x: 960, y: 540 });
-    const b = smoother((f - 112) / 12);
+    const b = smoother((f - 118) / 16);
     return { Z: lerp(t2.Z, shot.Z, b), O: { x: lerp(t2.O.x, shot.O.x, b), y: lerp(t2.O.y, shot.O.y, b) } };
   }
   const project = (c, p) => ({ x: c.O.x + c.Z * p.x, y: c.O.y + c.Z * p.y });
@@ -107,7 +124,7 @@
   const TAP = { ai: 176, input: 208, send: 262, card: 342, k3: 372, k7: 381, k5: 390 };
   const KEYXY = { k3: [344.4, 506], k7: [84.3, 633.8], k5: [214.6, 569.9] };
   const TYPE0 = 226; // first typed character (32 characters, one a frame)
-  const SLIDE = { from: 411, to: 430, x0: 46, travel: 389.6 - 51.8 }; // knob centre starts at 20 + 25.9 pt
+  const SLIDE = { from: 422, to: 442, x0: 46, travel: 389.6 - 51.8 }; // knob centre starts at 20 + 25.9 pt
   const slideE = (f) => smoother((f - SLIDE.from) / (SLIDE.to - SLIDE.from));
   const CUR = (() => {
     const keys = [
@@ -118,15 +135,15 @@
       [356, 296, 470], [364, 334, 494], [371, ...KEYXY.k3], [374, ...KEYXY.k3],
       [377.5, 210, 600], [380.5, ...KEYXY.k7], [383, ...KEYXY.k7],
       [386.5, 150, 618], [389.5, ...KEYXY.k5], [392, ...KEYXY.k5],
-      [398, 128, 690], [405, 58, 778], [410, SLIDE.x0, 793.4], [411, SLIDE.x0, 793.4],
-      [430, SLIDE.x0 + SLIDE.travel, 793.4], // the drag itself rides the knob (below)
-      [436, 352, 760], [446, 430, 700],
+      [399, 128, 690], [409, 72, 770], [420.5, SLIDE.x0, 793.4], [422, SLIDE.x0, 793.4],
+      [442, SLIDE.x0 + SLIDE.travel, 793.4], // the drag itself rides the knob (below)
+      [452, 352, 740], [466, 440, 640],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => (f >= SLIDE.from && f <= SLIDE.to ? { x: SLIDE.x0 + SLIDE.travel * slideE(f), y: 793.4 } : { x: sx(f), y: sy(f) });
   })();
   const cursorOpacity = (f) =>
-    smoother((f - 156) / 4) * (1 - smoother((f - 264) / 10)) + smoother((f - 322) / 5) * (1 - smoother((f - 430) / 6));
+    smoother((f - 156) / 4) * (1 - smoother((f - 264) / 10)) + smoother((f - 322) / 5) * (1 - smoother((f - 446) / 12));
   const pressed = (f) => {
     let p = 0;
     for (const k in TAP) p = Math.max(p, smoother((f - TAP[k] + 1.5) / 1.5) * (1 - smoother((f - TAP[k] - 2) / 4)));
@@ -134,11 +151,12 @@
     return p;
   };
   // keyboard sheet offset in pt (0 = up): rises after the input tap, drops after send
-  const kbOff = (f) => 300 * (1 - expoOut((f - 209) / 13)) + 300 * smoother((f - 263) / 12);
+  const kbOff = (f) => 300 * (1 - smoother((f - 209) / 17)) + 300 * smoother((f - 263) / 17);
 
   // ------------------------------------------------------------------ mount
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
+  SCENE._probe = { camera, world, project }; // for offline speed checks
   SCENE.mount = function (stage) {
     stage.innerHTML = `<div id="reveal"><div id="cam"><div id="phoneWrap"></div></div></div>
       <div id="words"><div id="pill"><div id="pillM">M</div></div><div id="just">just</div><div id="ask">ask</div></div>
@@ -153,6 +171,8 @@
     const pill = $("#pill"), pillM = $("#pillM"), justEl = $("#just"), askEl = $("#ask"), meas = $("#meas");
     const trail = $("#trail"), ring = $("#ring"), halo = $("#halo");
     const widthOf = (t, size) => { meas.textContent = t; meas.style.fontSize = size + "px"; meas.style.fontWeight = "620"; meas.style.letterSpacing = "-0.025em"; return meas.getBoundingClientRect().width; };
+    justEl.innerHTML = [..."just"].map((c) => `<span>${c}</span>`).join("");
+    askEl.innerHTML = [..."ask"].map((c) => `<span>${c}</span>`).join("");
     app.ai.querySelector(".status").style.display = "none"; // Home's status bar stays up through the switch
 
     // ---- the Explore screen exactly as one-terminal leaves it (row scrolled, Pre-IPO selected)
@@ -176,76 +196,82 @@
       const c = camera(f);
 
       // ---------------- phone visibility + reveal masks
-      const phoneOn = f < 22.5 || f >= 90;
+      const phoneOn = f < 27 || f >= 90;
       reveal.style.display = phoneOn ? "block" : "none";
       camEl.style.transform = `translate(${c.O.x.toFixed(3)}px, ${c.O.y.toFixed(3)}px) scale(${c.Z.toFixed(5)})`;
       let mask = "none";
-      if (f < 22.5) {
+      if (f < 27) {
         // dissolve the Explore screen around the Pre-IPO button as the camera pushes in
         const cp = project(c, P1);
-        const R = D1(f) / 2 + 2300 * Math.pow(1 - smoother(f / 22), 1.5);
-        const F = 0.5 + 260 * (1 - smoother((f - 4) / 18));
+        const R = D1(f) / 2 + 2300 * Math.pow(1 - smoother(f / 26), 1.5);
+        const F = 0.5 + 260 * (1 - smoother((f - 4) / 22));
         mask = `radial-gradient(circle at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px, #000 ${R.toFixed(2)}px, transparent ${(R + F).toFixed(2)}px)`;
-      } else if (f >= 90 && f < 120) {
+      } else if (f >= 90 && f < 132) {
         // reveal Home from the M avatar as the camera pulls back
         const cp = project(c, AV);
-        const R = (AV_D * c.Z) / 2 + 2300 * Math.pow(smoother((f - 90) / 26), 1.5);
-        const F = 0.5 + 260 * smoother((f - 90) / 14);
+        const R = (AV_D * c.Z) / 2 + 2300 * Math.pow(smoother((f - 90) / 38), 1.5);
+        const F = 0.5 + 260 * smoother((f - 90) / 20);
         mask = `radial-gradient(circle at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px, #000 ${R.toFixed(2)}px, transparent ${(R + F).toFixed(2)}px)`;
       }
       reveal.style.webkitMaskImage = reveal.style.maskImage = mask;
-      app.explore.style.display = f < 22.5 ? "block" : "none";
-      rocket.style.opacity = 1 - smoother((f - 11) / 9);
+      app.explore.style.display = f < 27 ? "block" : "none";
+      rocket.style.opacity = 1 - smoother((f - 12) / 12);
       const homeOn = f >= 89;
       app.home.style.display = homeOn ? "block" : "none";
       app.ai.style.display = f >= 176 ? "block" : "none";
       phoneWrap.querySelector(".tabbar").style.display = homeOn ? "flex" : "none";
 
-      // ---------------- the Pre-IPO circle collapses, then the words in the earlier clips' grammar:
-      // "just" punches in big and settles, "ask" joins and slides the line to centre, a dark pill grows
-      // behind "ask", its label fades, and the pill rounds into the circle that becomes the M avatar
+      // ---------------- words. The Pre-IPO circle eases down and fades as "just" rises in letter by letter (each
+      // letter lifts and un-blurs on a soft stagger); "ask" joins the same way while the line re-centres smoothly;
+      // a dark pill grows behind "ask" as it turns white; then the letters lift away and the pill rounds into the
+      // circle that becomes the M avatar. Everything eases in and out, and the line keeps a slow scale drift.
       const words = $("#words");
-      if (f >= 22 && f < 31) {
+      if (f >= 25 && f < 92) {
         words.style.display = "block";
-        justEl.style.opacity = askEl.style.opacity = 0;
-        const k = 1 - expoIn((f - 22) / 8.5), d = D1(22) * k;
-        pill.style.display = "block";
-        pill.style.width = pill.style.height = d + "px";
-        pill.style.borderRadius = d / 2 + "px";
-        pill.style.opacity = 1;
-        pill.style.transform = `translate(${(X1(f) - d / 2).toFixed(2)}px, ${(Y1(f) - d / 2).toFixed(2)}px)`;
-        pillM.style.opacity = 0;
-      } else if (fi >= 31 && f < 90.5) {
-        words.style.display = "block";
-        const ff = Math.max(f, 31); // the beat's motion starts at its cut
-        const size = 140 + 76 * Math.exp(-(ff - 31) / 1.6) - 0.35 * (ff - 31);
-        const two = fi >= 39;
-        const wLine = widthOf(two ? "just ask" : "just", size), wJs = widthOf("just ", size), wA = widthOf("ask", size);
-        let dx = 0;
-        if (two) dx = 0.2 * ((wLine - widthOf("just", size)) / 2) * Math.exp(-(f - 39) / 1.5);
-        const left = 960 - wLine / 2 + dx, boxTop = 540 - 0.54 * size;
-        justEl.style.fontSize = askEl.style.fontSize = size + "px";
-        const e = smoother((f - 61) / 6);
-        justEl.style.opacity = (1 - e).toFixed(3);
-        justEl.style.transform = `translate(${(left - 26 * e).toFixed(2)}px, ${boxTop.toFixed(2)}px)`;
-        const ax = left + wJs, acx = ax + wA / 2, acy = boxTop + 0.54 * size;
-        const a = smoother((f - 61) / 4), lf = smoother((f - 67) / 6);
-        askEl.style.opacity = two ? (1 - lf).toFixed(3) : 0;
-        askEl.style.color = mix("#1c1d21", "#f9f8f4", a);
-        askEl.style.filter = lf > 0.01 ? `blur(${(lf * 6).toFixed(2)}px)` : "none";
-        askEl.style.transform = `translate(${ax.toFixed(2)}px, ${boxTop.toFixed(2)}px)`;
-        if (a > 0) {
-          const m = smoother((f - 75) / 13), mw = smoother((f - 74.5) / 12);
-          const w = lerp(wA + 0.62 * size, D2(f), mw), h = lerp(1.22 * size, D2(f), m);
-          const cx = lerp(acx, X2(f), m), cy = lerp(acy, Y2(f), m), sc = lerp(0.9, 1, a);
+        // the collapsing circle (overlaps the first letters, so there is never an empty frame)
+        if (f < 40) {
+          const k = 1 - smoother((f - 25) / 10), d = D1(Math.min(f, 33)) * (0.3 + 0.7 * k);
           pill.style.display = "block";
-          pill.style.opacity = a;
+          pill.style.opacity = smoother(k * 1.3).toFixed(4);
+          pill.style.width = pill.style.height = d + "px";
+          pill.style.borderRadius = d / 2 + "px";
+          pill.style.transform = `translate(${(X1(Math.min(f, 33)) - d / 2).toFixed(2)}px, ${(Y1(Math.min(f, 33)) - d / 2).toFixed(2)}px) scale(1)`;
+          pillM.style.opacity = 0;
+        }
+        const size = 148 * (1.0 + 0.05 * smoother((f - 26) / 66)); // a slow, continuous push
+        const wJ = widthOf("just", size), wJs = widthOf("just ", size), wL = widthOf("just ask", size), wA = widthOf("ask", size);
+        const join = smoother((f - 44) / 16); // the line widens from "just" to "just ask"
+        const left = 960 - lerp(wJ, wL, join) / 2, boxTop = 540 - 0.54 * size;
+        justEl.style.fontSize = askEl.style.fontSize = size + "px";
+        justEl.style.opacity = askEl.style.opacity = 1;
+        const step = 0.1 * size * smoother((f - 56) / 11); // "just" steps aside as the pill grows
+        justEl.style.transform = `translate(${(left - step).toFixed(2)}px, ${boxTop.toFixed(2)}px)`;
+        askEl.style.transform = `translate(${(left + wJs).toFixed(2)}px, ${boxTop.toFixed(2)}px)`;
+        const letter = (el, i, t0, t1) => {
+          const pin = smoother((f - t0 - i * 1.7) / 13), pout = smoother((f - t1 - i * 1.1) / 10);
+          el.style.opacity = (pin * (1 - pout)).toFixed(4);
+          const bl = 7 * (1 - pin) + 6 * pout;
+          el.style.filter = bl > 0.05 ? `blur(${bl.toFixed(2)}px)` : "none";
+          el.style.transform = `translateY(${(0.32 * size * (1 - pin) - 0.22 * size * pout).toFixed(2)}px)`;
+        };
+        [...justEl.children].forEach((el, i) => letter(el, i, 31, 66));
+        const tw = smoother((f - 58) / 9); // "ask" turns white as the pill grows behind it
+        [...askEl.children].forEach((el, i) => { letter(el, i, 45, 71); el.style.color = mix("#1c1d21", "#f9f8f4", tw); });
+        if (f >= 40) {
+          const acx = left + wJs + wA / 2, acy = boxTop + 0.54 * size;
+          const g = smoother((f - 56) / 11); // pill grows
+          const m = smoother((f - 74) / 16); // and rounds off toward the avatar
+          const w0 = (wA + 0.5 * size) * (0.55 + 0.45 * g), h0 = 1.16 * size * (0.55 + 0.45 * g);
+          const w = lerp(w0, D2(f), m), h = lerp(h0, D2(f), m);
+          const cx = lerp(acx, X2(f), m), cy = lerp(acy, Y2(f), m);
+          pill.style.display = g > 0 ? "block" : "none";
+          pill.style.opacity = g.toFixed(4);
           pill.style.width = w + "px"; pill.style.height = h + "px";
           pill.style.borderRadius = Math.min(w, h) / 2 + "px";
-          pill.style.transform = `translate(${(cx - w / 2).toFixed(2)}px, ${(cy - h / 2).toFixed(2)}px) scale(${sc.toFixed(4)})`;
+          pill.style.transform = `translate(${(cx - w / 2).toFixed(2)}px, ${(cy - h / 2).toFixed(2)}px) scale(1)`;
           pillM.style.fontSize = (h * 14.5) / 36 + "px";
-          pillM.style.opacity = smoother((f - 83) / 7);
-        } else pill.style.display = "none";
+          pillM.style.opacity = smoother((f - 84) / 8);
+        }
       } else words.style.display = "none";
 
       // ---------------- Home: cascade in, balance counts up, sparklines draw; slides out on the AI tap
@@ -254,11 +280,11 @@
           if (el === app.avatarM) return;
           const s0 = 95 + i * 1.25;
           const p = outCubic((f - s0) / 14);
-          const o = smoother((f - TAP.ai - 0.5 - i * 0.15) / 4); // quick exit so nothing ghosts under the AI screen
+          const o = smoother((f - TAP.ai - i * 0.2) / 8);
           el.style.opacity = (p * (1 - o)).toFixed(4);
           el.style.transform = `translate(${(-18 * o).toFixed(2)}px, ${(14 * (1 - p)).toFixed(2)}px)`;
         });
-        const ao = smoother((f - TAP.ai - 0.5) / 4);
+        const ao = smoother((f - TAP.ai) / 8);
         app.avatarM.style.opacity = (1 - ao).toFixed(4);
         app.avatarM.style.transform = `translateX(${(-18 * ao).toFixed(2)}px)`;
         app.bal.textContent = money(APP.BALANCE * outCubic((f - 104) / 26));
@@ -279,15 +305,15 @@
       // ---------------- AI screen
       app.kbd.style.display = "none";
       if (f >= 176) {
-        const out = smoother((f - TAP.send) / 4); // title + suggestions leave quickly after send
+        const out = smoother((f - TAP.send) / 11); // title + suggestions drift away after send
         app.aiItems.forEach((el, j) => {
-          const p = expoOut((f - 182 - j * 1.6) / 12);
+          const p = smoother((f - 180 - j * 1.8) / 15);
           el.style.opacity = (p * (1 - out)).toFixed(4);
           el.style.transform = `translateY(${(16 * (1 - p) - 14 * out).toFixed(2)}px)`;
         });
         phoneWrap.querySelector(".a-edit").style.opacity = outCubic((f - 181) / 12).toFixed(4);
         // dock: fades in, rides the keyboard
-        const dIn = expoOut((f - 183) / 12);
+        const dIn = smoother((f - 183) / 15);
         const ko = kbOff(f);
         app.dock.style.opacity = dIn.toFixed(4);
         app.dock.style.transform = `translateY(${(10 * (1 - dIn) - 129 * (1 - ko / 300)).toFixed(2)}px)`;
@@ -305,7 +331,7 @@
         app.send.style.transform = `scale(${(1 - 0.12 * Math.sin(Math.PI * clamp((f - TAP.send + 1) / 8, 0, 1))).toFixed(4)})`;
         // the sent message flies from the input up into a bubble
         if (!bubbleW) bubbleW = app.bubble.offsetWidth; // layout width in pt (unaffected by transforms)
-        const fl = spring((f - TAP.send - 1) / 16);
+        const fl = smoother((f - TAP.send - 1) / 20);
         const startX = 30 - 16 - (412 - bubbleW), startY = 585 + 24 - 18.85 - 107;
         app.bubble.style.opacity = smoother((f - TAP.send) / 4).toFixed(4);
         app.bubble.style.background = mix("#fbfaf7", "#efefef", smoother((f - TAP.send - 2) / 8));
@@ -325,7 +351,7 @@
         });
         app.cards.forEach((el, j) => {
           const s0 = 303 + j * 3.2;
-          const p = spring((f - s0) / 14);
+          const p = smoother((f - s0) / 17);
           const press = j === 2 ? Math.sin(Math.PI * clamp((f - TAP.card + 1) / 10, 0, 1)) : 0;
           el.style.opacity = p.toFixed(4);
           el.style.transform = `translateY(${(18 * (1 - p)).toFixed(2)}px) scale(${((0.97 + 0.03 * p) * (1 - 0.018 * press)).toFixed(4)})`;
@@ -337,19 +363,20 @@
 
       // ---------------- trade panel: slides up over the chat, amount typed on the keypad, slide to buy
       const tp = f - (TAP.card + 2);
-      const up = spring(tp / 17);
-      app.backdrop.style.opacity = (smoother(tp / 10) * (1 - smoother(tp / 20))).toFixed(4);
+      const up = smoother(tp / 22);
+      app.backdrop.style.opacity = (0.8 * smoother(tp / 12) * (1 - smoother((tp - 8) / 14))).toFixed(4);
       app.trade.style.display = tp > -0.5 ? "block" : "none";
-      app.trade.style.transform = `translateY(${(940 * (1 - up)).toFixed(2)}px)`;
+      app.trade.style.transform = `translateY(${(150 * (1 - up)).toFixed(2)}px)`;
+      app.trade.style.opacity = smoother(tp / 7).toFixed(4);
       app.tItems.forEach((el, j) => {
         if (el.classList.contains("t-key") || el === app.tAmt) return; // keys handled below
-        const p = expoOut((tp - 5 - j * 0.5) / 12);
+        const p = smoother((tp - 5 - j * 0.6) / 15);
         el.style.opacity = p.toFixed(4);
         el.style.transform = `translateY(${(12 * (1 - p)).toFixed(2)}px)`;
       });
       // keypad: digits rise in, then light up as they are tapped
       Object.entries(app.tKeys).forEach(([d, k], j) => {
-        const p = expoOut((tp - 8 - j * 0.5) / 12);
+        const p = smoother((tp - 8 - j * 0.6) / 15);
         k.style.opacity = p.toFixed(4);
         let pr = 0;
         for (const [name, tf] of Object.entries(TAP)) if (name === "k" + d) pr = Math.max(pr, Math.sin(Math.PI * clamp((f - tf + 1) / 11, 0, 1)));
@@ -369,7 +396,7 @@
         app.tAmt._wp = meas.getBoundingClientRect().width; // meas is unscaled, so this is already in pt
       }
       const lastTap = typedN ? [TAP.k3, TAP.k7, TAP.k5][typedN - 1] : 0;
-      const rc = typedN ? outCubic((f - lastTap) / 7) : 1;
+      const rc = typedN ? smoother((f - lastTap) / 10) : 1;
       const w = lerp(app.tAmt._wp || app.tAmt._w, app.tAmt._w, rc);
       const ap = outCubic((tp - 7) / 12);
       app.tAmt.style.color = typedN ? "#262626" : "#6b6b69";
@@ -377,7 +404,7 @@
       app.tAmt.style.transform = `translate(${(215 - w / 2).toFixed(2)}px, ${(12 * (1 - ap)).toFixed(2)}px)`;
       const spans = app.tAmt.children;
       if (typedN && spans.length) {
-        const nd = spans[spans.length - 1], q = outCubic((f - lastTap) / 6);
+        const nd = spans[spans.length - 1], q = smoother((f - lastTap) / 9);
         nd.style.opacity = q.toFixed(3);
         nd.style.transform = `translateY(${(18 * (1 - q)).toFixed(2)}px)`;
       }
@@ -399,25 +426,25 @@
       app.tLbl1.style.transform = `translateX(${(kx * 0.35).toFixed(2)}px)`;
       const done = smoother((f - SLIDE.to) / 4);
       app.tChev.style.opacity = (1 - done).toFixed(3);
-      const bought = smoother((f - 466) / 6);
+      const bought = smoother((f - 482) / 8);
       app.tSpin.style.opacity = (done * (1 - bought)).toFixed(3);
       app.tCheck.style.opacity = bought.toFixed(3);
-      app.tCheck.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 466) / 9, 1.4)).toFixed(4)})`;
+      app.tCheck.style.transform = `scale(${(0.6 + 0.4 * smoother((f - 482) / 10)).toFixed(4)})`;
       app.tSpin.style.transform = `rotate(${((f - SLIDE.to) * 24).toFixed(1)}deg)`;
       app.tBtn.style.transform = `scale(${(1 - 0.012 * pressed(f) * (f > SLIDE.from - 2 ? 1 : 0)).toFixed(4)})`;
       // live-activity pill: drops in from the top, "Buying" with a spinner, then "Bought" with a check
-      const il = f - 441; // drops in right after the cut
-      const iw = lerp(0, 378, outBack(il / 14, 0.5)), ih = lerp(30, 50, outCubic(il / 12));
+      const il = f - 452; // drops in as the camera settles back on the whole phone
+      const iw = lerp(0, 378, smoother(il / 18)), ih = lerp(30, 50, smoother(il / 16));
       app.island.style.opacity = smoother(il / 3).toFixed(3);
       app.island.style.width = Math.max(0, iw).toFixed(2) + "px";
       app.island.style.height = ih.toFixed(2) + "px";
-      app.island.style.transform = `translateX(${(-Math.max(0, iw) / 2).toFixed(2)}px) translateY(${(-8 * (1 - outCubic(il / 10))).toFixed(2)}px)`;
-      const inner = smoother((il - 6) / 6);
+      app.island.style.transform = `translateX(${(-Math.max(0, iw) / 2).toFixed(2)}px) translateY(${(-8 * (1 - smoother(il / 14))).toFixed(2)}px)`;
+      const inner = smoother((il - 8) / 9);
       app.iIc.style.opacity = app.iTxt.style.opacity = inner.toFixed(3);
-      const ok = smoother((f - 466) / 6);
+      const ok = smoother((f - 482) / 8);
       app.iOk.style.opacity = ok.toFixed(3);
       app.iIc.firstElementChild.style.opacity = (1 - ok).toFixed(3);
-      app.iOk.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 466) / 9, 1.4)).toFixed(4)})`;
+      app.iOk.style.transform = `scale(${(0.6 + 0.4 * smoother((f - 482) / 10)).toFixed(4)})`;
       app.iT0.style.opacity = (1 - ok).toFixed(3);
       app.iT1.style.opacity = ok.toFixed(3);
       app.iSpin.style.opacity = (inner * (1 - ok)).toFixed(3);
@@ -428,7 +455,7 @@
       const toScreen = (ff) => { const p = CUR(ff); return project(camera(ff), world(p.x, p.y)); };
       if (co > 0.002) {
         const pts = [];
-        for (let k = 0; k <= 12; k++) { let ff = f - k * 0.26; if (fi >= 437) ff = Math.max(ff, 437); pts.push(toScreen(ff)); } // never trail across the cut
+        for (let k = 0; k <= 12; k++) pts.push(toScreen(f - k * 0.26));
         trail.setAttribute("d", pts.map((p, i) => (i ? "L" : "M") + p.x.toFixed(2) + " " + p.y.toFixed(2)).join(" "));
         trail.setAttribute("stroke-width", (13 * c.Z).toFixed(2));
         trail.style.opacity = co.toFixed(3);
