@@ -3,10 +3,10 @@
 //
 //   0–26    "Your next" grows, "trade" joins, the line squeezes shut
 //   27–46   "starts" punches in big and settles, "with a" joins
-//   47–74   "sentence" in blue with a lavender sweep; four coins tumble in and idle
-//   74–88   the word dissolves letter by letter, the Solana coin flips toward the phone
-//   81–108  the Trade screen rises; each coin flies down and becomes its row icon
-//   96–152  prices tick, the screen scrolls to the AI input + keyboard and a prompt is typed
+//   47–74   "sentence" rises in with a warm-grey sweep; four coins flip in and keep turning
+//   74–88   the word dissolves letter by letter, the top coin spins toward the phone
+//   81–108  the Explore screen rises; each coin flies down and becomes its card icon
+//   96–152  percentages tick, the screen scrolls to the AI input + keyboard and a prompt is typed
 (function () {
   const FPS = 30;
   const FRAMES = 153;
@@ -43,7 +43,7 @@
   const rgb = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a === undefined ? 1 : a})`;
 
   // ------------------------------------------------------------------ headline
-  // Brand palette from the Acend Trade screen: warm paper, near-black ink, warm grey for the sweep.
+  // Brand palette from the Acend app screens: warm paper, near-black ink, warm grey for the sweep.
   // INK is the one accent token for the hero word; swap it here to retint the whole beat.
   const INK = [28, 29, 33];
   const SWEEP = [164, 160, 150];
@@ -90,50 +90,54 @@
   }
 
   // ------------------------------------------------------------------ phone
-  const K = 700 / PHONE.W; // pt -> px on screen
-  const PHONE_LEFT = 585;
+  const K = 650 / PHONE.W; // pt -> px on screen
+  const BEZEL = 23, HALF_W = 348; // phone frame: 696 px wide, centred on x = 960
   // rise, slow drift, a long scroll that peaks around frame 120, settle, then the next scroll starts
   const phoneTop = spline([
     [81, 640], [82, 540], [84, 434], [86, 312], [88, 244], [90, 200], [92, 162], [94, 135], [96, 116], [100, 92], [104, 80], [108, 66],
-    [114, 22], [118, -122], [121, -256], [124, -350], [128, -404], [134, -428], [140, -440], [146, -454], [152, -500],
+    [114, 34], [118, -60], [121, -186], [124, -280], [128, -334], [134, -358], [140, -370], [146, -384], [152, -430],
   ]);
   // the screen arrives a touch large and settles to size while it rises (scaled about its top centre)
   const phoneScale = (f) => 1 + 0.05 * (1 - smoother((f - 82) / 18));
+  // keyboard sheet: parked below the screen, slides up as the scroll starts (pt)
+  const sheetOffset = (f) => 352 * (1 - smoother((f - 112) / 11));
   const phoneOpacity = (f) => smoother((f - 81) / 8);
   const phoneBlur = (f) => 12 * (1 - smoother((f - 81) / 9));
   const iconPos = (i, f) => {
     const sc = phoneScale(f);
     return {
-      x: 960 + (25 + (PHONE.ICON_X + PHONE.ICON / 2) * K - 375) * sc,
-      y: phoneTop(f) + (25 + (PHONE.ROW0 + i * PHONE.PITCH + PHONE.ICON / 2) * K) * sc,
+      x: 960 + (BEZEL + PHONE.iconCenter(i).x * K - HALF_W) * sc,
+      y: phoneTop(f) + (BEZEL + PHONE.iconCenter(i).y * K) * sc,
       s: sc,
     };
   };
   const ICON_D = PHONE.ICON * K;
 
   // ------------------------------------------------------------------ coins
-  // Tracked off the reference frame by frame (viewport px / degrees), mapped onto our four tokens:
-  //   solana   = the small coin over the word: flips up out of the text (X-axis toss), spins on its
-  //              vertical axis, turns its back, then drops face-up onto row 1
-  //   bitcoin  = the side coin: enters bottom-left showing its back, lies flat, tips edge-on and flies
-  //              away in depth behind the big coin, turns its face and lands on row 2
-  //   ethereum = the right coin: rises from the corner showing its back, flips edge-on to its face,
-  //              keeps turning, then slides left onto row 3
-  //   zcash    = the big near coin: swings in from the left as a rim wall, opens to its face, lands last
+  // Tracked off the reference frame by frame (viewport px / degrees), mapped onto our four tokens by where
+  // each lands on the 2 x 2 "Most popular" card grid (so no flight paths cross):
+  //   bitcoin  = the small coin over the word: flips up out of the text (X-axis toss), spins on its
+  //              vertical axis, turns its back, then drops face-up onto the top-right card
+  //   solana   = the side coin: enters bottom-left showing its back, lies flat, tips edge-on and flies
+  //              away in depth behind the big coin, turns its face and lands on the top-left card
+  //   zcash    = the right coin: rises from the corner showing its back, flips edge-on to its face,
+  //              keeps turning, then slides left onto the second-row right card
+  //   ethereum = the big near coin: swings in from the left as a rim wall, opens to its face, lands last on
+  //              the second-row left card
   // rx past 90 shows the plain back. Nothing ever holds still: idle is a slow continuous turn.
   const COINS = [
     {
-      key: "solana", row: 0, from: 47, thick: 0.12,
+      key: "bitcoin", row: 1, from: 47, thick: 0.12,
       x: [[47, 962], [66, 956], [76, 944], [82, 922], [86, 891], [90, 830]],
       y: [[47, 500], [49, 440], [51, 402], [54, 376], [60, 342], [66, 328], [74, 333], [80, 352], [84, 376], [88, 432], [90, 470]],
       d: [[47, 70], [50, 160], [53, 192], [60, 201], [76, 206], [82, 196], [86, 176], [90, 140]],
       rx: [[47, -360], [48, -220], [50, -100], [52, -30], [55, -6], [62, 4], [72, 7], [84, 3], [92, 0]],
       ry: [[47, 0], [58, -14], [64, -24], [70, -10], [76, 16], [80, 62], [84, 130], [88, 206], [92, 320]],
       rz: [[47, 0], [60, -4], [80, 4], [92, 0]],
-      land: [89, 95], ryEnd: 360,
+      land: [89, 95], ryEnd: 360, // top coin
     },
     {
-      key: "bitcoin", row: 1, from: 48, thick: 0.11,
+      key: "solana", row: 0, from: 48, thick: 0.11,
       x: [[48, 120], [50, 140], [53, 250], [56, 315], [59, 358], [62, 386], [66, 362], [76, 355], [86, 384]],
       y: [[48, 1040], [50, 840], [53, 826], [56, 806], [59, 790], [61, 722], [63, 604], [66, 562], [76, 574], [86, 598]],
       d: [[48, 470], [54, 488], [58, 468], [60, 420], [62, 312], [64, 238], [67, 204], [80, 192], [86, 186]],
@@ -143,7 +147,7 @@
       land: [86, 97], ryEnd: 0,
     },
     {
-      key: "ethereum", row: 2, from: 49, thick: 0.13,
+      key: "zcash", row: 3, from: 49, thick: 0.13,
       x: [[49, 2010], [50, 1940], [52, 1858], [55, 1786], [58, 1758], [66, 1722], [76, 1645], [86, 1574], [92, 1480]],
       y: [[49, 1110], [51, 970], [54, 905], [58, 880], [66, 894], [80, 880], [92, 870]],
       d: [[49, 580], [52, 556], [54, 520], [58, 470], [62, 432], [66, 410], [80, 400], [92, 384]],
@@ -153,7 +157,7 @@
       land: [90, 102], ryEnd: 0,
     },
     {
-      key: "zcash", row: 3, from: 60, thick: 0.17,
+      key: "ethereum", row: 2, from: 60, thick: 0.17,
       x: [[60, -150], [62, 140], [64, 282], [66, 384], [70, 448], [80, 490], [90, 518], [96, 560], [101, 618]],
       y: [[60, 880], [62, 920], [66, 944], [74, 958], [86, 964], [94, 968], [98, 968], [101, 966]],
       d: [[60, 690], [62, 672], [66, 650], [74, 628], [86, 602], [94, 576], [98, 540], [101, 500]],
@@ -273,14 +277,17 @@
       const blur = phoneBlur(f);
       phoneWrap.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
 
-      // live prices: tick every other frame once the screen is up
+      const so = sheetOffset(f);
+      ui.sheet.style.transform = `translateY(${so.toFixed(2)}px)`;
+      ui.sheet.style.visibility = so > 351 ? "hidden" : "visible";
+
+      // live card percentages: tick every other frame once the screen is up
       const tk = Math.max(0, Math.floor((fi - 86) / 2));
-      PHONE.rows.forEach((r, i) => {
-        const dir = r.pct >= 0 ? 1 : (i % 2 ? -1 : 1);
-        const jitter = Math.sin(tk * 1.7 + i * 2.3) * 0.25;
-        const v = r.price * (1 + dir * 0.00009 * (tk + jitter));
-        ui.prices[i].textContent = PHONE.fmt(v, r.dp);
-        ui.pcts[i].textContent = Math.abs(r.pct + 0.01 * Math.floor(tk / 3) * (r.pct >= 0 ? 1 : -0.5)).toFixed(2) + "%";
+      PHONE.cards.forEach((c, i) => {
+        const step = Math.floor((tk + i) / 2) - Math.floor(i / 2);
+        const wob = ((step * 7 + i * 3) % 5) - 2; // small deterministic up/down ticks
+        const v = Math.max(0.01, Math.abs(c.pct) + 0.01 * (step * (c.pct >= 0 ? 1 : 0.6) + wob * 0.5));
+        ui.pcts[i].textContent = v.toFixed(2) + "%";
       });
 
       // AI prompt: caret blinks, then the sentence is typed once the keyboard is in view

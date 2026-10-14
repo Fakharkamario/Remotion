@@ -6,51 +6,61 @@
 #line.blue { font-weight: 680; letter-spacing: -0.03em; }
 
 /* ---------------------------------------------------------------- phone */
-#phoneWrap { position: absolute; left: 585px; top: 0; width: 750px; height: 1567px; transform-origin: 50% 0; }
+#phoneWrap { position: absolute; left: 612px; top: 0; width: 696px; height: 1455px; transform-origin: 50% 0; }
 .phone {
-  position: absolute; inset: 0; border-radius: 116px; background: #efeeea;
+  position: absolute; inset: 0; border-radius: 108px; background: #efeeea;
   box-shadow: inset 0 0 0 1.5px #e2e0da, 0 30px 80px rgba(40, 30, 10, 0.07);
 }
 .screen {
-  position: absolute; left: 25px; top: 25px; width: 430px; height: 932px; transform-origin: 0 0;
-  transform: scale(1.627907); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
+  position: absolute; left: 23px; top: 23px; width: 430px; height: 932px; transform-origin: 0 0;
+  transform: scale(1.511628); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
   font-family: "Inter", system-ui, sans-serif;
 }
 .status { position: absolute; left: 0; top: 0; overflow: visible; }
 .status .sb-time { font-family: "Inter", system-ui, sans-serif; font-size: 17.6px; font-weight: 640; fill: #111; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
 .status .sb-batt { font-family: "Inter", system-ui, sans-serif; font-size: 11.6px; font-weight: 750; fill: #fff; text-anchor: middle; letter-spacing: -0.01em; }
 
+.avatar { position: absolute; left: 20px; top: 72.4px; width: 39.9px; height: 39.9px; border-radius: 50%; background: #f0f0f0; }
+.avatar svg { width: 22px; height: 22px; margin: 8.9px; }
+.cat { position: absolute; top: 132.8px; width: 55.8px; height: 55.8px; border-radius: 50%; background: #f0f0f0; }
+.cat.on { background: #31302e; }
+.cat svg { width: 24px; height: 24px; margin: 15.9px; }
+.cat-l { position: absolute; top: 196.5px; width: 100px; text-align: center; font-size: 15.4px; color: #6e6e6c; letter-spacing: 0.005em; }
+.cat-l.on { color: #262626; }
+
 .search {
-  position: absolute; left: 16px; top: 71px; width: 398px; height: 44px; border-radius: 22px; background: #efefef;
+  position: absolute; left: 20.1px; top: 235.8px; width: 389.3px; height: 43.6px; border-radius: 21.8px; background: #f0f0f0;
   display: flex; align-items: center;
 }
-.search svg { width: 17px; height: 17px; margin-left: 13px; }
-.search span { margin-left: 10px; font-size: 16px; color: #8b8b8b; letter-spacing: 0.005em; }
-.chips {
-  position: absolute; left: 16px; top: 127px; width: 398px; height: 40px; border-radius: 20px; background: #efefef;
-  overflow: hidden; white-space: nowrap; font-size: 16px; color: #8a8a88; line-height: 40px;
+.search svg { width: 17.5px; height: 17.5px; margin-left: 13.3px; }
+.search span { margin-left: 8.5px; font-size: 16.6px; color: #7d7d7b; letter-spacing: 0.005em; }
+.sec-t { position: absolute; left: 20.4px; top: 309.5px; font-size: 21.6px; font-weight: 450; color: #222; letter-spacing: -0.012em; }
+.sec-s { position: absolute; left: 20.2px; top: 340px; font-size: 14.9px; color: #6b6b69; letter-spacing: 0.005em; }
+.sec-b { position: absolute; left: 377.9px; top: 307.4px; width: 31.9px; height: 31.9px; border-radius: 50%; background: #f0f0f0; }
+.sec-b svg { width: 15px; height: 15px; margin: 8.45px; }
+
+.card {
+  position: absolute; width: 187.9px; height: 167.4px; border-radius: 16.8px; background: #f9f8f4;
+  box-shadow: inset 0 0 0 1px #d3d2d0;
 }
-.chips span { position: absolute; top: 0; }
-.chips span:nth-child(1) { left: 14px; color: #262626; }
-.chips span:nth-child(2) { left: 83px; }
-.chips span:nth-child(3) { left: 154px; }
-.chips span:nth-child(4) { left: 210px; }
-.chips span:nth-child(5) { left: 279px; }
-.chips span:nth-child(6) { left: 373px; }
-
-.row { position: absolute; left: 0; width: 430px; height: 40px; }
-.ic-slot { position: absolute; left: 16px; top: 0; width: 40px; height: 40px; }
-.ic { width: 40px; height: 40px; border-radius: 9px; overflow: hidden; }
+.ic-slot { position: absolute; left: 13.4px; top: 13.9px; width: 40px; height: 40px; }
+.ic { width: 40px; height: 40px; border-radius: 9.5px; overflow: hidden; }
 .ic svg { width: 100%; height: 100%; display: block; }
-.nm { position: absolute; left: 68.3px; top: 2px; font-size: 16.5px; color: #262626; letter-spacing: 0.005em; }
-.vol { position: absolute; left: 68.3px; top: 24px; font-size: 13.5px; color: #77776f; letter-spacing: 0.01em; }
-.spark { position: absolute; top: 2px; width: 72px; height: 32px; }
-.px { position: absolute; right: 16.5px; top: 1px; font-size: 16.5px; color: #262626; letter-spacing: 0.005em; font-variant-numeric: tabular-nums; }
-.pc { position: absolute; right: 16.5px; top: 24px; font-size: 13.5px; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; }
-.pc .ar { font-size: 11px; margin-right: 3px; position: relative; top: -0.5px; }
+.card .nm { position: absolute; left: 13.8px; top: 111.5px; font-size: 16.6px; color: #262626; letter-spacing: 0.003em; }
+.card .pc { position: absolute; left: 13.6px; top: 135.2px; font-size: 14.4px; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; display: flex; align-items: center; }
+.card .pc .ar { width: 11px; height: 11px; margin-right: 4.5px; }
 .pc.up { color: #4f8c68; }
-.pc.dn { color: #c0605a; }
+.pc.dn { color: #b0605a; }
 
+.tabbar {
+  position: absolute; left: 0; top: 774px; width: 430px; height: 158px; display: flex; padding: 0 0 0 0;
+  background: linear-gradient(#f9f8f400, #f9f8f4 10px);
+}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 10px; font-size: 13.6px; color: #6b6b69; letter-spacing: 0.005em; }
+.tab svg { width: 24px; height: 24px; margin-bottom: 3.5px; }
+.tab.on { color: #1f1f1f; }
+/* the AI bar + keyboard slide up from the bottom edge during the scroll (scene.js sets the offset) */
+.kb-sheet { position: absolute; left: 0; top: 0; width: 430px; height: 932px; }
 .composer {
   position: absolute; left: 0; top: 585px; width: 430px; height: 56px; background: #f9f8f4;
   box-shadow: 0 -0.5px 0 #e2e1dc;

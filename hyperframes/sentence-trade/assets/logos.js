@@ -1,4 +1,4 @@
-// Token art redrawn from the Trade screen: the same face is used for the row icon and the 3D coin.
+// Token art redrawn from the app screens: the same face is used for the card icon and the 3D coin.
 (function () {
   const L = {};
 
