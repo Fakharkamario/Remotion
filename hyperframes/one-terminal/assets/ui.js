@@ -72,7 +72,7 @@
         return `<div class="it card" style="left:${U.CARD_X[i]}px;top:${sec.y}px">
           <img class="ic" src="assets/icons/${icon}.png" alt="">
           <div class="nm${lines.length > 1 ? " two" : ""}">${lines.join("<br>")}</div>
-          ${pct ? `<div class="pc ${pct.up ? "up" : "dn"}">${arrow(pct.up)}<span>${pct.v.toFixed(2)}%</span></div>` : ""}
+          ${pct ? `<div class="pc ${pct.up ? "up" : "dn"}">${arrow(pct.up)}<span data-v="${pct.v}">${pct.v.toFixed(2)}%</span></div>` : ""}
         </div>`;
       }).join("");
     }).join("");

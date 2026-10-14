@@ -7,7 +7,7 @@
 //   47–60   a dark pill grows behind "market", the label fades, the pill rounds into a circle
 //   56–84   the camera pulls back: the circle is the selected Crypto button; the Explore screen fades up
 //   84–126  the cursor comet swoops in and taps Stocks, then ETFs; the content swaps with a stagger
-//   126–162 it drags the category row left (the row keeps gliding after release)
+//   126–162 it flicks the category row left; the row coasts, overshoots its end and springs back
 //   162–209 it taps Pre-IPO and drifts off; the camera keeps a slow push-in
 (function () {
   const FPS = 30;
@@ -70,9 +70,9 @@
   // The circle's on-screen path (centre + diameter) is ONE spline from the pill to the button's resting
   // place. Before frame 60 it shapes the pill; from 60 it *is* the camera (Z = diameter / button size,
   // anchored on the button), so the hand-off has no seam and the pull-back never stalls.
-  const CIR_D = spline([[52, 172], [56, 204], [60, 222], [64, 207], [68, 170], [72, 134], [76, 110], [80, 98], [84, 92.6], [88, CAT_D]]);
-  const CIR_X = spline([[52, 1040], [56, 990], [60, 930], [64, 878], [70, 800], [76, 742], [82, 708], [88, P.x]]);
-  const CIR_Y = spline([[52, 540], [56, 532], [60, 518], [64, 496], [70, 450], [76, 404], [82, 370], [88, P.y]]);
+  const CIR_D = spline([[52, 160], [56, 151], [60, 139], [64, 125], [68, 112], [72, 102], [76, 95.5], [80, 92.6], [84, 91.5], [88, CAT_D]]);
+  const CIR_X = spline([[52, 1060], [56, 1000], [60, 925], [66, 838], [72, 770], [78, 726], [84, 701], [88, P.x]]);
+  const CIR_Y = spline([[52, 540], [56, 535], [60, 515], [66, 470], [72, 421], [78, 385], [84, 360], [88, P.y]]);
   const Wd = { x: 960, y: 520 };
 
   // after the pull-back: anchor glides to the phone, a slow push-in runs, and the frame leans a little
@@ -100,34 +100,38 @@
   const CLICKS = [
     { f: 99, cat: 1 }, // Stocks
     { f: 121, cat: 2 }, // ETFs
-    { f: 168, cat: 6 }, // Pre-IPO
+    { f: 163, cat: 6 }, // Pre-IPO
   ];
-  const DRAG = { from: 140, to: 154 };
+  const DRAG = { from: 140, to: 149 }; // a quick flick: press, swipe, release mid-motion
   const SWAPS = [
     { f: 99, from: "crypto", to: "stocks" },
     { f: 121, from: "stocks", to: "etfs" },
-    { f: 168, from: "etfs", to: "preipo" },
+    { f: 163, from: "etfs", to: "preipo" },
   ];
   // category row scroll (pt): follows the finger, then glides to rest after release
-  const rowX = spline([[140, 0], [143, -10], [149, -74], [154, -132], [158, -146.5], [163, UI.ROW_SCROLL]]);
+  // the row follows the finger, keeps its momentum after release, runs ~6 pt past its end and springs back
+  const rowX = spline([[140, 0], [142, -5], [145, -42], [149, -114], [152, -142], [155, -155.5], [159, -152.4], [164, UI.ROW_SCROLL]]);
 
   // cursor path in screen points (pt); holds where it taps; during the drag it rides the row
   const CUR = (() => {
     const keys = [
       [84, 690, 420], [88, 560, 395], [92, 380, 310], [95.5, 215, 222], [99, 130, UI.CAT_Y], [106, 130, UI.CAT_Y],
       [111, 150, 228], [116, 192, 200], [120, UI.CAT_X[2], UI.CAT_Y], [126, UI.CAT_X[2], UI.CAT_Y],
-      [131, 270, 232], [136, 345, 200], [139.5, UI.CAT_X[4], UI.CAT_Y], [140, UI.CAT_X[4], UI.CAT_Y],
-      [154, UI.CAT_X[4] - 132, UI.CAT_Y], // placeholder for the drag segment (overridden below)
-      [159, 290, 226], [164, 360, 202], [167, UI.CAT_X[6] + UI.ROW_SCROLL, UI.CAT_Y], [175, UI.CAT_X[6] + UI.ROW_SCROLL, UI.CAT_Y],
-      [183, 440, 262], [192, 540, 420], [202, 690, 650],
+      [131, 286, 122], [135.5, 352, 142], [139, UI.CAT_X[4], UI.CAT_Y], [140, UI.CAT_X[4], UI.CAT_Y],
+      [149, UI.CAT_X[4] - 114, UI.CAT_Y], // the drag itself rides the row (below)
+      // follow-through after release, lift, and a short arc over the row to Pre-IPO
+      [151.5, 236, 154], [155, 262, 124], [158.5, 330, 118], [162, UI.CAT_X[6] + UI.ROW_SCROLL, UI.CAT_Y],
+      [171, UI.CAT_X[6] + UI.ROW_SCROLL, UI.CAT_Y], [179, 440, 262], [188, 540, 420], [198, 690, 650],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => {
       if (f >= DRAG.from && f <= DRAG.to) return { x: UI.CAT_X[4] + rowX(f), y: UI.CAT_Y };
+      // resting on Pre-IPO: stay on it while the row settles its rubber-band
+      if (f >= 162 && f <= 171) return { x: UI.CAT_X[6] + rowX(f), y: UI.CAT_Y };
       return { x: sx(f), y: sy(f) };
     };
   })();
-  const cursorOpacity = (f) => smoother((f - 84) / 4) * (1 - smoother((f - 180) / 16));
+  const cursorOpacity = (f) => smoother((f - 84) / 4) * (1 - smoother((f - 176) / 16));
   const pressed = (f) => {
     // 0..1 how hard the cursor is "down": short taps, and held through the drag
     let p = 0;
@@ -152,20 +156,28 @@
     return 1 - 0.08 * d;
   };
 
-  // content swap: out items leave left with a quick stagger, in items arrive from the right
+  // content motion. In: items slide in from the right and rise a touch, scaling up, on a stagger (the
+  // first screen instead cascades up as the reveal passes). Out: a quick fade and drift left.
+  // `start` is when the item began arriving: icons pop and percentages count up from it.
   function itemStyle(k, j, f) {
-    let op = k === "crypto" ? 1 : 0, tx = 0;
+    let op = 0, tx = 0, ty = 0, sc = 1, start = -1;
+    if (k === "crypto") {
+      start = 63 + j * 1.6;
+      const p = outCubic((f - start) / 14);
+      op = p; ty = 16 * (1 - p); sc = 0.97 + 0.03 * p;
+    }
     for (const s of SWAPS) {
       if (s.to === k) {
-        const p = outCubic((f - (s.f + 5) - j * 1.3) / 11);
-        op = p; tx = 34 * (1 - p);
+        start = s.f + 5 + j * 1.3;
+        const p = outCubic((f - start) / 12);
+        op = p; tx = 30 * (1 - p); ty = 7 * (1 - p); sc = 0.965 + 0.035 * p;
       }
       if (s.from === k) {
         const p = smoother((f - (s.f + 1) - j * 0.45) / 5);
-        op *= 1 - p; tx += -22 * p;
+        op *= 1 - p; tx += -20 * p; sc *= 1 - 0.02 * p;
       }
     }
-    return { op, tx };
+    return { op, tx, ty, sc, start };
   }
 
   // ------------------------------------------------------------------ mount
@@ -276,12 +288,15 @@
       ui.puck.style.borderRadius = ph / 2 + "px";
       ui.puck.style.transform = `translate(${(px - pw / 2).toFixed(3)}px, ${(squash / 2).toFixed(3)}px) scale(${dip.toFixed(4)})`;
 
-      // the screen is revealed by a circle growing out of the Crypto button (solid UI, no ghosting)
-      if (f < 84) {
+      // the screen is revealed by a circle growing out of the Crypto button; its edge feathers wider as
+      // it opens, so the UI dissolves in instead of being cut out (and the hand-off frame stays exact)
+      if (f < 90) {
         const cp = project(c, P);
-        const R = (CAT_D * c.Z) / 2 + 2400 * Math.pow(smoother((f - 60) / 24), 1.35);
-        reveal.style.clipPath = `circle(${R.toFixed(2)}px at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px)`;
-      } else reveal.style.clipPath = "none";
+        const R = (CAT_D * c.Z) / 2 + 2300 * Math.pow(smoother((f - 60) / 27), 1.5);
+        const F = 0.5 + 260 * smoother((f - 60) / 14);
+        const m = `radial-gradient(circle at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px, #000 ${R.toFixed(2)}px, transparent ${(R + F).toFixed(2)}px)`;
+        reveal.style.webkitMaskImage = reveal.style.maskImage = m;
+      } else reveal.style.webkitMaskImage = reveal.style.maskImage = "none";
 
       // content blocks
       for (const k in ui.blocks) {
@@ -289,8 +304,11 @@
         ui.blocks[k].items.forEach((el, j) => {
           const st = itemStyle(k, j, f);
           el.style.opacity = st.op.toFixed(4);
-          el.style.transform = `translateX(${st.tx.toFixed(3)}px)`;
+          el.style.transform = `translate(${st.tx.toFixed(3)}px, ${st.ty.toFixed(3)}px) scale(${st.sc.toFixed(4)})`;
           if (st.op > 0.002) any = true;
+          if (el._ic === undefined) { el._ic = el.querySelector(".ic"); el._pv = el.querySelector(".pc span"); }
+          if (el._ic) el._ic.style.transform = `scale(${(0.8 + 0.2 * outCubic((f - st.start - 2) / 11)).toFixed(4)})`;
+          if (el._pv) el._pv.textContent = (+el._pv.dataset.v * outCubic((f - st.start - 1) / 16)).toFixed(2) + "%";
         });
         ui.blocks[k].el.style.visibility = any ? "visible" : "hidden";
       }
