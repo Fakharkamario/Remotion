@@ -67,22 +67,33 @@
   const world = (x, y) => ({ x: PHONE.x + PHONE.bezel + x * K, y: PHONE.y + PHONE.bezel + y * K });
   const CAT_D = 56 * K;
   const P = world(UI.CAT_X[0], UI.CAT_Y); // the Crypto circle: the pill becomes it, the camera pulls back from it
-  const PILL_D = 220; // circle size on screen when the pull-back starts
-  const Z0 = PILL_D / CAT_D;
-  const SC = { x: 960, y: 540 };
+  // The circle's on-screen path (centre + diameter) is ONE spline from the pill to the button's resting
+  // place. Before frame 60 it shapes the pill; from 60 it *is* the camera (Z = diameter / button size,
+  // anchored on the button), so the hand-off has no seam and the pull-back never stalls.
+  const CIR_D = spline([[52, 172], [56, 204], [60, 222], [64, 207], [68, 170], [72, 134], [76, 110], [80, 98], [84, 92.6], [88, CAT_D]]);
+  const CIR_X = spline([[52, 1040], [56, 990], [60, 930], [64, 878], [70, 800], [76, 742], [82, 708], [88, P.x]]);
+  const CIR_Y = spline([[52, 540], [56, 532], [60, 518], [64, 496], [70, 450], [76, 404], [82, 370], [88, P.y]]);
+  const Wd = { x: 960, y: 520 };
 
-  // camera: screen = C + Z * (world - W). The pull-back is an exponential zoom (constant feel of speed)
-  // anchored on the Crypto circle; afterwards the anchor glides to the phone and a slow push-in runs.
-  function camera(f) {
-    const u = smoother((f - 56) / 28);
-    const Z = Math.pow(Z0, 1 - u) * (1 + 0.04 * smoother((f - 80) / 130));
-    const v = smoother((f - 76) / 50);
-    const Wd = { x: 960, y: 520 };
+  // after the pull-back: anchor glides to the phone, a slow push-in runs, and the frame leans a little
+  // toward where the cursor is working (set per frame through camera.lean)
+  function camera(f, lean) {
+    const Z = (CIR_D(f) / CAT_D) * (1 + 0.075 * smoother((f - 88) / 122));
+    const v = smoother((f - 84) / 46);
     const W = { x: lerp(P.x, Wd.x, v), y: lerp(P.y, Wd.y, v) };
-    const C0 = { x: lerp(SC.x, P.x, u), y: lerp(SC.y, P.y, u) };
-    const C = { x: lerp(C0.x, Wd.x, v), y: lerp(C0.y, Wd.y, v) - 18 * smoother((f - 90) / 120) };
+    const lx = lean ? lean.x : 0, ly = lean ? lean.y : 0;
+    const C = { x: lerp(CIR_X(f), Wd.x, v) - lx, y: lerp(CIR_Y(f), Wd.y, v) - 14 * smoother((f - 92) / 110) - ly };
     return { Z, W, C };
   }
+  // lean toward the cursor's recent average position (only while it is on screen)
+  function lean(f) {
+    const w = smoother((f - 84) / 22) * (1 - smoother((f - 180) / 26));
+    if (w <= 0) return { x: 0, y: 0 };
+    let ax = 0, ay = 0;
+    for (let k = 0; k < 9; k++) { const p = CUR(f - k); const q = world(p.x, p.y); ax += q.x; ay += q.y; }
+    return { x: 0.07 * (ax / 9 - 960) * w, y: 0.04 * (ay / 9 - 520) * w };
+  }
+  const cam = (f) => camera(f, lean(f));
   const project = (cam, p) => ({ x: cam.C.x + cam.Z * (p.x - cam.W.x), y: cam.C.y + cam.Z * (p.y - cam.W.y) });
 
   // ------------------------------------------------------------------ interaction script
@@ -125,14 +136,15 @@
     return p;
   };
 
-  // selection amount per category (0..1)
-  function selection(i, f) {
-    let s = i === 0 ? 1 : 0;
+  // the selection puck's centre in row points: glides to each tapped category on a C2 ease;
+  // long hops take longer so its speed stays in the same range
+  function puckX(f) {
+    let x = UI.CAT_X[0];
     for (const c of CLICKS) {
-      const t = smoother((f - c.f) / 6);
-      s = c.cat === i ? lerp(s, 1, t) : lerp(s, 0, t);
+      const to = UI.CAT_X[c.cat], dur = 8 + Math.abs(to - x) / 75;
+      x = lerp(x, to, smoother((f - c.f) / dur));
     }
-    return s;
+    return x;
   }
   const pressDip = (i, f) => {
     let d = 0;
@@ -160,12 +172,13 @@
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
   SCENE.mount = function (stage) {
-    stage.innerHTML = `<div id="cam"><div id="phoneWrap"></div></div><div id="pill"></div><div id="line"></div>
+    stage.innerHTML = `<div id="reveal"><div id="cam"><div id="phoneWrap"></div></div></div><div id="pill"></div><div id="line"></div>
       <svg id="cursor" width="1920" height="1080" viewBox="0 0 1920 1080">
-        <g id="halos"></g><circle id="ring" r="0" fill="#7ee2a8"/>
+        <circle id="ring" r="0" fill="#7ee2a8"/>
         <path id="trail" fill="none" stroke="#3d9ef2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg><span id="meas"></span>`;
-    const cam = stage.querySelector("#cam");
+    const camEl = stage.querySelector("#cam");
+    const reveal = stage.querySelector("#reveal");
     const phoneWrap = stage.querySelector("#phoneWrap");
     const ui = UI.build(phoneWrap);
     const line = stage.querySelector("#line");
@@ -173,9 +186,6 @@
     const meas = stage.querySelector("#meas");
     const trail = stage.querySelector("#trail");
     const ring = stage.querySelector("#ring");
-    const halos = stage.querySelector("#halos");
-    halos.innerHTML = CLICKS.map(() => `<circle r="0" fill="#7ee2a8"/>`).join("") + `<circle r="0" fill="#7ee2a8"/>`;
-    const haloEls = [...halos.children];
     const widthOf = (text, size, gap) => {
       meas.textContent = text;
       meas.style.fontSize = size + "px";
@@ -187,7 +197,7 @@
     function render(t) {
       const f = clamp(t, 0, FRAMES - 1);
       const fi = Math.round(f);
-      const c = camera(f);
+      const c = cam(f);
 
       // ---------------- headline + pill (until the hand-off at frame 60)
       if (f < 60) {
@@ -223,7 +233,7 @@
           // pill around the word, then a morph onto the projected Crypto circle (which the camera is
           // already starting to pull back from, so the hand-off at frame 60 is exact)
           const R0 = { x: r.left + r.width / 2, y: r.top + r.height * 0.54, w: r.width + 0.62 * h.size, h: 1.22 * h.size };
-          const T = project(c, P), D = CAT_D * c.Z;
+          const T = { x: CIR_X(f), y: CIR_Y(f) }, D = CIR_D(f);
           const m = smoother((f - 52) / 8);
           const mw = smoother((f - 51.5) / 7.5); // width leads a touch: the pill squeezes, then rounds
           const w = lerp(R0.w, D, mw), hh = lerp(R0.h, D, m);
@@ -242,25 +252,36 @@
 
       // ---------------- camera + phone
       const showPhone = f >= 60;
-      cam.style.display = showPhone ? "block" : "none";
-      cam.style.transform = `translate(${(c.C.x - c.Z * c.W.x).toFixed(3)}px, ${(c.C.y - c.Z * c.W.y).toFixed(3)}px) scale(${c.Z.toFixed(5)})`;
-      const uiOp = smoother((f - 61) / 15);
-      phoneWrap.style.setProperty("--ui", uiOp.toFixed(4));
+      reveal.style.display = showPhone ? "block" : "none";
+      camEl.style.transform = `translate(${(c.C.x - c.Z * c.W.x).toFixed(3)}px, ${(c.C.y - c.Z * c.W.y).toFixed(3)}px) scale(${c.Z.toFixed(5)})`;
 
-      // category row: selection colours, press dips, scroll
+      // category row: scroll, press dips, and the dark puck sliding between categories
       ui.row.style.transform = `translateX(${rowX(f).toFixed(3)}px)`;
-      ui.cats.forEach((el, i) => {
-        const s = selection(i, f);
-        const disc = el.firstElementChild;
-        disc.style.background = mix("#f0f0f0", "#31302e", s);
-        disc.style.color = mix("#5f5f5d", "#ffffff", s);
-        disc.style.transform = `scale(${pressDip(i, f).toFixed(4)})`;
-        // only the Crypto disc is on screen during the pull-back; its glyph fades in as it lands
-        el.style.opacity = i === 0 ? 1 : uiOp;
-        disc.firstElementChild.style.opacity = i === 0 ? smoother((f - 60) / 9) : 1;
-        ui.labels[i].style.opacity = uiOp;
-        ui.labels[i].style.color = mix("#6e6e6c", "#262626", s);
+      const px = puckX(f), pv = puckX(f + 0.5) - puckX(f - 0.5);
+      const stretch = Math.min(46, Math.abs(pv) * 1.15), squash = Math.min(7, Math.abs(pv) * 0.18);
+      const pw = 56 + stretch, ph = 56 - squash;
+      let dip = 1;
+      UI.CAT_X.forEach((x, i) => {
+        const near = smoother(1 - Math.abs(px - x) / 44); // how much the puck sits on this category
+        const d = pressDip(i, f);
+        if (near > 0.5) dip = Math.min(dip, d);
+        ui.discs[i].style.transform = ui.glyphs[i].style.transform = `scale(${d.toFixed(4)})`;
+        ui.glyphs[i].style.color = mix("#5f5f5d", "#ffffff", near);
+        const tapped = i === 0 || CLICKS.some((ck) => ck.cat === i);
+        ui.labels[i].style.color = mix("#6e6e6c", "#262626", tapped ? smoother(1 - Math.abs(px - x) / 18) : 0);
+        ui.glyphs[i].firstElementChild.style.opacity = i === 0 ? smoother((f - 61) / 8) : 1;
       });
+      ui.puck.style.width = pw + "px";
+      ui.puck.style.height = ph + "px";
+      ui.puck.style.borderRadius = ph / 2 + "px";
+      ui.puck.style.transform = `translate(${(px - pw / 2).toFixed(3)}px, ${(squash / 2).toFixed(3)}px) scale(${dip.toFixed(4)})`;
+
+      // the screen is revealed by a circle growing out of the Crypto button (solid UI, no ghosting)
+      if (f < 84) {
+        const cp = project(c, P);
+        const R = (CAT_D * c.Z) / 2 + 2400 * Math.pow(smoother((f - 60) / 24), 1.35);
+        reveal.style.clipPath = `circle(${R.toFixed(2)}px at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px)`;
+      } else reveal.style.clipPath = "none";
 
       // content blocks
       for (const k in ui.blocks) {
@@ -276,7 +297,7 @@
 
       // ---------------- cursor: a brush-stroke comet (its recent path) that collapses to a dot at rest
       const co = cursorOpacity(f);
-      const toScreen = (ff) => { const p = CUR(ff); return project(camera(ff), world(p.x, p.y)); };
+      const toScreen = (ff) => { const p = CUR(ff); return project(cam(ff), world(p.x, p.y)); };
       if (co > 0.002) {
         const pts = [];
         for (let k = 0; k <= 12; k++) pts.push(toScreen(f - k * 0.26)); // ~3 frames of path
@@ -289,22 +310,24 @@
         ring.style.opacity = (0.9 * co).toFixed(3);
       } else { trail.setAttribute("d", ""); ring.setAttribute("r", 0); }
 
-      // click halos: a soft mint bloom that grows and fades where each tap landed; one held during the drag
+      // tap halos (row points, under the buttons): a soft mint bloom that grows and fades; one held
+      // under the finger through the drag
+      const halo = (el, x, r, op) => {
+        el.style.width = el.style.height = (2 * r).toFixed(3) + "px";
+        el.style.transform = `translate(${(x - r).toFixed(3)}px, ${(UI.CAT_Y - r).toFixed(3)}px)`;
+        el.style.opacity = op.toFixed(3);
+      };
       CLICKS.forEach((ck, i) => {
-        const tt = f - ck.f, el = haloEls[i];
-        if (tt < 0 || tt > 24) { el.setAttribute("r", 0); return; }
-        const p = project(c, world(UI.CAT_X[ck.cat] + rowX(f), UI.CAT_Y));
-        el.setAttribute("cx", p.x); el.setAttribute("cy", p.y);
-        el.setAttribute("r", ((20 + 62 * (1 - Math.exp(-tt / 3.2))) * c.Z).toFixed(2));
-        el.style.opacity = (0.42 * smoother(tt / 1.5) * (1 - smoother(tt / 20))).toFixed(3);
+        const tt = f - ck.f;
+        if (tt < -1 || tt > 26) return halo(ui.halos[i], 0, 0, 0);
+        halo(ui.halos[i], UI.CAT_X[ck.cat], 30 + 34 * (1 - Math.exp(-Math.max(0, tt) / 3.4)),
+          0.6 * smoother((tt + 1) / 2.5) * (1 - smoother(tt / 22)));
       });
-      const dh = haloEls[CLICKS.length], dt = f - DRAG.from;
-      if (dt >= -1 && f <= DRAG.to + 12) {
-        const p = toScreen(Math.min(f, DRAG.to));
-        dh.setAttribute("cx", p.x); dh.setAttribute("cy", p.y);
-        dh.setAttribute("r", ((18 + 22 * smoother(dt / 4) + 30 * smoother((f - DRAG.to) / 10)) * c.Z).toFixed(2));
-        dh.style.opacity = (0.45 * smoother((dt + 1) / 3) * (1 - smoother((f - DRAG.to) / 12))).toFixed(3);
-      } else dh.setAttribute("r", 0);
+      const dt = f - DRAG.from;
+      if (dt >= -1 && f <= DRAG.to + 14)
+        halo(ui.halos[3], UI.CAT_X[4], 30 + 10 * smoother(dt / 4) + 26 * smoother((f - DRAG.to) / 12),
+          0.5 * smoother((dt + 1) / 3) * (1 - smoother((f - DRAG.to) / 14)));
+      else halo(ui.halos[3], 0, 0, 0);
     }
 
     const R = { _f: 0 };

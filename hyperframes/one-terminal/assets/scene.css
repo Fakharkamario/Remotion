@@ -8,6 +8,7 @@
 #pill { position: absolute; left: 0; top: 0; background: #31302e; transform-origin: 50% 50%; }
 
 /* ---------------------------------------------------------------- camera + phone */
+#reveal { position: absolute; inset: 0; }
 #cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
 #phoneWrap { position: absolute; left: 585px; top: 64px; width: 750px; height: 1567px; }
 .phone {
@@ -29,10 +30,13 @@
 
 /* category row: scrolls horizontally (scene.js sets the offset); each disc is recoloured per frame */
 .catrow { position: absolute; left: 0; top: 0; width: 430px; height: 220px; }
-.cat { position: absolute; top: 132.7px; width: 56px; height: 56px; }
-.cat .disc { width: 56px; height: 56px; border-radius: 50%; background: #f0f0f0; color: #5f5f5d; }
-.cat svg { width: 24px; height: 24px; margin: 16px; display: block; }
-.cat-l { position: absolute; top: 196.5px; width: 100px; text-align: center; font-size: 15.4px; color: #6e6e6c; letter-spacing: 0.005em; }
+.cdisc, .cglyph { position: absolute; top: 132.7px; width: 56px; height: 56px; border-radius: 50%; }
+.cdisc { background: #f0f0f0; }
+.cglyph { display: flex; align-items: center; justify-content: center; color: #5f5f5d; }
+.cglyph svg { width: 24px; height: 24px; display: block; }
+.puck { position: absolute; top: 132.7px; left: 0; width: 56px; height: 56px; border-radius: 28px; background: #31302e; }
+.halo { position: absolute; left: 0; top: 0; border-radius: 50%; background: #7ee2a8; width: 0; height: 0; }
+.cat-l { position: absolute; top: 196.5px; width: 100px; text-align: center; font-size: 14.9px; color: #6e6e6c; letter-spacing: -0.004em; }
 
 .search {
   position: absolute; left: 20.1px; top: 235.7px; width: 389.3px; height: 44px; border-radius: 22px; background: #f0f0f0;

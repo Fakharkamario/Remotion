@@ -79,9 +79,12 @@
   }
 
   U.build = function (host) {
-    const cats = U.CATS.map((k, i) => `
-      <div class="cat" data-k="${k}" style="left:${U.CAT_X[i] - 28}px"><div class="disc"><svg viewBox="0 0 24 24">${GLYPH[k]}</svg></div></div>
-      <div class="cat-l" style="left:${U.CAT_X[i] - 50}px">${LABEL[k]}</div>`).join("");
+    // layers: grey discs, the dark selection puck (slides between them), glyphs, labels
+    const discs = U.CATS.map((k, i) => `<div class="cdisc" style="left:${U.CAT_X[i] - 28}px"></div>`).join("");
+    const glyphs = U.CATS.map((k, i) => `<div class="cglyph" style="left:${U.CAT_X[i] - 28}px"><svg viewBox="0 0 24 24">${GLYPH[k]}</svg></div>`).join("");
+    const labels = U.CATS.map((k, i) => `<div class="cat-l" style="left:${U.CAT_X[i] - 50}px">${LABEL[k]}</div>`).join("");
+    // tap halos bloom underneath the buttons (row points), so they glow around them
+    const cats = `<div class="halo"></div>`.repeat(4) + discs + `<div class="puck"></div>` + glyphs + labels;
     const blocks = ["crypto", "stocks", "etfs", "preipo"].map((k) => `<div class="block" data-k="${k}">${block(k)}</div>`).join("");
 
     host.innerHTML = `
@@ -122,7 +125,10 @@
       phone: host.querySelector(".phone"),
       screen: host.querySelector(".screen"),
       row: host.querySelector(".catrow"),
-      cats: q(".cat"),
+      discs: q(".cdisc"),
+      glyphs: q(".cglyph"),
+      puck: host.querySelector(".puck"),
+      halos: q(".halo"),
       labels: q(".cat-l"),
       ui: q(".ui"),
       blocks: Object.fromEntries(q(".block").map((b) => [b.dataset.k, { el: b, items: [...b.querySelectorAll(".it")] }])),
