@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------- headline (same type as sentence-trade) */
+#line {
+  position: absolute; left: 960px; top: 540px; white-space: pre; transform-origin: 50% 50%;
+  font-weight: 620; color: #1c1d21; letter-spacing: -0.025em; line-height: 1;
+}
+#line span { display: inline-block; white-space: pre; }
+#meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-weight: 620; letter-spacing: -0.025em; }
+#pill { position: absolute; left: 0; top: 0; background: #31302e; transform-origin: 50% 50%; }
+
+/* ---------------------------------------------------------------- camera + phone */
+#cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+#phoneWrap { position: absolute; left: 585px; top: 64px; width: 750px; height: 1567px; }
+.phone {
+  position: absolute; inset: 0; border-radius: 116px; background: #efeeea; opacity: var(--ui, 1);
+  box-shadow: inset 0 0 0 1.5px #e2e0da, 0 30px 80px rgba(40, 30, 10, 0.07);
+}
+.screen {
+  position: absolute; left: 25px; top: 25px; width: 430px; height: 932px; transform-origin: 0 0;
+  transform: scale(1.627907); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
+  font-family: "Inter", system-ui, sans-serif;
+}
+.screen .ui { opacity: var(--ui, 1); }
+.status { position: absolute; left: 0; top: 0; overflow: visible; }
+.status .sb-time { font-family: "Inter", system-ui, sans-serif; font-size: 17.6px; font-weight: 640; fill: #111; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.status .sb-batt { font-family: "Inter", system-ui, sans-serif; font-size: 11.6px; font-weight: 750; fill: #fff; text-anchor: middle; letter-spacing: -0.01em; }
+
+.avatar { position: absolute; left: 20px; top: 72.7px; width: 40px; height: 40px; border-radius: 50%; background: #f0f0f0; }
+.avatar svg { width: 22px; height: 22px; margin: 9px; }
+
+/* category row: scrolls horizontally (scene.js sets the offset); each disc is recoloured per frame */
+.catrow { position: absolute; left: 0; top: 0; width: 430px; height: 220px; }
+.cat { position: absolute; top: 132.7px; width: 56px; height: 56px; }
+.cat .disc { width: 56px; height: 56px; border-radius: 50%; background: #f0f0f0; color: #5f5f5d; }
+.cat svg { width: 24px; height: 24px; margin: 16px; display: block; }
+.cat-l { position: absolute; top: 196.5px; width: 100px; text-align: center; font-size: 15.4px; color: #6e6e6c; letter-spacing: 0.005em; }
+
+.search {
+  position: absolute; left: 20.1px; top: 235.7px; width: 389.3px; height: 44px; border-radius: 22px; background: #f0f0f0;
+  display: flex; align-items: center;
+}
+.search svg { width: 17.5px; height: 17.5px; margin-left: 13.3px; }
+.search span { margin-left: 8.5px; font-size: 16.6px; color: #7d7d7b; letter-spacing: 0.005em; }
+
+.content { position: absolute; inset: 0; }
+.block { position: absolute; inset: 0; }
+.it { position: absolute; }
+.sec { position: absolute; left: 0; width: 430px; height: 60px; }
+.sec-t { position: absolute; left: 20.4px; top: 0; font-size: 21.6px; font-weight: 450; color: #222; letter-spacing: -0.012em; white-space: nowrap; }
+.sec-s { position: absolute; left: 20.2px; top: 30.5px; font-size: 14.9px; color: #6b6b69; letter-spacing: 0.005em; white-space: nowrap; }
+.sec-b { position: absolute; left: 375.5px; top: -2.1px; width: 31.9px; height: 31.9px; border-radius: 50%; background: #f0f0f0; }
+.sec-b svg { width: 15px; height: 15px; margin: 8.45px; }
+.note { left: 20.4px; font-size: 16.6px; color: #6b6b69; letter-spacing: 0.004em; white-space: nowrap; }
+
+.card {
+  width: 146px; height: 166px; border-radius: 16.8px; background: #f9f8f4;
+  box-shadow: inset 0 0 0 1px #d3d2d0;
+}
+.card .ic { position: absolute; left: 13.4px; top: 13.9px; width: 40px; height: 40px; border-radius: 9.5px; }
+.card .nm { position: absolute; left: 13.8px; top: 111.5px; font-size: 16.6px; color: #262626; letter-spacing: 0.003em; white-space: nowrap; line-height: 20px; }
+.card .nm.two { top: 93.5px; line-height: 18px; }
+.card .pc { position: absolute; left: 13.6px; top: 135.2px; font-size: 14.4px; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; display: flex; align-items: center; }
+.card .pc .ar { width: 11px; height: 11px; margin-right: 4.5px; }
+.pc.up { color: #4f8c68; }
+.pc.dn { color: #b0605a; }
+
+/* ---------------------------------------------------------------- cursor (brush-stroke comet + click halo) */
+#cursor { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
