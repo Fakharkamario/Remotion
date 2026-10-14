@@ -23,7 +23,14 @@
   }
 
   const S = {};
+  // the scene is built lazily on the first render (after page load): building the PMREM environment and compiling
+  // the physical/transmission shaders is slow on the software GL used for rendering, and must not hold up page load
   S.mount = function (canvas) {
+    S._canvas = canvas;
+    S.render = (pose) => { if (document.readyState !== "complete") return; build(S._canvas); S.render(pose); };
+    S.redrawLabel = () => {};
+  };
+  function build(canvas) {
     const r = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
     r.setPixelRatio(1);
     r.setSize(W, H, false);
@@ -48,7 +55,7 @@
     const TRACK_W = 2.5, TRACK_L = 31;
     const trackGeo = new THREE.ExtrudeGeometry(roundedRect(TRACK_W, TRACK_L, TRACK_W / 2), { depth: 0.12, bevelEnabled: false, curveSegments: 24 });
     trackGeo.rotateX(-Math.PI / 2);
-    const track = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ color: C.track, roughness: 0.6, metalness: 0 }));
+    const track = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ color: 0x22211f, roughness: 0.6, metalness: 0 }));
     track.position.set(0, 0, 4 - TRACK_L / 2);
     scene.add(track);
 
@@ -60,6 +67,10 @@
       x.clearRect(0, 0, lc.width, lc.height);
       x.fillStyle = C.label; x.textAlign = "center"; x.textBaseline = "middle";
       x.font = '650 250px "Inter", sans-serif';
+      // a soft glow under crisp letters: reads as light through the glass knob, as in the reference
+      x.shadowColor = "rgba(220,255,236,0.55)"; x.shadowBlur = 26;
+      x.fillText("Slide to buy", lc.width / 2, lc.height / 2 + 8);
+      x.shadowBlur = 0;
       x.fillText("Slide to buy", lc.width / 2, lc.height / 2 + 8);
       labelTex.needsUpdate = true;
     };
@@ -69,23 +80,38 @@
     label.position.set(0, 0.125, -9.5); label.renderOrder = 1;
     scene.add(label);
 
-    // knob: a green slab with two white chevrons, plus a soft contact shadow
+    // soft studio environment for reflections: a pale dome with a few bright soft-boxes, prefiltered (PMREM)
+    const envScene = new THREE.Scene();
+    envScene.add(new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), new THREE.MeshBasicMaterial({ color: 0xf2f1ec, side: THREE.BackSide })));
+    [[0, 30, 10, 40, 14, 3.2], [-26, 12, -8, 18, 30, 1.8], [24, 10, -4, 14, 24, 1.5], [0, 6, -40, 50, 10, 1.4]].forEach(([x, y, z, w, h, k]) => {
+      const m = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }); m.color.multiplyScalar(k);
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m); p.position.set(x, y, z); p.lookAt(0, 0, 0); envScene.add(p);
+    });
+    const pm = new THREE.PMREMGenerator(r);
+    scene.environment = pm.fromScene(envScene, 0.04).texture;
+    track.material.envMapIntensity = 0.12; track.material.roughness = 0.5;
+
+    // knob: a slim translucent glass slab (the label glows through it, as in the reference), bright clear-coat edges, two small glossy white chevrons and a soft contact shadow
     const knob = new THREE.Group();
-    const kGeo = new THREE.ExtrudeGeometry(roundedRect(2.9, 2.6, 0.85), { depth: 0.4, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 5, curveSegments: 20 });
-    kGeo.rotateX(-Math.PI / 2); kGeo.translate(0, 0.1, 0);
-    // slightly translucent, like the reference's glassy knob: the label shows through as it slides over it
-    const kMesh = new THREE.Mesh(kGeo, new THREE.MeshStandardMaterial({ color: C.knob, roughness: 0.28, metalness: 0.02, transparent: true, opacity: 0.86 }));
-    kMesh.renderOrder = 2; knob.add(kMesh);
-    const chevMat = new THREE.MeshStandardMaterial({ color: C.chev, roughness: 0.45 });
+    const kGeo = new THREE.ExtrudeGeometry(roundedRect(2.9, 2.6, 0.85), { depth: 0.12, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.08, bevelSegments: 8, curveSegments: 24 });
+    kGeo.rotateX(-Math.PI / 2); kGeo.translate(0, 0.07, 0);
+    const glass = new THREE.MeshPhysicalMaterial({
+      color: 0x2c7a50, transparent: true, opacity: 0.84, roughness: 0.26, metalness: 0,
+      clearcoat: 0.8, clearcoatRoughness: 0.12, specularIntensity: 0.55, envMapIntensity: 0.42, depthWrite: false,
+      emissive: 0x1d5c3a, emissiveIntensity: 0.35,
+    });
+    const kMesh = new THREE.Mesh(kGeo, glass);
+    kMesh.renderOrder = 3; knob.add(kMesh);
+    const chevMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 0.9 });
     // two small raised chevrons at the centre of the face (small against the knob, as in the reference)
-    [-0.08, 0.14].forEach((dz) => {
-      const cg = new THREE.ExtrudeGeometry(chevron(0.42, 0.2, 0.075), { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2 });
+    [-0.1, 0.16].forEach((dz) => {
+      const cg = new THREE.ExtrudeGeometry(chevron(0.5, 0.23, 0.085), { depth: 0.035, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 3 });
       cg.rotateX(-Math.PI / 2);
-      const m = new THREE.Mesh(cg, chevMat); m.position.set(0, 0.6, -dz); knob.add(m);
+      const m = new THREE.Mesh(cg, chevMat); m.position.set(0, 0.27, -dz); knob.add(m);
     });
     const sc = document.createElement("canvas"); sc.width = sc.height = 128;
     const sx = sc.getContext("2d"), sg = sx.createRadialGradient(64, 64, 4, 64, 64, 64);
-    sg.addColorStop(0, "rgba(0,0,0,0.45)"); sg.addColorStop(1, "rgba(0,0,0,0)");
+    sg.addColorStop(0, "rgba(0,0,0,0.28)"); sg.addColorStop(1, "rgba(0,0,0,0)");
     sx.fillStyle = sg; sx.fillRect(0, 0, 128, 128);
     const shadow = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.126;
@@ -94,7 +120,20 @@
     scene.add(knob);
 
     const cam = new THREE.PerspectiveCamera(38, W / H, 0.05, 200);
+    // the sky drifts from warm paper toward a faint green haze as the camera travels (the reference's white -> lavender)
+    const mixHex = (a, b, k) => "#" + new THREE.Color(a).lerp(new THREE.Color(b), k).getHexString();
+    let lastTint = -1;
+    const paintSky = (k) => {
+      if (Math.abs(k - lastTint) < 0.004) return;
+      lastTint = k;
+      const gr = gx.createLinearGradient(0, 0, 0, 512);
+      gr.addColorStop(0, mixHex("#fbfaf6", "#eef4ef", k)); gr.addColorStop(0.55, mixHex(C.bg, "#e6efe8", k)); gr.addColorStop(1, mixHex(C.haze, "#dbe7df", k));
+      gx.fillStyle = gr; gx.fillRect(0, 0, 4, 512);
+      bgTex.needsUpdate = true;
+      scene.fog.color.set(mixHex(C.haze, "#dbe7df", k));
+    };
     S.render = (pose) => {
+      paintSky(Math.min(1, Math.max(0, pose.tint || 0)));
       if (!S._fontOk && document.fonts && document.fonts.check('650 250px "Inter"')) { drawLabel(); S._fontOk = true; }
       knob.position.z = pose.knobZ;
       cam.position.set(0, pose.cy, pose.cz);
@@ -103,6 +142,6 @@
     };
     S.redrawLabel = drawLabel;
     if (document.fonts) document.fonts.load('650 250px "Inter"').then(drawLabel);
-  };
+  }
   window.SLIDER3D = S;
 })();

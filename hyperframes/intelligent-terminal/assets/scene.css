@@ -1,3 +1,4 @@
+#dof { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; pointer-events: none; }
 #gl { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
 #ghost { position: absolute; left: 960px; top: 28px; font-size: 92px; font-weight: 400; color: #1e1e1e; letter-spacing: -0.02em; white-space: nowrap; }
 #ghost span { font-size: 40px; color: #6e6e6c; margin-left: 28px; letter-spacing: 0; }

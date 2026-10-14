@@ -42,8 +42,8 @@
   //   it), then catches up and settles down onto its top face as the chevrons pass underneath.
   const KZ = spline([[0, 4.2], [2, 2.95], [3, 1.95], [4, 0.89], [5, 0.05], [6, -1.0], [12, -4.4], [18, -7.8], [24, -11.2],
     [30, -14.4], [36, -17.4], [38, -18.3], [42, -19.6], [46, -20.3], [53, -20.6]]);
-  const CY = spline([[0, 5.55], [6, 5.42], [12, 4.94], [18, 4.5], [24, 4.0], [30, 2.95], [36, 2.14], [38, 1.9], [41, 1.25],
-    [44, 1.12], [47, 1.06], [50, 1.0], [53, 0.97]]);
+  const CY = spline([[0, 5.55], [6, 5.42], [12, 4.94], [18, 4.5], [24, 4.0], [30, 2.95], [36, 2.1], [38, 1.82], [41, 1.0],
+    [44, 0.86], [47, 0.79], [50, 0.73], [53, 0.69]]);
   const CZ = spline([[0, 10.9], [6, 10.6], [12, 8.85], [18, 4.0], [24, 0.6], [30, -5.9], [36, -12.2], [38, -14.0], [41, -17.55],
     [44, -18.75], [47, -19.55], [50, -20.4], [53, -21.0]]);
   const LY = spline([[0, 0], [53, 0]]);
@@ -66,7 +66,7 @@
   SCENE.FRAMES = FRAMES;
   SCENE.mount = function (stage) {
     stage.innerHTML = `
-      <canvas id="gl" width="1920" height="1080"></canvas>
+      <canvas id="gl" width="1920" height="1080"></canvas><canvas id="dof" width="1920" height="1080"></canvas>
       <div id="ghost">$375 <span>Receive ~4.00 ko</span></div>
       <div id="cardScene"><div id="card">
         <div class="c-row1"><span class="tag">Buy · Market</span><span class="done">Done</span></div>
@@ -86,6 +86,7 @@
     const okEl = $(".ok"), ring = $(".ring"), boughtEl = $(".bought"), textScene = $("#textScene"), line = $("#line"), logo = $("#logoScene"), meas = $("#meas");
     const spans = [...line.children];
     SLIDER3D.mount(gl);
+    const dof = $("#dof"), dctx = dof.getContext("2d");
     const widthOf = (t) => { meas.textContent = t; return meas.getBoundingClientRect().width; };
 
     function render(t) {
@@ -94,10 +95,18 @@
       // keep each shot's motion inside its own window, so blur samples near a cut stay in that shot
       const g = shot === 1 ? Math.min(f, CUT_CARD - 0.5) : shot === 2 ? clamp(f, CUT_CARD, CUT_TEXT - 0.1) : shot === 3 ? Math.max(f, CUT_TEXT) : f;
 
-      gl.style.display = shot === 1 ? "block" : "none";
+      gl.style.display = dof.style.display = shot === 1 ? "block" : "none";
       ghost.style.display = shot === 1 && g < 6 ? "block" : "none";
       if (shot === 1) {
-        SLIDER3D.render({ knobZ: knobZ(g), cy: CY(g), cz: CZ(g), ly: LY(g), lz: LZ(g) });
+        SLIDER3D.render({ knobZ: knobZ(g), cy: CY(g), cz: CZ(g), ly: LY(g), lz: LZ(g), tint: smoother(g / 40) });
+        // shallow depth of field, as in the reference: focus on the knob, the foreground (bottom of frame) blurs,
+        // more as the camera gets close
+        const blurPx = lerp(3, 11, smoother((g - 26) / 18));
+        dctx.filter = `blur(${blurPx.toFixed(2)}px)`;
+        dctx.clearRect(0, 0, 1920, 1080);
+        dctx.drawImage(gl, 0, 0);
+        const m0 = lerp(72, 80, smoother((g - 38) / 10)), m1 = lerp(96, 100, smoother((g - 38) / 10)); // keep the chevrons in focus
+        dof.style.webkitMaskImage = dof.style.maskImage = `linear-gradient(to bottom, transparent ${m0.toFixed(1)}%, #000 ${m1.toFixed(1)}%)`;
         ghost.style.opacity = (0.35 * (1 - smoother(g / 4))).toFixed(3);
         ghost.style.transform = `translate(-50%, ${(-20 * smoother(g / 5)).toFixed(2)}px)`;
       }
@@ -141,6 +150,7 @@
     tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: FRAMES / FPS, ease: "none", immediateRender: true }, 0);
     tl.set({}, {}, FRAMES / FPS);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { SLIDER3D.redrawLabel(); render(R._f); });
+    window.addEventListener("load", () => render(R._f));
     tl.seek(0.001).seek(0);
     return tl;
   };

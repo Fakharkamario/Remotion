@@ -17,6 +17,10 @@ Inter, the acend wordmark).
   from the reference: a grid search over a pinhole model fitted to the knob's measured height and width and the
   track end's height on screen (and, for the dive, the knob's far edge and chevrons). The knob is translucent so
   the label shows through as it slides over it, and it overhangs the track, as in the reference.
+- Look: the knob is a slim translucent glass slab (clear-coat, a soft studio environment for reflections, the
+  label glowing through it); the sky drifts toward a faint green haze as the camera travels, and a shallow depth
+  of field blurs the foreground while the knob and chevrons stay in focus. The 3D scene builds lazily on the
+  first render so page load stays fast on software GL.
 - The pop-up is the Buy · Market order for Coca-Cola: KO @ $93.76, $375.00 for 4.00 KO, the fill ring counts to
   100% and flips to a green check with "Bought". Its scale and drift curves follow the reference's card.
 - `assets/acend-logo.png` is the supplied wordmark with its background keyed out.
