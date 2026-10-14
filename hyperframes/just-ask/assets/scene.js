@@ -154,9 +154,25 @@
   const kbOff = (f) => 300 * (1 - smoother((f - 209) / 17)) + 300 * smoother((f - 263) / 17);
 
   // ------------------------------------------------------------------ mount
+  // ---- pacing: the opening plays faster than it is authored. v(f) = source frames per output frame (1.3x on the
+  // push-in, ~2x on the words, 1.25x on the reveal, 1x from the UI on). Output time is its integral, so speed
+  // changes are smooth, and nothing after the reveal is re-timed.
+  const PACE = spline([[0, 1.3], [26, 1.3], [36, 2.0], [70, 2.0], [80, 1.25], [118, 1.25], [134, 1]]);
+  const TMAP = (() => {
+    const STEP = 0.05, n = Math.ceil(FRAMES / STEP) + 1, T = new Float64Array(n);
+    for (let i = 1; i < n; i++) T[i] = T[i - 1] + STEP / PACE((i - 0.5) * STEP);
+    const toSrc = (t) => { // output frame -> source frame
+      let lo = 0, hi = n - 1;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T[m] <= t) lo = m; else hi = m; }
+      return (lo + (t - T[lo]) / (T[hi] - T[lo])) * STEP;
+    };
+    return { toSrc, out: T[n - 1] };
+  })();
+  const OUT_FRAMES = Math.ceil(TMAP.out);
+
   const SCENE = {};
-  SCENE.FRAMES = FRAMES;
-  SCENE._probe = { camera, world, project }; // for offline speed checks
+  SCENE.FRAMES = OUT_FRAMES;
+  SCENE._probe = { camera, world, project, TMAP }; // for offline speed checks
   SCENE.mount = function (stage) {
     stage.innerHTML = `<div id="reveal"><div id="cam"><div id="phoneWrap"></div></div></div>
       <div id="words"><div id="pill"><div id="pillM">M</div></div><div id="just">just</div><div id="ask">ask</div></div>
@@ -482,11 +498,11 @@
     }
 
     const R = { _f: 0 };
-    Object.defineProperty(R, "frame", { get: () => R._f, set: (v) => { R._f = v; render(v); } });
+    Object.defineProperty(R, "frame", { get: () => R._f, set: (v) => { R._f = v; render(TMAP.toSrc(Math.min(v, OUT_FRAMES - 1))); } });
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: FRAMES / FPS, ease: "none", immediateRender: true }, 0);
-    tl.set({}, {}, FRAMES / FPS);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { bubbleW = 0; render(R._f); });
+    tl.fromTo(R, { frame: 0 }, { frame: OUT_FRAMES, duration: OUT_FRAMES / FPS, ease: "none", immediateRender: true }, 0);
+    tl.set({}, {}, OUT_FRAMES / FPS);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { bubbleW = 0; render(TMAP.toSrc(R._f)); });
     tl.seek(0.001).seek(0);
     SCENE.render = render;
     return tl;
