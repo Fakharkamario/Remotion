@@ -43,8 +43,9 @@
     const key = new THREE.DirectionalLight(0xffffff, 0.5); key.position.set(4, 9, 7); scene.add(key);
     const rim = new THREE.DirectionalLight(0xffffff, 0.18); rim.position.set(-6, 3, -10); scene.add(rim);
 
-    // track: a long pill, top surface at y = 0.12, near end at z = 4, far end at z = -27
-    const TRACK_W = 3.4, TRACK_L = 31;
+    // track: a long straight pill, top surface at y = 0.12, near end at z = 4, far end at z = -27; narrower than the
+    // knob, so the knob overhangs it as in the reference
+    const TRACK_W = 2.5, TRACK_L = 31;
     const trackGeo = new THREE.ExtrudeGeometry(roundedRect(TRACK_W, TRACK_L, TRACK_W / 2), { depth: 0.12, bevelEnabled: false, curveSegments: 24 });
     trackGeo.rotateX(-Math.PI / 2);
     const track = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({ color: C.track, roughness: 0.6, metalness: 0 }));
@@ -63,27 +64,30 @@
       labelTex.needsUpdate = true;
     };
     drawLabel();
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 1.97), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false }));
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(10.8, 2.02), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false }));
     label.rotation.x = -Math.PI / 2; label.rotation.z = Math.PI / 2;
-    label.position.set(0, 0.125, -6.2);
+    label.position.set(0, 0.125, -9.5); label.renderOrder = 1;
     scene.add(label);
 
     // knob: a green slab with two white chevrons, plus a soft contact shadow
     const knob = new THREE.Group();
-    const kGeo = new THREE.ExtrudeGeometry(roundedRect(2.9, 2.05, 0.6), { depth: 0.42, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 5, curveSegments: 20 });
+    const kGeo = new THREE.ExtrudeGeometry(roundedRect(2.9, 2.6, 0.85), { depth: 0.4, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.1, bevelSegments: 5, curveSegments: 20 });
     kGeo.rotateX(-Math.PI / 2); kGeo.translate(0, 0.1, 0);
-    knob.add(new THREE.Mesh(kGeo, new THREE.MeshStandardMaterial({ color: C.knob, roughness: 0.32, metalness: 0.02 })));
+    // slightly translucent, like the reference's glassy knob: the label shows through as it slides over it
+    const kMesh = new THREE.Mesh(kGeo, new THREE.MeshStandardMaterial({ color: C.knob, roughness: 0.28, metalness: 0.02, transparent: true, opacity: 0.86 }));
+    kMesh.renderOrder = 2; knob.add(kMesh);
     const chevMat = new THREE.MeshStandardMaterial({ color: C.chev, roughness: 0.45 });
-    [-0.18, 0.28].forEach((dz) => {
-      const cg = new THREE.ExtrudeGeometry(chevron(1.05, 0.5, 0.19), { depth: 0.08, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2 });
+    // two small raised chevrons at the centre of the face (small against the knob, as in the reference)
+    [-0.08, 0.14].forEach((dz) => {
+      const cg = new THREE.ExtrudeGeometry(chevron(0.42, 0.2, 0.075), { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2 });
       cg.rotateX(-Math.PI / 2);
-      const m = new THREE.Mesh(cg, chevMat); m.position.set(0, 0.62, -dz); knob.add(m);
+      const m = new THREE.Mesh(cg, chevMat); m.position.set(0, 0.6, -dz); knob.add(m);
     });
     const sc = document.createElement("canvas"); sc.width = sc.height = 128;
     const sx = sc.getContext("2d"), sg = sx.createRadialGradient(64, 64, 4, 64, 64, 64);
     sg.addColorStop(0, "rgba(0,0,0,0.45)"); sg.addColorStop(1, "rgba(0,0,0,0)");
     sx.fillStyle = sg; sx.fillRect(0, 0, 128, 128);
-    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 3.8), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc), transparent: true, depthWrite: false }));
     shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.126;
     knob.add(shadow);
     knob.position.y = 0.12;

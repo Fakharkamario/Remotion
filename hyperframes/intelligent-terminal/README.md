@@ -6,14 +6,17 @@ Inter, the acend wordmark).
 
 | frames  | time (s)    | beat |
 |---------|-------------|------|
-| 0–52    | 0.00–1.77   | 3D "Slide to buy": the green knob flicks away up the track, the camera flies low along it and skims over the knob |
+| 0–52    | 0.00–1.77   | 3D "Slide to buy": the knob launches up the track and cruises, the camera follows it, catches up and settles onto its top face |
 | 53–102  | 1.77–3.43   | cut: the order pop-up fills 17% → 100% as it slowly grows, turns to "Bought", then whips past camera |
-| 103–162 | 3.43–5.43   | cut: "your intelligent trading terminal" builds word by word, the line re-centring as each word lands |
+| 103–162 | 3.43–5.43   | cut: "your intelligent trading terminal" builds word by word: each word pops in with extra space, the gap closes as the line re-centres |
 | 163–229 | 5.43–7.67   | cut: the acend wordmark, held |
 
 - Beat 1 is a three.js scene (`assets/slider3d.js`, three r149 vendored in `assets/vendor`): an extruded pill
   track with the label printed along it, a bevelled green knob with two white chevrons, a contact shadow, soft
-  hemisphere + key light and a horizon haze. Camera and knob follow splines matched to the reference's framing.
+  hemisphere + key light and a horizon haze. The knob's path and the camera pose at each keyframe were *solved*
+  from the reference: a grid search over a pinhole model fitted to the knob's measured height and width and the
+  track end's height on screen (and, for the dive, the knob's far edge and chevrons). The knob is translucent so
+  the label shows through as it slides over it, and it overhangs the track, as in the reference.
 - The pop-up is the Buy · Market order for Coca-Cola: KO @ $93.76, $375.00 for 4.00 KO, the fill ring counts to
   100% and flips to a green check with "Bought". Its scale and drift curves follow the reference's card.
 - `assets/acend-logo.png` is the supplied wordmark with its background keyed out.

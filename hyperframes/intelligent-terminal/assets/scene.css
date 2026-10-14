@@ -32,4 +32,4 @@
 #line span { display: inline-block; }
 #meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-size: 72px; font-weight: 500; letter-spacing: -0.02em; }
 #logoScene { position: absolute; inset: 0; background: #f9f8f4; display: none; align-items: center; justify-content: center; }
-#logoScene img { width: 430px; height: auto; display: block; }
+#logoScene img { width: 500px; height: auto; display: block; }

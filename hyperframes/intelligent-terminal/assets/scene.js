@@ -1,8 +1,9 @@
 // "your intelligent trading terminal" — the reference's motion beat for beat (30 fps, 230 frames), in the acend style.
 //
-//   0–52    3D "Slide to buy": the green knob flicks away up the track, the camera flies low along it and over it
+//   0–52    3D "Slide to buy": the knob launches up the track and cruises; the camera follows, catches up and skims over it
 //   53–102  cut: the order pop-up fills 17% → 100% while it slowly grows, turns to "Bought", then whips past camera
-//   103–162 cut: "your intelligent trading terminal" builds word by word, the line re-centring as each word lands
+//   103–162 cut: "your intelligent trading terminal" builds word by word: each word pops in with extra space and
+//           the gap closes as the line eases back to centre
 //   163–229 cut: the acend wordmark, held
 //
 // Every element is a pure function of a continuous frame number (the 240 fps motion-blur render samples between
@@ -33,12 +34,22 @@
   }
   const CUT_CARD = 53, CUT_TEXT = 103, CUT_LOGO = 163;
 
-  // ---- beat 1: camera + knob (world units; track top at y 0.12, near end z 4, far end z -27)
-  const knobZ = (f) => lerp(2.6, -20, outCubic(f / 11)); // a quick flick that settles near the far end
-  const CY = spline([[0, 9.5], [12, 6.2], [24, 3.6], [34, 2.0], [40, 1.32], [46, 1.04], [53, 0.97]]);
-  const CZ = spline([[0, 10.5], [12, 4.5], [24, -5.5], [34, -13.2], [40, -17.3], [46, -19.85], [53, -21.5]]);
-  const LY = spline([[0, 0], [24, 0.05], [40, 0.32], [53, 0.45]]);
-  const LZ = spline([[0, -9], [12, -15], [24, -21], [34, -26], [40, -30], [53, -40]]);
+  // ---- beat 1: camera + knob, solved from the reference. Knob z and the camera pose at each keyframe were fitted
+  // (grid search over a pinhole model, fov 38) to the reference's measured knob height, knob width and track-end
+  // height on screen (and, for the final dive, the knob's far edge and chevron height), so the framing tracks the reference within ~1% per keyframe:
+  //   the knob launches in from the bottom (~1 unit/frame), settles into a steady cruise (~0.57/frame) and slows
+  //   near the far end; the camera follows it (the knob holds its place on screen while the label slides under
+  //   it), then catches up and settles down onto its top face as the chevrons pass underneath.
+  const KZ = spline([[0, 4.2], [2, 2.95], [3, 1.95], [4, 0.89], [5, 0.05], [6, -1.0], [12, -4.4], [18, -7.8], [24, -11.2],
+    [30, -14.4], [36, -17.4], [38, -18.3], [42, -19.6], [46, -20.3], [53, -20.6]]);
+  const CY = spline([[0, 5.55], [6, 5.42], [12, 4.94], [18, 4.5], [24, 4.0], [30, 2.95], [36, 2.14], [38, 1.9], [41, 1.25],
+    [44, 1.12], [47, 1.06], [50, 1.0], [53, 0.97]]);
+  const CZ = spline([[0, 10.9], [6, 10.6], [12, 8.85], [18, 4.0], [24, 0.6], [30, -5.9], [36, -12.2], [38, -14.0], [41, -17.55],
+    [44, -18.75], [47, -19.55], [50, -20.4], [53, -21.0]]);
+  const LY = spline([[0, 0], [53, 0]]);
+  const LZ = spline([[0, -13.5], [6, -10.9], [12, -10.3], [18, -13.3], [24, -17.1], [30, -19.9], [36, -23.8], [38, -24.7],
+    [41, -25.7], [44, -26], [47, -26.6], [50, -30], [53, -35]]);
+  const knobZ = KZ;
 
   // ---- beat 2: the pop-up card (base 828 px wide, centred), scale + centre
   const CS = spline([[53, 1.0], [57, 1.14], [66, 1.34], [78, 1.48], [90, 1.76], [96, 2.17], [99, 2.9], [102.9, 4.6]]);
@@ -49,7 +60,7 @@
 
   // ---- beat 3: words
   const WORDS = ["your", "intelligent", "trading", "terminal"];
-  const WT = [103, 109, 121, 133];
+  const WT = [103, 111, 123, 128];
 
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
@@ -106,17 +117,22 @@
 
       textScene.style.display = shot === 3 ? "block" : "none";
       if (shot === 3) {
-        // line width eases from the previous word count to the current one; new words fade in at their final place
+        // as in the reference: a new word pops in at full opacity with extra space before it, and the gap closes as
+        // the whole line eases to its new centre (ease-out, ~5 frames)
         let n = 0; WT.forEach((w) => { if (g >= w) n++; });
         const wOf = (k) => (k ? widthOf(WORDS.slice(0, k).join(" ")) : 0);
-        const e = smoother((g - WT[n - 1]) / 6);
-        const w = lerp(wOf(n - 1), wOf(n), n > 1 ? e : 1);
-        const sc = 1 + 0.035 * smoother((g - CUT_TEXT) / 60);
-        line.style.transform = `translate(${(960 - w / 2).toFixed(2)}px, -50%) scale(${sc.toFixed(4)})`;
-        spans.forEach((sp, i) => { sp.style.opacity = g >= WT[i] ? smoother((g - WT[i] + 0.6) / 3.4).toFixed(3) : 0; });
+        const e = n > 1 ? outCubic((g - WT[n - 1]) / 5.5) : 1;
+        const gapX = 0.55 * 72 * (1 - e); // the extra space before the new word, closing
+        const w = lerp(wOf(n - 1) + (n > 1 ? widthOf(" " + WORDS[n - 1]) + 0.55 * 72 : 0), wOf(n), e);
+        line.style.transform = `translate(${(960 - w / 2).toFixed(2)}px, -50%)`;
+        spans.forEach((sp, i) => {
+          sp.style.opacity = g >= WT[i] - 0.5 ? 1 : 0;
+          sp.style.transform = i === n - 1 && n > 1 ? `translateX(${gapX.toFixed(2)}px)` : "none";
+        });
       }
 
       logo.style.display = shot === 4 ? "flex" : "none";
+      if (shot === 4) logo.firstElementChild.style.transform = `scale(${(1 + 0.03 * (1 - smoother((g - CUT_LOGO) / 22))).toFixed(4)})`;
     }
 
     const R = { _f: 0 };
