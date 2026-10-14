@@ -1,10 +1,11 @@
 // "your intelligent trading terminal" — the reference's motion beat for beat (30 fps, 230 frames), in the acend style.
 //
 //   0–52    3D "Slide to buy": the knob launches up the track and cruises; the camera follows, catches up and skims over it
-//   53–102  cut: the order pop-up fills 17% → 100% while it slowly grows, turns to "Bought", then whips past camera
-//   103–162 cut: "your intelligent trading terminal" builds word by word: each word pops in with extra space and
-//           the gap closes as the line eases back to centre
-//   163–229 cut: the acend wordmark, held
+//   53–103  cut: the order pop-up fills 17% → 100% while it slowly grows, turns to "Bought", then drops out through
+//           the bottom of frame, over the first word of the next shot (100–103)
+//   100–163 "your intelligent trading terminal" builds word by word: each word pops in with extra space before it,
+//           and the gap closes as the whole line glides back to centre; then the line sinks into the cut
+//   164–229 cut: the acend wordmark rises a few pixels into place, held
 //
 // Every element is a pure function of a continuous frame number (the 240 fps motion-blur render samples between
 // frames); the cuts use the whole frame so blur samples never mix two shots.
@@ -32,7 +33,8 @@
       return (2 * t3 - 3 * t2 + 1) * y[i] + (t3 - 2 * t2 + t) * h[i] * m[i] + (-2 * t3 + 3 * t2) * y[i + 1] + (t3 - t2) * h[i] * m[i + 1];
     };
   }
-  const CUT_CARD = 53, CUT_TEXT = 103, CUT_LOGO = 163;
+  const CUT_CARD = 53, CARD_END = 103, CUT_TEXT = 100, CUT_LOGO = 164;
+  const outQuart = (t) => (t = clamp(t, 0, 1), 1 - Math.pow(1 - t, 4));
 
   // ---- beat 1: camera + knob, solved from the reference. Knob z and the camera pose at each keyframe were fitted
   // (grid search over a pinhole model, fov 38) to the reference's measured knob height, knob width and track-end
@@ -52,15 +54,19 @@
   const knobZ = KZ;
 
   // ---- beat 2: the pop-up card (base 828 px wide, centred), scale + centre
-  const CS = spline([[53, 1.0], [57, 1.14], [66, 1.34], [78, 1.48], [90, 1.76], [96, 2.17], [99, 2.9], [102.9, 4.6]]);
-  const CX = spline([[53, 960], [90, 960], [96, 966], [99, 1170], [102.9, 1720]]);
-  const CYc = spline([[53, 540], [66, 538], [78, 548], [90, 612], [96, 720], [99, 880], [102.9, 1250]]);
+  // measured on the reference: it keeps growing (1.57x at 84, 1.72x at 89, 1.99x at 94) while sinking, then falls
+  // out through the bottom edge (top edge at 53% of frame on 99, 69% on 100, 87% on 101, gone by 103)
+  const CS = spline([[53, 1.0], [57, 1.14], [66, 1.34], [78, 1.48], [84, 1.565], [89, 1.716], [94, 1.99], [99, 2.28], [103.5, 2.5]]);
+  const CX = spline([[53, 960], [103.5, 960]]);
+  const CYc = spline([[53, 540], [66, 538], [78, 546], [84, 551], [89, 605], [94, 702], [97, 775], [99, 850], [100, 960],
+    [101, 1135], [102, 1290], [103, 1390], [103.5, 1430]]);
   const FILL = spline([[53, 17], [57, 36], [66, 78], [78, 97], [86, 100]]);
   const BOUGHT = 87;
 
   // ---- beat 3: words
   const WORDS = ["your", "intelligent", "trading", "terminal"];
-  const WT = [103, 111, 123, 128];
+  const WT = [100, 108, 120, 130];
+  const GAP = 28, SETTLE = 14; // extra space a new word lands with; frames for the line to glide back to centre
 
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
@@ -92,8 +98,10 @@
     function render(t) {
       const f = clamp(t, 0, FRAMES - 1), fi = Math.round(f);
       const shot = fi < CUT_CARD ? 1 : fi < CUT_TEXT ? 2 : fi < CUT_LOGO ? 3 : 4;
+      const cardOn = fi >= CUT_CARD && fi <= CARD_END; // the card stays up over the first frames of the text shot
       // keep each shot's motion inside its own window, so blur samples near a cut stay in that shot
-      const g = shot === 1 ? Math.min(f, CUT_CARD - 0.5) : shot === 2 ? clamp(f, CUT_CARD, CUT_TEXT - 0.1) : shot === 3 ? Math.max(f, CUT_TEXT) : f;
+      const g = shot === 1 ? Math.min(f, CUT_CARD - 0.5) : shot === 3 ? clamp(f, CUT_TEXT - 0.5, CUT_LOGO - 0.5) : shot === 4 ? Math.max(f, CUT_LOGO - 0.5) : f;
+      const gc = clamp(f, CUT_CARD - 0.5, CARD_END + 0.5);
 
       gl.style.display = dof.style.display = shot === 1 ? "block" : "none";
       ghost.style.display = shot === 1 && g < 6 ? "block" : "none";
@@ -111,14 +119,15 @@
         ghost.style.transform = `translate(-50%, ${(-20 * smoother(g / 5)).toFixed(2)}px)`;
       }
 
-      cardScene.style.display = shot === 2 ? "block" : "none";
-      if (shot === 2) {
-        const s = CS(g);
-        card.style.transform = `translate(${(CX(g) - 414).toFixed(2)}px, ${(CYc(g) - 118).toFixed(2)}px) scale(${s.toFixed(4)})`;
-        const p = Math.round(FILL(g));
-        arc.style.strokeDasharray = `${FILL(g).toFixed(2)} 100`;
+      cardScene.style.display = cardOn ? "block" : "none";
+      cardScene.style.background = shot === 2 ? "#f9f8f4" : "transparent";
+      if (cardOn) {
+        const s = CS(gc);
+        card.style.transform = `translate(${(CX(gc) - 414).toFixed(2)}px, ${(CYc(gc) - 118).toFixed(2)}px) scale(${s.toFixed(4)})`;
+        const p = Math.round(FILL(gc));
+        arc.style.strokeDasharray = `${FILL(gc).toFixed(2)} 100`;
         pct.textContent = p + "% filled";
-        const b = smoother((g - BOUGHT) / 5);
+        const b = smoother((gc - BOUGHT) / 5);
         ring.style.opacity = (1 - b).toFixed(3); pct.style.opacity = (1 - b).toFixed(3);
         okEl.style.opacity = b.toFixed(3); okEl.style.transform = `scale(${(0.7 + 0.3 * b).toFixed(4)})`;
         boughtEl.style.opacity = b.toFixed(3);
@@ -126,22 +135,28 @@
 
       textScene.style.display = shot === 3 ? "block" : "none";
       if (shot === 3) {
-        // as in the reference: a new word pops in at full opacity with extra space before it, and the gap closes as
-        // the whole line eases to its new centre (ease-out, ~5 frames)
-        let n = 0; WT.forEach((w) => { if (g >= w) n++; });
-        const wOf = (k) => (k ? widthOf(WORDS.slice(0, k).join(" ")) : 0);
-        const e = n > 1 ? outCubic((g - WT[n - 1]) / 5.5) : 1;
-        const gapX = 0.55 * 72 * (1 - e); // the extra space before the new word, closing
-        const w = lerp(wOf(n - 1) + (n > 1 ? widthOf(" " + WORDS[n - 1]) + 0.55 * 72 : 0), wOf(n), e);
-        line.style.transform = `translate(${(960 - w / 2).toFixed(2)}px, -50%)`;
+        // as in the reference: a new word pops in at full opacity, landing with extra space before it while the words
+        // already there hold still; then the gap closes as the whole line glides back to centre (ease-out quart, so
+        // it starts at the reference's ~20 px/frame and decays smoothly to rest)
+        let n = 0; WT.forEach((w) => { if (g >= w - 0.5) n++; });
+        n = Math.max(n, 1);
+        const wOf = (k) => widthOf(WORDS.slice(0, k).join(" "));
+        const e = outQuart((g - WT[n - 1]) / (n > 1 ? SETTLE : 7));
+        let left, gap = 0;
+        if (n === 1) left = 960 - wOf(1) / 2 - 12 * (1 - e); // the first word drifts in from a touch left of centre
+        else { left = lerp(960 - wOf(n - 1) / 2, 960 - wOf(n) / 2, e); gap = GAP * (1 - e); }
+        // when the line is complete it sinks into the cut, accelerating (reference: ~18 px over its last 10 frames)
+        const sink = 18 * Math.pow(clamp((g - 153) / 10, 0, 1.1), 2);
+        line.style.transform = `translate(${left.toFixed(2)}px, calc(-50% + ${sink.toFixed(2)}px))`;
         spans.forEach((sp, i) => {
-          sp.style.opacity = g >= WT[i] - 0.5 ? 1 : 0;
-          sp.style.transform = i === n - 1 && n > 1 ? `translateX(${gapX.toFixed(2)}px)` : "none";
+          sp.style.opacity = i < n ? 1 : 0;
+          sp.style.transform = i === n - 1 && n > 1 ? `translateX(${gap.toFixed(2)}px)` : "none";
         });
       }
 
       logo.style.display = shot === 4 ? "flex" : "none";
-      if (shot === 4) logo.firstElementChild.style.transform = `scale(${(1 + 0.03 * (1 - smoother((g - CUT_LOGO) / 22))).toFixed(4)})`;
+      // hard cut onto the wordmark sitting a little low, which glides up ~19 px and settles (no scale, as in the reference)
+      if (shot === 4) logo.firstElementChild.style.transform = `translateY(${(-16 + 19 * (1 - outQuart((g - CUT_LOGO) / 12))).toFixed(2)}px)`;
     }
 
     const R = { _f: 0 };

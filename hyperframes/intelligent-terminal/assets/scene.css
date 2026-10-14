@@ -4,7 +4,7 @@
 #ghost span { font-size: 40px; color: #6e6e6c; margin-left: 28px; letter-spacing: 0; }
 
 /* ---------------------------------------------------------------- the pop-up */
-#cardScene { position: absolute; inset: 0; background: #f9f8f4; display: none; }
+#cardScene { position: absolute; inset: 0; background: #f9f8f4; display: none; z-index: 2; overflow: hidden; }
 #card {
   position: absolute; left: 0; top: 0; width: 828px; height: 236px; transform-origin: 50% 50%;
   border-radius: 30px; background: #ffffff; box-shadow: 0 0 0 1.5px #e7e5e0, 0 24px 70px rgba(40, 30, 10, 0.08);
@@ -33,4 +33,4 @@
 #line span { display: inline-block; }
 #meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-size: 72px; font-weight: 500; letter-spacing: -0.02em; }
 #logoScene { position: absolute; inset: 0; background: #f9f8f4; display: none; align-items: center; justify-content: center; }
-#logoScene img { width: 500px; height: auto; display: block; }
+#logoScene img { width: 410px; height: auto; display: block; }
