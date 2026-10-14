@@ -108,24 +108,42 @@
 .kfoot { display: flex; justify-content: space-between; padding: 6px 28px 0; }
 .kfoot svg { width: 26px; height: 26px; }
 
-/* ---------------------------------------------------------------- trade sheet */
-.backdrop { position: absolute; inset: 0; background: rgba(28, 26, 22, 0.32); opacity: 0; }
-.sheet { position: absolute; left: 0; top: 452px; width: 430px; height: 520px; border-radius: 26px 26px 0 0; background: #f9f8f4; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08); }
-.grab { position: absolute; left: 197px; top: 8px; width: 36px; height: 5px; border-radius: 3px; background: #d6d4cf; }
-.s-it { position: absolute; }
-.s-head { left: 0; top: 26px; width: 430px; height: 50px; }
-.s-head .ticon { left: 20px; top: 0; width: 46px; height: 46px; border-radius: 11px; }
-.s-t { position: absolute; left: 78px; top: 2px; font-size: 20px; font-weight: 500; color: #1e1e1e; letter-spacing: -0.01em; }
-.s-s { position: absolute; left: 78px; top: 28px; font-size: 14.2px; color: #6e6e6c; }
-.s-s b { font-weight: 400; color: #4f8c68; margin-left: 6px; }
-.s-x { position: absolute; left: 380px; top: 4px; width: 32px; height: 32px; border-radius: 50%; background: #efefef; }
-.s-x svg { width: 16px; height: 16px; margin: 8px; }
-.s-amt { left: 0; width: 430px; top: 100px; text-align: center; font-size: 46px; font-weight: 400; color: #1e1e1e; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
-.s-shares { left: 0; width: 430px; top: 156px; text-align: center; font-size: 15px; color: #6e6e6c; font-variant-numeric: tabular-nums; }
-.s-chart { left: 20px; top: 192px; width: 390px; height: 64px; overflow: visible; }
-.s-row { left: 20px; width: 390px; height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 15.4px; color: #6e6e6c; border-top: 1px solid transparent; }
-.s-row b { font-weight: 450; color: #262626; }
-.s-buy { left: 20px; top: 398px; width: 390px; height: 52px; border-radius: 26px; background: #31302e; color: #fff; font-size: 17.4px; font-weight: 500; display: flex; align-items: center; justify-content: center; letter-spacing: 0.005em; }
+/* ---------------------------------------------------------------- trade panel (measured off the screenshots) */
+.backdrop { position: absolute; inset: 0; background: rgba(28, 26, 22, 0.22); opacity: 0; }
+.trade { position: absolute; inset: 0; background: #f9f8f4; display: none; }
+.t-x { position: absolute; left: 21.7px; top: 82.7px; width: 20px; height: 20px; }
+.t-ic { position: absolute; left: 60.1px; top: 71px; width: 43.4px; height: 43.4px; border-radius: 10.5px; }
+.t-name { position: absolute; left: 116px; top: 83px; font-size: 17.4px; color: #262626; letter-spacing: 0.003em; }
+.t-px { position: absolute; right: 16.7px; top: 74px; font-size: 17px; color: #4f8c68; font-variant-numeric: tabular-nums; }
+.t-pc { position: absolute; right: 16.7px; top: 96px; font-size: 13.4px; color: #4f8c68; font-variant-numeric: tabular-nums; }
+.t-amt { position: absolute; left: 0; top: 228px; height: 52px; font-size: 52px; line-height: 52px; font-weight: 400; color: #262626; letter-spacing: -0.015em; white-space: pre; }
+.t-amt span { display: inline-block; }
+.t-recv { position: absolute; left: 0; width: 430px; top: 288px; text-align: center; font-size: 15.4px; color: #6e6e6c; font-variant-numeric: tabular-nums; }
+.t-pill { position: absolute; top: 425.9px; width: 90.6px; height: 39.2px; border-radius: 19.6px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 16.6px; color: #262626; }
+.t-key { position: absolute; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 18.6px; color: #262626; }
+.t-key i { position: absolute; inset: 0; border-radius: 50%; background: #e9e8e3; opacity: 0; }
+.t-key span { position: relative; }
+.t-del { width: 43.6px; height: 42.6px; border-radius: 10px; background: #f0f0f0; }
+.t-del svg { width: 22px; height: 22px; }
+.t-avail { position: absolute; left: 24.2px; top: 735px; font-size: 15.2px; color: #3a3a3a; white-space: nowrap; }
+.t-avail span { margin-left: 10px; font-size: 19px; color: #555; position: relative; top: 1px; }
+.t-fee { position: absolute; right: 26.7px; top: 735px; font-size: 14.6px; color: #7a7a78; }
+.t-btn { position: absolute; left: 20px; top: 766px; width: 389.6px; height: 54.7px; border-radius: 20px; background: #f0f0f0; overflow: hidden; }
+.t-fill { position: absolute; left: 0; top: 0; height: 100%; width: 0; background: #4f8c68; }
+.t-lbl0, .t-lbl1 { position: absolute; left: 0; width: 389.6px; top: 0; height: 54.7px; line-height: 54.7px; text-align: center; font-size: 17.6px; color: #2a2a2a; letter-spacing: 0.004em; }
+.t-knob { position: absolute; left: 0; top: 0; width: 51.8px; height: 54.7px; display: flex; align-items: center; justify-content: center; color: #3a3a3a; }
+.t-knob svg { width: 22px; height: 22px; position: absolute; }
+.t-spin, .t-check { opacity: 0; }
+.t-island { position: absolute; left: 215px; top: 9px; height: 50px; width: 0; border-radius: 23px; background: #111; overflow: hidden; opacity: 0; color: #fff; }
+.i-ic { position: absolute; left: 9px; top: 8px; width: 34px; height: 34px; }
+.i-ic img { width: 34px; height: 34px; border-radius: 9px; display: block; }
+.i-ok { position: absolute; inset: 0; border-radius: 50%; background: #4f8c68; opacity: 0; }
+.i-ok svg { width: 22px; height: 22px; margin: 6px; }
+.i-txt { position: absolute; left: 54px; top: 7px; width: 260px; height: 36px; }
+.i-txt b { position: absolute; left: 0; top: 0; font-size: 15.4px; font-weight: 600; letter-spacing: 0.005em; }
+.i-t1 { opacity: 0; }
+.i-txt span { position: absolute; left: 0; top: 19.5px; font-size: 13.2px; color: #a9a8a4; white-space: nowrap; }
+.i-spin { position: absolute; right: 14px; top: 13px; width: 24px; height: 24px; }
 
 /* ---------------------------------------------------------------- cursor (brush-stroke comet + tap halo) */
 #cursor { position: absolute; inset: 0; overflow: visible; pointer-events: none; }

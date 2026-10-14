@@ -1,5 +1,5 @@
 // "just ask" — picks up on the last frame of one-terminal (Explore, Pre-IPO selected) and runs in the same type and
-// motion language. 30 fps, 410 frames. Every element is a pure function of a continuous frame number so the 240 fps
+// motion language. 30 fps, 492 frames. Every element is a pure function of a continuous frame number so the 240 fps
 // motion-blur render can sample between frames; discrete state (typed characters, words) uses whole frames.
 //
 //   0–27    the camera pushes into the Pre-IPO button while a feathered mask dissolves the screen around it; the
@@ -10,10 +10,12 @@
 //   118–200 the camera eases out to the whole phone; the cursor taps AI; Home slides away, the AI screen builds in
 //   200–262 tap the input: the keyboard slides up and the prompt types itself with key presses; tap send
 //   262–330 the message flies up into a bubble, a typing indicator, a streamed reply and three low-risk asset cards
-//   330–409 the cursor taps Coca-Cola: the trade sheet springs up; the cursor settles on Buy
+//   342–392 the cursor taps Coca-Cola: the trade panel slides up; it taps 3, 7, 5 and the amount builds
+//   392–432 "Slide to buy": the camera pushes in on the slider and the cursor drags the knob across
+//   432–491 the camera pulls back as a live-activity pill drops in: "Buying 4.00 KO", then "Bought"
 (function () {
   const FPS = 30;
-  const FRAMES = 410;
+  const FRAMES = 492;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -67,9 +69,10 @@
 
   // ---- camera shots after the reveal (C fixed at screen centre): [frame, world focus x, y, zoom]
   const SHOT = [
-    [118, 960, 560, 1.0], [146, 960, 612, 0.955], [172, 960, 847.5, 0.655], [199, 960, 847.5, 0.655],
-    [221, 960, 1262, 1.0], [258, 960, 1276, 1.0], [280, 960, 652, 1.0], [330, 960, 694, 1.0],
-    [354, 960, 1082, 0.92], [409, 960, 1104, 0.955],
+    [118, 960, 560, 1.0], [146, 960, 612, 0.955], [172, 960, 850, 0.655], [199, 960, 832, 0.676],
+    [221, 960, 1262, 1.0], [258, 960, 1280, 1.012], [282, 960, 700, 1.0], [332, 960, 646, 1.02],
+    [344, 960, 680, 1.0], [364, 960, 884, 0.70], [392, 960, 900, 0.722], [412, 960, 1378, 2.05], [431, 960, 1378, 2.13],
+    [454, 960, 430, 1.12], [491, 960, 404, 1.17],
   ];
   const SW = { x: spline(SHOT.map((s) => [s[0], s[1]])), y: spline(SHOT.map((s) => [s[0], s[2]])), z: spline(SHOT.map((s) => [s[0], s[3]])) };
 
@@ -86,24 +89,33 @@
   const project = (c, p) => ({ x: c.O.x + c.Z * p.x, y: c.O.y + c.Z * p.y });
 
   // ------------------------------------------------------------------ interaction script
-  const TAP = { ai: 176, input: 204, send: 262, card: 342 };
+  const TAP = { ai: 176, input: 204, send: 262, card: 342, k3: 372, k7: 381, k5: 390 };
+  const KEYXY = { k3: [344.4, 506], k7: [84.3, 633.8], k5: [214.6, 569.9] };
   const TYPE0 = 224; // first typed character
+  const SLIDE = { from: 411, to: 430, x0: 46, travel: 389.6 - 51.8 }; // knob centre starts at 20 + 25.9 pt
+  const slideE = (f) => smoother((f - SLIDE.from) / (SLIDE.to - SLIDE.from));
   const CUR = (() => {
     const keys = [
       [156, 560, 1010], [160, 486, 936], [165, 380, 868], [170, 302, 818], [174.5, 269, 797], [182, 269, 797],
       [188, 246, 775], [194, 214, 752], [198.5, 196, 739], [206, 196, 739],
       [212, 248, 650], [218, 296, 566], [224, 318, 524], [254, 328, 528], [258, 372, 586], [261.5, 395, 609], [267, 395, 609],
-      [276, 452, 540], [322, 470, 600], [327, 420, 540], [333, 340, 484], [338, 276, 456], [341.5, 252, 451], [349, 252, 451],
-      [356, 272, 560], [364, 252, 720], [372, 230, 840], [378, 224, 870], [409, 222, 874],
+      [276, 452, 540], [322, 470, 600], [327, 420, 540], [333, 340, 484], [338, 276, 456], [341.5, 252, 451], [348, 252, 451],
+      [356, 296, 470], [364, 334, 494], [371, ...KEYXY.k3], [374, ...KEYXY.k3],
+      [377.5, 210, 600], [380.5, ...KEYXY.k7], [383, ...KEYXY.k7],
+      [386.5, 150, 618], [389.5, ...KEYXY.k5], [392, ...KEYXY.k5],
+      [398, 128, 690], [405, 58, 778], [410, SLIDE.x0, 793.4], [411, SLIDE.x0, 793.4],
+      [430, SLIDE.x0 + SLIDE.travel, 793.4], // the drag itself rides the knob (below)
+      [436, 352, 760], [446, 430, 700],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
-    return (f) => ({ x: sx(f), y: sy(f) });
+    return (f) => (f >= SLIDE.from && f <= SLIDE.to ? { x: SLIDE.x0 + SLIDE.travel * slideE(f), y: 793.4 } : { x: sx(f), y: sy(f) });
   })();
   const cursorOpacity = (f) =>
-    smoother((f - 156) / 4) * (1 - smoother((f - 264) / 10)) + smoother((f - 322) / 5) * (1 - smoother((f - 398) / 11));
+    smoother((f - 156) / 4) * (1 - smoother((f - 264) / 10)) + smoother((f - 322) / 5) * (1 - smoother((f - 432) / 12));
   const pressed = (f) => {
     let p = 0;
     for (const k in TAP) p = Math.max(p, smoother((f - TAP[k] + 1.5) / 1.5) * (1 - smoother((f - TAP[k] - 2) / 4)));
+    p = Math.max(p, smoother((f - SLIDE.from + 1.5) / 1.5) * (1 - smoother((f - SLIDE.to) / 3)));
     return p;
   };
   // keyboard sheet offset in pt (0 = up): rises after the input tap, drops after send
@@ -125,7 +137,7 @@
     const ex = UI.build(app.explore);
     const pill = $("#pill"), pillM = $("#pillM"), justEl = $("#just"), askEl = $("#ask"), meas = $("#meas");
     const trail = $("#trail"), ring = $("#ring"), halo = $("#halo");
-    const widthOf = (t, size) => { meas.textContent = t; meas.style.fontSize = size + "px"; return meas.getBoundingClientRect().width; };
+    const widthOf = (t, size) => { meas.textContent = t; meas.style.fontSize = size + "px"; meas.style.fontWeight = "640"; meas.style.letterSpacing = "-0.03em"; return meas.getBoundingClientRect().width; };
     app.ai.querySelector(".status").style.display = "none"; // Home's status bar stays up through the switch
 
     // ---- the Explore screen exactly as one-terminal leaves it (row scrolled, Pre-IPO selected)
@@ -176,7 +188,7 @@
 
       // ---------------- words: just [ask]
       if (f >= 22 && f < 90.5) {
-        const size = 150 * (1 + 0.045 * smoother((f - 26) / 56));
+        const size = 150 * (1 + 0.09 * smoother((f - 24) / 62)); // keeps pushing in: the beat never parks
         const wJ = widthOf("just", size), wA = widthOf("ask", size);
         const padX = 0.33 * size, pillW = wA + 2 * padX, pillH = 1.18 * size, gap = 0.27 * size;
         const total = wJ + gap + pillW, left = 960 - total / 2;
@@ -304,24 +316,93 @@
         app.fills.forEach((b, j) => { b.style.transform = `scaleX(${outCubic((f - 309 - j * 3.2) / 18).toFixed(4)})`; });
       }
 
-      // ---------------- trade sheet
-      const sh = f - (TAP.card + 3);
-      app.backdrop.style.opacity = (smoother(sh / 10)).toFixed(4);
-      app.sheet.style.display = sh > -1 ? "block" : "none";
-      app.sheet.style.transform = `translateY(${(520 * (1 - outBack(sh / 20, 0.9))).toFixed(2)}px)`;
-      app.sheetItems.forEach((el, j) => {
-        const p = outCubic((f - TAP.card - 9 - j * 1.6) / 13);
+      // ---------------- trade panel: slides up over the chat, amount typed on the keypad, slide to buy
+      const tp = f - (TAP.card + 2);
+      const up = outBack(tp / 20, 0.55);
+      app.backdrop.style.opacity = (smoother(tp / 10) * (1 - smoother(tp / 20))).toFixed(4);
+      app.trade.style.display = tp > -0.5 ? "block" : "none";
+      app.trade.style.transform = `translateY(${(940 * (1 - up)).toFixed(2)}px)`;
+      app.tItems.forEach((el, j) => {
+        if (el.classList.contains("t-key") || el === app.tAmt) return; // keys handled below
+        const p = outCubic((tp - 6 - j * 0.55) / 12);
         el.style.opacity = p.toFixed(4);
-        el.style.transform = `translateY(${(14 * (1 - p)).toFixed(2)}px)`;
+        el.style.transform = `translateY(${(12 * (1 - p)).toFixed(2)}px)`;
       });
-      const ca = outCubic((f - TAP.card - 12) / 18);
-      app.sAmt.textContent = money(APP.TRADE.amt * ca);
-      app.sShares.textContent = "≈ " + ((APP.TRADE.amt / APP.TRADE.price) * ca).toFixed(2) + " KO";
-      app.sLine.style.strokeDasharray = "1";
-      app.sLine.style.strokeDashoffset = (1 - outCubic((f - TAP.card - 14) / 20)).toFixed(4);
-      app.sArea.style.opacity = smoother((f - TAP.card - 22) / 12).toFixed(4);
-      const hov = smoother((f - 376) / 6);
-      app.sBuy.style.background = mix("#31302e", "#1f1e1c", hov);
+      // keypad: digits rise in, then light up as they are tapped
+      Object.entries(app.tKeys).forEach(([d, k], j) => {
+        const p = outCubic((tp - 9 - j * 0.6) / 12);
+        k.style.opacity = p.toFixed(4);
+        let pr = 0;
+        for (const [name, tf] of Object.entries(TAP)) if (name === "k" + d) pr = Math.max(pr, Math.sin(Math.PI * clamp((f - tf + 1) / 11, 0, 1)));
+        k.firstElementChild.style.opacity = pr.toFixed(3);
+        k.style.transform = `translateY(${(12 * (1 - p)).toFixed(2)}px) scale(${(1 - 0.06 * pr).toFixed(4)})`;
+      });
+      // the amount: each digit drops in and the number re-centres smoothly instead of jumping
+      const typedN = [TAP.k3, TAP.k7, TAP.k5].filter((tf) => fi >= tf).length;
+      const str = typedN ? "$" + APP.TRADE.digits.slice(0, typedN) : "$0";
+      const keyA = str + "|" + typedN;
+      if (app.tAmt._k !== keyA) {
+        app.tAmt._k = keyA;
+        app.tAmt.innerHTML = [...str].map((ch) => `<span>${ch}</span>`).join("");
+        app.tAmt._w = app.tAmt.offsetWidth;
+        const prev = typedN > 1 ? "$" + APP.TRADE.digits.slice(0, typedN - 1) : "$0";
+        meas.style.fontSize = "52px"; meas.style.letterSpacing = "-0.015em"; meas.style.fontWeight = "400"; meas.textContent = prev;
+        app.tAmt._wp = meas.getBoundingClientRect().width; // meas is unscaled, so this is already in pt
+      }
+      const lastTap = typedN ? [TAP.k3, TAP.k7, TAP.k5][typedN - 1] : 0;
+      const rc = typedN ? outCubic((f - lastTap) / 7) : 1;
+      const w = lerp(app.tAmt._wp || app.tAmt._w, app.tAmt._w, rc);
+      const ap = outCubic((tp - 7) / 12);
+      app.tAmt.style.color = typedN ? "#262626" : "#6b6b69";
+      app.tAmt.style.opacity = ap.toFixed(4);
+      app.tAmt.style.transform = `translate(${(215 - w / 2).toFixed(2)}px, ${(12 * (1 - ap)).toFixed(2)}px)`;
+      const spans = app.tAmt.children;
+      if (typedN && spans.length) {
+        const nd = spans[spans.length - 1], q = outCubic((f - lastTap) / 6);
+        nd.style.opacity = q.toFixed(3);
+        nd.style.transform = `translateY(${(18 * (1 - q)).toFixed(2)}px)`;
+      }
+      // receive line, fee and the button morph once there is an amount
+      const amtNow = typedN ? +APP.TRADE.digits.slice(0, typedN) : 0;
+      const shown = lerp(typedN > 1 ? +APP.TRADE.digits.slice(0, typedN - 1) : 0, amtNow, rc);
+      const has = smoother((f - TAP.k3) / 6);
+      app.tRecv.textContent = "Receive ~" + (shown / APP.TRADE.price).toFixed(2) + " ko";
+      app.tRecv.style.opacity = (has * outCubic((tp - 6) / 12)).toFixed(4);
+      app.tFee.style.opacity = (smoother((f - TAP.k5 - 2) / 6)).toFixed(4);
+      const ready = smoother((f - TAP.k5 - 2) / 8);
+      // slide to buy
+      const se = slideE(f), kx = SLIDE.travel * se;
+      app.tFill.style.width = ((51.8 + kx) * ready).toFixed(2) + "px";
+      app.tKnob.style.transform = `translateX(${kx.toFixed(2)}px)`;
+      app.tKnob.style.color = mix("#3a3a3a", "#ffffff", ready);
+      app.tLbl0.style.opacity = (1 - ready).toFixed(3);
+      app.tLbl1.style.opacity = (ready * (1 - smoother(se / 0.55))).toFixed(3);
+      app.tLbl1.style.transform = `translateX(${(kx * 0.35).toFixed(2)}px)`;
+      const done = smoother((f - SLIDE.to) / 4);
+      app.tChev.style.opacity = (1 - done).toFixed(3);
+      const bought = smoother((f - 463) / 6);
+      app.tSpin.style.opacity = (done * (1 - bought)).toFixed(3);
+      app.tCheck.style.opacity = bought.toFixed(3);
+      app.tCheck.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 463) / 9, 1.4)).toFixed(4)})`;
+      app.tSpin.style.transform = `rotate(${((f - SLIDE.to) * 24).toFixed(1)}deg)`;
+      app.tBtn.style.transform = `scale(${(1 - 0.012 * pressed(f) * (f > SLIDE.from - 2 ? 1 : 0)).toFixed(4)})`;
+      // live-activity pill: drops in from the top, "Buying" with a spinner, then "Bought" with a check
+      const il = f - (SLIDE.to + 3);
+      const iw = lerp(0, 378, outBack(il / 14, 0.5)), ih = lerp(30, 50, outCubic(il / 12));
+      app.island.style.opacity = smoother(il / 3).toFixed(3);
+      app.island.style.width = Math.max(0, iw).toFixed(2) + "px";
+      app.island.style.height = ih.toFixed(2) + "px";
+      app.island.style.transform = `translateX(${(-Math.max(0, iw) / 2).toFixed(2)}px) translateY(${(-8 * (1 - outCubic(il / 10))).toFixed(2)}px)`;
+      const inner = smoother((il - 6) / 6);
+      app.iIc.style.opacity = app.iTxt.style.opacity = inner.toFixed(3);
+      const ok = smoother((f - 463) / 6);
+      app.iOk.style.opacity = ok.toFixed(3);
+      app.iIc.firstElementChild.style.opacity = (1 - ok).toFixed(3);
+      app.iOk.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 463) / 9, 1.4)).toFixed(4)})`;
+      app.iT0.style.opacity = (1 - ok).toFixed(3);
+      app.iT1.style.opacity = ok.toFixed(3);
+      app.iSpin.style.opacity = (inner * (1 - ok)).toFixed(3);
+      app.iSpin.style.transform = `rotate(${(f * 22).toFixed(1)}deg)`;
 
       // ---------------- cursor: brush-stroke comet + mint tap halo
       const co = cursorOpacity(f);
@@ -341,7 +422,7 @@
       for (const k in TAP) {
         const tt = f - TAP[k];
         if (tt < -1 || tt > 24) continue;
-        const tp = CUR(TAP[k]);
+        const tp = KEYXY[k] ? { x: KEYXY[k][0], y: KEYXY[k][1] } : CUR(TAP[k]);
         // the input and send button ride the keyboard: keep their halo on them
         const dockY = (ff) => -129 * (1 - kbOff(ff) / 300);
         const dy = k === "input" || k === "send" ? dockY(f) - dockY(TAP[k]) : 0;

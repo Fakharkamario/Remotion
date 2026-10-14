@@ -68,7 +68,7 @@
     ["here's", 0], ["a", 0], ["low-risk", 0], ["split", 0], ["for", 0], ["the", 0], ["other", 0], ["$1,250:", 0],
   ];
   A.PROMPT = "Put my cash into low-risk assets";
-  A.TRADE = { amt: 375, price: 93.76 };
+  A.TRADE = { amt: 375, price: 93.7601, digits: "375" };
 
   const icon = (k) => k === "treasury"
     ? `<div class="ticon tre"><svg viewBox="0 0 24 24"><path d="M3.5 9 12 4.5 20.5 9z M5.5 11v7 M9.5 11v7 M14.5 11v7 M18.5 11v7 M3.5 20.5h17 M4.5 9h15" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`
@@ -153,19 +153,35 @@
         </div>
 
         <div class="backdrop"></div>
-        <div class="sheet">
-          <div class="grab"></div>
-          <div class="s-it s-head"><img class="ticon" src="assets/icons/cocacola.png" alt=""><div class="s-t">Buy Coca-Cola</div>
-            <div class="s-s">KO · $93.76 <b>↗ 3.09%</b></div><div class="s-x"><svg viewBox="0 0 24 24"><path d="M7 7l10 10M17 7 7 17" stroke="#333" stroke-width="2" stroke-linecap="round"/></svg></div></div>
-          <div class="s-it s-amt">$0.00</div>
-          <div class="s-it s-shares">≈ 0.00 KO</div>
-          <svg class="s-it s-chart" viewBox="0 0 390 64" preserveAspectRatio="none"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f8c68" stop-opacity=".18"/><stop offset="1" stop-color="#4f8c68" stop-opacity="0"/></linearGradient></defs>
-            <path class="s-area" d="${spark(8, 0.12, 390, 56).replace(/^M/, "M")} L390 64 L0 64 Z" fill="url(#sg)"/>
-            <path class="s-line" pathLength="1" d="${spark(8, 0.12, 390, 56)}" fill="none" stroke="#4f8c68" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
-          <div class="s-it s-row" style="top:282px"><span>Pay with</span><b>USDC · $1,350.00</b></div>
-          <div class="s-it s-row" style="top:318px"><span>Order type</span><b>Market</b></div>
-          <div class="s-it s-row" style="top:354px"><span>Plan allocation</span><b>30% · $375.00</b></div>
-          <div class="s-it s-buy">Buy KO</div>
+        <!-- trade panel (from the supplied Coca-Cola screenshots): full-screen, slides up over the chat -->
+        <div class="trade">
+          ${A.status("8:45", 84, "sb-t")}
+          <svg class="t-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="#555" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <img class="t-ic" src="assets/icons/cocacola.png" alt="">
+          <div class="t-name">Coca-Cola</div>
+          <div class="t-px">$93.7601</div><div class="t-pc">▲ 3.09%</div>
+          <div class="t-amt"></div>
+          <div class="t-recv">Receive ~0.00 ko</div>
+          ${["10%", "25%", "50%", "Max"].map((l, i) => `<div class="t-pill" style="left:${[20, 119.8, 219.2, 319][i]}px">${l}</div>`).join("")}
+          ${["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "del"].map((k, i) => {
+            const x = [84.3, 214.6, 344.4][i % 3], y = [506, 569.9, 633.8, 697.6][Math.floor(i / 3)];
+            return k === "del"
+              ? `<div class="t-key t-del" style="left:${x - 21.8}px;top:${y - 21.3}px"><svg viewBox="0 0 24 24"><path d="M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z" fill="none" stroke="#222" stroke-width="1.9" stroke-linejoin="round"/><path d="m11.5 9.5 5 5m0-5-5 5" stroke="#222" stroke-width="1.9" stroke-linecap="round"/></svg></div>`
+              : `<div class="t-key" data-d="${k}" style="left:${x - 30}px;top:${y - 30}px"><i></i><span>${k}</span></div>`;
+          }).join("")}
+          <div class="t-avail">$1,350.00 available <span>+</span></div><div class="t-fee">0.5% fee</div>
+          <div class="t-btn">
+            <div class="t-fill"></div>
+            <span class="t-lbl0">Enter an amount</span><span class="t-lbl1">Slide to buy</span>
+            <div class="t-knob"><svg class="t-chev" viewBox="0 0 24 24"><path d="m6.5 7 5 5-5 5M12.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <svg class="t-spin" viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 1-8 8" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <svg class="t-check" viewBox="0 0 24 24"><path d="m6.5 12.5 3.7 3.7L17.5 8.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div class="t-island">
+            <div class="i-ic"><img src="assets/icons/cocacola.png" alt=""><div class="i-ok"><svg viewBox="0 0 24 24"><path d="m6.5 12.5 3.7 3.7L17.5 8.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+            <div class="i-txt"><b class="i-t0">Buying</b><b class="i-t1">Bought</b><span>4.00 KO · $375.00</span></div>
+            <svg class="i-spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="#3b3a37" stroke-width="2.4"/><path d="M12 4a8 8 0 0 1 8 8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </div>
         </div>
         <div class="home-ind"></div>
       </div>`;
@@ -181,8 +197,11 @@
       caret: one(".caret"), send: one(".send"), bubble: one(".bubble"), typing: one(".typing"), dots: q(".typing i"),
       words: q(".rw"), cards: q(".c-it"), amts: q(".pamt"), fills: q(".pfill"),
       tabs: q(".tab"), kbd: one(".kbd"), keys,
-      backdrop: one(".backdrop"), sheet: one(".sheet"), sheetItems: q(".s-it"), sAmt: one(".s-amt"), sShares: one(".s-shares"),
-      sLine: one(".s-line"), sArea: one(".s-area"), sBuy: one(".s-buy"),
+      backdrop: one(".backdrop"), trade: one(".trade"), tItems: q(".trade > :not(.t-island):not(.status)"),
+      tAmt: one(".t-amt"), tRecv: one(".t-recv"), tKeys: Object.fromEntries(q(".t-key[data-d]").map((k) => [k.dataset.d, k])),
+      tFee: one(".t-fee"), tBtn: one(".t-btn"), tFill: one(".t-fill"), tKnob: one(".t-knob"), tChev: one(".t-chev"), tSpin: one(".t-spin"), tCheck: one(".t-check"),
+      tLbl0: one(".t-lbl0"), tLbl1: one(".t-lbl1"), island: one(".t-island"), iOk: one(".i-ok"), iT0: one(".i-t0"), iT1: one(".i-t1"),
+      iSpin: one(".i-spin"), iTxt: one(".i-txt"), iIc: one(".i-ic"),
     };
   };
 
