@@ -1,5 +1,5 @@
 // "just ask" — picks up on the last frame of one-terminal (Explore, Pre-IPO selected) and runs in the same type and
-// motion language. 30 fps, 492 frames. Every element is a pure function of a continuous frame number so the 240 fps
+// motion language. 30 fps, 508 frames. Every element is a pure function of a continuous frame number so the 240 fps
 // motion-blur render can sample between frames; discrete state (typed characters, words) uses whole frames.
 //
 //   0–27    the camera pushes into the Pre-IPO button while a feathered mask dissolves the screen around it; the
@@ -12,10 +12,10 @@
 //   262–330 the message flies up into a bubble, a typing indicator, a streamed reply and three low-risk asset cards
 //   342–392 the cursor taps Coca-Cola: the trade panel slides up; it taps 3, 7, 5 and the amount builds
 //   392–432 "Slide to buy": the camera pushes in on the slider and the cursor drags the knob across
-//   432–491 the camera pulls back as a live-activity pill drops in: "Buying 4.00 KO", then "Bought"
+//   432–507 the camera pulls back (slowly, so it stays clean) and a live-activity pill drops in: "Buying 4.00 KO", then "Bought"
 (function () {
   const FPS = 30;
-  const FRAMES = 492;
+  const FRAMES = 508;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -72,7 +72,7 @@
     [118, 960, 560, 1.0], [146, 960, 612, 0.955], [172, 960, 850, 0.655], [199, 960, 832, 0.676],
     [221, 960, 1262, 1.0], [258, 960, 1280, 1.012], [282, 960, 700, 1.0], [332, 960, 646, 1.02],
     [344, 960, 680, 1.0], [364, 960, 884, 0.70], [392, 960, 900, 0.722], [412, 960, 1378, 2.05], [431, 960, 1378, 2.13],
-    [454, 960, 430, 1.12], [491, 960, 404, 1.17],
+    [462, 960, 430, 1.12], [507, 960, 402, 1.175],
   ];
   const SW = { x: spline(SHOT.map((s) => [s[0], s[1]])), y: spline(SHOT.map((s) => [s[0], s[2]])), z: spline(SHOT.map((s) => [s[0], s[3]])) };
 
@@ -380,14 +380,14 @@
       app.tLbl1.style.transform = `translateX(${(kx * 0.35).toFixed(2)}px)`;
       const done = smoother((f - SLIDE.to) / 4);
       app.tChev.style.opacity = (1 - done).toFixed(3);
-      const bought = smoother((f - 463) / 6);
+      const bought = smoother((f - 474) / 6);
       app.tSpin.style.opacity = (done * (1 - bought)).toFixed(3);
       app.tCheck.style.opacity = bought.toFixed(3);
-      app.tCheck.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 463) / 9, 1.4)).toFixed(4)})`;
+      app.tCheck.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 474) / 9, 1.4)).toFixed(4)})`;
       app.tSpin.style.transform = `rotate(${((f - SLIDE.to) * 24).toFixed(1)}deg)`;
       app.tBtn.style.transform = `scale(${(1 - 0.012 * pressed(f) * (f > SLIDE.from - 2 ? 1 : 0)).toFixed(4)})`;
       // live-activity pill: drops in from the top, "Buying" with a spinner, then "Bought" with a check
-      const il = f - (SLIDE.to + 3);
+      const il = f - 446; // drops in as the pull-back settles
       const iw = lerp(0, 378, outBack(il / 14, 0.5)), ih = lerp(30, 50, outCubic(il / 12));
       app.island.style.opacity = smoother(il / 3).toFixed(3);
       app.island.style.width = Math.max(0, iw).toFixed(2) + "px";
@@ -395,10 +395,10 @@
       app.island.style.transform = `translateX(${(-Math.max(0, iw) / 2).toFixed(2)}px) translateY(${(-8 * (1 - outCubic(il / 10))).toFixed(2)}px)`;
       const inner = smoother((il - 6) / 6);
       app.iIc.style.opacity = app.iTxt.style.opacity = inner.toFixed(3);
-      const ok = smoother((f - 463) / 6);
+      const ok = smoother((f - 474) / 6);
       app.iOk.style.opacity = ok.toFixed(3);
       app.iIc.firstElementChild.style.opacity = (1 - ok).toFixed(3);
-      app.iOk.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 463) / 9, 1.4)).toFixed(4)})`;
+      app.iOk.style.transform = `scale(${(0.6 + 0.4 * outBack((f - 474) / 9, 1.4)).toFixed(4)})`;
       app.iT0.style.opacity = (1 - ok).toFixed(3);
       app.iT1.style.opacity = ok.toFixed(3);
       app.iSpin.style.opacity = (inner * (1 - ok)).toFixed(3);
