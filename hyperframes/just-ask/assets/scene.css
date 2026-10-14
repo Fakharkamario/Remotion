@@ -1,0 +1,131 @@
+/* ---------------------------------------------------------------- headline (same type as the earlier clips) */
+#words { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; pointer-events: none; }
+#just, #ask { position: absolute; left: 0; top: 0; white-space: pre; font-weight: 640; letter-spacing: -0.03em; line-height: 1; }
+#just { color: #1c1d21; }
+#ask { color: #f9f8f4; }
+#meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-weight: 640; letter-spacing: -0.03em; line-height: 1; }
+#pill { position: absolute; left: 0; top: 0; background: #31302e; }
+#pillM { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 450; }
+
+/* ---------------------------------------------------------------- camera + phone */
+#reveal { position: absolute; inset: 0; }
+#cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+#phoneWrap { position: absolute; left: 585px; top: 64px; width: 750px; height: 1567px; }
+.phone {
+  position: absolute; inset: 0; border-radius: 116px; background: #efeeea;
+  box-shadow: inset 0 0 0 1.5px #e2e0da, 0 30px 80px rgba(40, 30, 10, 0.07);
+}
+.screen {
+  position: absolute; left: 25px; top: 25px; width: 430px; height: 932px; transform-origin: 0 0;
+  transform: scale(1.627907); border-radius: 56px; overflow: hidden; background: #f9f8f4; color: #262626;
+  font-family: "Inter", system-ui, sans-serif;
+}
+.explore-host, .home, .ai { position: absolute; inset: 0; }
+.status { position: absolute; left: 0; top: 0; overflow: visible; }
+.status .sb-time { font-family: "Inter", system-ui, sans-serif; font-size: 17.6px; font-weight: 640; fill: #111; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; }
+.status .sb-batt { font-family: "Inter", system-ui, sans-serif; font-size: 11.6px; font-weight: 750; fill: #fff; text-anchor: middle; letter-spacing: -0.01em; }
+.home-ind { position: absolute; left: 148px; top: 918px; width: 134px; height: 5px; border-radius: 3px; background: #111; opacity: 0; }
+
+/* ---------------------------------------------------------------- home */
+.home .logo { position: absolute; left: 16px; top: 72px; width: 100px; height: 38px; }
+.avatarM { position: absolute; left: 378px; top: 73px; width: 36px; height: 36px; border-radius: 50%; background: #31302e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14.5px; font-weight: 450; }
+.h-total { position: absolute; left: 20.2px; top: 180.6px; font-size: 14.4px; color: #6b6b69; letter-spacing: 0.004em; display: flex; align-items: center; line-height: 1; }
+.h-total svg { width: 17px; height: 17px; margin-left: 9px; }
+.h-bal { position: absolute; left: 20px; top: 195.5px; font-size: 41px; font-weight: 400; color: #1e1e1e; letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.h-add { position: absolute; left: 299px; top: 196px; width: 111.5px; height: 35.6px; border-radius: 17.8px; background: #31302e; color: #fff; font-size: 16.6px; display: flex; align-items: center; justify-content: center; letter-spacing: 0.005em; }
+.h-search { position: absolute; left: 0; top: 0; }
+.home .search, .ai .search { position: absolute; left: 20px; top: 268.5px; width: 391px; height: 43.4px; border-radius: 21.7px; background: #f0f0f0; display: flex; align-items: center; }
+.home .search svg { width: 17.5px; height: 17.5px; margin-left: 13.3px; }
+.home .search span { margin-left: 8.5px; font-size: 16.6px; color: #7d7d7b; letter-spacing: 0.005em; }
+.h-tabs { position: absolute; left: 20.6px; top: 324.3px; height: 32.3px; font-size: 16.6px; color: #6e6e6c; }
+.h-tabs span { position: absolute; top: 0; height: 32.3px; line-height: 32.3px; white-space: nowrap; }
+.h-tabs span:nth-child(1) { left: 0; width: 49.5px; text-align: center; border-radius: 16.2px; background: #f0f0f0; color: #262626; }
+.h-tabs span:nth-child(2) { left: 70.8px; }
+.h-tabs span:nth-child(3) { left: 179.6px; }
+.hrow { position: absolute; left: 0; width: 430px; height: 40px; }
+.hic { position: absolute; left: 20px; top: 0; width: 40px; height: 40px; border-radius: 9.5px; }
+.hnm { position: absolute; left: 73px; top: 2px; font-size: 16.6px; color: #262626; white-space: nowrap; letter-spacing: 0.003em; }
+.hsym { position: absolute; left: 73px; top: 23.6px; font-size: 14.4px; color: #6e6e6c; letter-spacing: 0.01em; }
+.hspark { position: absolute; left: 238px; top: 5px; width: 72px; height: 30px; overflow: visible; }
+.hpx { position: absolute; right: 19.2px; top: 2px; font-size: 16.6px; color: #262626; font-variant-numeric: tabular-nums; letter-spacing: 0.003em; }
+.hpc { position: absolute; right: 19.2px; top: 23.6px; font-size: 14.4px; color: #4f8c68; font-variant-numeric: tabular-nums; }
+.h-div { position: absolute; left: 20px; top: 757.5px; width: 391px; height: 1px; background: #e2e0db; }
+
+/* ---------------------------------------------------------------- tab bar */
+.tabbar { position: absolute; left: 0; top: 774px; width: 430px; height: 158px; display: flex; background: #f9f8f4; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 10px; font-size: 13.4px; color: #6b6b69; letter-spacing: 0.005em; }
+.tab svg { width: 25px; height: 25px; margin-bottom: 3.2px; }
+
+/* ---------------------------------------------------------------- AI */
+.a-edit { position: absolute; left: 392px; top: 72.7px; width: 20px; height: 20px; }
+.a-title { position: absolute; left: 0; width: 430px; top: 289.5px; text-align: center; font-size: 28.4px; font-weight: 400; color: #222; letter-spacing: -0.012em; line-height: 1; }
+.a-sug { position: absolute; left: 55px; width: 320px; height: 44px; border-radius: 7px; box-shadow: inset 0 0 0 1px #d8d6d1; display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 17px; color: #262626; }
+.a-sug img { width: 42px; height: 18px; border-radius: 4px; }
+.dock { position: absolute; left: 0; top: 0; width: 430px; height: 932px; pointer-events: none; }
+.chips { position: absolute; left: 12px; top: 686px; height: 20px; display: flex; align-items: center; gap: 6px; }
+.chip { height: 20px; line-height: 20px; padding: 0 8px; border-radius: 10px; background: #efefef; font-size: 12.6px; color: #3a3a3a; white-space: nowrap; }
+.clear { font-size: 16.4px; color: #7a7a78; margin-left: 2px; white-space: nowrap; }
+.input { position: absolute; left: 12px; top: 714px; width: 406px; height: 48px; border-radius: 24px; background: #fbfaf7; box-shadow: inset 0 0 0 1px #d9d7d2; display: flex; align-items: center; padding-left: 18px; font-size: 17px; white-space: pre; }
+.input .ph { color: #8b8b89; }
+.input .typed { color: #1e1e1e; }
+.input .caret { width: 2px; height: 21px; background: #2f6bff; border-radius: 1px; margin-left: 1px; }
+.send { position: absolute; left: 365px; top: 6px; width: 36px; height: 36px; border-radius: 18px; background: #b9b8b5; }
+.send svg { width: 20px; height: 20px; margin: 8px; }
+
+.bubble { position: absolute; right: 18px; top: 107px; height: 37.7px; border-radius: 18.9px; background: #efefef; padding: 0 16px; display: flex; align-items: center; font-size: 16.6px; color: #262626; white-space: nowrap; transform-origin: 100% 100%; }
+.typing { position: absolute; left: 16px; top: 165px; display: flex; gap: 5px; }
+.typing i { width: 7.5px; height: 7.5px; border-radius: 50%; background: #9a9995; display: block; }
+.reply { position: absolute; left: 16px; top: 160px; width: 398px; font-size: 16.6px; line-height: 23.4px; color: #262626; letter-spacing: 0.002em; }
+.reply .rw { display: inline-block; }
+.reply .rw.b { font-weight: 650; }
+.pcard { position: absolute; left: 16px; width: 398px; height: 74px; border-radius: 16.8px; background: #f9f8f4; box-shadow: inset 0 0 0 1px #d3d2d0; transform-origin: 50% 50%; }
+.ticon { position: absolute; left: 14px; top: 14px; width: 40px; height: 40px; border-radius: 9.5px; }
+.ticon.tre { background: #1f3550; display: flex; align-items: center; justify-content: center; }
+.ticon.tre svg { width: 24px; height: 24px; }
+.pnm { position: absolute; left: 66px; top: 13.5px; font-size: 16.6px; color: #262626; white-space: nowrap; }
+.psub { position: absolute; left: 66px; top: 35px; font-size: 13.6px; color: #6e6e6c; white-space: nowrap; }
+.pamt { position: absolute; right: 14px; top: 13.5px; font-size: 16.6px; color: #262626; font-variant-numeric: tabular-nums; }
+.ppct { position: absolute; right: 14px; top: 35px; font-size: 13.6px; color: #6e6e6c; }
+.pbar { position: absolute; left: 66px; right: 14px; top: 59px; height: 3.5px; border-radius: 2px; background: #ebeae6; overflow: hidden; }
+.pfill { height: 100%; border-radius: 2px; background: #31302e; transform-origin: 0 50%; }
+.hint { position: absolute; left: 16px; top: 504px; font-size: 14.4px; color: #7a7a78; }
+
+/* ---------------------------------------------------------------- keyboard */
+.kbd { position: absolute; left: 0; top: 641px; width: 430px; height: 291px; background: #e5e6ea; padding-top: 9px; }
+.krow { display: flex; justify-content: center; gap: 6px; height: 43px; margin-bottom: 11px; padding: 0 3px; }
+.krow.mid { padding: 0 22px; }
+.key {
+  flex: 1; max-width: 36.6px; border-radius: 8.5px; background: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.28);
+  display: flex; align-items: center; justify-content: center; font-size: 22.5px; color: #111; font-weight: 400;
+}
+.key.fn { max-width: 45px; flex: 1.3; background: #abb0ba; font-size: 18px; }
+.krow:nth-child(3) .key.fn:first-child { margin-right: 8px; }
+.krow:nth-child(3) .key.fn:last-child { margin-left: 8px; }
+.krow.last .key { max-width: none; font-size: 16px; }
+.krow.last .n123 { flex: none; width: 92px; }
+.krow.last .space { flex: 1; }
+.krow.last .go { flex: none; width: 92px; background: #31302e; color: #fff; font-weight: 500; }
+.kfoot { display: flex; justify-content: space-between; padding: 6px 28px 0; }
+.kfoot svg { width: 26px; height: 26px; }
+
+/* ---------------------------------------------------------------- trade sheet */
+.backdrop { position: absolute; inset: 0; background: rgba(28, 26, 22, 0.32); opacity: 0; }
+.sheet { position: absolute; left: 0; top: 452px; width: 430px; height: 520px; border-radius: 26px 26px 0 0; background: #f9f8f4; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08); }
+.grab { position: absolute; left: 197px; top: 8px; width: 36px; height: 5px; border-radius: 3px; background: #d6d4cf; }
+.s-it { position: absolute; }
+.s-head { left: 0; top: 26px; width: 430px; height: 50px; }
+.s-head .ticon { left: 20px; top: 0; width: 46px; height: 46px; border-radius: 11px; }
+.s-t { position: absolute; left: 78px; top: 2px; font-size: 20px; font-weight: 500; color: #1e1e1e; letter-spacing: -0.01em; }
+.s-s { position: absolute; left: 78px; top: 28px; font-size: 14.2px; color: #6e6e6c; }
+.s-s b { font-weight: 400; color: #4f8c68; margin-left: 6px; }
+.s-x { position: absolute; left: 380px; top: 4px; width: 32px; height: 32px; border-radius: 50%; background: #efefef; }
+.s-x svg { width: 16px; height: 16px; margin: 8px; }
+.s-amt { left: 0; width: 430px; top: 100px; text-align: center; font-size: 46px; font-weight: 400; color: #1e1e1e; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1; }
+.s-shares { left: 0; width: 430px; top: 156px; text-align: center; font-size: 15px; color: #6e6e6c; font-variant-numeric: tabular-nums; }
+.s-chart { left: 20px; top: 192px; width: 390px; height: 64px; overflow: visible; }
+.s-row { left: 20px; width: 390px; height: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 15.4px; color: #6e6e6c; border-top: 1px solid transparent; }
+.s-row b { font-weight: 450; color: #262626; }
+.s-buy { left: 20px; top: 398px; width: 390px; height: 52px; border-radius: 26px; background: #31302e; color: #fff; font-size: 17.4px; font-weight: 500; display: flex; align-items: center; justify-content: center; letter-spacing: 0.005em; }
+
+/* ---------------------------------------------------------------- cursor (brush-stroke comet + tap halo) */
+#cursor { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
