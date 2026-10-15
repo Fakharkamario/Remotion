@@ -219,8 +219,6 @@
         <div class="page p-sol">${marketsPage(SOL, false)}</div>
         <div class="page p-ai">${aiPage()}</div>
         <div class="page p-ko">${marketsPage(KO, true)}</div>
-        <div class="morph"></div>
-        <div class="mlogo"><img src="assets/icons/cocacola.png" alt=""></div>
         <div class="nav">
           <svg class="mark" viewBox="0 0 40 40"><circle cx="18" cy="21" r="13" fill="none" stroke="#2a2a2c" stroke-width="5.5"/><rect x="29" y="5" width="5.5" height="31" rx="1.2" fill="#2a2a2c"/></svg>
           <div class="tabpill"></div>
@@ -252,7 +250,6 @@
       ko, koItems: q(".it", ko), koCnd: one(".cnd", ko), koPh: one(".ko-ph", ko), koTyped: one(".ko-typed", ko), koCaret: one(".ko-caret", ko),
       koRecv: one(".ko-recv", ko), koAmtBox: one(".amt", ko), buy: one(".buybtn", ko), bb0: one(".bb-l0", ko), bb1: one(".bb-l1", ko),
       bb2: one(".bb-l2", ko), bbSpin: one(".bb-spin", ko), koCard: q(".pcard", ai)[2],
-      morph: one(".morph"), mlogo: one(".mlogo"), koHeadIcon: one(".nic", ko),
       toast: one(".toast"), tOk: one(".t-ok"), tT0: one(".t-t0"), tT1: one(".t-t1"), tSpin: one(".t-spin"), tTxt: one(".t-txt"), tIc: one(".t-ic"),
     };
   };
