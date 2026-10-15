@@ -1,17 +1,17 @@
-// Part 3 — "你一定要看到最后。第一，亏损的公司不买。第二，本月成长率低于40%的公司不买。第三，股价没有创近一年新高的
-// 公司不买。第四，没有新产品、新服务、新市场的公司不买。第五点最重要：产品没有供不应求的公司不买。" — 21.63 s, 30 fps.
+// Part 3 (on screen in Traditional Chinese) — "你一定要看到最後。第一，虧損的公司不買。第二，本月成長率低於40%的公司不買。第三，股價沒有創近一年新高的
+// 公司不買。第四，沒有新產品、新服務、新市場的公司不買。第五點最重要：產品沒有供不應求的公司不買。" — 21.63 s, 30 fps.
 // Same system as parts 1 and 2. The list has one rhythm, repeated five times:
 //   number beat  — a huge green numeral lands BEHIND him (purple -> gold flash) as he counts on his fingers, 第N above;
 //   rule beat    — the rule, each in a different move from the animation reference;
-//   verdict      — on 不买 the talking-head reference's red strike wipes through the rule, and 不买 pops in red.
+//   verdict      — on 不買 the talking-head reference's red strike wipes through the rule, and 不買 pops in red.
 //
-//   0–49     chest stack: 你一定要 / 看到最后
-//   50–73    1          74–125   dark: 亏损的公司 typed huge chasing the caret, cut wide, struck
-//   126–148  2          149–249  dark: 本月成长率 pill, a row of ten cells fills short of the green 40% mark, 低于40%, struck
+//   0–49     chest stack: 你一定要 / 看到最後
+//   50–73    1          74–125   dark: 虧損的公司 typed huge chasing the caret, cut wide, struck
+//   126–148  2          149–249  dark: 本月成長率 pill, a row of ten cells fills short of the green 40% mark, 低於40%, struck
 //   250–274  3          275–375  white: a price line creeps up to the dashed 一年新高 line and never breaks it;
-//                                 black box 股价没有创近一年新高, struck (the dot stays on the end of the line)
-//   376–398  4          399–514  on the wall: 没有 / three boxes open from a line (新产品 新服务 新市场) / 的公司, struck
-//   515–557  5 with the pill 第五点 最重要   558–648  tight: 产品没有 / 供不应求 / 的公司, struck
+//                                 black box 股價沒有創近一年新高, struck (the dot stays on the end of the line)
+//   376–398  4          399–514  on the wall: 沒有 / three boxes open from a line (新產品 新服務 新市場) / 的公司, struck
+//   515–557  5 with the pill 第五點 最重要   558–648  tight: 產品沒有 / 供不應求 / 的公司, struck
 //
 // Word frames are ASR (SenseVoice) onsets checked against the voice's loudness envelope.
 (function () {
@@ -98,7 +98,7 @@
     place(e, x, y + 60 * (1 - hp), ` scaleX(${(sx === undefined ? 0.8 : sx).toFixed(4)})`);
     return hp;
   }
-  // the verdict: a red strike that wipes left to right with an ease-out, and 不买 popping in red
+  // the verdict: a red strike that wipes left to right with an ease-out, and 不買 popping in red
   function strike(bar, f, at, x, y, w, h, rot) {
     const sp = outCubic(prog(f, at, at + 7));
     disp(bar, sp > 0);
@@ -113,7 +113,7 @@
   }
   const mkStrike = (parent) => { const b = el("div", "abs", parent); b.style.background = RED; b.style.transformOrigin = "0 50%"; b.style.borderRadius = "3px"; return b; };
   const mkVerdict = (parent, size) => {
-    const t = el("div", "abs", parent, "不买");
+    const t = el("div", "abs", parent, "不買");
     t.style.fontWeight = "900"; t.style.fontSize = (size || 84) + "px"; t.style.lineHeight = "1"; t.style.color = RED;
     t.style.transformOrigin = "0 50%"; t.style.whiteSpace = "nowrap";
     return t;
@@ -170,12 +170,12 @@
       return b;
     };
 
-    // ============================================================ I: 你一定要 / 看到最后 (chest)
+    // ============================================================ I: 你一定要 / 看到最後 (chest)
     const iWrap = el("div", "abs", S.I.front);
     const iL1 = el("div", "abs cap", iWrap);
     iL1.style.fontSize = "64px";
     const iL1W = words(iL1, ["你", "一定要"]);
-    const iHero = el("div", "abs hero light", iWrap, "看到最后");
+    const iHero = el("div", "abs hero light", iWrap, "看到最後");
     iHero.style.fontSize = "230px";
     const I_AT = { l1: [9, 13], hero: 19 };
 
@@ -185,7 +185,7 @@
       { id: "N2", label: "第二", n: "2", at: 127 },
       { id: "N3", label: "第三", n: "3", at: 251 },
       { id: "N4", label: "第四", n: "4", at: 377 },
-      { id: "N5", label: "第五点", n: "5", at: 516, numAt: 521, pill: { t: "最重要", ats: [532, 537, 541] } },
+      { id: "N5", label: "第五點", n: "5", at: 516, numAt: 521, pill: { t: "最重要", ats: [532, 537, 541] } },
     ];
     NUMS.forEach((N) => {
       N.lab = inkCap(S[N.id].behind, 70);
@@ -205,7 +205,7 @@
     const r1Bg = darkBg(S.R1.top, rgb(BG));
     const r1Big = el("div", "abs grot", S.R1.top);
     r1Big.style.fontSize = "560px"; r1Big.style.color = rgb(WHITE);
-    const r1BigC = chars(r1Big, "亏损的公司");
+    const r1BigC = chars(r1Big, "虧損的公司");
     const r1Caret = el("div", "caret", S.R1.top);
     const R1_AT = [75, 78, 86, 91, 95];
     const R1_CW = 560 * 0.955;
@@ -214,19 +214,19 @@
     const r1Wide = el("div", "abs", S.R1.top);
     const r1Line = el("div", "abs grot", r1Wide);
     r1Line.style.fontSize = "220px"; r1Line.style.color = rgb(WHITE);
-    chars(r1Line, "亏损的公司");
+    chars(r1Line, "虧損的公司");
     const r1Strike = mkStrike(r1Wide);
     const r1Verdict = mkVerdict(r1Wide, 92);
     const R1_W = 5 * 220 * 0.955;
 
-    // ============================================================ R2: pill, ten cells, 40% mark, 低于40%
+    // ============================================================ R2: pill, ten cells, 40% mark, 低於40%
     darkBg(S.R2.top, rgb(BG));
     const r2World = el("div", "abs", S.R2.top);
     r2World.style.width = "1920px"; r2World.style.height = "1080px"; r2World.style.transformOrigin = "960px 540px";
     const r2Pill = el("div", "pill", r2World);
     const r2PillT = el("div", "txt", r2Pill);
     r2PillT.style.fontSize = "70px";
-    const r2PillC = chars(r2PillT, "本月成长率");
+    const r2PillC = chars(r2PillT, "本月成長率");
     const R2_PILL = [149, 154, 165, 170, 174];
     const r2PillW = spline([[147, 8], [149, 70], ...R2_PILL.map((a, i) => [a + 2, 76 + 70 * 0.98 * (i + 1)])]);
     const CELL = 118, GAP = 16, ROWX = 960 - (10 * CELL + 9 * GAP) / 2, ROWY = 470;
@@ -242,7 +242,7 @@
     r2MarkLab.style.fontWeight = "800"; r2MarkLab.style.fontSize = "54px"; r2MarkLab.style.color = rgb(GREEN); r2MarkLab.style.lineHeight = "1";
     const r2Big = el("div", "abs grot", r2World);
     r2Big.style.fontSize = "170px"; r2Big.style.fontWeight = "700";
-    const r2BigC = chars(r2Big, "低于40%");
+    const r2BigC = chars(r2Big, "低於40%");
     const R2_BIG = [181, 186, 194, 199, 204];
     const R2_BW = [1, 1, 0.58, 0.58, 0.9].map((k) => k * 170 * 0.955);
     const r2Tail = el("div", "abs thin", r2World);
@@ -284,22 +284,22 @@
       `<rect width="800" height="200" filter="url(#fx3)"/></svg>`;
     const r3BoxT = el("div", "txt", r3Box);
     r3BoxT.style.fontSize = "84px";
-    const r3BoxC = chars(r3BoxT, "股价没有创近一年新高");
+    const r3BoxC = chars(r3BoxT, "股價沒有創近一年新高");
     const R3_BOX = [275, 280, 291, 294, 302, 307, 318, 323, 330, 336];
     const R3_BW = 10 * 84 * 0.97 + 90, R3_BH = 132, R3_BY = 790;
     const r3Strike = mkStrike(r3World);
     const r3Verdict = mkVerdict(r3World, 92);
 
-    // ============================================================ R4: 没有 / three boxes / 的公司 (wall)
+    // ============================================================ R4: 沒有 / three boxes / 的公司 (wall)
     const r4Wrap = el("div", "abs", S.R4.behind);
     const r4Thin = el("div", "abs thin", r4Wrap);
     r4Thin.style.fontSize = "62px"; r4Thin.style.color = rgb(INK); r4Thin.style.fontWeight = "400"; r4Thin.style.letterSpacing = "0.2em";
-    const r4ThinC = chars(r4Thin, "没有");
+    const r4ThinC = chars(r4Thin, "沒有");
     const R4_THIN = [399, 402];
     const R4_ITEMS = [
-      { t: "新产品", at: 410, chars: [410, 417, 420], y: 270, strike: 494 },
-      { t: "新服务", at: 433, chars: [433, 440, 444], y: 418, strike: 497 },
-      { t: "新市场", at: 456, chars: [456, 464, 467], y: 566, strike: 500 },
+      { t: "新產品", at: 410, chars: [410, 417, 420], y: 270, strike: 494 },
+      { t: "新服務", at: 433, chars: [433, 440, 444], y: 418, strike: 497 },
+      { t: "新市場", at: 456, chars: [456, 464, 467], y: 566, strike: 500 },
     ];
     R4_ITEMS.forEach((it) => {
       it.box = el("div", "box", r4Wrap);
@@ -315,12 +315,12 @@
     const R4_TAIL = [473, 478, 482];
     const r4Verdict = mkVerdict(r4Wrap, 80);
 
-    // ============================================================ R5: 产品没有 / 供不应求 / 的公司 (chest)
+    // ============================================================ R5: 產品沒有 / 供不應求 / 的公司 (chest)
     const r5Wrap = el("div", "abs", S.R5.front);
     const r5L1 = el("div", "abs cap", r5Wrap);
     r5L1.style.fontSize = "64px";
-    const r5L1W = words(r5L1, ["产品", "没有"]);
-    const r5Hero = el("div", "abs hero light", r5Wrap, "供不应求");
+    const r5L1W = words(r5L1, ["產品", "沒有"]);
+    const r5Hero = el("div", "abs hero light", r5Wrap, "供不應求");
     r5Hero.style.fontSize = "232px";
     const r5L3 = el("div", "abs cap", r5Wrap);
     r5L3.style.fontSize = "64px";
@@ -406,7 +406,7 @@
           r1Caret.style.height = 560 * 0.74 + "px"; r1Caret.style.width = "12px";
           place(r1Caret, left + n * R1_CW + 14, 540 - 560 * 0.37);
         } else {
-          // wide: the line keeps sliding left, the strike lands on 不, 不买 on 买, then it smears out
+          // wide: the line keeps sliding left, the strike lands on 不, 不買 on 買, then it smears out
           const out = prog(f, 122.5, 125.5);
           const x = 960 - R1_W / 2 + 40 - 2.4 * (f - 100) - 160 * out * out;
           place(r1Wide, x, 540 - 220 * 0.56);
@@ -450,8 +450,8 @@
         r2Mark.style.height = (CELL + 90) * mk + "px";
         place(r2Mark, mx, ROWY - 45);
         place(r2MarkLab, mx - 50, ROWY - 110, ` scale(${lerp(1.4, 1, outExpo(prog(f, 199, 204))).toFixed(3)})`);
-        // 低于40% / 的公司
-        // 低于40% 的公司 不买 as one line, centred
+        // 低於40% / 的公司
+        // 低於40% 的公司 不買 as one line, centred
         const bigW = sum(R2_BW, 5), tailW = 3 * 64 * 1.0, lineW = bigW + 28 + tailW + 40 + 2 * 92;
         const bx = 960 - lineW / 2;
         place(r2Big, bx, 690);
