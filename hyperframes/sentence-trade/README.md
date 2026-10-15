@@ -1,23 +1,23 @@
 # your next trade starts with a sentence (HyperFrames)
 
 A 5.1 s, 1920x1080 / 30 fps HyperFrames clip. It follows the reference cut beat for beat (same 153 frames),
-with the copy "Your next trade starts with a sentence" and the Explore screen from the supplied screenshot.
+with the copy "Your next trade starts with a sentence" and the acend desktop trade screen (Markets > Solana).
 
 | frames  | time (s)    | beat |
 |---------|-------------|------|
 | 0–26    | 0.00–0.90   | "Your next" grows, "trade" joins, the line squeezes shut |
 | 27–46   | 0.90–1.56   | "starts" punches in big and settles, "with a" joins |
 | 47–74   | 1.56–2.50   | "sentence" rises into place with a warm-grey sweep; Bitcoin, Solana, Zcash and Ethereum coins flip in |
-| 74–88   | 2.47–2.96   | the word dissolves letter by letter, the top coin spins toward the phone |
-| 81–108  | 2.70–3.60   | the Explore screen rises; each coin flies down and becomes its "Most popular" card icon |
-| 96–152  | 3.20–5.10   | percentages tick, the screen scrolls as the AI bar + keyboard slide up and "Buy $100 of SOL" is typed |
+| 74–88   | 2.47–2.96   | the word dissolves letter by letter, the top coin spins toward the screen |
+| 81–108  | 2.70–3.60   | the desktop trade screen rises, framed on its token list; each coin flies down and becomes its list icon |
+| 96–152  | 3.20–5.10   | 24h changes tick, the camera glides to centre as the Ask AI bar slides up and "Buy $100 of SOL" is typed |
 
-- `assets/phone.js` rebuilds the Explore screen in DOM at iPhone point size (430 x 932 pt), measured off the
-  1290 x 2517 screenshot, plus an AI input bar and keyboard that slide up during the scroll.
-- `assets/logos.js` holds the token art; the same face is used for the card icon and the 3D coin.
+- `assets/desktop.js` rebuilds the desktop trade screen in DOM at the screenshot's pixel size (1920 x 894), plus a
+  floating Ask AI bar that slides up at the end.
+- `assets/logos.js` holds the token art; the same face is used for the list icon and the 3D coin.
 - `assets/scene.js` draws every element as a pure function of the frame number. All motion runs on monotone
   cubic splines, so velocity is continuous and nothing parks between beats, matching the reference cadence. Coins are CSS 3D discs
-  (stacked rim layers + two faces) that blend onto their card icon's live position as they land.
+  (stacked rim layers + two faces) that blend onto their list icon's live position as they land.
 
 Palette: taken from the Acend app screens (warm paper `#F9F8F4`, ink `#1C1D21`, warm grey sweep). The hero
 word's colour is the `INK` token in `assets/scene.js`. acend.fi itself could not be reached from the build

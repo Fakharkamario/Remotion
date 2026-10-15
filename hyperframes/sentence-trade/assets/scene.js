@@ -4,9 +4,9 @@
 //   0–26    "Your next" grows, "trade" joins, the line squeezes shut
 //   27–46   "starts" punches in big and settles, "with a" joins
 //   47–74   "sentence" rises in with a warm-grey sweep; four coins flip in and keep turning
-//   74–88   the word dissolves letter by letter, the top coin spins toward the phone
-//   81–108  the Explore screen rises; each coin flies down and becomes its card icon
-//   96–152  percentages tick, the screen scrolls to the AI input + keyboard and a prompt is typed
+//   74–88   the word dissolves letter by letter, the top coin spins toward the screen
+//   81–108  the desktop trade screen rises; each coin flies down and becomes its token-list icon
+//   96–152  percentages tick, the camera glides in on the Ask AI bar as it slides up and a prompt is typed
 (function () {
   const FPS = 30;
   const FRAMES = 153;
@@ -89,29 +89,34 @@
     return rgb(col, 1 - smoother((f - s - 3.5) / 3.5));
   }
 
-  // ------------------------------------------------------------------ phone
-  const K = 650 / PHONE.W; // pt -> px on screen
-  const BEZEL = 23, HALF_W = 348; // phone frame: 696 px wide, centred on x = 960
-  // rise, slow drift, a long scroll that peaks around frame 120, settle, then the next scroll starts
-  const phoneTop = spline([
-    [81, 640], [82, 540], [84, 434], [86, 312], [88, 244], [90, 200], [92, 162], [94, 135], [96, 116], [100, 92], [104, 80], [108, 66],
-    [114, 34], [118, -60], [121, -186], [124, -280], [128, -334], [134, -358], [140, -370], [146, -384], [152, -430],
-  ]);
-  // the screen arrives a touch large and settles to size while it rises (scaled about its top centre)
-  const phoneScale = (f) => 1 + 0.05 * (1 - smoother((f - 82) / 18));
-  // keyboard sheet: parked below the screen, slides up as the scroll starts (pt)
-  const sheetOffset = (f) => 352 * (1 - smoother((f - 112) / 11));
-  const phoneOpacity = (f) => smoother((f - 81) / 8);
-  const phoneBlur = (f) => 12 * (1 - smoother((f - 81) / 9));
-  const iconPos = (i, f) => {
-    const sc = phoneScale(f);
+  // ------------------------------------------------------------------ desktop
+  // The window rises framed on its left side (the token list, where the coins land, sits left of centre),
+  // settles, then the camera glides across and eases in until the whole window is centred and the Ask AI bar is up. Window transform: translate(x0, top) scale(s)
+  // about its top-left corner, in screen px.
+  const winS = spline([[81, 0.975], [90, 0.945], [100, 0.93], [108, 0.925], [112, 0.926], [118, 0.935], [124, 0.95], [130, 0.962],
+    [136, 0.968], [152, 0.975]]);
+  const riseTop = spline([[81, 760], [82, 662], [84, 540], [86, 424], [88, 334], [90, 266], [92, 218], [94, 184], [96, 163],
+    [100, 142], [104, 133], [108, 128], [112, 126]]);
+  const riseX = spline([[81, 404], [100, 394], [112, 388]]);
+  const askY = spline([[110, 871], [118, 875], [124, 880], [136, 886], [152, 889]]); // screen y of the bar (window centred at the end)
+  const focus = (f) => smoother((f - 110) / 26);
+  const winPose = (f) => {
+    const s = winS(f), k = focus(f);
     return {
-      x: 960 + (BEZEL + PHONE.iconCenter(i).x * K - HALF_W) * sc,
-      y: phoneTop(f) + (BEZEL + PHONE.iconCenter(i).y * K) * sc,
-      s: sc,
+      s,
+      x: lerp(riseX(f), 960 - 960 * s, k),
+      y: lerp(riseTop(f), askY(f) - DESK.ASK.y * s, k),
     };
   };
-  const ICON_D = PHONE.ICON * K;
+  const winOpacity = (f) => smoother((f - 81) / 8);
+  const winBlur = (f) => 12 * (1 - smoother((f - 81) / 9));
+  // the Ask AI bar slides up out of the window's bottom edge (px, window space)
+  const askOffset = (f) => 150 * (1 - smoother((f - 113) / 12));
+  const iconPos = (i, f) => {
+    const w = winPose(f), c = DESK.iconCenter(i);
+    return { x: w.x + c.x * w.s, y: w.y + c.y * w.s, s: w.s };
+  };
+  const ICON_D = DESK.ICON;
 
   // ------------------------------------------------------------------ coins
   // Tracked off the reference frame by frame (viewport px / degrees), mapped onto our four tokens by where
@@ -127,8 +132,8 @@
   // rx past 90 shows the plain back. Nothing ever holds still: idle is a slow continuous turn.
   const COINS = [
     {
-      key: "bitcoin", row: 1, from: 47, thick: 0.12,
-      x: [[47, 962], [66, 956], [76, 944], [82, 922], [86, 891], [90, 830]],
+      key: "bitcoin", row: 0, from: 47, thick: 0.12,
+      x: [[47, 962], [66, 956], [74, 940], [80, 900], [84, 850], [88, 790], [90, 755]],
       y: [[47, 500], [49, 440], [51, 402], [54, 376], [60, 342], [66, 328], [74, 333], [80, 352], [84, 376], [88, 432], [90, 470]],
       d: [[47, 70], [50, 160], [53, 192], [60, 201], [76, 206], [82, 196], [86, 176], [90, 140]],
       rx: [[47, -360], [48, -220], [50, -100], [52, -30], [55, -6], [62, 4], [72, 7], [84, 3], [92, 0]],
@@ -137,7 +142,7 @@
       land: [86, 98],
     },
     {
-      key: "solana", row: 0, from: 48, thick: 0.11,
+      key: "solana", row: 1, from: 48, thick: 0.11,
       x: [[48, 120], [50, 140], [53, 250], [56, 315], [59, 358], [62, 386], [66, 362], [76, 355], [86, 384]],
       y: [[48, 1040], [50, 840], [53, 826], [56, 806], [59, 790], [61, 722], [63, 604], [66, 562], [76, 574], [86, 598]],
       d: [[48, 470], [54, 488], [58, 468], [60, 420], [62, 312], [64, 238], [67, 204], [80, 192], [86, 186]],
@@ -148,13 +153,13 @@
     },
     {
       key: "zcash", row: 3, from: 49, thick: 0.13,
-      x: [[49, 2010], [50, 1940], [52, 1858], [55, 1786], [58, 1758], [66, 1722], [76, 1645], [86, 1574], [92, 1480]],
+      x: [[49, 2010], [50, 1940], [52, 1858], [55, 1786], [58, 1758], [66, 1712], [72, 1640], [78, 1520], [84, 1370], [88, 1260], [92, 1150]],
       y: [[49, 1110], [51, 970], [54, 905], [58, 880], [66, 894], [80, 880], [92, 870]],
       d: [[49, 580], [52, 556], [54, 520], [58, 470], [62, 432], [66, 410], [80, 400], [92, 384]],
       rx: [[49, 160], [52, 140], [55, 110], [57, 90], [59, 52], [62, 25], [66, 14], [80, 10], [92, 6]],
       ry: [[49, 0], [56, -4], [59, -38], [64, -38], [72, -18], [78, 0], [84, 18], [92, 26]],
       rz: [[49, 10], [53, 24], [57, 40], [59, 27], [62, 11], [66, 6], [92, 2]],
-      land: [88, 104],
+      land: [85, 108],
     },
     {
       key: "ethereum", row: 2, from: 60, thick: 0.17,
@@ -169,22 +174,22 @@
   ];
   COINS.forEach((c) => ["x", "y", "d", "rx", "ry", "rz"].forEach((k) => (c[k] = spline(c[k]))));
 
-  // Landing: one quintic Hermite per channel, worked out in the phone's own frame. It starts from the
+  // Landing: one quintic Hermite per channel, worked out in the window's own frame. It starts from the
   // coin's position, velocity *and acceleration* at the start of the landing (so the hand-over has no
-  // jolt and the coin picks up speed gradually) and ends on the card icon at rest relative to the phone
+  // jolt and the coin picks up speed gradually) and ends on the list icon at rest relative to the window
   // (a soft arrival that rides along with the rising screen). Spins finish on the nearest whole turn.
   const q0 = (u) => 1 - 10 * u ** 3 + 15 * u ** 4 - 6 * u ** 5;
   const q1 = (u) => u - 6 * u ** 3 + 8 * u ** 4 - 3 * u ** 5;
   const q2 = (u) => 0.5 * u * u - 1.5 * u ** 3 + 1.5 * u ** 4 - 0.5 * u ** 5;
   const q5 = (u) => 10 * u ** 3 - 15 * u ** 4 + 6 * u ** 5;
-  const ICON_R = (9.5 / 40) * 100; // the card icon's corner radius, % of its size
+  const ICON_R = (6 / 26) * 100; // the list icon's corner radius, % of its size
   function freePose(c, f) {
     return { x: c.x(f), y: c.y(f), d: c.d(f), rx: c.rx(f), ry: c.ry(f), rz: c.rz(f) };
   }
   function landingStart(c) {
     if (c._ls) return c._ls;
     const t0 = c.land[0], D = c.land[1] - c.land[0], e = 0.5;
-    // backward differences (the free tracks end soon after t0), relative to the phone for position
+    // backward differences (the free tracks end soon after t0), relative to the window for position
     const p = freePose(c, t0), q = freePose(c, t0 - e), r = freePose(c, t0 - 2 * e);
     const i0 = iconPos(c.row, t0), i1 = iconPos(c.row, t0 - e), i2 = iconPos(c.row, t0 - 2 * e);
     p.x -= i0.x; q.x -= i1.x; r.x -= i2.x;
@@ -241,9 +246,9 @@
   SCENE._debug = { COINS, coinPose, iconPos }; // for offline checks of the coin paths
 
   SCENE.mount = function (stage) {
-    stage.innerHTML = `<div id="phoneWrap"></div><div id="line"></div><div id="coins"></div><span id="meas"></span>`;
-    const phoneWrap = stage.querySelector("#phoneWrap");
-    const ui = PHONE.build(phoneWrap);
+    stage.innerHTML = `<div id="deskWrap"></div><div id="line"></div><div id="coins"></div><span id="meas"></span>`;
+    const deskWrap = stage.querySelector("#deskWrap");
+    const ui = DESK.build(deskWrap);
     const line = stage.querySelector("#line");
     const meas = stage.querySelector("#meas");
     const widthOf = (text, size, gap) => {
@@ -299,35 +304,37 @@
         else line.style.color = rgb(INK);
       }
 
-      // phone
-      const top = phoneTop(f);
-      const op = phoneOpacity(f);
-      phoneWrap.style.display = op > 0 ? "block" : "none";
-      phoneWrap.style.transform = `translateY(${top}px) scale(${phoneScale(f).toFixed(4)})`;
-      phoneWrap.style.opacity = op;
-      const blur = phoneBlur(f);
-      phoneWrap.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
+      // desktop
+      const w = winPose(f);
+      const op = winOpacity(f);
+      deskWrap.style.display = op > 0 ? "block" : "none";
+      deskWrap.style.transform = `translate(${w.x.toFixed(2)}px, ${w.y.toFixed(2)}px) scale(${w.s.toFixed(4)})`;
+      deskWrap.style.opacity = op;
+      const blur = winBlur(f);
+      deskWrap.style.filter = blur > 0.05 ? `blur(${blur.toFixed(2)}px)` : "none";
 
-      const so = sheetOffset(f);
-      ui.sheet.style.transform = `translateY(${so.toFixed(2)}px)`;
-      ui.sheet.style.visibility = so > 351 ? "hidden" : "visible";
+      const ao = askOffset(f);
+      ui.ask.style.transform = `translateY(${ao.toFixed(2)}px)`;
+      ui.ask.style.opacity = smoother((f - 113) / 9).toFixed(3);
+      ui.ask.style.visibility = ao > 149 ? "hidden" : "visible";
 
-      // live card percentages: tick every other frame once the screen is up
+      // live 24h changes in the list: tick every other frame once the screen is up
       const tk = Math.max(0, Math.floor((fi - 86) / 2));
-      PHONE.cards.forEach((c, i) => {
+      DESK.rows.forEach((r, i) => {
+        if (i > 5) return;
         const step = Math.floor((tk + i) / 2) - Math.floor(i / 2);
         const wob = ((step * 7 + i * 3) % 5) - 2; // small deterministic up/down ticks
-        const v = Math.max(0.01, Math.abs(c.pct) + 0.01 * (step * (c.pct >= 0 ? 1 : 0.6) + wob * 0.5));
-        ui.pcts[i].textContent = v.toFixed(2) + "%";
+        const v = Math.max(0.01, Math.abs(r.pct) + 0.01 * (step * 0.6 + wob * 0.5));
+        ui.chs[i].textContent = "-" + v.toFixed(2) + "%";
       });
 
-      // AI prompt: caret blinks, then the sentence is typed once the keyboard is in view
-      const n = clamp(fi - 124, 0, PROMPT.length);
+      // AI prompt: caret blinks, then the sentence is typed once the bar is up
+      const n = clamp(fi - 126, 0, PROMPT.length);
       ui.typed.textContent = PROMPT.slice(0, n);
       ui.ph.style.display = n > 0 ? "none" : "inline";
       ui.caret.style.opacity = n > 0 && n < PROMPT.length ? 1 : Math.floor(fi / 8) % 2 ? 0 : 1;
-      if (n === 0) ui.caret.style.order = -1;
-      else ui.caret.style.order = 0;
+      ui.caret.style.order = n === 0 ? -1 : 0;
+      ui.send.style.background = n >= PROMPT.length ? "#4f8c68" : "#2a2a2c";
 
       // coins
       coins.forEach(({ c, wrap, el }) => {
