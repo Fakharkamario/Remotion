@@ -124,7 +124,9 @@
   SCENE._debug = { circles }; // for offline checks of the motion
   SCENE.mount = function (stage) {
     stage.innerHTML = `<canvas id="cv" width="1920" height="1080"></canvas><div id="line"></div><span id="meas"></span>`;
-    const cv = stage.querySelector("#cv"), ctx = cv.getContext("2d");
+    const cv = stage.querySelector("#cv"), out = cv.getContext("2d");
+    const work = document.createElement("canvas"); work.width = 1920; work.height = 1080;
+    const ctx = work.getContext("2d");
     const line = stage.querySelector("#line"), meas = stage.querySelector("#meas");
     const widthOf = (text, size, gap) => {
       meas.textContent = text;
@@ -247,13 +249,23 @@
       const f = clamp(t, 0, FRAMES - 1);
       const fi = Math.round(f);
 
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, 1920, 1080);
-      ctx.fillStyle = "#f9f8f4"; ctx.fillRect(0, 0, 1920, 1080);
-      // one continuous move: the glass forms on the rim circles as they close up
-      const k = GLASS(f);
-      drawGlass(f, k);
-      drawRims(f, 1 - k);
+      // the circles move fast through the pull-back, so each render is itself the average of four sub-samples
+      // spread over the 1/8 frame between the 240 fps samples: with the 8-sample shutter of the final render that
+      // is 32 samples a frame, and thin edges smear instead of stepping
+      const SUB = [-3 / 64, -1 / 64, 1 / 64, 3 / 64];
+      out.globalAlpha = 1;
+      SUB.forEach((o, n) => {
+        const fs = clamp(f + o, 0, FRAMES - 1);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.globalAlpha = 1; ctx.filter = "none";
+        ctx.fillStyle = "#f9f8f4"; ctx.fillRect(0, 0, 1920, 1080);
+        // one continuous move: the glass forms on the rim circles as they close up
+        const k = GLASS(fs);
+        drawGlass(fs, k);
+        drawRims(fs, 1 - k);
+        out.globalAlpha = 1 / (n + 1); // running average
+        out.drawImage(work, 0, 0);
+      });
 
       // headline
       if (fi < WORD_OUT[1]) {
