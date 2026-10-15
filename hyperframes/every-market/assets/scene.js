@@ -5,7 +5,7 @@
 //   0–20    two huge circles slide in, turning, and frame a gap; "One" grows, "terminal," joins
 //   27–55   "every" punches in and settles, "market" joins; the circles keep a slow clockwise turn
 //   55–57   the words drop out, left to right
-//   55–74   the camera pulls back and keeps turning: four circles, their green rims cooling to grey
+//   55–74   the camera pulls back and keeps turning: four circles, their ink rims lightening to grey
 //   75–134  cut: the four markets as overlapping glass circles, still turning and pulling back, settle into a
 //           2 x 2 cluster inside a thin ring
 (function () {
@@ -136,7 +136,7 @@
 
     const circlePath = (c) => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); };
 
-    // before the cut: the circles are only their rims, glowing inward (the reference's lit edges, in acend green)
+    // before the cut: the circles are only their rims, glowing inward (the reference's lit edges, in brand ink)
     function drawRims(f, fi) {
       const k = COOL(f);
       const [r, g, b] = mixRGB("#31302e", "#b4b2ab", k);
