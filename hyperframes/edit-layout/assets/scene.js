@@ -104,57 +104,74 @@
     const s = { x: lerp(S0.x, 960 + Z1 * (P.x - F1.x), e), y: lerp(S0.y, 540 + Z1 * (P.y - F1.y), e) };
     return { Z, O: { x: s.x - Z * P.x, y: s.y - Z * P.y } };
   }
-  const P_UI = smoothPath([
-    [96, 1100, 230, 1.32, 0, 0, 0], [102, 1080, 260, 1.24, 0, 0, 0], [124, 960, 455, 0.84, 8, -12, 1], [132, 950, 455, 0.83, 8, -12, 1],
-    [146, 800, 470, 1.18, 0, 0, 0], [170, 820, 600, 1.12, 0, 0, 0], [178, 900, 470, 1.05, 0, 0, 0], [186, 1100, 230, 1.32, 0, 0, 0],
-    [204, 1100, 240, 1.32, 0, 0, 0], [214, 980, 450, 0.95, 0, 0, 0], [222, 1500, 700, 1.25, 0, 0, 0],
-  ], 90, 230, 3);
-  const P_ASK = smoothPath([
-    [306, 1500, 700, 1.25, 0, 0, 0], [318, 1560, 560, 1.12, 0, 0, 0], [340, 1590, 420, 1.38, 0, 0, 0], [352, 1590, 380, 1.45, 0, 0, 0],
-    [372, 1590, 300, 1.55, 0, 0, 0], [420, 1590, 380, 1.5, 0, 0, 0], [440, 1580, 420, 1.42, 0, 0, 0], [468, 960, 450, 0.8, 9, 13, 1],
-    [500, 960, 445, 0.83, 5, 8, 1],
-  ], 300, 495, 3);
+  // After the hand-off the edit works like "just ask": every shot is a slow continuous drift (focus point + zoom,
+  // linear in time so the frame never parks), close-ups on what is being clicked, cuts on the action, and two shots
+  // that float the window in 3D on a deep backdrop. [from, to, start [x, y, zoom], end, tilt [[x, y] start, end], dark]
+  const SHOTS = [
+    { a: 96, b: 112, s: [1110, 150, 2.3], e: [1088, 162, 2.46] },
+    { a: 112, b: 136, s: [930, 470, 0.74], e: [985, 445, 0.81], tilt: [[14, -20], [7, -11]], dark: 1 },
+    { a: 136, b: 178, drag: true },
+    { a: 178, b: 200, s: [1160, 118, 2.38], e: [1122, 138, 2.56] },
+    { a: 200, b: 216, s: [960, 470, 0.72], e: [985, 450, 0.79], tilt: [[-12, 18], [-6, 10]], dark: 1 },
+    { a: 216, b: 222, s: [1690, 770, 1.62], e: [1730, 790, 1.76] },
+    { a: 306, b: 330, s: [1700, 760, 1.9], e: [1650, 700, 1.8] },
+    { a: 330, b: 362, s: [1590, 430, 1.42], e: [1590, 385, 1.55] },
+    { a: 362, b: 420, s: [1590, 215, 1.95], e: [1590, 300, 1.88] },
+    { a: 420, b: 452, s: [1585, 392, 2.08], e: [1605, 404, 2.26] },
+    { a: 452, b: 486, s: [960, 470, 0.72], e: [960, 445, 0.8], tilt: [[10, 16], [4, 6]], dark: 1 },
+  ];
+  const shotCam = (sh, f) => {
+    const u = clamp((f - sh.a) / (sh.b - sh.a), -0.02, 1.02);
+    let x, y, z;
+    if (sh.drag) { x = lerp(690, 740, u); y = 330 + 0.78 * dragY(f); z = Math.exp(lerp(Math.log(1.46), Math.log(1.36), u)); }
+    else { x = lerp(sh.s[0], sh.e[0], u); y = lerp(sh.s[1], sh.e[1], u); z = Math.exp(lerp(Math.log(sh.s[2]), Math.log(sh.e[2]), u)); }
+    const c = fromFocus(x, y, z);
+    c.rx = sh.tilt ? lerp(sh.tilt[0][0], sh.tilt[1][0], smoother(u * 1.15)) : 0;
+    c.ry = sh.tilt ? lerp(sh.tilt[0][1], sh.tilt[1][1], smoother(u * 1.15)) : 0;
+    c.dark = sh.dark || 0; c.fx = x; c.fy = y;
+    return c;
+  };
+  const shotAt = (fi) => { let k = -1; SHOTS.forEach((sh, i) => { if (fi >= sh.a && fi < sh.b) k = i; }); return k; };
   function camera(f, fi) {
     if (fi === undefined) fi = Math.round(f);
     let c;
     if (fi < CUT_TEXT) return openCam(Math.min(f, CUT_TEXT - 0.5));
     if (fi < CUT_UI) c = { Z: 1, O: { x: 0, y: 0 } }; // the window is hidden behind the headline
     else if (fi < 96) {
-      const g = Math.max(f, CUT_UI - 0.5), p = P_UI(96);
-      c = pullTo(g, CUT_UI - 0.5, 96, G.label, Z_TEXT.edit, { x: p.x, y: p.y }, p.z, HEAD_C);
-      c.rx = 0; c.ry = 0; c.dark = 0;
-      return c;
-    } else if (fi < 222) {
-      const p = P_UI(f); c = fromFocus(p.x, p.y, p.z); c.rx = p.rx; c.ry = p.ry; c.dark = p.dark; return c;
-    } else if (fi < ASK_IN) {
+      const g = Math.max(f, CUT_UI - 0.5), s0 = SHOTS[0].s;
+      c = pullTo(g, CUT_UI - 0.5, 96, G.label, Z_TEXT.edit, { x: s0[0], y: s0[1] }, s0[2], HEAD_C);
+    } else if (fi >= 222 && fi < ASK_IN) {
       // dive into the Ask AI pill: log-zoom accelerates until its label is headline-sized at the screen centre
-      const g = Math.min(f, ASK_IN - 0.5), p0 = P_UI(222), t = clamp((g - 222) / (ASK_IN - 222), 0, 1);
-      const Z = Math.exp(lerp(Math.log(p0.z), Math.log(Z_TEXT.ask), t * t)), w = smoother(t * 1.2);
-      const d = { x: p0.z * (G.ask.x - p0.x) * (1 - w), y: p0.z * (G.ask.y - p0.y) * (1 - w) };
+      const g = Math.min(f, ASK_IN - 0.5), p0 = shotCam(SHOTS[5], 222), t = clamp((g - 222) / (ASK_IN - 222), 0, 1);
+      const Z = Math.exp(lerp(Math.log(p0.Z), Math.log(Z_TEXT.ask), t * t)), w = smoother(t * 1.2);
+      const d = { x: p0.Z * (G.ask.x - p0.fx) * (1 - w), y: p0.Z * (G.ask.y - p0.fy) * (1 - w) };
       c = fromFocus(G.ask.x - d.x / Z, G.ask.y - d.y / Z, Z);
-    } else if (fi < ASK_OUT) {
+    } else if (fi >= ASK_IN && fi < ASK_OUT) {
       c = fromFocus(G.ask.x, G.ask.y, Z_TEXT.ask * (1 + 0.06 * smoother((f - ASK_IN) / 30)));
-    } else if (fi < 306) {
-      const g = Math.max(f, ASK_OUT - 0.5), p = P_ASK(306);
-      c = pullTo(g, ASK_OUT - 0.5, 306, G.ask, Z_TEXT.ask * 1.06, { x: p.x, y: p.y }, p.z, { x: 960, y: 540 });
+    } else if (fi >= ASK_OUT && fi < 306) {
+      const g = Math.max(f, ASK_OUT - 0.5), s0 = SHOTS[6].s;
+      c = pullTo(g, ASK_OUT - 0.5, 306, G.ask, Z_TEXT.ask * 1.06, { x: s0[0], y: s0[1] }, s0[2], { x: 960, y: 540 });
     } else {
-      const p = P_ASK(f); c = fromFocus(p.x, p.y, p.z); c.rx = p.rx; c.ry = p.ry; c.dark = p.dark; return c;
+      const k = shotAt(fi);
+      // keep each shot's samples inside its own window, so blur never mixes two shots
+      const sh = SHOTS[k];
+      return shotCam(sh, clamp(f, sh.a - 0.5, sh.b - 0.5));
     }
     c.rx = 0; c.ry = 0; c.dark = 0;
     return c;
   }
 
   // ------------------------------------------------------------------ interaction script (window px)
-  const TAP = { edit: 96, grab: 142, gear: 186, done: 200, ask: 314, analyze: 356 };
+  const TAP = { edit: 101, grab: 142, gear: 184, done: 195, ask: 314, analyze: 356 };
   const DRAG = { from: 142, to: 172, dy: 390 }; // the chart panel moves down by the activity panel's height + gap
-  const CUR_ON = [[84, 100], [130, 212], [306, 362]];
+  const CUR_ON = [[96, 112], [136, 178], [178, 200], [306, 330], [330, 362]];
   const CUR = (() => {
     const L = G.label;
     const keys = [
-      [84, 1240, 260], [90, 1140, 140], [94.5, 1110, 98], [100, 1104, 100],
-      [130, 640, 320], [138, 420, 260], [141, 380, 246], [142, 380, 246],
-      [176, 600, 520], [181, 1000, 240], [185, 1196, 52], [186, 1208, 34], [191, 1180, 70], [197, 1110, 92], [200, 1100, 92], [212, 1150, 140],
-      [306, 1700, 700], [311, 1820, 830], [314, 1845, 850], [320, 1700, 700], [340, 1640, 420], [352, 1600, 330], [356, 1590, 321], [362, 1600, 330],
+      [96, 1190, 210], [99.5, 1112, 104], [101, 1104, 98], [112, 1100, 106],
+      [136, 520, 330], [140, 400, 260], [142, 380, 246], [176, 420, 640],
+      [178, 1310, 210], [182.5, 1216, 42], [184, 1208, 34], [189, 1160, 70], [194, 1108, 92], [195, 1100, 92], [200, 1120, 112],
+      [306, 1660, 720], [312, 1822, 832], [314, 1845, 850], [330, 1700, 560], [350, 1612, 338], [356, 1590, 321], [362, 1600, 330],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => {
@@ -174,7 +191,7 @@
     p = Math.max(p, smoother((f - DRAG.from + 1.5) / 1.5) * (1 - smoother((f - DRAG.to) / 3)));
     return p;
   };
-  const EDIT_ON = (f) => smoother((f - 100) / 16) * (1 - smoother((f - 202) / 14));
+  const EDIT_ON = (f) => smoother((f - 104) / 12) * (1 - smoother((f - 197) / 12));
 
   // ------------------------------------------------------------------ mount
   const SCENE = {};
@@ -305,7 +322,7 @@
       ui.gm0.style.opacity = m0.toFixed(3);
       ui.gm0.style.transform = `scale(${(0.96 + 0.04 * m0).toFixed(4)})`;
       ui.mEditLabel.style.opacity = fi >= CUT_UI ? smoother((f - 87) / 5).toFixed(3) : 1;
-      ui.miEdit.style.background = mix("#fdfcfa", "#eeede9", smoother((f - 88) / 5));
+      ui.miEdit.style.background = mix("#fdfcfa", "#eeede9", smoother((f - 97) / 4));
       const m1 = smoother((f - TAP.gear - 1) / 6) * (1 - smoother((f - TAP.done - 1) / 6));
       ui.gm1.style.display = m1 > 0.002 ? "block" : "none";
       ui.gm1.style.opacity = m1.toFixed(3);
@@ -315,7 +332,7 @@
       // ---------------- the layout editor: grips + eyes, the hint, the drop zone; the chart is dragged below activity
       const ed = EDIT_ON(f);
       ui.handles.forEach((el, i) => {
-        const p = smoother((f - 102 - i * 0.8) / 10) * (1 - smoother((f - 202 - i * 0.4) / 10));
+        const p = smoother((f - 108 - i * 0.8) / 10) * (1 - smoother((f - 197 - i * 0.4) / 10));
         el.style.opacity = p.toFixed(3);
         el.style.transform = `translateY(${(-6 * (1 - p)).toFixed(2)}px) scale(${(0.85 + 0.15 * p).toFixed(4)})`;
       });

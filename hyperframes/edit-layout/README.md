@@ -19,8 +19,9 @@ supplied screenshots).
   so the two clips cut together.
 - The two text moments are match moves on a UI label: the headline is drawn exactly where (and as large as) the
   label lands under the camera, rides it down as the camera pulls back, and hands over to the real label once small.
-- Camera moves between are Gaussian-smoothed keyframes (velocity and acceleration continuous); the cursor is a soft
-  mint dot whose clicks bloom; the reply card arrives with a pastel wash.
+- Between the text moments the edit works like `just-ask`: every shot is a slow continuous drift, close-ups on what
+  is being clicked, cuts on the action, and 3D shots floating the window on a deep backdrop; the cursor is a soft mint
+  dot whose clicks bloom; the reply card arrives with a pastel wash.
 - Mock reply text and the Solana card's numbers follow the supplied screenshots.
 
 There is no soundtrack.
