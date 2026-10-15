@@ -1,17 +1,17 @@
-// Part 2 — "多数人呢都是在思考哪家公司会涨、哪个公司赚钱，但是呢用逆向思维的方式会让事情变得更简单。
-// 尤其是第五点，基本到不行的经济学常识。但是多数人在做股票的时候全部都会忘光光。" — 14.73 s, 30 fps (442 frames).
+// Part 2 (on screen in Traditional Chinese) — "多數人呢都是在思考哪家公司會漲、哪個公司賺錢，但是呢用逆向思維的方式會讓事情變得更簡單。
+// 尤其是第五點，基本到不行的經濟學常識。但是多數人在做股票的時候全部都會忘光光。" — 14.73 s, 30 fps (442 frames).
 // Same system as part 1 (stock-five): the take runs unbroken underneath, beats cut hard, nothing sits on his face.
 //
-//   0–46     A-roll framed left. 多数人呢 / 都是在 pop on the wall, huge 思考 flashes in BEHIND him.
-//   47–107   dark room with neon arcs. 哪家公司会涨 huge, letters land green and sweep white (reference: AUTOPILOT);
-//            a chart card opens from inside the word and 哪个公司赚钱 is written across it (AUTONOMOUS AGENTS).
-//   108–170  punch-in. 但是呢 用 / 逆向思维 / 的方式 on his chest; the key word flips in mirrored ("reverse").
-//   171–236  tight. thin 会让事情变得 writes on; huge 更简单 lands green behind his hair, washes to ink (agent).
-//   237–275  wide. a huge green 5 stands behind him as he holds up five fingers; the grey pill 尤其是第五点 is
+//   0–46     A-roll framed left. 多數人呢 / 都是在 pop on the wall, huge 思考 flashes in BEHIND him.
+//   47–107   dark room with neon arcs. 哪家公司會漲 huge, letters land green and sweep white (reference: AUTOPILOT);
+//            a chart card opens from inside the word and 哪個公司賺錢 is written across it (AUTONOMOUS AGENTS).
+//   108–170  punch-in. 但是呢 用 / 逆向思維 / 的方式 on his chest; the key word flips in mirrored ("reverse").
+//   171–236  tight. thin 會讓事情變得 writes on; huge 更簡單 lands green behind his hair, washes to ink (agent).
+//   237–275  wide. a huge green 5 stands behind him as he holds up five fingers; the grey pill 尤其是第五點 is
 //            typed over it (2X pipe line); the picture washes to white.
-//   276–336  white. 基本到不行的 writes on; a box opens green, turns black, 经济学常识 typed inside (augmentation).
-//   337–389  A-roll framed left, flashing in from white. 但是 / 多数人 / 在做股票 / 的时候 cascade down the wall.
-//   390–441  tight punch-in. 全部都会 / 忘光光 flashes in, then the characters dissolve away one by one.
+//   276–336  white. 基本到不行的 writes on; a box opens green, turns black, 經濟學常識 typed inside (augmentation).
+//   337–389  A-roll framed left, flashing in from white. 但是 / 多數人 / 在做股票 / 的時候 cascade down the wall.
+//   390–441  tight punch-in. 全部都會 / 忘光光 flashes in, then the characters dissolve away one by one.
 //
 // Word frames are ASR (SenseVoice) onsets checked against the voice's loudness envelope.
 (function () {
@@ -142,9 +142,9 @@
       return e;
     };
 
-    // ============================================================ A: 多数人呢 / 都是在 / 思考 (behind him)
+    // ============================================================ A: 多數人呢 / 都是在 / 思考 (behind him)
     const aWrap = el("div", "abs", S.A.behind);
-    const aL1 = inkCap(aWrap, 66), aL1W = words(aL1, ["多数人", "呢"]);
+    const aL1 = inkCap(aWrap, 66), aL1W = words(aL1, ["多數人", "呢"]);
     const aL2 = inkCap(aWrap, 66), aL2W = words(aL2, ["都是在"]);
     const aHero = el("div", "abs hero ink", aWrap, "思考");
     aHero.style.fontSize = "380px";
@@ -171,7 +171,7 @@
     const bWord = el("div", "abs", S.B.top);
     bWord.style.fontWeight = "800"; bWord.style.fontSize = "196px"; bWord.style.letterSpacing = "-0.03em"; bWord.style.lineHeight = "1";
     bWord.style.whiteSpace = "nowrap"; bWord.style.textShadow = "0 0 40px rgba(0,0,0,.6)";
-    const bWordC = chars(bWord, "哪家公司会涨");
+    const bWordC = chars(bWord, "哪家公司會漲");
     const B_AT1 = [48, 53, 57, 61, 66, 71];
     const B_W1 = 6 * 196 * 0.97;
     // the card: a dusky chart "photo" that opens from inside the word
@@ -197,29 +197,29 @@
     const bCardWord = el("div", "abs", bCard);
     bCardWord.style.fontWeight = "800"; bCardWord.style.fontSize = "128px"; bCardWord.style.letterSpacing = "-0.03em";
     bCardWord.style.lineHeight = "1"; bCardWord.style.whiteSpace = "nowrap"; bCardWord.style.textShadow = "0 4px 30px rgba(40,20,50,.45)";
-    const bCardC = chars(bCardWord, "哪个公司赚钱");
+    const bCardC = chars(bCardWord, "哪個公司賺錢");
     const B_AT2 = [78, 82, 88, 91, 98, 102];
 
-    // ============================================================ C: 但是呢 用 / 逆向思维 / 的方式 (chest)
+    // ============================================================ C: 但是呢 用 / 逆向思維 / 的方式 (chest)
     const cWrap = el("div", "abs", S.C.front);
     const cL1 = el("div", "abs cap", cWrap);
     cL1.style.fontSize = "62px";
     const cL1W = words(cL1, ["但是", "呢", " 用"]);
-    const cHero = el("div", "abs hero light", cWrap, "逆向思维");
+    const cHero = el("div", "abs hero light", cWrap, "逆向思維");
     cHero.style.fontSize = "224px";
     const cL3 = el("div", "abs cap", cWrap);
     cL3.style.fontSize = "62px";
     const cL3W = words(cL3, ["的方式"]);
     const C_AT = { l1: [113, 123, 131], hero: 138, l3: [161] };
 
-    // ============================================================ D: 会让事情变得 / 更简单 (behind his hair)
+    // ============================================================ D: 會讓事情變得 / 更簡單 (behind his hair)
     const dThin = el("div", "abs thin", S.D.behind);
     dThin.style.color = rgb(INK); dThin.style.fontSize = "58px"; dThin.style.fontWeight = "400"; dThin.style.letterSpacing = "0.18em";
-    const dThinC = chars(dThin, "会让事情变得");
+    const dThinC = chars(dThin, "會讓事情變得");
     const D_THIN = [177, 181, 186, 190, 197, 201];
     const dHero = el("div", "abs grot", S.D.behind);
     dHero.style.fontSize = "300px";
-    const dHeroC = chars(dHero, "更简单");
+    const dHeroC = chars(dHero, "更簡單");
     const D_AT = [206, 213, 219];
 
     // ============================================================ E: a huge 5 behind him, pill over it
@@ -228,12 +228,12 @@
     const ePill = el("div", "pill", S.E.front);
     const eTxt = el("div", "txt", ePill);
     eTxt.style.fontSize = "74px";
-    const eTxtC = chars(eTxt, "尤其是第五点");
+    const eTxtC = chars(eTxt, "尤其是第五點");
     const E_AT = [237, 242, 248, 253, 257, 260];
     const E_CW = 74 * 0.98;
     const ePillW = spline([[236, 8], [238, 70], ...E_AT.map((a, i) => [a + 2, 76 + E_CW * (i + 1)])]);
 
-    // ============================================================ F: white, 基本到不行的 / 经济学常识 box
+    // ============================================================ F: white, 基本到不行的 / 經濟學常識 box
     const fBg = el("div", "abs", S.F.top);
     fBg.style.width = "1920px"; fBg.style.height = "1080px"; fBg.style.background = "#fafafa";
     const fWorld = el("div", "abs", S.F.top);
@@ -250,16 +250,16 @@
       `<rect width="800" height="200" filter="url(#fx)"/></svg>`;
     const fBoxTxt = el("div", "txt", fBox);
     fBoxTxt.style.fontSize = "132px";
-    const fBoxC = chars(fBoxTxt, "经济学常识");
+    const fBoxC = chars(fBoxTxt, "經濟學常識");
     const F_AT = [310, 313, 316, 320, 323];
     const F_BOX_W = 5 * 132 * 0.97 + 100, F_BOX_H = 176;
 
     // ============================================================ G: cascade down the wall
     const G_LINES = [
       { t: "但是", ats: [338, 341], x: 1080, y: 150, size: 62 },
-      { t: "多数人", ats: [347, 350, 355], x: 1210, y: 252, size: 62 },
+      { t: "多數人", ats: [347, 350, 355], x: 1210, y: 252, size: 62 },
       { t: "在做股票", ats: [361, 365, 372, 375], x: 1120, y: 360, size: 92, bold: [2, 3] },
-      { t: "的时候", ats: [379, 382, 384], x: 1330, y: 492, size: 62 },
+      { t: "的時候", ats: [379, 382, 384], x: 1330, y: 492, size: 62 },
     ];
     const gWrap = el("div", "abs", S.G.behind);
     G_LINES.forEach((ln) => {
@@ -269,11 +269,11 @@
       (ln.bold || []).forEach((i) => (ln.cs[i].style.fontWeight = "800"));
     });
 
-    // ============================================================ H: 全部都会 / 忘光光, dissolving
+    // ============================================================ H: 全部都會 / 忘光光, dissolving
     const hWrap = el("div", "abs", S.H.front);
     const hL1 = el("div", "abs cap", hWrap);
     hL1.style.fontSize = "62px";
-    const hL1W = words(hL1, ["全部", "都会"]);
+    const hL1W = words(hL1, ["全部", "都會"]);
     const hHero = el("div", "abs hero light", hWrap);
     hHero.style.fontSize = "232px";
     const hHeroC = chars(hHero, "忘光光");
