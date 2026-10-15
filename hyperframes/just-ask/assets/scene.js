@@ -5,13 +5,15 @@
 //   0–30    "just" grows, "ask" joins and the line glides to centre; a dark pill grows behind "ask" as it turns white
 //   30–72   the pill becomes the Account button while the camera pulls back and the Markets page is revealed around it
 //   46–92   the page cascades in, the candles draw, the USDC balance counts up to $1,350.00
-//   92–140  the cursor clicks AI: the tab pill glides over and the AI page rises in
-//   140–196 click the message box: the camera eases in, the prompt types itself, click send
-//   196–290 the message flies up into a bubble, a typing indicator, a streamed reply and three low-risk asset cards
-//   300–392 click Coca-Cola: its Markets page cascades in, the camera pushes in on the order panel, 375 is typed,
-//           click Buy
-//   392–470 the camera eases back to the whole window; a toast drops in, "Buying 4.00 KO", then "Bought"; the
-//           balance settles to $975.00
+//   from 72 the edit cuts between shots, as in the motion reference: each one a slow continuous drift, close-ups on
+//   the detail that matters, two floating the window in 3D on a deep backdrop, a caption pill under the action
+//   72–113  wide: the cursor (a soft mint dot) clicks AI, the tab pill glides over
+//   113–140 close: the AI page rises in
+//   140–197 macro on the message box, riding along as the prompt types; click send
+//   197–297 the message flies up into a bubble, typing dots, a streamed reply, three cards with pastel washes
+//   297–309 close: click Coca-Cola    309–337 3D: its Markets page cascades in
+//   337–393 macro on the order panel: 375 is typed, the Buy button lights up, click
+//   393–419 "Buying…" -> "Bought 4.00 KO"    419–470 3D wide: a toast drops in, the balance settles to $975.00
 (function () {
   const FPS = 30;
   const FRAMES = 471;
@@ -48,67 +50,67 @@
     const S = { x: lerp(ASK_C.x, endA.x, e), y: lerp(ASK_C.y, endA.y, e) };
     return { Z, O: { x: S.x - Z * ACC.x, y: S.y - Z * ACC.y } };
   }
-  // after the reveal: one keyframed path [frame, focus x, focus y, zoom], joined linearly and Gaussian-smoothed
-  // (sigma 6 frames), so velocity and acceleration are continuous and moves never start or stop abruptly
-  const CAMK = [
-    [0, 960, 450, ZF], [128, 960, 450, ZF], [148, 960, 610, 1.1], [190, 960, 610, 1.1], [210, 960, 440, 1.0],
-    [292, 960, 445, 1.0], [326, 1683, 470, 1.5], [394, 1683, 470, 1.5], [420, 960, 450, ZF], [520, 960, 450, ZF],
+  // After the reveal the edit cuts between shots, as in the motion reference: every shot is one slow, continuous
+  // drift (focus point + zoom, linear in time so the frame never parks), a few are close-ups on the detail that
+  // matters, and two float the window in 3D on a deep backdrop. Cuts land on whole frames.
+  const SHOTS = [
+    { a: 72, b: 113, s: [960, 450, ZF], e: [925, 418, 1.0] },
+    { a: 113, b: 140, s: [960, 452, 1.7], e: [960, 482, 1.86] },
+    { a: 140, b: 197, caret: true },
+    { a: 197, b: 297, s: [960, 322, 1.32], e: [960, 470, 1.25] },
+    { a: 297, b: 309, s: [880, 600, 2.18], e: [935, 608, 2.32] },
+    { a: 309, b: 337, s: [930, 470, 0.74], e: [985, 440, 0.81], tilt: [[16, -24], [7, -11]], dark: true },
+    { a: 337, b: 393, s: [1650, 470, 2.42], e: [1712, 486, 2.6] },
+    { a: 393, b: 419, s: [1683, 556, 1.82], e: [1683, 572, 1.98] },
+    { a: 419, b: 471, s: [960, 470, 0.7], e: [960, 445, 0.79], tilt: [[10, 16], [4, 6]], dark: true },
   ];
-  const CAM = (() => {
-    const STEP = 0.1, F0 = 60, F1 = 500, n = Math.round((F1 - F0) / STEP) + 1;
-    const raw = (f, k) => {
-      if (f <= CAMK[0][0]) return CAMK[0][k];
-      for (let i = 1; i < CAMK.length; i++) if (f <= CAMK[i][0]) {
-        const t = (f - CAMK[i - 1][0]) / (CAMK[i][0] - CAMK[i - 1][0]);
-        return k === 3 ? Math.exp(lerp(Math.log(CAMK[i - 1][3]), Math.log(CAMK[i][3]), t)) : lerp(CAMK[i - 1][k], CAMK[i][k], t);
-      }
-      return CAMK[CAMK.length - 1][k];
-    };
-    const sig = 6, R = Math.round((3 * sig) / STEP), w = [];
-    for (let j = -R; j <= R; j++) w.push(Math.exp(-0.5 * Math.pow((j * STEP) / sig, 2)));
-    const ws = w.reduce((x, y) => x + y, 0);
-    const X = new Float64Array(n), Y = new Float64Array(n), Zl = new Float64Array(n);
-    for (let i = 0; i < n; i++) {
-      let x = 0, y = 0, z = 0;
-      for (let j = -R; j <= R; j++) {
-        const f = F0 + (i + j) * STEP, wj = w[j + R];
-        x += wj * raw(f, 1); y += wj * raw(f, 2); z += wj * Math.log(raw(f, 3));
-      }
-      X[i] = x / ws; Y[i] = y / ws; Zl[i] = z / ws;
+  const shotAt = (fi) => { let k = -1; SHOTS.forEach((sh, i) => { if (fi >= sh.a) k = i; }); return k; };
+  function camera(f, fi) {
+    if (fi === undefined) fi = Math.round(f);
+    if (fi < 72) return { ...pullCam(f), rx: 0, ry: 0, dark: false };
+    const sh = SHOTS[shotAt(fi)];
+    const u = clamp((f - sh.a) / (sh.b - sh.a), -0.02, 1.02);
+    let x, y, z;
+    if (sh.caret) {
+      // the camera rides along the message box as the prompt types
+      x = lerp(760, 1185, smoother((f - 148) / 44)); y = lerp(846, 838, u); z = Math.exp(lerp(Math.log(2.14), Math.log(2.3), u));
+    } else {
+      x = lerp(sh.s[0], sh.e[0], u); y = lerp(sh.s[1], sh.e[1], u); z = Math.exp(lerp(Math.log(sh.s[2]), Math.log(sh.e[2]), u));
     }
-    return (f) => {
-      const u = clamp((f - F0) / STEP, 0, n - 1.001), i = Math.floor(u), t = u - i;
-      return { x: lerp(X[i], X[i + 1], t), y: lerp(Y[i], Y[i + 1], t), z: Math.exp(lerp(Zl[i], Zl[i + 1], t)) };
-    };
-  })();
-  function camera(f) {
-    if (f < 72) return pullCam(f);
-    const c = CAM(f);
-    return fromFocus(c.x, c.y, c.z);
+    const c = fromFocus(x, y, z);
+    c.rx = sh.tilt ? lerp(sh.tilt[0][0], sh.tilt[1][0], smoother(u * 1.15)) : 0;
+    c.ry = sh.tilt ? lerp(sh.tilt[0][1], sh.tilt[1][1], smoother(u * 1.15)) : 0;
+    c.dark = !!sh.dark;
+    return c;
   }
   const project = (c, p) => ({ x: c.O.x + c.Z * p.x, y: c.O.y + c.Z * p.y });
 
   // ------------------------------------------------------------------ interaction script (window px)
-  const TAP = { ai: 112, input: 146, send: 190, card: 300, amount: 342, buy: 388 };
+  const TAP = { ai: 108, input: 146, send: 190, card: 302, amount: 343, buy: 388 };
   const TYPE0 = 152; // first prompt character, one a frame
   const DIGITS = [354, 362, 370]; // 3, 7, 5
-  const BOUGHT = 420;
+  const BOUGHT = 408;
+  const KO_IN = 309; // the Coca-Cola page arrives on the cut
+  const CAPS = [[150, 196, "Just say what you want."], [236, 296, "It builds a low-risk plan."], [346, 392, "Review it. Buy in one click."], [436, 471, "Done. Just ask."]];
   const CARD_KO = { x: 980, y: DESK.CARD0 + 2 * DESK.CARD_PITCH + DESK.CARD_H / 2 };
   const CUR = (() => {
     const A = DESK.AI_TAB, S = DESK.SEND, M = DESK.AMOUNT, B = DESK.BUY;
     const keys = [
-      [90, 760, 640], [96, 660, 380], [102, 580, 170], [107, 534, 64], [110.5, A.x, A.y], [116, A.x, A.y],
-      [124, 590, 300], [132, 690, 640], [140, 760, 820], [144.5, 772, 845], [150, 772, 845],
-      [160, 900, 870], [178, 1250, 872], [185, 1405, 852], [188.5, S.x, S.y], [194, S.x, S.y], [204, 1500, 700],
-      [276, 1560, 760], [286, 1360, 650], [294, 1080, 612], [298.5, CARD_KO.x, CARD_KO.y], [304, CARD_KO.x, CARD_KO.y],
-      [314, 1200, 560], [326, 1470, 470], [335, 1630, 436], [340.5, M.x, M.y], [374, M.x, M.y],
-      [380, 1690, 490], [385, 1685, 570], [386.5, B.x, B.y], [392, B.x, B.y], [402, 1760, 690], [414, 1840, 820],
+      [94, 860, 520], [99, 700, 300], [104, 570, 110], [107, A.x, A.y], [113, A.x + 10, A.y + 8],
+      [140, 700, 980], [145, 772, 850], [148, 778, 848], [160, 820, 900], [178, 1240, 905], [186, 1410, 860], [189, S.x, S.y], [196, S.x + 14, S.y + 20],
+      [296, 860, 700], [301, CARD_KO.x, CARD_KO.y], [308, CARD_KO.x + 12, CARD_KO.y + 6],
+      [336, 1790, 560], [341.5, M.x + 20, M.y + 4], [343, M.x, M.y], [374, M.x + 6, M.y + 2],
+      [381, 1700, 500], [386, B.x + 4, B.y], [388, B.x, B.y], [394, B.x + 10, B.y + 8],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => ({ x: sx(f), y: sy(f) });
   })();
-  const cursorOpacity = (f) =>
-    smoother((f - 90) / 5) * (1 - smoother((f - 196) / 8)) + smoother((f - 276) / 5) * (1 - smoother((f - 398) / 12));
+  // the pointer only appears in the shots where it acts (it cuts with them)
+  const CUR_ON = [[94, 113], [140, 197], [297, 309], [337, 393]];
+  const cursorOpacity = (f, fi) => {
+    for (const [a, b] of CUR_ON) if (fi >= a && fi < b) return smoother((f - a + 0.5) / 4) * (1 - smoother((f - b + 5) / 4));
+    return 0;
+  };
   const pressed = (f) => {
     let p = 0;
     for (const k in TAP) p = Math.max(p, smoother((f - TAP[k] + 1.5) / 1.5) * (1 - smoother((f - TAP[k] - 2) / 4)));
@@ -138,16 +140,17 @@
   SCENE.FRAMES = FRAMES;
   SCENE._probe = { camera, project, CUR };
   SCENE.mount = function (stage) {
-    stage.innerHTML = `<div id="reveal"><div id="cam"><div id="win"></div></div></div>
+    stage.innerHTML = `<div id="bg"></div><div id="reveal"><div id="cam"><div id="win"></div></div></div>
       <div id="pill"></div><div id="line"></div>
       <svg id="cursor" width="1920" height="1080" viewBox="0 0 1920 1080">
-        <circle id="halo" r="0" fill="#7ee2a8"/><circle id="ring" r="0" fill="#7ee2a8"/>
-        <path id="trail" fill="none" stroke="#3d9ef2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg><span id="meas"></span>`;
+        <defs><radialGradient id="dotg"><stop offset="0" stop-color="#b9dcc5"/><stop offset="1" stop-color="#7fb894"/></radialGradient></defs>
+        <circle id="halo" r="0" fill="#9fd0b0"/><circle id="ring" r="0" fill="none" stroke="#7fb894" stroke-width="2"/>
+        <circle id="dot" r="0" fill="url(#dotg)" stroke="#ffffff" stroke-width="2.5"/>
+      </svg><div id="cap"><span></span></div><span id="meas"></span>`;
     const $ = (s) => stage.querySelector(s);
     const reveal = $("#reveal"), camEl = $("#cam"), ui = DESK.build($("#win"));
     const line = $("#line"), pill = $("#pill"), meas = $("#meas");
-    const trail = $("#trail"), ring = $("#ring"), halo = $("#halo");
+    const dot = $("#dot"), ring = $("#ring"), halo = $("#halo"), bg = $("#bg"), cap = $("#cap"), capT = cap.firstElementChild, winEl = $("#win");
     const widthOf = (text, size) => { meas.textContent = text; meas.style.fontSize = size + "px"; return meas.getBoundingClientRect().width; };
     let lastKey = null, bubbleW = 0, solW = 0, toastW = 0;
 
@@ -162,8 +165,26 @@
     function render(t) {
       const f = clamp(t, 0, FRAMES - 1);
       const fi = Math.round(f);
-      const c = camera(f);
+      const c = camera(f, fi);
       camEl.style.transform = `translate(${c.O.x.toFixed(3)}px, ${c.O.y.toFixed(3)}px) scale(${c.Z.toFixed(5)})`;
+      winEl.style.transform = c.rx || c.ry ? `rotateX(${c.rx.toFixed(3)}deg) rotateY(${c.ry.toFixed(3)}deg)` : "none";
+      bg.className = c.dark ? "dark" : "";
+      // captions, as in the reference: a small dark pill under the action, words arriving one by one
+      let capOn = null;
+      for (const cp of CAPS) if (fi >= cp[0] && fi < cp[1]) capOn = cp;
+      cap.style.display = capOn ? "block" : "none";
+      if (capOn) {
+        if (capT._k !== capOn[2]) { capT._k = capOn[2]; capT.innerHTML = capOn[2].split(" ").map((w) => `<i>${w}</i>`).join(" "); }
+        const ci = smoother((f - capOn[0]) / 7), co = smoother((f - capOn[1] + 6) / 5);
+        cap.style.opacity = (ci * (1 - co)).toFixed(3);
+        cap.style.transform = `translate(-50%, ${(14 * (1 - ci)).toFixed(2)}px) scale(${(0.96 + 0.04 * ci).toFixed(4)})`;
+        [...capT.children].forEach((w, i) => {
+          const p = outCubic((f - capOn[0] - 2 - i * 1.6) / 7);
+          w.style.opacity = p.toFixed(3);
+          w.style.transform = `translateY(${(8 * (1 - p)).toFixed(2)}px)`;
+          w.style.filter = p < 0.98 ? `blur(${(4 * (1 - p)).toFixed(2)}px)` : "none";
+        });
+      }
 
       // ---------------- reveal: a feathered circle opens out of the Account button
       const winOn = f >= 33;
@@ -214,7 +235,7 @@
 
       // ---------------- top bar: tab pill (Markets -> AI -> Markets), Solana balance hides on the AI page,
       // USDC balance counts up, then settles after the buy
-      const toAI = smoother((f - TAP.ai) / 10), back = smoother((f - TAP.card - 2) / 10);
+      const toAI = smoother((f - TAP.ai) / 10), back = smoother((f - KO_IN + 3) / 8);
       const onAI = toAI * (1 - back);
       const tm = DESK.TAB.markets, ta = DESK.TAB.ai;
       ui.tabpill.style.left = lerp(tm.x, ta.x, onAI) + "px";
@@ -223,7 +244,7 @@
       if (!solW) solW = ui.solbal.firstElementChild.offsetWidth;
       ui.solbal.style.width = (solW * (1 - onAI)).toFixed(2) + "px";
       ui.solbal.style.opacity = (1 - onAI).toFixed(3);
-      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - BOUGHT - 2) / 18);
+      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - 432) / 18);
       ui.usdv.textContent = money(bal);
       ui.account.style.opacity = smoother((f - 47) / 6).toFixed(3); // under the pill until it hands over
 
@@ -237,17 +258,17 @@
       });
       ui.solCnd.style.clipPath = `inset(0 ${(100 * (1 - outCubic((f - 56) / 28))).toFixed(2)}% 0 0)`;
 
-      const aiIn = f >= TAP.ai + 2, aiOut = smoother((f - TAP.card - 1) / 10);
-      ui.ai.style.display = aiIn && f < TAP.card + 12 ? "block" : "none";
-      ui.ai.style.opacity = (smoother((f - TAP.ai - 2) / 8) * (1 - aiOut)).toFixed(4);
+      const aiIn = f >= TAP.ai + 2;
+      ui.ai.style.display = aiIn && fi < KO_IN ? "block" : "none";
+      ui.ai.style.opacity = smoother((f - TAP.ai - 2) / 8).toFixed(4);
       if (aiIn) {
         const gone = smoother((f - TAP.send) / 10); // title + suggestions drift away after send
         ui.aiItems.forEach((el, j) => {
-          const p = smoother((f - 118 - j * 2) / 14);
+          const p = smoother((f - 110 - j * 2) / 14);
           el.style.opacity = (p * (1 - gone)).toFixed(4);
           el.style.transform = `translateY(${(18 * (1 - p) - 16 * gone).toFixed(2)}px)`;
         });
-        const dIn = smoother((f - 124) / 14);
+        const dIn = smoother((f - 116) / 14);
         ui.dock.style.opacity = dIn.toFixed(4);
         ui.dock.style.transform = `translateY(${(14 * (1 - dIn)).toFixed(2)}px)`;
         ui.dock.style.boxShadow = `0 0 0 ${lerp(1, 1.6, smoother((f - TAP.input) / 5)).toFixed(2)}px ${mix("#e3e1dc", "#b9b8b5", smoother((f - TAP.input) / 5) * (1 - smoother((f - TAP.send) / 6)))}`;
@@ -280,12 +301,21 @@
           w.style.opacity = p.toFixed(3);
           w.style.transform = `translateY(${(7 * (1 - p)).toFixed(2)}px)`;
         });
+        // each card arrives with a pastel wash sweeping across it (as the reference's highlighted rows); the
+        // clicked one keeps a soft mint tint
+        const TINT = [[251, 240, 214], [248, 227, 225], [220, 238, 227]];
         ui.cards.forEach((el, j) => {
-          const p = smoother((f - 258 - j * 4) / 17);
+          const t0 = 258 + j * 4, p = smoother((f - t0) / 17);
           const press = j === 2 ? bump(f, TAP.card - 1, 10) : 0;
           el.style.opacity = p.toFixed(4);
-          el.style.transform = `translateY(${(20 * (1 - p)).toFixed(2)}px) scale(${((0.98 + 0.02 * p) * (1 - 0.012 * press)).toFixed(4)})`;
-          el.style.background = mix("#ffffff", "#f3f2ee", press);
+          el.style.transform = `translateY(${(20 * (1 - p)).toFixed(2)}px) scale(${((0.98 + 0.02 * p) * (1 - 0.014 * press)).toFixed(4)})`;
+          const sw = 100 * outCubic((f - t0 - 3) / 16), fade = 1 - smoother((f - t0 - 18) / 18);
+          const keep = j === 2 ? smoother((f - TAP.card) / 4) : 0;
+          const a = Math.max(fade, keep), tc = `rgba(${TINT[j].join(",")},${a.toFixed(3)})`;
+          el.style.background = keep > fade
+            ? `linear-gradient(${tc}, ${tc}), #ffffff`
+            : `linear-gradient(90deg, ${tc} 0%, ${tc} ${sw.toFixed(1)}%, rgba(255,255,255,0) ${(sw + 16).toFixed(1)}%), #ffffff`;
+          el.style.boxShadow = `0 0 0 1px ${keep > 0.01 ? mix("#e3e1dc", "#9fcfb1", keep) : "#e3e1dc"}${keep > 0.01 ? `, 0 10px 30px rgba(40,90,60,${(0.12 * keep).toFixed(3)})` : ""}`;
         });
         ui.amts.forEach((a, j) => { a.textContent = money(+a.dataset.v * outCubic((f - 262 - j * 4) / 16)); });
         ui.sparks.forEach((p, j) => { p.style.strokeDasharray = "1"; p.style.strokeDashoffset = (1 - outCubic((f - 264 - j * 4) / 18)).toFixed(4); });
@@ -293,17 +323,17 @@
       }
 
       // ---------------- Coca-Cola: its Markets page, the amount typed, Buy
-      const koOn = f >= TAP.card + 1;
+      const koOn = fi >= KO_IN;
       ui.ko.style.display = koOn ? "block" : "none";
       if (koOn) {
         ui.koItems.forEach((el, i) => {
-          const p = outCubic((f - TAP.card - 3 - i * 1.6) / 15);
+          const p = outCubic((f - KO_IN - i * 1.6) / 14);
           el.style.opacity = p.toFixed(4);
           el.style.transform = `translateY(${(18 * (1 - p)).toFixed(2)}px)`;
         });
-        ui.koCnd.style.clipPath = `inset(0 ${(100 * (1 - outCubic((f - TAP.card - 10) / 26))).toFixed(2)}% 0 0)`;
+        ui.koCnd.style.clipPath = `inset(0 ${(100 * (1 - outCubic((f - KO_IN - 4) / 24))).toFixed(2)}% 0 0)`;
         const foc = smoother((f - TAP.amount) / 5);
-        ui.koAmtBox.style.boxShadow = `inset 0 0 0 ${(1.6 * foc).toFixed(2)}px #31302e`;
+        ui.koAmtBox.style.boxShadow = `inset 0 0 0 ${(1.6 * foc).toFixed(2)}px #31302e, 0 0 0 ${(6 * foc).toFixed(2)}px rgba(127,184,148,${(0.28 * foc).toFixed(3)})`;
         ui.koAmtBox.style.background = mix("#eeede9", "#fdfcfa", foc);
         const typedN = DIGITS.filter((d) => fi >= d).length;
         const str = DESK.TRADE.digits.slice(0, typedN);
@@ -323,7 +353,9 @@
         ui.koRecv.textContent = "≈ " + (shown / DESK.TRADE.price).toFixed(2) + " KO";
         const ready = smoother((f - DIGITS[2] - 2) / 8);
         const busy = smoother((f - TAP.buy) / 4), done = smoother((f - BOUGHT) / 6);
-        ui.buy.style.background = mix("#c9d9cf", "#4f8c68", ready);
+        const base = mix("#c9d9cf", "#4f8c68", ready), shp = lerp(-30, 130, (f - DIGITS[2] - 4) / 16);
+        ui.buy.style.background = shp > -30 && shp < 130
+          ? `linear-gradient(105deg, ${base} ${(shp - 18).toFixed(1)}%, #7fb894 ${shp.toFixed(1)}%, ${base} ${(shp + 18).toFixed(1)}%)` : base;
         ui.buy.style.boxShadow = `inset 0 0 0 60px rgba(0,0,0,${(0.1 * busy * (1 - done)).toFixed(3)})`;
         ui.buy.style.transform = `scale(${(1 - 0.02 * bump(f, TAP.buy - 1, 8)).toFixed(4)})`;
         ui.bb0.style.opacity = (1 - busy).toFixed(3);
@@ -334,7 +366,7 @@
       }
 
       // ---------------- toast: drops in at the top of the window as the camera eases back, "Buying" -> "Bought"
-      const tt = f - 400;
+      const tt = f - 424;
       if (!toastW) toastW = 66 + Math.max(ui.tTxt.scrollWidth, 236) + 56;
       const tw = lerp(64, toastW, smoother((tt - 2) / 14));
       ui.toast.style.opacity = smoother(tt / 4).toFixed(3);
@@ -349,27 +381,30 @@
       ui.tSpin.style.opacity = (inner * (1 - ok)).toFixed(3);
       ui.tSpin.style.transform = `rotate(${(f * 22).toFixed(1)}deg)`;
 
-      // ---------------- cursor: brush-stroke comet + mint tap halo (as in the earlier clips)
-      const co = cursorOpacity(f);
-      const toScreen = (ff) => project(camera(ff), CUR(ff));
+      // ---------------- cursor: a soft mint dot (as in the motion reference); each click blooms and rings
+      const co = cursorOpacity(f, fi);
       if (co > 0.002) {
-        const pts = [];
-        for (let k = 0; k <= 12; k++) pts.push(toScreen(f - k * 0.26));
-        trail.setAttribute("d", pts.map((p, i) => (i ? "L" : "M") + p.x.toFixed(2) + " " + p.y.toFixed(2)).join(" "));
-        trail.setAttribute("stroke-width", (15 * c.Z).toFixed(2));
-        trail.style.opacity = co.toFixed(3);
-        const head = pts[0];
-        ring.setAttribute("cx", head.x); ring.setAttribute("cy", head.y);
-        ring.setAttribute("r", (pressed(f) * 19 * c.Z).toFixed(2));
-        ring.style.opacity = (0.9 * co).toFixed(3);
-      } else { trail.setAttribute("d", ""); ring.setAttribute("r", 0); }
+        const head = project(c, CUR(f)), pr = pressed(f);
+        dot.setAttribute("cx", head.x.toFixed(2)); dot.setAttribute("cy", head.y.toFixed(2));
+        dot.setAttribute("r", (15 * (1 - 0.22 * pr)).toFixed(2));
+        dot.style.opacity = (0.92 * co).toFixed(3);
+      } else dot.setAttribute("r", 0);
+      ring.setAttribute("r", 0);
+      for (const k in TAP) {
+        const d = f - TAP[k];
+        if (d < 0 || d > 16) continue;
+        const rp = project(c, CUR(TAP[k]));
+        ring.setAttribute("cx", rp.x.toFixed(2)); ring.setAttribute("cy", rp.y.toFixed(2));
+        ring.setAttribute("r", (16 + 46 * outCubic(d / 14)).toFixed(2));
+        ring.style.opacity = (0.9 * (1 - smoother(d / 15))).toFixed(3);
+      }
       let hr = 0, hop = 0, hp = null;
       for (const k in TAP) {
         const d = f - TAP[k];
         if (d < -1 || d > 24) continue;
         hp = project(c, CUR(TAP[k]));
-        hr = (22 + 62 * (1 - Math.exp(-Math.max(0, d) / 3.2))) * c.Z;
-        hop = 0.34 * smoother((d + 1) / 2.5) * (1 - smoother(d / 20));
+        hr = (18 + 58 * (1 - Math.exp(-Math.max(0, d) / 3.2))) * Math.sqrt(c.Z);
+        hop = 0.42 * smoother((d + 1) / 2.5) * (1 - smoother(d / 20));
       }
       if (hp) { halo.setAttribute("cx", hp.x); halo.setAttribute("cy", hp.y); }
       halo.setAttribute("r", hr.toFixed(2));
