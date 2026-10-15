@@ -16,7 +16,8 @@
 //           reply and a Solana card; the camera eases out to the floating window
 (function () {
   const FPS = 30;
-  const FRAMES = 486;
+  const FRAMES = 508; // 486 frames of action + a 22-frame macro shot inserted at 136 (see INS)
+  const INS = { a: 136, len: 22 };
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -108,16 +109,17 @@
   // linear in time so the frame never parks), close-ups on what is being clicked, cuts on the action, and two shots
   // that float the window in 3D on a deep backdrop. [from, to, start [x, y, zoom], end, tilt [[x, y] start, end], dark]
   const SHOTS = [
-    { a: 96, b: 112, s: [1110, 150, 2.3], e: [1088, 162, 2.46] },
+    { a: 96, b: 112, s: [1110, 150, 2.3], e: [1080, 166, 2.52] },
     { a: 112, b: 136, s: [930, 470, 0.74], e: [985, 445, 0.81], tilt: [[14, -20], [7, -11]], dark: 1 },
     { a: 136, b: 178, drag: true },
-    { a: 178, b: 200, s: [1160, 118, 2.38], e: [1122, 138, 2.56] },
+    { a: 178, b: 200, s: [1170, 112, 2.36], e: [1112, 142, 2.62] },
     { a: 200, b: 216, s: [960, 470, 0.72], e: [985, 450, 0.79], tilt: [[-12, 18], [-6, 10]], dark: 1 },
     { a: 216, b: 222, s: [1690, 770, 1.62], e: [1730, 790, 1.76] },
-    { a: 306, b: 330, s: [1700, 760, 1.9], e: [1650, 700, 1.8] },
+    { a: 306, b: 330, s: [1712, 770, 1.92], e: [1640, 694, 1.8] },
     { a: 330, b: 362, s: [1590, 430, 1.42], e: [1590, 385, 1.55] },
-    { a: 362, b: 420, s: [1590, 215, 1.95], e: [1590, 300, 1.88] },
-    { a: 420, b: 452, s: [1585, 392, 2.08], e: [1605, 404, 2.26] },
+    { a: 362, b: 388, s: [1735, 112, 2.45], e: [1700, 132, 2.62] },
+    { a: 388, b: 420, s: [1540, 196, 2.12], e: [1620, 262, 2.0] },
+    { a: 420, b: 452, s: [1560, 388, 2.05], e: [1625, 408, 2.32] },
     { a: 452, b: 486, s: [960, 470, 0.72], e: [960, 445, 0.8], tilt: [[10, 16], [4, 6]], dark: 1 },
   ];
   const shotCam = (sh, f) => {
@@ -126,8 +128,9 @@
     if (sh.drag) { x = lerp(690, 740, u); y = 330 + 0.78 * dragY(f); z = Math.exp(lerp(Math.log(1.46), Math.log(1.36), u)); }
     else { x = lerp(sh.s[0], sh.e[0], u); y = lerp(sh.s[1], sh.e[1], u); z = Math.exp(lerp(Math.log(sh.s[2]), Math.log(sh.e[2]), u)); }
     const c = fromFocus(x, y, z);
-    c.rx = sh.tilt ? lerp(sh.tilt[0][0], sh.tilt[1][0], smoother(u * 1.15)) : 0;
-    c.ry = sh.tilt ? lerp(sh.tilt[0][1], sh.tilt[1][1], smoother(u * 1.15)) : 0;
+    const sg = SHOTS.indexOf(sh) % 2 ? -1 : 1;
+    c.rx = sh.tilt ? lerp(sh.tilt[0][0], sh.tilt[1][0], smoother(u * 1.15)) : lerp(3.2, 0.6, u) * sg;
+    c.ry = sh.tilt ? lerp(sh.tilt[0][1], sh.tilt[1][1], smoother(u * 1.15)) : lerp(-4.5, -1.2, u) * sg;
     c.dark = sh.dark || 0; c.fx = x; c.fy = y;
     return c;
   };
@@ -194,6 +197,15 @@
   const EDIT_ON = (f) => smoother((f - 104) / 12) * (1 - smoother((f - 197) / 12));
 
   // ------------------------------------------------------------------ mount
+  // the inserted macro shot (real frames 136–158): a close drift across the header stats; the cursor clicks the eye
+  // over Volume. The rest of the scene holds its state at frame 136 meanwhile.
+  const EYE_T = 147; // real frame of the eye click
+  const macroCam = (f) => {
+    const u = clamp((f - INS.a) / INS.len, -0.02, 1.02);
+    const c = fromFocus(lerp(1330, 1600, u), lerp(126, 134, u), Math.exp(lerp(Math.log(2.7), Math.log(2.95), u)));
+    c.rx = lerp(-3, -1, u); c.ry = lerp(5, 2, u); c.dark = 0;
+    return c;
+  };
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
   SCENE._probe = { camera, project };
@@ -228,6 +240,7 @@
       const lab = ctr(ui.mEditLabel); ui.gm0.style.display = gm;
       G.gear = ctr(ui.gear); G.label = lab;
       G.ask = ctr(ui.askfloat);
+      G.eyeVol = ctr(ui.eyeVol);
       // headline size at the hand-off decides the zoom that makes the UI label match it
       const h = headline(CUT_UI, CUT_UI);
       Z_TEXT.edit = (h.size * 1.0) / 23; // menu items are 23 px
@@ -237,9 +250,12 @@
     measure();
 
     function render(t) {
-      const f = clamp(t, 0, FRAMES - 1);
-      const fi = Math.round(f);
-      const c = camera(f, fi);
+      const fr = clamp(t, 0, FRAMES - 1), fir = Math.round(fr);
+      const inMacro = fir >= INS.a && fir < INS.a + INS.len;
+      // content time: everything after the inserted shot runs 22 frames later; during it the scene holds
+      const f = inMacro ? INS.a - 0.6 : fr >= INS.a + INS.len ? fr - INS.len : fr;
+      const fi = inMacro ? INS.a - 1 : Math.round(f);
+      const c = inMacro ? macroCam(clamp(fr, INS.a - 0.5, INS.a + INS.len - 0.5)) : camera(f, fi);
       camEl.style.transform = `translate(${c.O.x.toFixed(3)}px, ${c.O.y.toFixed(3)}px) scale(${c.Z.toFixed(5)})`;
       winEl.style.transform = c.rx || c.ry ? `rotateX(${c.rx.toFixed(3)}deg) rotateY(${c.ry.toFixed(3)}deg)` : "none";
       bg.style.setProperty("--dark", (c.dark || 0).toFixed(3));
@@ -340,6 +356,14 @@
       ui.hint.style.transform = `translateX(${(-12 * (1 - ed)).toFixed(2)}px)`;
       ui.drop.style.opacity = ed.toFixed(3);
       ui.drop.style.transform = `translateY(${(40 * (1 - ed)).toFixed(2)}px)`;
+      // Volume's eye: clicked in the macro shot; the stat dims with a pastel wash, and is gone once editing is done
+      const eyeK = smoother((fr - EYE_T - 1) / 6);
+      ui.eyeVol.style.opacity = (1 - 0.6 * eyeK).toFixed(3);
+      ui.eyeSlash.style.strokeDashoffset = (1 - eyeK).toFixed(3);
+      const gone = smoother((f - 198) / 10);
+      ui.statVol.style.opacity = ((1 - 0.65 * eyeK) * (1 - gone)).toFixed(3);
+      const wash = eyeK * (1 - smoother((fr - EYE_T - 10) / 14));
+      ui.statVol.style.background = wash > 0.01 ? `rgba(251,240,214,${wash.toFixed(3)})` : "transparent";
       ui.panels.forEach((p) => { p.style.boxShadow = `0 0 0 ${lerp(1, 1.5, ed).toFixed(2)}px ${mix("#ebe9e4", "#d6d4ce", ed)}`; });
       // drag: the chart lifts and follows the cursor down; the activity panel slides up into its place
       const dy = dragY(f), lift = smoother((f - DRAG.from) / 4) * (1 - smoother((f - DRAG.to) / 6));
@@ -371,7 +395,12 @@
           const press = el === ui.apSug[0] ? bump(f, TAP.analyze - 1, 9) : 0;
           el.style.opacity = (p * (1 - gone)).toFixed(4);
           el.style.transform = `translateY(${(16 * (1 - p) - 14 * gone).toFixed(2)}px) scale(${(1 - 0.02 * press).toFixed(4)})`;
-          if (el === ui.apSug[0]) el.style.background = mix("#ffffff", "#e3f0e8", press);
+          const ci = ui.apSug.indexOf(el);
+          if (ci >= 0) {
+            const cp = CUR(f), cy = [321, 399, 477][ci];
+            const hov = cursorOpacity(f, fi) * Math.max(0, 1 - Math.abs(cp.y - cy) / 40) * (Math.abs(cp.x - 1590) < 250 ? 1 : 0);
+            el.style.background = mix(mix("#ffffff", "#f3f2ee", hov).replace(/rgb\((\d+),(\d+),(\d+)\)/, (m, r, g, b) => "#" + [r, g, b].map((v) => (+v).toString(16).padStart(2, "0")).join("")), "#e3f0e8", press);
+          }
         });
         const ii = smoother((f - TAP.ask - 14) / 14);
         ui.apInput.style.opacity = ii.toFixed(3);
@@ -400,6 +429,22 @@
       }
 
       // ---------------- cursor: a soft mint dot; each click blooms and rings
+      if (inMacro) {
+        const ep = G.eyeVol, a = { x: ep.x + 120, y: ep.y + 70 };
+        const k = smoother((fr - INS.a - 2) / (EYE_T - INS.a - 3)), q = { x: lerp(a.x, ep.x, k), y: lerp(a.y, ep.y, k) };
+        const sp = project(c, q), co2 = smoother((fr - INS.a + 0.5) / 4) * (1 - smoother((fr - INS.a - INS.len + 5) / 4));
+        const pr = smoother((fr - EYE_T + 1.5) / 1.5) * (1 - smoother((fr - EYE_T - 2) / 4));
+        dot.setAttribute("cx", sp.x.toFixed(2)); dot.setAttribute("cy", sp.y.toFixed(2));
+        dot.setAttribute("r", (15 * (1 - 0.22 * pr)).toFixed(2)); dot.style.opacity = (0.92 * co2).toFixed(3);
+        const d = fr - EYE_T, rp = project(c, ep);
+        ring.setAttribute("cx", rp.x.toFixed(2)); ring.setAttribute("cy", rp.y.toFixed(2));
+        ring.setAttribute("r", d >= 0 && d <= 16 ? (16 + 46 * outCubic(d / 14)).toFixed(2) : 0);
+        ring.style.opacity = (0.9 * (1 - smoother(d / 15))).toFixed(3);
+        halo.setAttribute("cx", rp.x.toFixed(2)); halo.setAttribute("cy", rp.y.toFixed(2));
+        halo.setAttribute("r", d >= -1 && d <= 24 ? ((18 + 58 * (1 - Math.exp(-Math.max(0, d) / 3.2))) * Math.sqrt(c.Z)).toFixed(2) : 0);
+        halo.style.opacity = (0.42 * smoother((d + 1) / 2.5) * (1 - smoother(d / 20))).toFixed(3);
+        return;
+      }
       const co = cursorOpacity(f, fi);
       if (co > 0.002) {
         const head = project(c, CUR(f)), pr = pressed(f);

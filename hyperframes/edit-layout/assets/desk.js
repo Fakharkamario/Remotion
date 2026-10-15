@@ -98,7 +98,7 @@
   const arrow = (up) => `<svg viewBox="0 0 12 12"><path d="${up ? "M6 10.5V2M2.5 5.5 6 2l3.5 3.5" : "M6 1.5V10M2.5 6.5 6 10l3.5-3.5"}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const STAT_X = [1104, 1241, 1351, 1482, 1610, 1746, 1883];
   // the layout editor's handle: a grip and an eye
-  const HANDLE = `<svg class="grip" viewBox="0 0 12 18"><g fill="#8b8a86"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/></g></svg><svg class="eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="#6b6a66" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="#6b6a66" stroke-width="1.6"/></svg>`;
+  const HANDLE = `<svg class="grip" viewBox="0 0 12 18"><g fill="#8b8a86"><circle cx="3" cy="3" r="1.5"/><circle cx="9" cy="3" r="1.5"/><circle cx="3" cy="9" r="1.5"/><circle cx="9" cy="9" r="1.5"/><circle cx="3" cy="15" r="1.5"/><circle cx="9" cy="15" r="1.5"/></g></svg><svg class="eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" fill="none" stroke="#6b6a66" stroke-width="1.6"/><circle cx="12" cy="12" r="3" fill="none" stroke="#6b6a66" stroke-width="1.6"/><path class="slash" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" d="M4 4l16 16" stroke="#6b6a66" stroke-width="1.7" stroke-linecap="round"/></svg>`;
 
   // one Markets page; every block carries class "it" (the scene cascades them in) and the chart's candles sit in
   // .cnd (drawn left to right)
@@ -269,7 +269,8 @@
     return {
       desk: one(".desk"), nav: one(".nav"), tabpill: one(".tabpill"), solbal: one(".solbal"), usdv: one(".usdv"), gear: one(".gear"), gearbg: one(".gearbg"),
       sol, solItems: q(".it", sol), solCnd: one(".cnd", sol), gChart: one(".g-chart", sol), gAct: one(".g-act", sol),
-      handles: q(".eh", sol), panels: q(".panel", sol), hint: one(".hint-edit"), drop: one(".dropzone"),
+      handles: q(".eh", sol), panels: q(".panel", sol), statVol: q(".stat", sol)[3], eyeVol: q(".eh.es", sol)[3].querySelector(".eye"),
+      eyeSlash: q(".eh.es", sol)[3].querySelector(".slash"), hint: one(".hint-edit"), drop: one(".dropzone"),
       gm0: one(".gm0"), gm1: one(".gm1"), miEdit: one(".m-edit"), miDone: one(".m-done"), mEditLabel: one(".m-edit span"),
       ko, koItems: q(".it", ko), koCnd: one(".cnd", ko), koPh: one(".ko-ph", ko), koTyped: one(".ko-typed", ko), koRecv: one(".ko-recv", ko),
       koAmtBox: one(".amt", ko), buy: one(".buybtn", ko), bb0: one(".bb-l0", ko), bb2: one(".bb-l2", ko), koHandles: q(".eh", ko),
