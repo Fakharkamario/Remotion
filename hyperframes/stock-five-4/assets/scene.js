@@ -1,21 +1,21 @@
-// Part 4 — "你就按照这5点去筛选股票。对了，就拿住，而且是死拿，拿到基本面不行的、大家都在喊跌喊空了、没有更高的预期
-// 空间的，再去把它卖掉。那错了的话呢，直接一刀砍掉，不要留恋，不要跟股票谈恋爱，直接去找下一档，周而复始。只要根据这
-// 5点，你绝对可以买到一个飙股，大部分都是时间问题而已。" — 24.2 s, 30 fps (726 frames). Same system as parts 1–3.
+// Part 4 (on screen in Traditional Chinese) — "你就按照這5點去篩選股票。對了，就拿住，而且是死拿，拿到基本面不行的、大家都在喊跌喊空了、沒有更高的預期
+// 空間的，再去把它賣掉。那錯了的話呢，直接一刀砍掉，不要留戀，不要跟股票談戀愛，直接去找下一檔，周而復始。只要根據這
+// 5點，你絕對可以買到一個飆股，大部分都是時間問題而已。" — 24.2 s, 30 fps (726 frames). Same system as parts 1–3.
 //
-//   0–82     wall: 你就按照, five chips 1–5 pop on 这5点 (part 3's list), huge 筛选股票 flashes in BEHIND him
-//   83–147   chest: 对了 就拿住 而且是 / 死拿 (it grips: a squeeze as 拿 lands)
-//   148–196  name-tag lower third (reference: "Piers F. / COMMERCIAL DIRECTOR"): ■ 基本面不行, rule, 卖出信号 01
+//   0–82     wall: 你就按照, five chips 1–5 pop on 這5點 (part 3's list), huge 篩選股票 flashes in BEHIND him
+//   83–147   chest: 對了 就拿住 而且是 / 死拿 (it grips: a squeeze as 拿 lands)
+//   148–196  name-tag lower third (reference: "Piers F. / COMMERCIAL DIRECTOR"): ■ 基本面不行, rule, 賣出訊號 01
 //   197–247  dark grid, pink circle (reference: "with ↑ AI"): the arrow swings from up to DOWN on 喊跌; 大家都在 / 喊跌喊空
-//   248–305  wall: thin 没有更高的, huge 预期空间 lands green behind his hair and washes to ink
-//   306–340  chest: 再去把它 / 卖掉
-//   341–417  chest: 那错了的话呢 -> 直接一刀 / 砍掉, then a red slash cuts the word and the halves slide apart
-//   418–487  wall: 不要留恋 / 不要跟股票 / huge 谈恋爱 behind him; a gold hand-drawn heart draws round it
+//   248–305  wall: thin 沒有更高的, huge 預期空間 lands green behind his hair and washes to ink
+//   306–340  chest: 再去把它 / 賣掉
+//   341–417  chest: 那錯了的話呢 -> 直接一刀 / 砍掉, then a red slash cuts the word and the halves slide apart
+//   418–487  wall: 不要留戀 / 不要跟股票 / huge 談戀愛 behind him; a gold hand-drawn heart draws round it
 //            (reference: the gold script "2 years"), then a red scrawl crosses it out
-//   488–525  dark: chart cards slide past, the pill 直接去找下一档; the next card lands centre-stage
-//   526–548  dark: 周而复始 inside a dot ring and an arrow that keep coming round
-//   549–589  wall: 只要根据, the five chips light up green one by one on 这5点
-//   590–660  chest: 你 绝对可以 买到一个 / 飙股, the key word shooting up into place
-//   661–725  dark: a clock face draws on, its hands sweep; 大部分都是 / 时间问题 / 而已 (reference: the clock)
+//   488–525  dark: chart cards slide past, the pill 直接去找下一檔; the next card lands centre-stage
+//   526–548  dark: 周而復始 inside a dot ring and an arrow that keep coming round
+//   549–589  wall: 只要根據, the five chips light up green one by one on 這5點
+//   590–660  chest: 你 絕對可以 買到一個 / 飆股, the key word shooting up into place
+//   661–725  dark: a clock face draws on, its hands sweep; 大部分都是 / 時間問題 / 而已 (reference: the clock)
 //
 // Word frames are ASR (SenseVoice) onsets checked against the voice's loudness envelope.
 (function () {
@@ -208,12 +208,12 @@
     const s1L1 = inkCap(s1Wrap, 66), s1L1W = words(s1L1, ["你就", "按照"]);
     const s1Chips = mkChips(s1Wrap);
     const S1_CHIPS = [34, 36, 38, 40, 42];
-    const s1Hero = el("div", "abs hero ink", s1Wrap, "筛选股票");
+    const s1Hero = el("div", "abs hero ink", s1Wrap, "篩選股票");
     s1Hero.style.fontSize = "272px";
 
     // ============================================================ S2
     const s2Wrap = el("div", "abs", S.S2.front);
-    const s2L = capLine(s2Wrap, 64, ["对了 ", "就拿住 ", "而且是"]);
+    const s2L = capLine(s2Wrap, 64, ["對了 ", "就拿住 ", "而且是"]);
     const s2Hero = el("div", "abs hero light", s2Wrap, "死拿");
     s2Hero.style.fontSize = "280px";
 
@@ -235,7 +235,7 @@
     const s3Sub = el("div", "abs", s3Wrap);
     s3Sub.style.fontFamily = "ui-monospace, 'JetBrains Mono', monospace"; s3Sub.style.fontWeight = "500"; s3Sub.style.fontSize = "34px";
     s3Sub.style.letterSpacing = "0.32em"; s3Sub.style.color = rgb(WHITE); s3Sub.style.lineHeight = "1"; s3Sub.style.whiteSpace = "nowrap";
-    const s3SubC = chars(s3Sub, "卖出信号 01");
+    const s3SubC = chars(s3Sub, "賣出訊號 01");
 
     // ============================================================ S4: dark grid, pink circle, arrow
     darkBg(S.S4.top, "#0b0b0d");
@@ -270,22 +270,22 @@
     const S4_L = [200, 204, 207, 213], S4_R = [216, 222, 231, 238];
 
     // ============================================================ S5
-    const s5Thin = thinInk(S.S5.behind, 58, "没有更高的");
+    const s5Thin = thinInk(S.S5.behind, 58, "沒有更高的");
     const S5_THIN = [259, 263, 268, 274, 281];
     const s5Hero = el("div", "abs grot", S.S5.behind);
     s5Hero.style.fontSize = "222px";
-    const s5HeroC = chars(s5Hero, "预期空间");
+    const s5HeroC = chars(s5Hero, "預期空間");
     const S5_AT = [285, 290, 295, 299];
 
     // ============================================================ S6
     const s6Wrap = el("div", "abs", S.S6.front);
     const s6L = capLine(s6Wrap, 64, ["再去", "把它"]);
-    const s6Hero = el("div", "abs hero light", s6Wrap, "卖掉");
+    const s6Hero = el("div", "abs hero light", s6Wrap, "賣掉");
     s6Hero.style.fontSize = "250px";
 
     // ============================================================ S7: 砍掉, slashed
     const s7Wrap = el("div", "abs", S.S7.front);
-    const s7La = capLine(s7Wrap, 64, ["那", "错了的话呢"]);
+    const s7La = capLine(s7Wrap, 64, ["那", "錯了的話呢"]);
     const s7Lb = capLine(s7Wrap, 64, ["直接", "一刀"]);
     const s7HeroBox = el("div", "abs", s7Wrap);
     const s7Top = el("div", "abs hero light", s7HeroBox, "砍掉");
@@ -298,13 +298,13 @@
     s7Slash.style.height = "14px"; s7Slash.style.background = RED; s7Slash.style.transformOrigin = "0 50%"; s7Slash.style.borderRadius = "7px";
     s7Slash.style.boxShadow = "0 0 24px rgba(229,37,42,.7)";
 
-    // ============================================================ S8: 谈恋爱, the heart, the scrawl
-    const s8Thin1 = thinInk(S.S8.behind, 58, "不要留恋");
+    // ============================================================ S8: 談戀愛, the heart, the scrawl
+    const s8Thin1 = thinInk(S.S8.behind, 58, "不要留戀");
     const s8Thin2 = thinInk(S.S8.behind, 58, "不要跟股票");
     const S8_T1 = [418, 423, 429, 432], S8_T2 = [441, 445, 448, 454, 459];
     const s8Hero = el("div", "abs grot", S.S8.behind);
     s8Hero.style.fontSize = "262px";
-    const s8HeroC = chars(s8Hero, "谈恋爱");
+    const s8HeroC = chars(s8Hero, "談戀愛");
     const S8_AT = [465, 468, 472];
     S.S8.behind.insertAdjacentHTML("beforeend",
       `<svg class="abs" width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" stroke-linecap="round" stroke-linejoin="round">` +
@@ -335,16 +335,16 @@
       c.innerHTML = cardSvg(31 + i * 7, i >= 3);
       return c;
     });
-    // which card is centre-stage: card 1, then 2 on 下, then 3 (the good one) on 档
+    // which card is centre-stage: card 1, then 2 on 下, then 3 (the good one) on 檔
     const s9Pos = spline([[486, 0.5], [493, 1], [507, 1.02], [509, 0.95], [513.5, 2], [516, 1.97], [517.5, 1.93], [522, 3], [526, 3.08]]);
     const s9Pill = el("div", "pill", s9World);
     const s9PillT = el("div", "txt", s9Pill);
     s9PillT.style.fontSize = "70px";
-    const s9PillC = chars(s9PillT, "直接去找下一档");
+    const s9PillC = chars(s9PillT, "直接去找下一檔");
     const S9_AT = [490, 495, 501, 504, 510, 513, 517];
     const s9PillW = spline([[488, 8], [490, 70], ...S9_AT.map((a, i) => [a + 2, 76 + 70 * 0.98 * (i + 1)])]);
 
-    // ============================================================ S10: 周而复始 in a turning ring
+    // ============================================================ S10: 周而復始 in a turning ring
     darkBg(S.S10.top, rgb(BG));
     const s10World = el("div", "abs", S.S10.top);
     s10World.style.width = "1920px"; s10World.style.height = "1080px"; s10World.style.transformOrigin = "960px 540px";
@@ -361,20 +361,20 @@
     const s10Arc = s10World.querySelector("#s10arc");
     const s10Word = el("div", "abs grot", s10World);
     s10Word.style.fontSize = "178px"; s10Word.style.fontWeight = "700";
-    const s10WordC = chars(s10Word, "周而复始");
+    const s10WordC = chars(s10Word, "周而復始");
     const S10_AT = [529, 533, 540, 544];
 
     // ============================================================ S11: chips light up
     const s11Wrap = el("div", "abs", S.S11.front);
-    const s11L1 = inkCap(s11Wrap, 66), s11L1W = words(s11L1, ["只要", "根据"]);
+    const s11L1 = inkCap(s11Wrap, 66), s11L1W = words(s11L1, ["只要", "根據"]);
     const s11Chips = mkChips(s11Wrap);
     const S11_LIT = [573, 576, 579, 582, 585];
-    const s11Tail = inkCap(s11Wrap, 66), s11TailW = words(s11Tail, ["这5点"]);
+    const s11Tail = inkCap(s11Wrap, 66), s11TailW = words(s11Tail, ["這5點"]);
 
-    // ============================================================ S12: 飙股 shoots up
+    // ============================================================ S12: 飆股 shoots up
     const s12Wrap = el("div", "abs", S.S12.front);
-    const s12L = capLine(s12Wrap, 64, ["你", "绝对可以", "买到一个"]);
-    const s12Hero = el("div", "abs hero light", s12Wrap, "飙股");
+    const s12L = capLine(s12Wrap, 64, ["你", "絕對可以", "買到一個"]);
+    const s12Hero = el("div", "abs hero light", s12Wrap, "飆股");
     s12Hero.style.fontSize = "262px";
 
     // ============================================================ S13: the clock
@@ -404,7 +404,7 @@
     const S13_PRE = [663, 668, 673, 681, 688];
     const s13Big = el("div", "abs grot", s13World);
     s13Big.style.fontSize = "150px"; s13Big.style.fontWeight = "700";
-    const s13BigC = chars(s13Big, "时间问题");
+    const s13BigC = chars(s13Big, "時間問題");
     const S13_BIG = [693, 699, 706, 709];
     const s13Tail = el("div", "abs thin", s13World);
     s13Tail.style.fontSize = "56px"; s13Tail.style.color = rgb(WHITE); s13Tail.style.fontWeight = "300"; s13Tail.style.letterSpacing = "0.3em";
@@ -636,7 +636,7 @@
         s12Wrap.style.transform = `translateY(${lerp(0, -12, p).toFixed(2)}px) scale(${lerp(1.02, 0.975, p).toFixed(4)})`;
         place(s12L.e, 850 - (9 * 64) / 2, 766);
         popWords(s12L.ws, [592, 600, 619], fi);
-        // 飙: the word shoots up from below, smeared vertically, and lands
+        // 飆: the word shoots up from below, smeared vertically, and lands
         const hw = 262 * 2 * 0.8;
         const up = outExpo(prog(f, 639, 646));
         heroIn(s12Hero, f, 639, CREAM, 850 - hw / 2, 832 + 220 * (1 - up) - 60 * (1 - outExpo(prog(f, 639, 645))));
