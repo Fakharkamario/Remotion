@@ -1,15 +1,15 @@
-// "做股票投资呢，你只要能避开这5种公司，你的投资绩效绝对会高于90%的人。" — 7 s, 30 fps (210 frames).
+// "做股票投資呢，你只要能避開這5種公司，你的投資績效絕對會高於90%的人。" (on screen in Traditional Chinese) — 7 s, 30 fps (210 frames).
 // The take runs unbroken under the whole clip (the voice never jumps). Beats cut hard, as both references do.
 //
-//   0–47     A-roll, framed left, pushing in. 做 / 股票投资 / 呢 stand on the wall BEHIND him (his cutout is
+//   0–47     A-roll, framed left, pushing in. 做 / 股票投資 / 呢 stand on the wall BEHIND him (his cutout is
 //            layered over them); the key word flashes purple -> gold -> ink like the reference's DRAFTKINGS.
 //   48–69    charcoal. 你只要 typed huge, the camera chasing the caret so the line runs off the left;
-//            cut wide on a grey panel frame, 能避开 typed, a yellow -> lime highlighter grows under 避开,
+//            cut wide on a grey panel frame, 能避開 typed, a yellow -> lime highlighter grows under 避開,
 //            the line smears out sideways.
-//   70–101   A-roll punch-in on the open hand. 避开这 pops word by word, 5种公司 flashes in, a red strike wipes it.
-//   102–138  A-roll. thin 你的 writes on green -> white; an outline box opens from a line around 投资绩效;
+//   70–101   A-roll punch-in on the open hand. 避開這 pops word by word, 5種公司 flashes in, a red strike wipes it.
+//   102–138  A-roll. thin 你的 writes on green -> white; an outline box opens from a line around 投資績效;
 //            the picture washes out to white.
-//   139–172  A-roll, flashing back in from white. thin 绝对 会 write on; huge 高于 lands green behind his
+//   139–172  A-roll, flashing back in from white. thin 絕對 會 write on; huge 高於 lands green behind his
 //            hair and washes to ink letter by letter, drifting smaller.
 //   173–209  charcoal grid: a dot, a square, particles gather to a ring, the square splits 2x2 -> 4x4 -> 10x10,
 //            a green caret opens into the grey pill "90%的人"; 90 cells dim, the top row lights green.
@@ -131,7 +131,7 @@
     const aSmall = el("div", "abs cap", aWrap);
     aSmall.style.color = rgb(INK); aSmall.style.textShadow = "none"; aSmall.style.fontSize = "66px";
     const aSmallW = chars(aSmall, "做");
-    const aHero = el("div", "abs hero ink", aWrap, "股票投资");
+    const aHero = el("div", "abs hero ink", aWrap, "股票投資");
     aHero.style.fontSize = "282px";
     const aTail = el("div", "abs cap", aWrap);
     aTail.style.color = rgb(INK); aTail.style.textShadow = "none"; aTail.style.fontSize = "66px";
@@ -155,7 +155,7 @@
     const b2hl = el("div", "hl", b2);
     const b2line = el("div", "abs grot", b2);
     b2line.style.fontSize = "176px"; b2line.style.color = rgb(WHITE);
-    const b2C = chars(b2line, "你只要能避开");
+    const b2C = chars(b2line, "你只要能避開");
     const b2Caret = el("div", "caret", b2);
     const B2_AT = [0, 0, 0, 61, 64, 67];
     const B2_CW = 176 * 0.955;
@@ -163,9 +163,9 @@
     // ============================================================ C: on his chest
     const cWrap = el("div", "abs", S.C.front);
     const cSmall = el("div", "abs cap", cWrap);
-    const cSmallW = [el("span", "ch", cSmall, "避开"), el("span", "ch", cSmall, "这")];
+    const cSmallW = [el("span", "ch", cSmall, "避開"), el("span", "ch", cSmall, "這")];
     const cHeroBox = el("div", "abs", cWrap);
-    const cHero = el("div", "abs hero light", cHeroBox, "5种公司");
+    const cHero = el("div", "abs hero light", cHeroBox, "5種公司");
     cHero.style.fontSize = "224px";
     const cStrike = el("div", "strike", cHeroBox);
     const C_AT = { small: [70, 71], hero: 75, strike: [90, 98] };
@@ -175,7 +175,7 @@
     dThin.style.fontSize = "58px";
     const dThinC = chars(dThin, "你的");
     const dBox = el("div", "box", S.D.top);
-    const dTxt = el("div", "txt", dBox, "投资绩效");
+    const dTxt = el("div", "txt", dBox, "投資績效");
     dTxt.style.fontSize = "100px";
     const D_AT = { thin: [105, 109] };
     const D_BOX_H = 140;
@@ -184,11 +184,11 @@
     // ============================================================ E: behind his hair
     const eThin = el("div", "abs thin", S.E.behind);
     eThin.style.color = rgb(INK); eThin.style.fontSize = "58px"; eThin.style.fontWeight = "400";
-    const eThinC = chars(eThin, "绝对   会");
+    const eThinC = chars(eThin, "絕對   會");
     const E_THIN_AT = [142, 149, null, null, null, 155];
     const eHero = el("div", "abs grot", S.E.behind);
     eHero.style.fontSize = "440px";
-    const eHeroC = chars(eHero, "高于");
+    const eHeroC = chars(eHero, "高於");
     const E_AT = [163, 167];
 
     // ============================================================ F: grid, pill
