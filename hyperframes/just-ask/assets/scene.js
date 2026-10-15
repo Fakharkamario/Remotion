@@ -6,7 +6,7 @@
 //   30–72   the pill becomes the Account button while the camera pulls back and the Markets page is revealed around it
 //   46–92   the page cascades in, the candles draw, the USDC balance counts up to $1,350.00
 //   from 72 the edit cuts between shots, as in the motion reference: each one a slow continuous drift, close-ups on
-//   the detail that matters, two floating the window in 3D on a deep backdrop, a caption pill under the action
+//   the detail that matters, two floating the window in 3D on a deep backdrop
 //   72–113  wide: the cursor (a soft mint dot) clicks AI, the tab pill glides over
 //   113–140 close: the AI page rises in
 //   140–197 macro on the message box, riding along as the prompt types; click send
@@ -16,7 +16,7 @@
 //   393–419 "Buying…" -> "Bought 4.00 KO"    419–470 3D wide: a toast drops in, the balance settles to $975.00
 (function () {
   const FPS = 30;
-  const FRAMES = 486;
+  const FRAMES = 471;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -41,8 +41,8 @@
   const ACC = { x: DESK.ACCOUNT.x + DESK.ACCOUNT.w / 2, y: DESK.ACCOUNT.y + DESK.ACCOUNT.h / 2 };
   const fromFocus = (fx, fy, z) => ({ Z: z, O: { x: 960 - z * fx, y: 540 - z * fy } });
   // pull-back: the Account button starts where "ask" sits, large, and the camera eases out to the whole window
-  const ZS = 2.4;
-  const pullE = (f) => { const t = clamp((f - 30) / 54, 0, 1); return 0.5 - 0.5 * Math.cos(Math.PI * t); }; // sine ease: the gentlest peak
+  const ZS = 2.6;
+  const pullE = (f) => smoother((f - 30) / 42);
   let ASK_C = { x: 1090, y: 540 }; // measured once the fonts are in
   function pullCam(f) {
     const e = pullE(f), Z = Math.exp(lerp(Math.log(ZS), Math.log(ZF), e));
@@ -50,98 +50,62 @@
     const S = { x: lerp(ASK_C.x, endA.x, e), y: lerp(ASK_C.y, endA.y, e) };
     return { Z, O: { x: S.x - Z * ACC.x, y: S.y - Z * ACC.y } };
   }
-  // After the reveal the camera moves the way the motion reference does: quick, kinetic moves between close-ups,
-  // with only two cuts, and both are match cuts on the clicked element:
-  //   AI tab -> the camera whips in on the tab; cut to the AI page with its title on the same spot
-  //   Coca-Cola card -> it pushes in on the card's logo; cut to the same logo, same size and place, on Coca-Cola's
-  //                     page, and pull back as the window floats up in 3D
-  // Between cuts the camera follows keyframes [frame, focus x, focus y, zoom, tilt x, tilt y], Gaussian-smoothed so
-  // velocity and acceleration stay continuous.
-  function smoothPath(keys, F0, F1, sig) {
-    const STEP = 0.1, n = Math.round((F1 - F0) / STEP) + 1, CH = keys[0].length - 1;
-    const raw = (f, k) => {
-      if (f <= keys[0][0]) return keys[0][k];
-      for (let i = 1; i < keys.length; i++) if (f <= keys[i][0]) {
-        const t = (f - keys[i - 1][0]) / (keys[i][0] - keys[i - 1][0]);
-        return k === 3 ? Math.exp(lerp(Math.log(keys[i - 1][3]), Math.log(keys[i][3]), t)) : lerp(keys[i - 1][k], keys[i][k], t);
-      }
-      return keys[keys.length - 1][k];
-    };
-    const R = Math.round((3 * sig) / STEP), w = [];
-    for (let j = -R; j <= R; j++) w.push(Math.exp(-0.5 * Math.pow((j * STEP) / sig, 2)));
-    const ws = w.reduce((x, y) => x + y, 0);
-    const out = [];
-    for (let k = 1; k <= CH; k++) out.push(new Float64Array(n));
-    for (let i = 0; i < n; i++) for (let k = 1; k <= CH; k++) {
-      let v = 0;
-      for (let j = -R; j <= R; j++) { const r = raw(F0 + (i + j) * STEP, k); v += w[j + R] * (k === 3 ? Math.log(r) : r); }
-      out[k - 1][i] = v / ws;
-    }
-    return (f) => {
-      const u = clamp((f - F0) / STEP, 0, n - 1.001), i = Math.floor(u), t = u - i;
-      const g = (k) => lerp(out[k][i], out[k][i + 1], t);
-      return { x: g(0), y: g(1), z: Math.exp(g(2)), rx: g(3), ry: g(4) };
-    };
-  }
-  const CUT_AI = 113, CUT_KO = 309, PULL_END = 345;
-  const CARD_LOGO = { x: 456 + 19 + 27, y: DESK.CARD0 + 2 * DESK.CARD_PITCH + 16 + 27 };
-  const HEAD_LOGO = { x: 82, y: 165 };
-  const Z_CARD = 1.95, Z_HEAD = (Z_CARD * 54) / 26; // the logo is the same size on both sides of the cut
-  // Markets: a drift on the whole window, then a whip in on the AI tab as it is clicked
-  const P1 = smoothPath([[84, 960, 450, ZF, 0, 0], [96, 945, 436, 0.97, 0, 0], [101, 915, 410, 1.0, 0, 0], [110, 545, 40, 1.62, 0, 0], [120, 510, 28, 1.8, 0, 0]], 80, 124, 2.5);
-  // AI page: the title, down to the message box riding along as the prompt types, up with the message into the chat,
-  // then in on the Coca-Cola logo
-  const P2 = smoothPath([
-    [113, 960, 330, 1.78, 0, 0], [134, 960, 395, 1.88, 0, 0], [147, 770, 846, 2.14, 0, 0], [186, 1185, 838, 2.3, 0, 0],
-    [194, 1170, 800, 2.1, 0, 0], [214, 960, 330, 1.32, 0, 0], [284, 960, 470, 1.25, 0, 0],
-    [304, CARD_LOGO.x, CARD_LOGO.y, Z_CARD, 0, 0], [316, CARD_LOGO.x, CARD_LOGO.y, Z_CARD * 1.06, 0, 0],
-  ], 108, 320, 2.5);
-  // order: from the floating window in to the order panel, the buy, and back out to the floating window
-  const P3 = smoothPath([
-    [PULL_END, 985, 440, 0.81, 7, -11], [349, 1060, 445, 0.88, 6, -9], [366, 1650, 472, 2.3, 0, 0], [402, 1712, 486, 2.45, 0, 0],
-    [410, 1683, 556, 1.85, 0, 0], [432, 1683, 572, 1.98, 0, 0], [458, 960, 470, 0.72, 10, 16], [486, 960, 445, 0.79, 4, 6], [500, 960, 445, 0.79, 4, 6],
-  ], 340, 495, 2.5);
+  // After the reveal the edit cuts between shots, as in the motion reference: every shot is one slow, continuous
+  // drift (focus point + zoom, linear in time so the frame never parks), a few are close-ups on the detail that
+  // matters, and two float the window in 3D on a deep backdrop. Cuts land on whole frames.
+  const SHOTS = [
+    { a: 72, b: 113, s: [960, 450, ZF], e: [925, 418, 1.0] },
+    { a: 113, b: 140, s: [960, 452, 1.7], e: [960, 482, 1.86] },
+    { a: 140, b: 197, caret: true },
+    { a: 197, b: 297, s: [960, 322, 1.32], e: [960, 470, 1.25] },
+    { a: 297, b: 309, s: [880, 600, 2.18], e: [935, 608, 2.32] },
+    { a: 309, b: 337, s: [930, 470, 0.74], e: [985, 440, 0.81], tilt: [[16, -24], [7, -11]], dark: true },
+    { a: 337, b: 393, s: [1650, 470, 2.42], e: [1712, 486, 2.6] },
+    { a: 393, b: 419, s: [1683, 556, 1.82], e: [1683, 572, 1.98] },
+    { a: 419, b: 471, s: [960, 470, 0.7], e: [960, 445, 0.79], tilt: [[10, 16], [4, 6]], dark: true },
+  ];
+  const shotAt = (fi) => { let k = -1; SHOTS.forEach((sh, i) => { if (fi >= sh.a) k = i; }); return k; };
   function camera(f, fi) {
     if (fi === undefined) fi = Math.round(f);
-    if (fi < 84) return { ...pullCam(f), rx: 0, ry: 0, dark: false };
-    let p, rx = 0, ry = 0;
-    if (fi < CUT_AI) p = P1(Math.min(f, CUT_AI - 0.5));
-    else if (fi < CUT_KO) p = P2(clamp(f, CUT_AI - 0.5, CUT_KO - 0.5));
-    else if (fi < PULL_END) {
-      // pull back out of the header logo (same size and place as the card's logo at the cut), decelerating
-      const g = Math.max(f, CUT_KO - 0.5), t = clamp((g - CUT_KO + 0.5) / (PULL_END - CUT_KO + 0.5), 0, 1);
-      const e = 0.5 - 0.5 * Math.cos(Math.PI * t), Z = Math.exp(lerp(Math.log(Z_HEAD), Math.log(0.81), e));
-      const w = smoother(t * 1.05), F1 = { x: 985, y: 440 };
-      const d = { x: 0.81 * (HEAD_LOGO.x - F1.x) * w, y: 0.81 * (HEAD_LOGO.y - F1.y) * w };
-      p = { x: HEAD_LOGO.x - d.x / Z, y: HEAD_LOGO.y - d.y / Z, z: Z, rx: 7 * smoother(t * 1.2), ry: -11 * smoother(t * 1.2) };
-    } else p = P3(f);
-    const c = fromFocus(p.x, p.y, p.z);
-    c.rx = p.rx; c.ry = p.ry; c.dark = fi >= CUT_KO;
+    if (fi < 72) return { ...pullCam(f), rx: 0, ry: 0, dark: false };
+    const sh = SHOTS[shotAt(fi)];
+    const u = clamp((f - sh.a) / (sh.b - sh.a), -0.02, 1.02);
+    let x, y, z;
+    if (sh.caret) {
+      // the camera rides along the message box as the prompt types
+      x = lerp(760, 1185, smoother((f - 148) / 44)); y = lerp(846, 838, u); z = Math.exp(lerp(Math.log(2.14), Math.log(2.3), u));
+    } else {
+      x = lerp(sh.s[0], sh.e[0], u); y = lerp(sh.s[1], sh.e[1], u); z = Math.exp(lerp(Math.log(sh.s[2]), Math.log(sh.e[2]), u));
+    }
+    const c = fromFocus(x, y, z);
+    c.rx = sh.tilt ? lerp(sh.tilt[0][0], sh.tilt[1][0], smoother(u * 1.15)) : 0;
+    c.ry = sh.tilt ? lerp(sh.tilt[0][1], sh.tilt[1][1], smoother(u * 1.15)) : 0;
+    c.dark = !!sh.dark;
     return c;
   }
   const project = (c, p) => ({ x: c.O.x + c.Z * p.x, y: c.O.y + c.Z * p.y });
 
   // ------------------------------------------------------------------ interaction script (window px)
-  const TAP = { ai: 102, input: 146, send: 190, card: 300, amount: 371, buy: 402 };
+  const TAP = { ai: 108, input: 146, send: 190, card: 302, amount: 343, buy: 388 };
   const TYPE0 = 152; // first prompt character, one a frame
-  const DIGITS = [382, 389, 396]; // 3, 7, 5
-  const BOUGHT = 420;
-  const KO_IN = 309; // the Coca-Cola page arrives on the logo match cut
-  const CARD_KO = { x: 640, y: DESK.CARD0 + 2 * DESK.CARD_PITCH + DESK.CARD_H / 2 };
+  const DIGITS = [354, 362, 370]; // 3, 7, 5
+  const BOUGHT = 408;
+  const KO_IN = 309; // the Coca-Cola page arrives on the cut
+  const CARD_KO = { x: 980, y: DESK.CARD0 + 2 * DESK.CARD_PITCH + DESK.CARD_H / 2 };
   const CUR = (() => {
     const A = DESK.AI_TAB, S = DESK.SEND, M = DESK.AMOUNT, B = DESK.BUY;
     const keys = [
-      [90, 860, 520], [95, 700, 300], [99, 570, 110], [101.5, A.x, A.y], [113, A.x + 4, A.y + 3],
+      [94, 860, 520], [99, 700, 300], [104, 570, 110], [107, A.x, A.y], [113, A.x + 10, A.y + 8],
       [140, 700, 980], [145, 772, 850], [148, 778, 848], [160, 820, 900], [178, 1240, 905], [186, 1410, 860], [189, S.x, S.y], [196, S.x + 14, S.y + 20],
-      [290, 860, 700], [298.5, CARD_KO.x, CARD_KO.y], [309, CARD_KO.x + 8, CARD_KO.y + 4],
-      [364, 1790, 560], [369.5, M.x + 20, M.y + 4], [371, M.x, M.y], [398, M.x + 6, M.y + 2],
-      [400, 1700, 500], [401, B.x + 4, B.y], [402, B.x, B.y], [409, B.x + 10, B.y + 8],
+      [296, 860, 700], [301, CARD_KO.x, CARD_KO.y], [308, CARD_KO.x + 12, CARD_KO.y + 6],
+      [336, 1790, 560], [341.5, M.x + 20, M.y + 4], [343, M.x, M.y], [374, M.x + 6, M.y + 2],
+      [381, 1700, 500], [386, B.x + 4, B.y], [388, B.x, B.y], [394, B.x + 10, B.y + 8],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => ({ x: sx(f), y: sy(f) });
   })();
   // the pointer only appears in the shots where it acts (it cuts with them)
-  const CUR_ON = [[90, 113], [140, 197], [290, 309], [364, 409]];
+  const CUR_ON = [[94, 113], [140, 197], [297, 309], [337, 393]];
   const cursorOpacity = (f, fi) => {
     for (const [a, b] of CUR_ON) if (fi >= a && fi < b) return smoother((f - a + 0.5) / 4) * (1 - smoother((f - b + 5) / 4));
     return 0;
@@ -208,9 +172,9 @@
       // ---------------- reveal: a feathered circle opens out of the Account button
       const winOn = f >= 33;
       reveal.style.display = winOn ? "block" : "none";
-      if (winOn && f < 90) {
+      if (winOn && f < 78) {
         const cp = project(c, ACC);
-        const R = 40 * c.Z + 2600 * Math.pow(smoother((f - 33) / 50), 1.5);
+        const R = 40 * c.Z + 2600 * Math.pow(smoother((f - 33) / 40), 1.5);
         const F = 0.5 + 280 * smoother((f - 33) / 18);
         reveal.style.webkitMaskImage = reveal.style.maskImage =
           `radial-gradient(circle at ${cp.x.toFixed(2)}px ${cp.y.toFixed(2)}px, #000 ${R.toFixed(2)}px, transparent ${(R + F).toFixed(2)}px)`;
@@ -263,7 +227,7 @@
       if (!solW) solW = ui.solbal.firstElementChild.offsetWidth;
       ui.solbal.style.width = (solW * (1 - onAI)).toFixed(2) + "px";
       ui.solbal.style.opacity = (1 - onAI).toFixed(3);
-      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - 446) / 18);
+      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - 432) / 18);
       ui.usdv.textContent = money(bal);
       ui.account.style.opacity = smoother((f - 47) / 6).toFixed(3); // under the pill until it hands over
 
@@ -346,7 +310,7 @@
       ui.ko.style.display = koOn ? "block" : "none";
       if (koOn) {
         ui.koItems.forEach((el, i) => {
-          const p = i === 0 ? 1 : outCubic((f - KO_IN - 3 - i * 1.6) / 14); // the header is where the cut lands
+          const p = outCubic((f - KO_IN - i * 1.6) / 14);
           el.style.opacity = p.toFixed(4);
           el.style.transform = `translateY(${(18 * (1 - p)).toFixed(2)}px)`;
         });
@@ -385,7 +349,7 @@
       }
 
       // ---------------- toast: drops in at the top of the window as the camera eases back, "Buying" -> "Bought"
-      const tt = f - 438;
+      const tt = f - 424;
       if (!toastW) toastW = 66 + Math.max(ui.tTxt.scrollWidth, 236) + 56;
       const tw = lerp(64, toastW, smoother((tt - 2) / 14));
       ui.toast.style.opacity = smoother(tt / 4).toFixed(3);
@@ -410,7 +374,6 @@
       } else dot.setAttribute("r", 0);
       ring.setAttribute("r", 0);
       for (const k in TAP) {
-        if ((k === "ai" && fi >= CUT_AI) || (k === "card" && fi >= CUT_KO)) continue; // blooms stay on their side of a cut
         const d = f - TAP[k];
         if (d < 0 || d > 16) continue;
         const rp = project(c, CUR(TAP[k]));
@@ -420,7 +383,6 @@
       }
       let hr = 0, hop = 0, hp = null;
       for (const k in TAP) {
-        if ((k === "ai" && fi >= CUT_AI) || (k === "card" && fi >= CUT_KO)) continue; // blooms stay on their side of a cut
         const d = f - TAP[k];
         if (d < -1 || d > 24) continue;
         hp = project(c, CUR(TAP[k]));
@@ -435,9 +397,8 @@
     const R = { _f: 0 };
     Object.defineProperty(R, "frame", { get: () => R._f, set: (v) => { R._f = v; render(v); } });
     const tl = gsap.timeline({ paused: true });
-    const SLOW = window.__TIMESCALE || 1; // the motion-blur render plays the clip at half speed (see scripts/render-mb.sh)
-    tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: (FRAMES * SLOW) / FPS, ease: "none", immediateRender: true }, 0);
-    tl.set({}, {}, (FRAMES * SLOW) / FPS);
+    tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: FRAMES / FPS, ease: "none", immediateRender: true }, 0);
+    tl.set({}, {}, FRAMES / FPS);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { bubbleW = solW = toastW = 0; measureAsk(); render(R._f); });
     tl.seek(0.001).seek(0);
     SCENE.render = render;
