@@ -30,5 +30,5 @@ There is no soundtrack.
 
 ```bash
 npx hyperframes preview
-./scripts/render-mb.sh        # final: 240 fps samples blended to 30 fps with a 180-degree shutter
+./scripts/render-mb.sh        # final: 240 fps samples blended to 30 fps with a 360-degree shutter
 ```

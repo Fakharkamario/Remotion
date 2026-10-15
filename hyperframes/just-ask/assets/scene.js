@@ -85,7 +85,7 @@
   // chat stretch: settle on the input, ride along it as the prompt types, follow the message up into the chat
   const PATH_D = smoothPath([
     [143, 960, 640, 1.15, 0, 0], [150, 960, 640, 1.15, 0, 0], [162, 770, 846, 2.12, 0, 0], [186, 1185, 840, 2.28, 0, 0],
-    [193, 1190, 820, 2.2, 0, 0], [214, 960, 330, 1.32, 0, 0], [282, 960, 470, 1.25, 0, 0], [299, 960, 470, 1.25, 0, 0],
+    [193, 1190, 820, 2.2, 0, 0], [224, 960, 330, 1.32, 0, 0], [282, 960, 470, 1.25, 0, 0], [299, 960, 470, 1.25, 0, 0],
   ], 140, 302, 5);
   // order stretch: from the floating page in to the order panel, then back out to the whole window, floating
   const PATH_G = smoothPath([
