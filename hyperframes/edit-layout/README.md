@@ -27,5 +27,5 @@ There is no soundtrack.
 
 ```bash
 npx hyperframes preview
-./scripts/render-mb.sh        # final: 240 fps samples blended to 30 fps with a 180-degree shutter
+./scripts/render-mb.sh        # final: 16 samples a frame (half-speed copy at 240 fps), 180-degree shutter
 ```

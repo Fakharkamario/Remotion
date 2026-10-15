@@ -414,8 +414,9 @@
     const R = { _f: 0 };
     Object.defineProperty(R, "frame", { get: () => R._f, set: (v) => { R._f = v; render(v); } });
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: FRAMES / FPS, ease: "none", immediateRender: true }, 0);
-    tl.set({}, {}, FRAMES / FPS);
+    const SLOW = window.__TIMESCALE || 1; // the motion-blur render plays the clip at half speed (see scripts/render-mb.sh)
+    tl.fromTo(R, { frame: 0 }, { frame: FRAMES, duration: (FRAMES * SLOW) / FPS, ease: "none", immediateRender: true }, 0);
+    tl.set({}, {}, (FRAMES * SLOW) / FPS);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { solW = 0; measure(); render(R._f); });
     tl.seek(0.001).seek(0);
     SCENE.render = render;
