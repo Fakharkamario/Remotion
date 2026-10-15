@@ -15,7 +15,7 @@ the acend style (warm paper, ink, Inter). The headline uses the same word animat
   turn) for every frame before the cut, and label positions and sizes give the cluster's centre, scale and
   decaying spin after it, including the lift out of frame at the end. Where the reference cuts from rims to
   glass, ours keeps one move: radius, spin, spacing and centre each run on a single monotone spline across it.
-- Before the cut the circles are only rims with an inner glow; after it they are frosted discs with hairline
+- At first the circles are only rims with an inner glow; they fill into frosted discs with hairline
   edges and soft shadows; two thin rings (fitted on the reference) sit behind, the lit one crossing the glass.
 
 ```bash

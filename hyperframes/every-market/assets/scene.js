@@ -1,6 +1,6 @@
 // "One terminal, every market": the reference's circles beat in the acend style, 30 fps, 135 frames.
 // Every element is a pure function of a continuous frame number, so the 240 fps motion-blur render can sample
-// between frames; discrete state (which words are on screen, the cut) uses the nearest whole frame.
+// between frames; discrete state (which words are on screen) uses the nearest whole frame.
 //
 //   0–20    two huge circles slide in, turning, and frame a gap; "One" grows, "terminal," joins
 //   27–55   "every" punches in and settles, "market" joins; the circles keep a slow clockwise turn
