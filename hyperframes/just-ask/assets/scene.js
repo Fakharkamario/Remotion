@@ -14,7 +14,7 @@
 //           floating window, a toast drops in and the balance settles to $975.00
 (function () {
   const FPS = 30;
-  const FRAMES = 500;
+  const FRAMES = 524;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -39,8 +39,8 @@
   const ACC = { x: DESK.ACCOUNT.x + DESK.ACCOUNT.w / 2, y: DESK.ACCOUNT.y + DESK.ACCOUNT.h / 2 };
   const fromFocus = (fx, fy, z) => ({ Z: z, O: { x: 960 - z * fx, y: 540 - z * fy } });
   // pull-back: the Account button starts where "ask" sits, large, and the camera eases out to the whole window
-  const ZS = 2.6;
-  const pullE = (f) => { const t = clamp((f - 30) / 60, 0, 1); return 0.5 - 0.5 * Math.cos(Math.PI * t); }; // sine ease: gentlest peak speed
+  const ZS = 2.3;
+  const pullE = (f) => { const t = clamp((f - 30) / 62, 0, 1); return 0.5 - 0.5 * Math.cos(Math.PI * t); }; // sine ease: gentlest peak speed
   let ASK_C = { x: 1090, y: 540 }; // measured once the fonts are in
   function pullCam(f) {
     const e = pullE(f), Z = Math.exp(lerp(Math.log(ZS), Math.log(ZF), e));
@@ -80,11 +80,11 @@
   }
   const PATH = smoothPath([
     [90, 960, 450, ZF, 0, 0], [100, 945, 445, 0.94, 0, 0], [128, 960, 470, 1.0, 0, 0], [146, 960, 640, 1.15, 0, 0],
-    [150, 960, 640, 1.15, 0, 0], [162, 770, 846, 2.12, 0, 0], [186, 1185, 840, 2.28, 0, 0], [193, 1190, 820, 2.2, 0, 0],
-    [224, 960, 330, 1.32, 0, 0], [282, 960, 470, 1.25, 0, 0], [298, 960, 500, 1.18, 0, 0], [326, 960, 455, 0.86, 7, -11],
-    [348, 960, 450, 0.8, 10, -16], [362, 1010, 452, 0.86, 9, -14], [386, 1683, 470, 2.45, 0, 0], [418, 1712, 486, 2.6, 0, 0],
-    [426, 1700, 500, 2.3, 0, 0], [456, 960, 452, 0.76, 12, 14], [500, 960, 440, 0.82, 6, 8], [520, 960, 440, 0.82, 6, 8],
-  ], 80, 510, 5);
+    [148, 960, 640, 1.15, 0, 0], [170, 800, 846, 1.82, 0, 0], [188, 1120, 840, 1.95, 0, 0], [196, 1150, 820, 1.9, 0, 0],
+    [234, 960, 330, 1.32, 0, 0], [284, 960, 470, 1.25, 0, 0], [298, 960, 500, 1.18, 0, 0], [326, 960, 455, 0.86, 7, -11],
+    [348, 960, 450, 0.8, 10, -16], [358, 990, 452, 0.84, 9, -14], [400, 1660, 476, 1.95, 0, 0], [440, 1690, 490, 2.06, 0, 0],
+    [448, 1680, 496, 1.98, 0, 0], [496, 960, 452, 0.82, 11, 13], [524, 960, 444, 0.84, 7, 9], [544, 960, 444, 0.84, 7, 9],
+  ], 80, 534, 6);
   const CUT_AI = 118, CUT_KO = 318; // the pages swap under the growing surface, on whole frames
   // the growing surfaces (window px): tab pill -> page, card -> page
   const PAGE_R = { x: 12, y: 72, w: 1896, h: 820 };
@@ -102,10 +102,10 @@
   const project = (c, p) => ({ x: c.O.x + c.Z * p.x, y: c.O.y + c.Z * p.y });
 
   // ------------------------------------------------------------------ interaction script (window px)
-  const TAP = { ai: 99, input: 148, send: 190, card: 296, amount: 384, buy: 414 };
+  const TAP = { ai: 99, input: 148, send: 190, card: 296, amount: 402, buy: 434 };
   const TYPE0 = 154; // first prompt character, one a frame
-  const DIGITS = [392, 398, 404]; // 3, 7, 5
-  const BOUGHT = 432;
+  const DIGITS = [411, 418, 425]; // 3, 7, 5
+  const BOUGHT = 452;
   const KO_IN = 318; // the Coca-Cola page swaps in under the expanding card
   const CARD_KO = { x: 980, y: DESK.CARD0 + 2 * DESK.CARD_PITCH + DESK.CARD_H / 2 };
   const CUR = (() => {
@@ -114,14 +114,14 @@
       [88, 860, 520], [93, 700, 300], [97, 560, 90], [99, A.x, A.y], [104, A.x + 8, A.y + 6],
       [140, 700, 980], [146, 772, 850], [149, 778, 848], [162, 820, 900], [178, 1240, 905], [186, 1410, 860], [189, S.x, S.y], [196, S.x + 14, S.y + 20],
       [286, 820, 700], [294, CARD_KO.x - 140, CARD_KO.y + 4], [296, CARD_KO.x - 150, CARD_KO.y], [302, CARD_KO.x - 156, CARD_KO.y + 4],
-      [372, 1820, 560], [381, M.x + 24, M.y + 6], [384, M.x, M.y], [406, M.x + 6, M.y + 2],
-      [409, 1700, 500], [412, B.x + 4, B.y], [414, B.x, B.y], [420, B.x + 10, B.y + 8],
+      [388, 1820, 560], [398, M.x + 24, M.y + 6], [402, M.x, M.y], [426, M.x + 6, M.y + 2],
+      [430, 1700, 500], [433, B.x + 4, B.y], [434, B.x, B.y], [440, B.x + 10, B.y + 8],
     ];
     const sx = spline(keys.map((k) => [k[0], k[1]])), sy = spline(keys.map((k) => [k[0], k[2]]));
     return (f) => ({ x: sx(f), y: sy(f) });
   })();
   // the pointer only appears in the shots where it acts (it cuts with them)
-  const CUR_ON = [[88, 106], [141, 197], [284, 304], [370, 421]];
+  const CUR_ON = [[88, 106], [141, 197], [284, 304], [388, 442]];
   const cursorOpacity = (f, fi) => {
     for (const [a, b] of CUR_ON) if (fi >= a && fi < b) return smoother((f - a + 0.5) / 4) * (1 - smoother((f - b + 5) / 4));
     return 0;
@@ -247,7 +247,7 @@
       if (!solW) solW = ui.solbal.firstElementChild.offsetWidth;
       ui.solbal.style.width = (solW * (1 - onAI)).toFixed(2) + "px";
       ui.solbal.style.opacity = (1 - onAI).toFixed(3);
-      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - 452) / 18);
+      const bal = DESK.BALANCE * outCubic((f - 60) / 30) - 375 * outCubic((f - 478) / 20);
       ui.usdv.textContent = money(bal);
       ui.account.style.opacity = smoother((f - 47) / 6).toFixed(3); // under the pill until it hands over
 
@@ -371,7 +371,7 @@
       }
 
       // ---------------- toast: drops in at the top of the window as the camera eases back, "Buying" -> "Bought"
-      const tt = f - 444;
+      const tt = f - 470;
       if (!toastW) toastW = 66 + Math.max(ui.tTxt.scrollWidth, 236) + 56;
       const tw = lerp(64, toastW, smoother((tt - 2) / 14));
       ui.toast.style.opacity = smoother(tt / 4).toFixed(3);

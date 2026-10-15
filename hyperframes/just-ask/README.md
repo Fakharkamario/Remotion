@@ -1,6 +1,6 @@
 # just ask (HyperFrames)
 
-A 16.7 s, 1920x1080 / 30 fps HyperFrames clip in the same type and motion language as the earlier clips: "just ask",
+A 17.5 s, 1920x1080 / 30 fps HyperFrames clip in the same type and motion language as the earlier clips: "just ask",
 then the AI flow on the acend desktop app, rebuilt from the supplied screenshots.
 
 | frames  | time (s)    | beat |
@@ -10,7 +10,7 @@ then the AI flow on the acend desktop app, rebuilt from the supplied screenshots
 | 90–132  | 3.00–4.40   | click AI: the tab grows into the AI page, which settles in |
 | 143–298 | 4.77–9.93   | it rides along the input as the prompt types, then follows the message up: typing dots, a streamed reply, three plan cards with pastel washes |
 | 296–336 | 9.87–11.20  | click Coca-Cola: the card expands into its page and the logo glides onto the page's header logo, as the window floats up in 3D |
-| 356–500 | 11.87–16.67 | in to the order panel: 375 typed, Buy, "Bought 4.00 KO"; back out to the floating window, a toast, the balance settles to $975.00 |
+| 356–524 | 11.87–17.47 | in to the order panel: 375 typed, Buy, "Bought 4.00 KO"; back out to the floating window, a toast, the balance settles to $975.00 |
 
 - `assets/desk.js` builds the desktop app at the screenshots' pixel size (a 1920 x 900 window): the top bar, the
   Markets page (Solana, and the same layout for Coca-Cola with a live amount field and a Buy button) and the AI
