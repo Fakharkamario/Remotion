@@ -5,13 +5,12 @@
 //   0–20    two huge circles slide in, turning, and frame a gap; "One" grows, "terminal," joins
 //   27–55   "every" punches in and settles, "market" joins; the circles keep a slow clockwise turn
 //   55–57   the words drop out, left to right
-//   55–74   the camera pulls back and keeps turning: four circles, their ink rims lightening to grey
-//   75–134  cut: the four markets as overlapping glass circles, still turning and pulling back, settle into a
-//           2 x 2 cluster inside a thin ring
+//   46–82   the camera pulls back and turns faster: four circles close up and, in one continuous move, their ink
+//           rims become overlapping glass discs; the labels resolve out of a soft blur and two thin rings fade in
+//   82–134  the spin decays, the 2 x 2 cluster settles, then lifts out of frame
 (function () {
   const FPS = 30;
   const FRAMES = 135;
-  const CUT = 75;
 
   // ------------------------------------------------------------------ helpers
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -69,23 +68,25 @@
     [64, 1204], [66, 1235], [68, 1262], [70, 1286], [71, 1294], [72, 1301], [73, 1303], [74, 1296]]);
   const MY = spline([[0, 533], [45, 532], [46, 532], [48, 536], [50, 542], [52, 551], [54, 562], [56, 574], [58, 587], [60, 602],
     [62, 616], [64, 634], [66, 652], [68, 673], [70, 698], [71, 712], [72, 730], [73, 752], [74, 784]]);
-  const RA = spline([[0, 1660], [21, 1666], [42, 1665], [45, 1665], [46, 1660], [48, 1642], [50, 1612], [52, 1570], [54, 1520],
-    [56, 1456], [58, 1384], [60, 1304], [62, 1220], [64, 1134], [66, 1048], [68, 964], [70, 883], [71, 844], [72, 805], [73, 768], [74, 732]]);
-  const ND = spline([[0, 2.783], [3, 2.545], [6, 2.417], [9, 2.33], [12, 2.27], [15, 2.227], [18, 2.197], [21, 2.177], [24, 2.166],
-    [27, 2.161], [74, 2.162]]);
-  const PSI_A = spline([[0, -83.52], [3, -79.87], [6, -77.14], [9, -74.82], [12, -72.71], [15, -70.75], [18, -68.82], [21, -66.94],
-    [24, -65.04], [27, -63.14], [30, -61.19], [33, -59.2], [36, -57.23], [39, -55.3], [42, -53.44], [45, -51.63], [48, -49.86],
-    [50, -48.73], [52, -47.61], [54, -46.49], [56, -45.27], [58, -43.97], [60, -42.56], [62, -40.97], [64, -39.16], [66, -37.1],
-    [68, -34.59], [70, -31.44], [71, -29.43], [72, -26.93], [73, -23.55], [74, -18.05]]);
-  // after the cut (reference label tracks): radius, neighbour distance, cluster centre and the decaying spin
-  const RB = spline([[74.5, 450], [76, 425], [78, 405], [80, 375], [84, 330], [88, 312], [92, 300], [96, 293], [100, 286], [108, 279],
-    [116, 271], [124, 267], [134, 263]]);
-  const NDB = spline([[74.5, 1.97], [76, 1.94], [80, 1.85], [86, 1.74], [94, 1.68], [134, 1.66]]);
-  const CXB = spline([[74.5, 1030], [76, 1021], [78, 992], [80, 979], [84, 977], [92, 975], [108, 973], [134, 972]]);
-  const CYB = spline([[74.5, 578], [76, 576], [78, 570], [80, 570], [88, 567], [100, 566], [116, 564], [124, 558], [125, 558],
+  // after the hand-over (reference label tracks): neighbour distance, cluster centre and the decaying spin.
+  // Where the reference cuts, ours keeps one continuous move: radius, spin, spacing and centre each run on one
+  // curve across the hand-over, so the rim circles close up and *become* the glass circles without a jump.
+  const R_ALL = spline([[0, 1660], [21, 1666], [45, 1665], [46, 1660], [48, 1642], [50, 1612], [52, 1570], [54, 1520], [56, 1456],
+    [58, 1384], [60, 1304], [62, 1220], [64, 1134], [66, 1048], [68, 964], [70, 883], [72, 802], [74, 718], [76, 636], [78, 560],
+    [80, 494], [82, 440], [84, 398], [87, 354], [90, 325], [94, 303], [100, 287], [108, 279], [116, 271], [124, 267], [134, 263]]);
+  const ND_ALL = spline([[0, 2.783], [3, 2.545], [6, 2.417], [9, 2.33], [12, 2.27], [15, 2.227], [18, 2.197], [21, 2.177], [24, 2.166],
+    [27, 2.161], [64, 2.162], [70, 2.11], [76, 1.98], [82, 1.84], [88, 1.74], [96, 1.68], [134, 1.66]]);
+  // the spin, in the square's frame: the reference's turn before the hand-over, its post-cut spin after it
+  const PSI_ALL = spline([[0, -68.52], [3, -64.87], [6, -62.14], [9, -59.82], [12, -57.71], [15, -55.75], [18, -53.82], [21, -51.94],
+    [24, -50.04], [27, -48.14], [30, -46.19], [33, -44.2], [36, -42.23], [39, -40.3], [42, -38.44], [45, -36.63], [48, -34.86],
+    [50, -33.73], [52, -32.61], [54, -31.49], [56, -30.27], [58, -28.97], [60, -27.56], [62, -25.97], [64, -24.16], [66, -22.1],
+    [68, -19.59], [70, -16.44], [72, -11.93], [74, -5.5], [77, 6], [80, 22], [84, 40.5], [88, 54], [92, 64.5], [96, 73],
+    [100, 79.6], [108, 89.6], [116, 97.2], [124, 103.5], [130, 108.6], [134, 112]]);
+  const CXB = spline([[66, 1000], [80, 979], [84, 977], [92, 975], [108, 973], [134, 972]]);
+  const CYB = spline([[66, 572], [80, 570], [88, 567], [100, 566], [116, 564], [124, 558], [125, 558],
     [126, 553], [127, 546], [128, 537], [129, 526], [130, 506], [131, 490], [132, 468], [133, 436], [134, 392]]);
-  const PSI_B = spline([[74.5, 5], [76, 15.6], [78, 38.7], [80, 55], [84, 75.9], [88, 90], [92, 100.3], [96, 108.4], [100, 115],
-    [108, 125], [116, 132.6], [124, 138.9], [130, 144], [134, 147.4]]);
+  // how far the rims have turned into glass (0..1)
+  const GLASS = (f) => smoother((f - 63) / 19);
 
   // the four markets, by where they end up (the square settles axis-aligned): i0 starts at the top
   const MARKETS = [
@@ -96,20 +97,18 @@
   ];
   const dir = (deg) => [Math.cos((deg * Math.PI) / 180), Math.sin((deg * Math.PI) / 180)];
 
-  function circles(f, fi) {
-    let R, s, psi, cx, cy;
-    if (fi < CUT) {
-      // the pair (i0, i1) sits where the reference's pair is; the square's centre lies half a side beyond its
-      // gap, easing toward the reference cluster's centroid as the camera pulls back (so the cut lines up)
-      R = RA(f); s = ND(f) * R; psi = PSI_A(f) + 15;
-      const w = smoother((f - 46) / 28);
-      const off = lerp(s / 2, s / (2 * Math.sqrt(3)), w);
-      const u = dir(psi + 225);
-      cx = MX(f) + u[0] * off; cy = MY(f) + u[1] * off;
-    } else {
-      R = RB(f); s = NDB(f) * R; psi = PSI_B(f) - 10;
-      cx = CXB(f); cy = CYB(f);
-    }
+  function circles(f) {
+    const R = R_ALL(f), s = ND_ALL(f) * R, psi = PSI_ALL(f);
+    // early on, the pair (i0, i1) sits where the reference's pair is: the square's centre lies half a side beyond
+    // their gap (easing toward the reference cluster's centroid as the camera pulls back); then the centre hands
+    // over to the reference's post-cut track
+    const fa = Math.min(f, 74);
+    const w = smoother((fa - 46) / 28);
+    const off = lerp(s / 2, s / (2 * Math.sqrt(3)), w);
+    const u = dir(psi + 225);
+    const ax = MX(fa) + u[0] * off, ay = MY(fa) + u[1] * off;
+    const h = smoother((f - 62) / 20);
+    const cx = lerp(ax, CXB(f), h), cy = lerp(ay, CYB(f), h);
     const D = s / Math.SQRT2;
     return MARKETS.map((m, i) => {
       const d = dir(psi + 90 * i);
@@ -117,11 +116,12 @@
     });
   }
   // rim tone: brand ink, lightening to a hairline grey as the glass takes over (the reference's lime -> white)
-  const COOL = (f) => smoother((f - 66) / 9);
+  const COOL = (f) => smoother((f - 60) / 16);
 
   // ------------------------------------------------------------------ mount
   const SCENE = {};
   SCENE.FRAMES = FRAMES;
+  SCENE._debug = { circles }; // for offline checks of the motion
   SCENE.mount = function (stage) {
     stage.innerHTML = `<canvas id="cv" width="1920" height="1080"></canvas><div id="line"></div><span id="meas"></span>`;
     const cv = stage.querySelector("#cv"), ctx = cv.getContext("2d");
@@ -137,10 +137,13 @@
     const circlePath = (c) => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); };
 
     // before the cut: the circles are only their rims, glowing inward (the reference's lit edges, in brand ink)
-    function drawRims(f, fi) {
+    function drawRims(f, alpha) {
+      if (alpha <= 0.002) return;
       const k = COOL(f);
+      ctx.save();
+      ctx.globalAlpha = alpha;
       const [r, g, b] = mixRGB("#31302e", "#b4b2ab", k);
-      for (const c of circles(f, fi)) {
+      for (const c of circles(f)) {
         if (c.x + c.r < -40 || c.x - c.r > 1960 || c.y + c.r < -40 || c.y - c.r > 1120) continue;
         ctx.save();
         circlePath(c); ctx.clip();
@@ -160,18 +163,23 @@
         ctx.strokeStyle = `rgb(${r},${g},${b})`;
         circlePath(c); ctx.stroke();
       }
+      ctx.restore();
     }
 
-    // after the cut: frosted glass discs on warm paper, hairline edges, a soft shadow each, labels on top,
+    // after the hand-over: frosted glass discs on warm paper, hairline edges, a soft shadow each, labels on top,
     // inside a thin ring whose bright side catches the light
-    function drawGlass(f, fi) {
-      const cs = circles(f, fi), R = cs[0].r;
+    function drawGlass(f, k) {
+      if (k <= 0.002) return;
+      const cs = circles(f), R = cs[0].r;
+      const ringA = smoother((f - 70) / 16), labA = smoother((f - 72) / 12);
+      ctx.save();
       // two thin rings, fitted on the reference: a lit one centred up-left of the cluster whose near side sweeps
       // across the lower-right discs, and a faint, wider one centred down-right
-      const c0 = cs[0], sw = smoother((f - 75) / 14);
+      const c0 = cs[0], sw = smoother((f - 72) / 18);
       const ring = { x: c0.cx - 1.48 * R, y: c0.cy - lerp(1.3, 1.42, sw) * R, r: lerp(3.14, 3.3, sw) * R };
       const faint = { x: c0.cx + 0.5 * R, y: c0.cy + 0.96 * R, r: 3.45 * R };
-      const hl = ((44 + 0.12 * (PSI_B(f) - 125)) * Math.PI) / 180;
+      const hl = ((44 + 0.12 * (PSI_ALL(f) - 103)) * Math.PI) / 180;
+      ctx.globalAlpha = ringA;
       ctx.lineWidth = 1.6;
       ctx.strokeStyle = "rgba(49,48,46,0.10)";
       ctx.beginPath(); ctx.arc(faint.x, faint.y, faint.r, 0, Math.PI * 2); ctx.stroke();
@@ -188,6 +196,7 @@
       };
       const ringR = ring.r, cx = ring.x, cy = ring.y;
       // shadows first, so a disc's shadow falls on the paper and on the discs below it
+      ctx.globalAlpha = k;
       for (const c of cs) {
         ctx.save();
         ctx.shadowColor = "rgba(40,30,10,0.13)";
@@ -209,35 +218,42 @@
       }
       // where the ring's bright side crosses a disc, the glass catches it
       ctx.save();
+      ctx.globalAlpha = k * ringA;
       ctx.beginPath(); cs.forEach((c) => { ctx.moveTo(c.x + c.r, c.y); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2); }); ctx.clip();
       ctx.lineWidth = 0.09 * R;
       ctx.filter = `blur(${(0.035 * R).toFixed(1)}px)`;
       ctx.strokeStyle = "rgba(255,255,255,0.75)";
       ctx.beginPath(); ctx.arc(cx, cy, ringR, hl - 0.32, hl + 0.32); ctx.stroke();
       ctx.restore();
+      ctx.globalAlpha = ringA;
       drawRing();
-      // labels stay upright
+      // labels stay upright; they resolve out of a soft blur, growing in a touch as the glass forms
+      ctx.globalAlpha = labA;
+      if (labA < 0.999) ctx.filter = `blur(${(9 * (1 - labA)).toFixed(2)}px)`;
       ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+      const ls = lerp(0.86, 1, smoother((f - 70) / 18));
       for (const c of cs) {
         ctx.fillStyle = INK;
-        ctx.font = `500 ${(0.2 * R).toFixed(1)}px Inter`;
-        ctx.fillText(c.m.name, c.x, c.y + 0.05 * R);
+        ctx.font = `500 ${(0.2 * R * ls).toFixed(1)}px Inter`;
+        ctx.fillText(c.m.name, c.x, c.y + 0.05 * R * ls);
         ctx.fillStyle = "#8b8a86";
-        ctx.font = `500 ${(0.068 * R).toFixed(1)}px Inter`;
-        ctx.fillText(c.m.sub, c.x, c.y + 0.18 * R);
+        ctx.font = `500 ${(0.068 * R * ls).toFixed(1)}px Inter`;
+        ctx.fillText(c.m.sub, c.x, c.y + 0.18 * R * ls);
       }
+      ctx.restore();
     }
 
     function render(t) {
       const f = clamp(t, 0, FRAMES - 1);
       const fi = Math.round(f);
-      // keep each side of the cut inside its own window, so blur samples never mix the two
-      const g = fi < CUT ? Math.min(f, CUT - 0.5) : Math.max(f, CUT - 0.5);
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, 1920, 1080);
       ctx.fillStyle = "#f9f8f4"; ctx.fillRect(0, 0, 1920, 1080);
-      if (fi < CUT) drawRims(g, fi); else drawGlass(g, fi);
+      // one continuous move: the glass forms on the rim circles as they close up
+      const k = GLASS(f);
+      drawGlass(f, k);
+      drawRims(f, 1 - k);
 
       // headline
       if (fi < WORD_OUT[1]) {
