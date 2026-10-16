@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>ask ai</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f9f8f4; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #f9f8f4; font-family: "Inter", system-ui, sans-serif; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      #pill { position: absolute; left: 0; top: 0; background: #31302e; display: none; }
+      #line { position: absolute; left: 960px; top: 540px; white-space: pre; font-weight: 620; color: #1c1d21; letter-spacing: -0.025em; line-height: 1; }
+      #line span { display: inline-block; white-space: pre; }
+      #meas { position: absolute; left: -9999px; top: 0; white-space: pre; font-weight: 620; letter-spacing: -0.025em; line-height: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="2.5" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:620">Aa</span></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
