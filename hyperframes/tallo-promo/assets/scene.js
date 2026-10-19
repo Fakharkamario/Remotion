@@ -16,18 +16,40 @@
   const sm = (t) => (t = clamp(t, 0, 1), t * t * (3 - 2 * t));
   const hex = (s) => (s[0] === "#" ? [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16)) : s.match(/[\d.]+/g).slice(0, 3).map(Number));
   const mix = (a, b, t) => { const A = hex(a), B = hex(b); t = clamp(t, 0, 1); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`; };
-  // piecewise-linear lookup through [frame, value] pairs (the tables are dense, so this tracks the reference closely)
+  // smooth lookup through [frame, value] pairs: a monotone cubic (Fritsch–Carlson) that passes through every
+  // measured point with continuous speed and never overshoots, so moves ease like graph-editor curves
+  const slope = (pts, i) => (pts[i + 1][1] - pts[i][1]) / (pts[i + 1][0] - pts[i][0]);
+  const tangent = (pts, k) => {
+    const n = pts.length;
+    if (n < 2) return 0;
+    if (k === 0) return slope(pts, 0);
+    if (k === n - 1) return slope(pts, n - 2);
+    const d0 = slope(pts, k - 1), d1 = slope(pts, k);
+    if (d0 * d1 <= 0) return 0;
+    const h0 = pts[k][0] - pts[k - 1][0], h1 = pts[k + 1][0] - pts[k][0];
+    const w0 = 2 * h1 + h0, w1 = h1 + 2 * h0;
+    return (w0 + w1) / (w0 / d0 + w1 / d1);
+  };
   const keys = (f, pts) => {
     if (f <= pts[0][0]) return pts[0][1];
-    for (let i = 1; i < pts.length; i++) if (f <= pts[i][0]) return lerp(pts[i - 1][1], pts[i][1], (f - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]));
+    for (let i = 1; i < pts.length; i++) if (f <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], h = x1 - x0, t = (f - x0) / h, t2 = t * t, t3 = t2 * t;
+      return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * tangent(pts, i - 1) + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * tangent(pts, i);
+    }
     return pts[pts.length - 1][1];
   };
   const rel = (pts, base) => pts.map(([a, v]) => [a + base, v]);
+  // light 1-2-1 pass over a measured glide, to take out per-frame reading error (endpoints stay put)
+  const smoothPts = (pts, passes = 1) => {
+    let p = pts.map((q) => q.slice());
+    for (let k = 0; k < passes; k++) p = p.map((q, i) => (i === 0 || i === p.length - 1 ? q : [q[0], 0.25 * p[i - 1][1] + 0.5 * q[1] + 0.25 * p[i + 1][1]]));
+    return p;
+  };
   const rng = (seed) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
   const px = (v) => v.toFixed(2) + "px";
   const blurOf = (b) => (b > 0.05 ? `blur(${b.toFixed(2)}px)` : "none");
 
-  const INK = "#17181b", BLUE = "#3a8fd8", BLUE2 = "#86c6f2", GRAY = "#8c8c93";
+  const INK = "#22252b", BLUE = "#3a8fd8", BLUE2 = "#86c6f2", GRAY = "#8c8c93";
 
   const ICON = {
     wallet: '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 9.5h18M16 14h2"/><path d="M6 6l9-3 1.5 3"/>',
@@ -94,8 +116,9 @@
       const out = extra.out || 0, lift = extra.lift ?? 0.16, big = extra.big ?? 0.28;
       w.span.style.opacity = (clamp(a / 1.5, 0, 1) * (1 - out)).toFixed(3);
       w.span.style.color = out > 0 ? mix(INK, GRAY, out * 2) : mix(blue, INK, d);
-      w.span.style.transform = `translate(${(0.06 * (1 - p)).toFixed(3)}em, ${(lift * (1 - p) - 0.35 * out).toFixed(3)}em) skewX(${(-13 * (1 - p)).toFixed(2)}deg) scale(${(1 + big * (1 - p)).toFixed(4)})`;
-      w.span.style.filter = blurOf(3.5 * (1 - p) + 3 * out);
+      const slide = (extra.slide ?? 1.1) * Math.exp(-a / 1.25);
+      w.span.style.transform = `translate(${(slide + 0.06 * (1 - p)).toFixed(3)}em, ${(lift * (1 - p) - 0.35 * out).toFixed(3)}em) skewX(${(-13 * (1 - p)).toFixed(2)}deg) scale(${(1 + big * (1 - p)).toFixed(4)})`;
+      w.span.style.filter = blurOf(1.6 * (1 - p) + 3 * out);
     }
     // gap: em between words; x: {left} or {cx}; returns the laid-out width
     function placeLine(L0, show, o = {}) {
@@ -212,7 +235,7 @@
       ["Savings", "piggy", [[273, 1.1], [274, 1.0], [275, 0.955], [276, 0.925], [277, 0.875], [278, 0.82], [279, 0.77], [280, 0.72], [281, 0.685], [282, 0.66], [283, 0.635], [284, 0.62], [285, 0.6], [286, 0.59], [287, 0.57], [288, 0.56], [290, 0.54], [292, 0.51], [294, 0.47], [296, 0.43], [297, 0.39], [298, 0.345], [299, 0.3]]],
     ].map(([t, ic, xs]) => {
       const c = el("div", "card", cardsL, `<div class="band"></div><div class="in">${svgIcon(ic, "#d9d9de", 1.6)}<b>${t}</b></div>`);
-      return { el: c, inner: c.querySelector(".in"), xs, e: xs[0][0] + 1 };
+      return { el: c, inner: c.querySelector(".in"), xs: [xs[0], ...smoothPts(xs.slice(1))], e: xs[0][0] + 1 };
     });
     const cardX = (i, f) => keys(f, CARDS[i].xs) * W;
 
@@ -336,12 +359,12 @@
         const cx = 960 + keys(f, [[13, 0], [17, 10], [20, 38], [24, 96], [28, 192], [30, 269], [32, 355], [34, 499], [35, 576], [36, 700]]);
         placeLine(T1, show, {
           gap: keys(f, [[0, 0.45], [10, 0.42], [12, 0.3], [15, 0.12], [17.5, 0.03], [19, 0.12], [20.5, 0.26]]),
-          left: 0.31 * W, cx, blend: sm(ramp(f, 11.5, 14)), dy: 0,
+          left: 0.31 * W, cx, blend: sm(ramp(f, 9.5, 13)), dy: 0,
           blur: keys(f, [[23, 0], [26, 1.5], [29, 3], [32, 5], [34, 8], [36, 12]]), alpha: keys(f, [[33, 1], [35.5, 0.5], [37, 0]]),
         });
         if (show) {
           const fade = ramp(f, 27, 35);
-          [4, 6.5, 8, 10].forEach((s, i) => landWord(T1.ws[i], f, s, [7.5, 10, 12.5, 16][i]));
+          [4, 6.5, 8, 10].forEach((s, i) => landWord(T1.ws[i], f, s, [7.5, 10, 10.5, 13.5][i]));
           if (fade > 0) T1.ws.forEach((w) => (w.span.style.color = mix(INK, "#55565c", fade)));
         }
         // swishes: one trails under the line, one leads above it
@@ -360,7 +383,7 @@
         phoneWrap.style.display = show ? "block" : "none";
         if (show) {
           const X = keys(f, [[35, 0.2], [36, 0.25], [37, 0.33], [38, 0.36], [39, 0.385], [40, 0.405], [41, 0.42], [42, 0.43], [43, 0.44], [44, 0.45], [46, 0.47], [47, 0.48], [52, 0.49], [58, 0.497], [69, 0.5]]) * W;
-          const Y = keys(f, [[35, 0.49], [41, 0.495], [44, 0.5], [47, 0.505], [52, 0.503], [58, 0.51], [61, 0.52], [64, 0.535], [65, 0.515], [66, 0.53], [67, 0.525], [68, 0.51], [69, 0.525]]) * H;
+          const Y = keys(f, [[35, 0.49], [44, 0.5], [52, 0.503], [58, 0.51], [63, 0.522], [69, 0.525]]) * H;
           const S = keys(f, [[36, 1.16], [38, 1.14], [39, 1.12], [41, 1.08], [44, 1.01], [47, 1.0], [52, 0.957], [58, 0.945], [69, 0.94]]);
           const ry = keys(f, [[35, 140], [36, 96], [37, 82], [38, 66], [39, 52], [40, 44], [41, 38], [44, 27], [47, 17], [52, 9], [58, 4], [64, 2], [69, 0]]);
           const rx = keys(f, [[58, 2], [59, 10], [61, 17], [63, 24], [64, 27], [65, 32], [66, 42], [67, 53], [68, 66], [69, 82]]);
