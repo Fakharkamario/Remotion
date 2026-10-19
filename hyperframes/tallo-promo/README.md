@@ -13,7 +13,7 @@ A 14.7 s, 30 fps, 1920×1080 promo for Tallo, a personal-money app. It follows t
 | 300–384 | "All in one place", then Smart / Simple / Secure |
 | 384–440 | the frame shrinks into the app icon, then the glowing tallo.app wordmark shrinks away |
 
-Everything is drawn in `assets/scene.js` as a pure function of the frame (no media assets besides Inter). No audio track.
+Everything is drawn in `assets/scene.js` as a pure function of the frame. Positions, scales, tilts and blur are keyed per frame from measurements of the reference edit (dense `[frame, value]` tables), so the motion follows it shot for shot. The phone is real CSS 3D (a sliced metal band around a rounded body) with an original wallpaper and icon set; chip icons use Noto Color Emoji. No audio track.
 
 - Preview: `npx --yes hyperframes@0.8.114 preview`
 - Render with motion blur: `scripts/render-mb.sh` (outputs `renders/tallo-promo.mp4`)
