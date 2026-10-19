@@ -155,6 +155,8 @@
     }
     const front = el("div", "face front", rig);
     const screen = el("div", "screen", el("div", "bezel", front));
+    // optional drop-in: assets/user/phone-screen.png (your own screenshot, 1179x2556 or any ~9:19.5 image) replaces the drawn home screen
+    const userShot = el("div", "usershot", screen);
     el("div", "island", screen);
     el("div", "sbar", screen, `<span>9:41</span><span style="letter-spacing:2px">▮▮▮ ◔ ▭</span>`);
     const home = el("div", "home", screen);
@@ -223,6 +225,11 @@
     const tile = el("div", "", icon, `<svg viewBox="0 0 100 100"><g id="markG" fill="#111214"><rect x="10" y="14" width="80" height="22" rx="11"/><rect x="36" y="14" width="23" height="74" rx="11.5"/><circle cx="76" cy="70" r="13"/></g></svg>`);
     tile.id = "tile";
     const markG = tile.querySelector("#markG");
+    // optional drop-in: assets/user/logo.png replaces the Tallo mark on the app icon
+    const userLogo = el("div", "userlogo", tile);
+    const probe = (src, onOk) => { const im = new Image(); im.onload = () => { onOk(); render(R0._f); }; im.src = src; };
+    probe("assets/user/phone-screen.png", () => { userShot.style.display = "block"; screen.classList.add("has-shot"); });
+    probe("assets/user/logo.png", () => { userLogo.style.display = "block"; tile.querySelector("svg").style.display = "none"; });
     const glow = el("div", "", logoL); glow.id = "glow";
     const wordmark = el("div", "", logoL, "tallo.app"); wordmark.id = "wordmark";
     // scale the wordmark so it opens as wide as the reference's (790 px)

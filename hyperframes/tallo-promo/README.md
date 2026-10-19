@@ -17,3 +17,11 @@ Everything is drawn in `assets/scene.js` as a pure function of the frame. Positi
 
 - Preview: `npx --yes hyperframes@0.8.114 preview`
 - Render with motion blur: `scripts/render-mb.sh` (outputs `renders/tallo-promo.mp4`)
+
+## Drop-in images
+
+Put these in `assets/user/` (git-ignored) and re-render; anything missing falls back to the drawn version.
+
+- `phone-screen.png` — a phone screenshot (any ~9:19.5 image) shown on the 3D phone
+- `logo.png` — your logo, shown on the app icon in the closing shot
+
