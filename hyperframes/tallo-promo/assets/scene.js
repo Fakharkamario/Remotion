@@ -100,11 +100,14 @@
       meas.innerHTML = ref.split(" ").map((w, i, a) => `<span style="margin-right:${i < a.length - 1 ? 0.26 : 0}em">${w}</span>`).join("");
       return 100 * target / meas.getBoundingClientRect().width;
     };
+    let lineId = 0;
     function makeLine(words, size) {
       const line = el("div", "kline", textLayer);
       line.style.fontSize = size + "px";
       const ws = words.map((w) => { const span = el("span", "kword", line); return { span, letters: [...w].map((ch) => el("span", "lt", span, ch)) }; });
-      return { line, ws, size };
+      const id = "ks" + (lineId++);
+      textLayer.insertAdjacentHTML("beforeend", `<svg width="0" height="0" style="position:absolute"><filter id="${id}" x="-30%" y="-60%" width="160%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter></svg>`);
+      return { line, ws, size, id, smear: textLayer.querySelector(`#${id} feGaussianBlur`) };
     }
     // a word lands blue, italic, oversized and soft, then settles; it turns ink at darkAt (an absolute frame)
     function landWord(w, f, inAt, darkAt, extra = {}) {
@@ -128,7 +131,11 @@
       const w = L0.line.offsetWidth;
       const left = o.left != null ? (o.cx != null ? lerp(o.left, o.cx - w / 2, o.blend || 0) : o.left) : o.cx - w / 2;
       L0.line.style.transform = `translate(${px(left)}, -50%) translateY(${px(o.dy || 0)}) rotate(${(o.rot || 0).toFixed(2)}deg) scale(${(o.s || 1).toFixed(4)})`;
-      L0.line.style.filter = blurOf(o.blur || 0);
+      // smear: a horizontal-only blur (the reference streaks lines sideways as they leave)
+      if (o.smear > 0.05) {
+        L0.smear.setAttribute("stdDeviation", `${o.smear.toFixed(2)} ${(0.1 * o.smear).toFixed(2)}`);
+        L0.line.style.filter = `url(#${L0.id})` + (o.blur > 0.05 ? " " + blurOf(o.blur) : "");
+      } else L0.line.style.filter = blurOf(o.blur || 0);
       L0.line.style.opacity = o.alpha ?? 1;
       if (o.color) L0.line.style.color = o.color;
       return w;
@@ -236,6 +243,8 @@
     const nums = [];
     for (let r = -1; r <= 1; r++) for (let d = 8; d <= 28; d++) { const v = d + 7 * r; if (v >= 1 && v <= 31) nums.push({ d, r, e: el("div", "num", cal, String(v)) }); }
     const dot = el("div", "", cal); dot.id = "dot";
+    stage.insertAdjacentHTML("beforeend", `<svg width="0" height="0" style="position:absolute"><filter id="dirL" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter><filter id="dirK" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter></svg>`);
+    const dirL = stage.querySelector("#dirL feGaussianBlur"), dirK = stage.querySelector("#dirK feGaussianBlur");
 
     // ---------- cards ----------
     const cardsL = el("div", "layer", stage); cardsL.id = "cards";
@@ -340,7 +349,7 @@
         fxCtx.fillStyle = `rgba(118,118,128,${a.toFixed(3)})`;
         fxCtx.fillRect(s.x, s.y0 + (f - 69) * 40, s.w, s.len);
       });
-      const scan = Math.max(keys(f, [[136.5, 0], [137.5, 0.4], [139, 0.8], [140, 1], [141, 0.6], [142, 0]]), keys(f, [[298.5, 0], [299, 1], [300, 1], [301, 0.5], [302, 0]]));
+      const scan = Math.max(keys(f, [[136.5, 0], [137, 0.35], [138, 0.6], [139, 0.85], [140, 1], [141, 0.5], [142, 0]]), keys(f, [[298.5, 0], [299, 1], [300, 1], [301, 0.5], [302, 0]]));
       if (scan > 0) {
         fxCtx.fillStyle = `rgba(198,198,204,${(0.5 * scan).toFixed(3)})`; fxCtx.fillRect(0, 0, W, H);
         fxCtx.fillStyle = `rgba(105,105,115,${(0.5 * scan).toFixed(3)})`;
@@ -389,7 +398,7 @@
 
       // ---- phone ----
       {
-        const show = f >= 35.6 && f < 70;
+        const show = f >= 35.6 && f < 69.4;
         phoneWrap.style.display = show ? "block" : "none";
         if (show) {
           const X = keys(f, [[35, 0.22], [36, 0.27], [37, 0.351], [38, 0.38], [39, 0.403], [40, 0.42], [41, 0.434], [42, 0.445], [43, 0.454], [44, 0.463], [45, 0.473], [46, 0.48], [47, 0.484], [48, 0.489], [49, 0.492], [50, 0.495], [51, 0.497], [52, 0.498], [54, 0.5], [58, 0.5], [69, 0.503]]) * W;
@@ -435,10 +444,13 @@
         tasks.style.display = show ? "block" : "none";
         if (show) {
           tlist.style.transform = `translate(${px(cam.tx)}, ${px(cam.ty)}) scale(${cam.s.toFixed(4)})`;
-          tlist.style.filter = blurOf(cam.blur / cam.s); // filter runs in the list's own (scaled) space
+          const lx = keys(f, [[85, 0], [87, 0.6], [89, 1.5], [90, 4], [91, 6], [92, 9], [92.45, 9], [92.5, 24], [93, 24], [94, 9], [95, 5], [96, 2.5], [97, 1], [98, 0]]);
+          dirL.setAttribute("stdDeviation", `${lx.toFixed(2)} ${(0.5 * lx).toFixed(2)}`);
+          tlist.style.filter = "none";
+          tasks.style.filter = lx > 0.05 ? "url(#dirL)" : "none";
           ttlLetters.forEach((l, i) => {
             const a = f - 72 - i * 0.8;
-            l.style.opacity = clamp(a / 1.5, 0, 1);
+            l.style.opacity = f >= 92.5 ? 0 : clamp(a / 1.5, 0, 1);
             l.style.transform = `translateY(${([0.05, -0.12, 0.18, -0.1, 0.32][i] * Math.exp(-Math.max(0, a) / 2.6)).toFixed(3)}em)`;
           });
           rows.forEach((r, i) => {
@@ -459,18 +471,25 @@
         cal.style.display = show ? "block" : "none";
         if (show) {
           const ck2 = { x: cam.tx + cam.s * P2.x, y: cam.ty + cam.s * P2.y };
-          const sp = keys(f, [[112, 0.11], [119, 0.13], [120, 0.125], [122, 0.14], [123, 0.16], [124, 0.19], [125, 0.205], [127, 0.22], [132, 0.22], [137, 0.185], [140, 0.17]]) * W;
+          const sp = keys(f, [[112, 0.11], [119, 0.13], [122, 0.135], [123, 0.15], [124, 0.19], [125, 0.205], [127, 0.22], [132, 0.22], [137, 0.185], [140, 0.17]]) * W;
           const cur = keys(f, [[116, 17], [117, 17.25], [118, 17.6], [119, 18], [120, 18.2], [121, 18.8], [122, 19.6], [123, 20.3], [124, 20.7], [125, 20.92], [126, 21]]);
-          const persp = keys(f, [[112, 1.1], [119, 1.1], [119.5, 0.35], [124, 0.15], [127, 0]]);
-          const fr = keys(f, [[112, 0.36], [119, 0.4], [119.5, 0.62], [124, 0.58], [126, 0.55]]);
+          // the strip leans away to the right (dates step down and shrink a little); the grid then swings so the right side is nearest
+          const persp = keys(f, [[112, 0.25], [119, 0.25], [120, 0], [122, -0.3], [125, -0.48], [140, -0.48]]);
+          const slope = keys(f, [[112, 0.1], [119, 0.1], [121, 0]]);
+          const fr = keys(f, [[112, 0.36], [119, 0.4], [122.5, 0.42], [124, 0.58], [126, 0.55]]);
           const cy = f < 113 ? ck2.y : keys(f, [[113, 540], [119, 540], [120, 508], [125, 508], [126, 529]]);
-          const gblur = keys(f, [[136, 0], [137, 0.5], [138, 2], [139, 5], [140, 8]]);
-          const rowsOn = ramp(f, 119.5, 123);
+          const gblur = keys(f, [[136, 0], [137, 2], [138, 9], [139, 20]]);
+          const kx = keys(f, [[114, 0], [115, 2], [116, 5], [117, 10], [118, 16], [119, 20], [120, 24], [121, 26], [122, 24], [123, 18], [124, 12], [125, 7], [126, 3.5], [127, 1], [128, 0]]);
+          dirK.setAttribute("stdDeviation", `${(kx + gblur).toFixed(2)} ${(0.15 * kx + 1.5 * gblur).toFixed(2)}`);
+          cal.style.filter = kx + gblur > 0.05 ? "url(#dirK)" : "none";
+          cal.style.opacity = (1 - ramp(f, 139, 140)).toFixed(3);
+          const rowsOn = ramp(f, 120, 124);
           nums.forEach((n) => {
-            const bulge = n.r !== 0 ? lerp(1, 0.87, ramp(f, 120, 124)) : 1;
+            const bulge = n.r !== 0 ? lerp(1, 0.75, ramp(f, 120, 124)) : 1;
             const X = (n.d - cur) * sp * bulge;
-            const k = Math.max(0.3, 1 + persp * X / W), x = 960 + X / k, sz = fr * sp * bulge / Math.sqrt(k);
-            let o = f < 120 ? ramp(f, 111.5 - (n.d < 17 ? 0.5 : 0) + Math.abs(n.d - 17) * 0.4, 114 + Math.abs(n.d - 17) * 0.4) : 1;
+            const k = Math.max(0.3, 1 + persp * X / W), x = 960 + X / k, sz = fr * sp * bulge / Math.pow(k, 0.8);
+            const o0 = n.d < 17 ? 111.5 : 112.5 + (n.d - 17); // dates to the right arrive one per frame
+            let o = f < 120 ? ramp(f, o0, o0 + 1.5) : 1;
             if (f < 121) o *= clamp(1.25 - Math.max(0, X / sp - 1) * 0.22, 0, 1) * (X < -1.6 * sp ? 0 : 1);
             if (n.r === 0 && Math.abs(X) < sp * 0.45) o = 0; // the dot carries its own number
             if (n.r !== 0) o *= rowsOn;
@@ -478,24 +497,25 @@
             n.e.style.display = "block";
             n.e.style.opacity = o.toFixed(3);
             n.e.style.fontSize = px(sz);
-            n.e.style.filter = blurOf(gblur);
-            n.e.style.transform = `translate(${px(x)}, ${px(cy + n.r * 0.88 * sp)}) translate(-50%, -50%) skewX(${n.r === -1 ? -10 : n.r === 1 ? -7 : 0}deg)`;
+            n.e.style.filter = "none";
+            n.e.style.transform = `translate(${px(x)}, ${px(cy + n.r * 0.88 * sp + (n.r === 0 ? slope * X / k : 0))}) translate(-50%, -50%) skewX(${n.r === -1 ? -10 : n.r === 1 ? -7 : 0}deg)`;
           });
           const dsz = f < 114 ? keys(f, [[108, 2.8 * 52], [110, 150], [112, 165], [113, 190], [114, 0.89 * sp]]) : f < 119.5 ? 0.89 * sp : f < 126 ? keys(f, [[119.5, 326], [122, 330], [124, 345], [126, 357]]) : 0.845 * sp;
           const dx = f < 113 ? ck2.x : 960;
           dot.style.width = dot.style.height = px(dsz);
-          dot.style.transform = `translate(${px(dx - dsz / 2)}, ${px(cy - dsz / 2)})`;
+          const stretch = keys(f, [[115, 1], [116, 1.15], [117, 1.35], [118, 1.5], [119, 1.45], [120, 1.35], [121, 1.5], [122, 1.4], [123, 1.3], [124, 1.25], [125, 1.15], [126, 1.05], [127, 1]]);
+          dot.style.transform = `translate(${px(dx - dsz / 2)}, ${px(cy - dsz / 2)}) scaleX(${stretch.toFixed(3)})`;
           dot.style.background = f < 112 ? "#edb53a" : mix("#f07a2a", "#f1311c", ramp(f, 112, 113.5));
           dot.style.fontSize = px(dsz * 0.5);
           const day = f < 113.5 ? null : Math.round(cur);
           dot.innerHTML = day == null ? svgIcon("check", "#fff", 3) : String(day);
-          dot.style.filter = blurOf(gblur * 1.2);
+          dot.style.filter = "none";
         }
       }
 
       // ---- "Late fees again" / "What if your money just" / "sorted itself?" ----
       {
-        const out = [159, 160, 161];
+        const out = [157.5, 159, 160];
         const showA = f >= 140.5 && f < 163;
         placeLine(T2a, showA, { gap: keys(f, [[141, 0.3], [143, 0.08], [145, 0.12], [147, 0.18], [150, 0.26]]), cx: 960, dy: 5, rot: keys(f, [[141, -1], [143, -4], [146, -4.5], [148, -2.5], [150, 0]]) });
         if (showA) [141, 143, 145].forEach((s, i) => landWord(T2a.ws[i], f, s, [144.5, 146.5, 148][i], { out: ramp(f, out[i], out[i] + 2), lift: [-0.1, -0.25, -0.3][i] }));
@@ -505,15 +525,15 @@
         const cxB = f < 184 ? lerp(0.29 * W + wB / 2, 0.495 * W, sm(ramp(f, 165, 170))) : keys(f, [[184, 0.495], [185, 0.485], [186, 0.46], [187, 0.44], [188, 0.4], [189, 0.33], [190, 0.27], [191, 0.19], [192, 0.08], [193, -0.1]]) * W;
         placeLine(T2b, showB, {
           gap: keys(f, [[160, 0.3], [163, 0.28], [165, 0.12], [167, 0.12], [170, 0.2], [172, 0.26]]), cx: cxB, dy: 5,
-          rot: keys(f, [[163, -1], [165, -2.5], [168, -2], [170, 0]]), blur: keys(f, [[184, 0.5], [185, 2], [186, 4], [187, 6], [188, 9], [189, 12]]), alpha: 1 - ramp(f, 190, 193),
+          rot: keys(f, [[163, -1], [165, -2.5], [168, -2], [170, 0]]), blur: keys(f, [[184, 0], [186, 1], [188, 2], [190, 3]]), smear: keys(f, [[184, 0], [185, 2], [186, 6], [187, 16], [188, 28], [189, 36], [190, 40]]), alpha: 1 - ramp(f, 190, 193),
         });
-        if (showB) [160, 161.2, 162.4, 163.6, 164.8].forEach((s, i) => landWord(T2b.ws[i], f, s, [160.5, 162.5, 165.5, 167.5, 168.5][i], { lift: [0.1, -0.25, 0.15, 0.15, -0.25][i] }));
+        if (showB) [159, 160.5, 161.7, 162.7, 163.8].forEach((s, i) => landWord(T2b.ws[i], f, s, [160.5, 162.5, 165.5, 167.5, 168.5][i], { lift: [0.1, -0.25, 0.15, 0.15, -0.25][i] }));
 
         const showC = f >= 181 && f < 214;
         placeLine(T2c, showC, {
           gap: 0.26, cx: keys(f, [[181, 0.73], [184, 0.71], [186, 0.70], [188, 0.67], [189, 0.64], [190, 0.60], [191, 0.56], [192, 0.55], [194, 0.525], [197, 0.495], [200, 0.465], [203, 0.425], [206, 0.375], [208, 0.32], [210, 0.25], [212, 0.165], [213, 0.075], [214, -0.05]]) * W,
           dy: 0, s: keys(f, [[181, 0.4], [183, 0.5], [185, 0.6], [187, 0.72], [189, 0.85], [191, 0.95], [193, 1]]),
-          blur: keys(f, [[181, 2], [184, 3], [187, 4], [190, 5], [192, 3], [193, 1.5], [195, 0.5], [197, 0], [204, 0], [206, 1.5], [208, 3], [210, 5], [212, 7], [213, 9]]), alpha: 1 - ramp(f, 212, 214),
+          blur: keys(f, [[181, 2], [184, 3], [187, 4], [190, 5], [192, 3], [193, 1.5], [195, 0.5], [197, 0], [204, 0], [208, 1], [212, 2]]), smear: keys(f, [[204, 0], [205, 3], [206, 7], [207, 12], [208, 18], [210, 26], [212, 32], [213, 36]]), alpha: 1 - ramp(f, 212, 214),
         });
         if (showC) {
           [181, 188.5].forEach((s, i) => landWord(T2c.ws[i], f, s, 191 + i));
