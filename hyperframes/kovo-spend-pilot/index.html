@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>kovo spend pilot</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0b1236; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0b1236; font-family: "Inter", system-ui, sans-serif; color: #fff; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      svg { display: block; }
+
+      /* sky */
+      #sky { position: absolute; inset: 0; }
+      #clouds { position: absolute; left: 0; top: 0; width: 2600px; height: 1080px; }
+      #wash { position: absolute; inset: 0; pointer-events: none; }
+      .shot { position: absolute; inset: 0; overflow: hidden; display: none; }
+      .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+      /* mascot + floaters */
+      .bot { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; }
+      .bot svg { width: 100%; height: 100%; overflow: visible; }
+      .coin { position: absolute; left: 0; top: 0; width: 64px; height: 64px; border-radius: 50%;
+        background: radial-gradient(circle at 38% 34%, #fff2c4 0 18%, #f6cd63 40%, #d99a2b 100%);
+        box-shadow: inset 0 0 0 5px rgba(255,236,170,.55), inset 0 0 0 9px rgba(190,128,30,.35); }
+      .coin::after { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 26px; margin: -13px 0 0 -7px; border-radius: 7px; border: 3px solid rgba(165,104,16,.55); }
+      .slip { position: absolute; left: 0; top: 0; width: 46px; height: 64px; border-radius: 8px; background: linear-gradient(160deg, #e9fff6, #9cf0cf); box-shadow: inset 0 0 0 2px rgba(255,255,255,.6); }
+      .slip::before { content: ""; position: absolute; left: 9px; right: 9px; top: 14px; height: 4px; border-radius: 2px; background: rgba(20,110,90,.45); box-shadow: 0 10px 0 rgba(20,110,90,.35), 0 20px 0 rgba(20,110,90,.3); }
+
+      /* kinetic text */
+      .ktext { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; color: #fff; }
+      .kw { display: inline-block; white-space: pre; }
+      #meet { font-size: 80px; font-weight: 500; letter-spacing: -0.02em; }
+      #prod { font-size: 150px; font-weight: 300; letter-spacing: -0.035em; }
+      #phrase { font-size: 104px; font-weight: 450; letter-spacing: -0.025em; }
+      #getL1 { font-size: 40px; font-weight: 450; letter-spacing: -0.01em; }
+      #getL2 { font-size: 80px; font-weight: 450; letter-spacing: -0.025em; }
+
+      /* logo */
+      .logo { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 22px; white-space: nowrap; }
+      .logo svg { width: 132px; height: 132px; overflow: visible; }
+      .logo .wm { font-size: 150px; font-weight: 600; letter-spacing: -0.045em; line-height: 1; color: #fff; display: flex; }
+      .logo .wm span { display: inline-block; }
+      #ball { position: absolute; left: 0; top: 0; }
+      #rays { position: absolute; left: 0; top: 0; width: 900px; height: 900px; margin: -450px 0 0 -450px; border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(255,250,225,.55), rgba(255,240,200,.18) 45%, rgba(255,240,200,0)); }
+
+      /* landscape */
+      #land { position: absolute; left: -100px; top: 0; width: 2120px; height: 520px; }
+
+      /* ---------- product UI ---------- */
+      .ui { font-family: "Inter", system-ui, sans-serif; color: #1b2130; letter-spacing: -0.005em; }
+      .win { position: absolute; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 30px 90px rgba(5,15,50,.35), 0 0 0 1.5px rgba(255,255,255,.55); }
+      .muted { color: #6b7385; }
+      .pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 7px; font-size: 15px; font-weight: 500; white-space: nowrap; border: 1px solid; }
+      .pill.crit { color: #d2364b; background: #fff1f3; border-color: #f4b9c2; }
+      .pill.high { color: #d4622b; background: #fff3ea; border-color: #f6c6a6; }
+      .pill.med { color: #b7860b; background: #fff9e6; border-color: #f1dc9c; }
+      .pill.low { color: #2f6fd6; background: #eef4ff; border-color: #bcd2fa; }
+      .pill.blue { color: #2f6fd6; background: #f2f6ff; border-color: #c4d6fb; }
+      .pill.ok { color: #138a52; background: #eafaf1; border-color: #a9e6c4; }
+      .pill.gray { color: #4c5466; background: #f4f5f8; border-color: #e1e4ea; }
+      .st { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 13px; border-radius: 15px; font-size: 15px; font-weight: 500; background: #f4f5f8; color: #384052; white-space: nowrap; }
+      .st i { width: 9px; height: 9px; border-radius: 50%; background: #e7b21e; display: inline-block; }
+      .st.ok { background: #e3f8ec; color: #11734a; } .st.ok i { background: #1fb36a; }
+      .st.bad { background: #ffe5e8; color: #c21f37; } .st.bad i { background: #e5354f; }
+      .st.warn { background: #fff4d6; color: #8a6200; }
+      .ico { display: inline-grid; place-items: center; flex: none; border-radius: 10px; }
+      .ico svg { width: 58%; height: 58%; }
+      .sico svg { width: 20px; height: 20px; }
+
+      /* app window (dashboard + table) */
+      #app { width: 1880px; height: 1180px; left: 0; top: 0; }
+      #app .top { position: absolute; left: 0; right: 0; top: 0; height: 58px; border-bottom: 1px solid #eceef2; display: flex; align-items: center; padding: 0 22px; gap: 16px; font-size: 15px; }
+      #app .side { position: absolute; left: 0; top: 58px; bottom: 0; width: 250px; border-right: 1px solid #eceef2; padding: 18px 12px; font-size: 15px; color: #3b4254; }
+      #app .side .h { font-size: 12px; color: #9097a6; margin: 18px 10px 8px; text-transform: uppercase; letter-spacing: .04em; }
+      #app .side .it { display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 10px; border-radius: 8px; }
+      #app .side .it.on { background: #ddf8ec; color: #0f6b47; font-weight: 550; }
+      #app .side .it svg { width: 18px; height: 18px; }
+      .card { position: absolute; background: #fff; border: 1px solid #e8eaf0; border-radius: 14px; }
+      .card .ttl { position: absolute; left: 22px; top: 18px; font-size: 17px; font-weight: 600; color: #1b2130; }
+      .tabs { position: absolute; display: flex; gap: 28px; font-size: 15px; color: #4c5466; }
+      .tabs b { font-weight: 500; } .tabs .n { display: inline-block; margin-left: 7px; padding: 1px 7px; border-radius: 5px; background: #f0f1f5; font-size: 13px; color: #1b2130; }
+      .tabs .on { color: #0f6b47; font-weight: 600; }
+      .fbar { position: absolute; display: flex; align-items: center; gap: 0; height: 52px; border: 1px solid #e6e8ee; border-radius: 12px; font-size: 16px; color: #3b4254; background: #fff; }
+      .fbar > span { padding: 0 22px; height: 100%; display: flex; align-items: center; border-right: 1px solid #eef0f4; gap: 8px; white-space: nowrap; }
+      .fbar .find { font-weight: 600; color: #1b2130; }
+      .fbar .ai { border: 1px solid #e3e6ec; border-radius: 8px; height: 36px; margin: 0 10px; padding: 0 12px; }
+      .tbl { position: absolute; }
+      .tbl .hd, .tbl .rw { position: absolute; left: 0; right: 0; }
+      .tbl .hd { height: 48px; font-size: 15px; color: #6b7385; border-bottom: 1px solid #eceef2; }
+      .tbl .rw { height: 76px; border-bottom: 1px solid #eef0f3; font-size: 17px; }
+      .tbl .c { position: absolute; top: 0; height: 100%; display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+      .tbl .rw .bg { position: absolute; inset: 0; opacity: 0; }
+      .tbl .nm { font-size: 18px; font-weight: 500; color: #1b2130; }
+      .tbl .sb { font-size: 14px; color: #6b7385; margin-top: 3px; }
+      .tbl .catic { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #dfe2e8; display: grid; place-items: center; background: #fff; }
+      .tbl .catic svg { width: 18px; height: 18px; }
+      .tbl .own { width: 30px; height: 30px; border-radius: 7px; border: 1.5px solid #c9d7f6; display: grid; place-items: center; color: #2f6fd6; background: #f6f9ff; }
+      .tbl .own svg { width: 18px; height: 18px; }
+      .cursor { position: absolute; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: radial-gradient(circle, rgba(170,255,222,.95) 0 45%, rgba(120,240,200,.55) 62%, rgba(120,240,200,0) 72%); }
+
+      /* graph */
+      .node { position: absolute; border-radius: 22px; border: 2px dashed rgba(255,255,255,.75); background: linear-gradient(120deg, rgba(255,255,255,.28), rgba(255,255,255,.12)); }
+      .node .lab { position: absolute; left: 20px; top: 14px; height: 30px; padding: 0 12px; border-radius: 8px; background: #fff; color: #1f63c6; font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 7px; }
+      .node .in { position: absolute; left: 16px; right: 16px; bottom: 16px; height: 96px; border-radius: 14px; background: #fff; display: flex; align-items: center; gap: 16px; padding: 0 18px; box-shadow: 0 6px 20px rgba(10,30,90,.12); }
+      .grp { position: absolute; border-radius: 18px; border: 2px dashed rgba(255,255,255,.7); background: linear-gradient(110deg, rgba(255,255,255,.34), rgba(255,255,255,.12)); overflow: hidden; }
+      .grp .gl { position: absolute; left: 22px; top: 16px; font-size: 15px; font-weight: 500; color: rgba(255,255,255,.95); }
+      .itm { position: absolute; width: 320px; height: 72px; border-radius: 12px; background: #fff; display: flex; align-items: center; gap: 13px; padding: 0 14px; box-shadow: 0 6px 18px rgba(10,30,90,.1); }
+      .itm .ico { width: 38px; height: 38px; }
+      .itm .t { font-size: 15px; font-weight: 600; color: #1b2130; white-space: nowrap; }
+      .itm .s { font-size: 12.5px; color: #6b7385; margin-top: 3px; white-space: nowrap; }
+      .itm .pill { margin-left: auto; height: 23px; font-size: 13px; padding: 0 8px; }
+      #links path { fill: none; stroke: rgba(255,255,255,.85); stroke-width: 2.4; stroke-linecap: round; }
+
+      /* detail panel */
+      #page { position: absolute; background: #f5f6f9; border-radius: 20px; overflow: hidden; }
+      #pnl { position: absolute; background: #fff; border-radius: 18px 0 0 0; box-shadow: -10px 0 40px rgba(10,20,60,.12); }
+      .dn text { font-family: "Inter"; }
+
+      /* chat */
+      #chat { width: 1800px; height: 1000px; }
+      #chat .chrome { position: absolute; left: 0; right: 0; top: 0; height: 56px; background: #f1f2f5; border-bottom: 1px solid #e3e5ea; display: flex; align-items: center; gap: 14px; padding: 0 18px; font-size: 15px; color: #59606f; }
+      #chat .dots i { display: inline-block; width: 13px; height: 13px; border-radius: 50%; margin-right: 7px; }
+      #chat .url { margin-left: 30px; flex: 1; height: 34px; border-radius: 17px; background: #fff; display: flex; align-items: center; padding: 0 16px; gap: 8px; }
+      #chat .cside { position: absolute; left: 0; top: 56px; bottom: 0; width: 230px; background: #fafafb; border-right: 1px solid #eceef2; padding: 22px 18px; font-size: 15px; color: #3b4254; }
+      #chat .cside div { height: 34px; display: flex; align-items: center; gap: 10px; }
+      #chat .main { position: absolute; left: 230px; right: 0; top: 56px; bottom: 0; background: #fbfbfc; }
+      .bubble { position: absolute; border-radius: 16px; background: #eef0f4; font-size: 19px; line-height: 1.5; color: #1b2130; padding: 18px 24px; }
+      .stop { position: absolute; border-radius: 14px; background: #ffe8ea; border: 1px solid #f7c1c8; color: #b4233a; padding: 18px 22px; font-size: 18px; line-height: 1.5; }
+
+      /* activity page */
+      #act { width: 1270px; height: 1500px; }
+      .sec { position: absolute; font-size: 17px; line-height: 1.55; color: #2a3142; }
+      .sec .k { color: #6b7385; font-size: 15px; }
+      .redw { color: #d42f48; }
+      .blk { position: absolute; border-radius: 14px; border: 2px solid #e9ebf0; background: #fff; padding: 20px 24px; }
+      .side2 .h { font-size: 20px; font-weight: 650; color: #1b2130; }
+      .side2 .k { font-size: 15px; color: #6b7385; margin-top: 16px; }
+      .side2 .v { font-size: 17px; color: #1b2130; margin-top: 4px; }
+
+      /* compliance card */
+      #comp { width: 1400px; height: 1020px; }
+      #comp .rw2 { position: absolute; left: 30px; right: 30px; height: 46px; border-bottom: 1px solid #f0f1f4; font-size: 14px; color: #2a3142; display: flex; align-items: center; }
+      #comp .rw2 span { position: absolute; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+      .tag2 { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 5px; font-size: 11px; font-weight: 700; }
+
+      /* header close-up */
+      #hdr { width: 1500px; height: 700px; background: #f7f8fa; }
+      #glowG { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 70% 90% at 80% 40%, rgba(150,240,170,.75), rgba(170,240,180,.35) 50%, rgba(190,240,200,0) 80%); opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="47" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:300">Aa</span><span style="font-weight:450">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
