@@ -28,11 +28,13 @@
   const INK = [24, 26, 32], WHITE = [255, 255, 255], GREY = [150, 154, 162], NAVY = [14, 52, 110], BLUE = [47, 147, 251], BLUE2 = [120, 190, 255], PALE = [205, 228, 255];
   const OPEN = { a: 0, b: 23, text: "Are you...", at: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12] };
   // lines: [word, frame, kind] — kind: "fade" / "settle" / "keep" accent, otherwise a plain word
+  // fs: font size; z0: the line arrives this much bigger and eases out to 1 (the reference's "It's" beat);
+  // fit: the scale it eases down to after the given frame, as it grows past the frame (the reference's bloom line)
   const LINES = [
-    { a: 23, b: 52, bg: "light", words: [["Are", 23], ["you", 23], ["looking", 33, "settle"]] },
-    { a: 52, b: 113, bg: "dark", words: [["for", 55], ["a", 60], ["motion", 67, "keep"], ["designer?", 76, "keep"]] },
-    { a: 113, b: 153, bg: "light", words: [["Hit", 115], ["me", 120], ["up,", 126, "fade"]] },
-    { a: 153, b: 213, bg: "light", words: [["let's", 156], ["cook", 162], ["together!", 189, "fade"]] },
+    { a: 23, b: 52, bg: "light", fs: 100, words: [["Are", 23], ["you", 23], ["looking", 35, "settle"]] },
+    { a: 52, b: 113, bg: "dark", fs: 112, z0: 1.4, words: [["for", 53], ["a", 58], ["motion", 63, "keep"], ["designer?", 79, "keep"]] },
+    { a: 113, b: 153, bg: "light", fs: 84, words: [["Hit", 115], ["me", 118], ["up,", 128, "fade"]] },
+    { a: 153, b: 213, bg: "light", fs: 100, fit: [189, 0.84], words: [["let's", 154], ["cook", 159], ["together!", 189, "keep"]] },
   ];
   const BLOOM = 184, CARD = 213;
   const BADGE = '<svg viewBox="0 0 24 24"><path fill="#2f93fb" d="M12 1.5l2.4 1.8 3-.2.9 2.9 2.5 1.7-.9 2.9.9 2.9-2.5 1.7-.9 2.9-3-.2L12 20.5l-2.4-1.8-3 .2-.9-2.9-2.5-1.7.9-2.9-.9-2.9 2.5-1.7.9-2.9 3 .2z"/><path d="M7.6 11.6l3 3 5.8-6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -59,7 +61,7 @@
     const layout = () => {
       open.style.display = "block"; OW = open.offsetWidth; open.style.display = "none";
       G = lines.map(({ row, ws }) => {
-        row.style.display = "block";
+        row.style.display = "block"; row.style.fontSize = px(LINES[lines.findIndex((x) => x.row === row)].fs);
         ws.forEach((w) => { w.style.transform = "none"; });
         const g = { x: ws.map((w) => w.offsetLeft + w.offsetWidth / 2), lw: ws.map((w) => w.offsetWidth), h: row.offsetHeight, rw: row.offsetWidth };
         row.style.display = "none";
@@ -96,7 +98,8 @@
 
       // ---- the opener: typed letter by letter, each sweeping through the colour ramp as it lands
       if (show(open, F < OPEN.b)) {
-        open.style.transform = `translate(${px(960 - OW / 2)}, 540px) translateY(-50%) scale(${(1 + 0.0025 * F).toFixed(4)})`;
+        // grows steadily while typing, and a little faster into the cut (as the reference's "Well..." does)
+        open.style.transform = `translate(${px(960 - OW / 2)}, 540px) translateY(-50%) scale(${((1 + 0.004 * F) * (1 + 0.06 * Math.pow(ramp(F, 16, 23), 2))).toFixed(4)})`;
         chars.forEach((c, i) => {
           const t0 = OPEN.at[i], k = F - t0;
           if (k < 0) { c.style.opacity = "0"; return; }
@@ -113,7 +116,12 @@
         row.style.display = "block";
         const life = F - L.a, base = dark ? WHITE : INK, start = dark ? [120, 122, 128] : GREY;
         // a slow drift up and a gentle push across the line's life
-        row.style.transform = `translate(${px(960 - centreAt(li, F))}, ${px(540 - g.h / 2 - 0.35 * life)}) scale(${(1 + 0.0009 * life).toFixed(4)})`;
+        // the line's own motion: it arrives a touch low (and, for some, big) and eases into place, pushes in slowly,
+        // then accelerates up out of its cut; the visible words stay centred as the line grows
+        const enter = eo(life / 12), out = Math.pow(ramp(F, L.b - 8, L.b), 2);
+        const sc = lerp(L.z0 || 1, 1, eo(life / 10)) * (1 + 0.0011 * life) * (L.fit ? lerp(1, L.fit[1], sio(ramp(F, L.fit[0], L.fit[0] + 10))) : 1);
+        const cy = 540 + 26 * (1 - enter) - 70 * out;
+        row.style.transform = `translate(960px, ${px(cy)}) scale(${sc.toFixed(4)}) translate(${px(-centreAt(li, F))}, ${px(-g.h / 2)})`;
         ws.forEach((w, i) => {
           const [, at, kind] = L.words[i], t = w.firstChild, k = F - at;
           if (k < 0) { w.style.opacity = "0"; return; }
