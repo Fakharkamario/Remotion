@@ -94,7 +94,7 @@
           `radial-gradient(65% 75% at ${50 + 46 * Math.cos(r + 0.5)}% ${50 + 52 * Math.sin(r + 0.5)}%, rgba(47,147,251,.9), rgba(47,147,251,0) 70%),` +
           `radial-gradient(50% 60% at ${50 + 40 * Math.cos(r + 2)}% ${50 + 46 * Math.sin(r + 2)}%, rgba(150,205,255,.85), rgba(150,205,255,0) 70%), #eef1f6`;
       }
-      if (show(bgCard, F >= CARD)) bgCard.style.background = `radial-gradient(45% 55% at ${16 + 4 * Math.sin(F / 25)}% -6%, rgba(150,120,255,.35), rgba(150,120,255,0) 70%), radial-gradient(45% 50% at ${86 + 4 * Math.cos(F / 30)}% 108%, rgba(47,147,251,.35), rgba(47,147,251,0) 70%), #f3f3f4`;
+      if (show(bgCard, F >= CARD)) bgCard.style.background = "#f3f3f4";
 
       // ---- the opener: typed letter by letter, each sweeping through the colour ramp as it lands
       if (show(open, F < OPEN.b)) {
