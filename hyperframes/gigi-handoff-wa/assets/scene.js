@@ -5,7 +5,7 @@
 //   60–92    the message grows out of the composer into the chat, the link preview pops above it, the composer drops
 //   92–145   "i fucking love it!!" and "let's continue" pop in word by word while the view drifts and pushes in
 //   145–240  a whip up-left lands close on "Perfect"; a typing bubble pulses under it
-//   240–262  it opens into "Let's animate" with a tilt that settles
+//   240–262  "Let's animate" pops in where the typing bubble was, like the other messages
 //   262–286  everything lifts away upward
 // Every element rides a track measured from its counterpart in the reference edit, one row per real source frame
 // at its true (24 fps) time, threaded with a monotone cubic (assets/ref-keys.js). Coordinates there are 1280×720.
@@ -150,6 +150,16 @@
       w.style.transform = `translateY(${(0.4 * (1 - eo(k))).toFixed(3)}em)`;
     });
 
+    const CLICK = 98;
+    const cardBox = (F, full = false) => {
+      const [, x2, cy, h] = TR.sent(F), z = zoomAt(F);
+      const scF = (1054 - 536) * S / CARD[0] * z, p = full ? 1 : ramp(F, 76, 94);
+      const sc = scF * (0.55 + 0.45 * eo(p));
+      const right = (x2 + 16 * z) * S, bottom = (cy - h / 2 - 32 * z) * S + 30 * (1 - eo(p));
+      // scaled about its bottom-right corner (transform-origin 100% 100%), so place the unscaled box there
+      return { x1: right - CARD[0], y1: bottom - CARD[1], sc, p, cx: right - (CARD[0] * scF) / 2, cyc: bottom - (CARD[1] * scF) / 2 };
+    };
+
     function render(F) {
       blobs.forEach((o, i) => {
         const t = F / FRAMES;
@@ -192,19 +202,15 @@
         } else put(sent.b, sx2 * S - L.sent, scy * S, Z, "100% 50%");
       }
 
-      // ---- link preview: pops from its corner, then rides with the message
-      if (show(card, F >= R.card[0] && F < 160)) {
-        let x1, y1, sc;
-        if (F <= R.card[1]) {
-          const [cx1, cy1, cx2] = TR.card(F);
-          x1 = cx1 * S; y1 = cy1 * S; sc = (cx2 - cx1) * S / CARD[0];
-        } else {
-          sc = (1054 - 536) * S / CARD[0] * Z;
-          const right = (sx2 + 16 * Z) * S, bottom = (scy - sh / 2 - 32 * Z) * S;
-          x1 = right - CARD[0] * sc; y1 = bottom - CARD[1] * sc;
-        }
-        card.style.transform = `translate(${px(x1)}, ${px(y1)}) scale(${sc.toFixed(4)})`;
-        card.style.filter = blurOf(6 * (1 - ramp(F, 77, 81)));
+      // ---- link preview: eases in from its corner above the message (slower than the reference's snap),
+      // then rides with it; the cursor clicks it at CLICK
+      if (show(card, F >= 76 && F < 160)) {
+        const { x1, y1, sc, p } = cardBox(F);
+        const press = 1 - 0.03 * Math.sin(Math.PI * ramp(F, CLICK - 1, CLICK + 5));
+        card.style.transformOrigin = "100% 100%";
+        card.style.transform = `translate(${px(x1)}, ${px(y1)}) scale(${(sc * press).toFixed(4)})`;
+        card.style.opacity = eo(ramp(F, 76, 85)).toFixed(3);
+        card.style.filter = blurOf(6 * (1 - eo(p)));
         sheen.style.transform = `translateX(${px(-CARD[0] + 2 * CARD[0] * ramp(F, 82, 102))})`;
       }
 
@@ -221,7 +227,7 @@
 
       // ---- "Perfect" flies in from the lower right and settles big
       if (show(perfect.b, F >= R.perfect[0])) {
-        const [, y1, x2, y2] = TR.perfect(F);
+        const [, y1, x2, y2] = TR.perfect(Math.min(F, 240));
         put(perfect.b, x2 * S - L.per, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%", 0, 5 * (1 - ramp(F, 158, 166)));
       }
       // ---- typing bubble grows from its corner and pulses
@@ -230,20 +236,28 @@
         put(typing, x2 * S - 203, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%");
         dots.forEach((d, i) => { const k = 0.5 + 0.5 * Math.sin(F / 4 - i * 1.1); d.style.opacity = (0.45 + 0.55 * k).toFixed(3); d.style.transform = `translateY(${(-4 * k).toFixed(2)}px)`; });
       }
-      // ---- it opens into "Let's animate", tilted, then settles
-      if (show(anim.b, F >= 242.5)) {
-        const [x1, y1, x2, y2] = TR.final(F), [tilt] = TR.tilt(F);
-        put(anim.b, (x1 + x2) / 2 * S - L.anim / 2, (y1 + y2) / 2 * S, (y2 - y1) / 80, "50% 50%", tilt, 3 * (1 - ramp(F, 243, 248)), eo(ramp(F, 242.5, 244)));
-        anim.b.style.boxShadow = `0 16px 40px rgba(11,20,26,.10), 0 0 ${px(50 * (1 - ramp(F, 246, 262)) + 18)} rgba(60,180,95,${(0.4 * (1 - ramp(F, 246, 262)) + 0.12).toFixed(3)})`;
-        words(anim, F, 242, 1.5);
+      // ---- "Let's animate" takes the typing bubble's place and pops in like the other messages
+      if (show(anim.b, F >= 242)) {
+        const [, ty1, tx2, ty2] = TR.typing(242), [, py1, , py2] = TR.perfect(240), p = ramp(F, 242, 249);
+        put(anim.b, tx2 * S - L.anim, (ty1 + ty2) / 2 * S + 20 * (1 - eo(p)), ((py2 - py1) / 80) * (0.6 + 0.4 * back(p, 1.6)), "100% 100%", 0, 5 * (1 - eo(p)), clamp((F - 241) / 2, 0, 1));
+        anim.b.style.boxShadow = "";
+        words(anim, F, 242);
       }
 
       stamps.forEach((B) => { B.ts.style.opacity = B.ws[B.ws.length - 1].style.opacity || "1"; });
 
       // ---- cursor: the reference's own path (it types, then slips down out of frame as the message sends)
-      if (show(cursor, F < 64)) {
-        const [cx, cy] = TR.cur(F);
-        cursor.style.transform = `translate(${px(cx * S + entry)}, ${px(cy * S)})`;
+      if (show(cursor, F < 124)) {
+        let cx, cy;
+        if (F < 58) [cx, cy] = TR.cur(F).map((v) => v * S);
+        else {
+          const [sx, sy] = TR.cur(58).map((v) => v * S), t = cardBox(F, true), tx = t.cx + 60, ty = t.cyc + 40;
+          const k = ((u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2))(ramp(F, 58, 92));
+          const out = ((u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2))(ramp(F, 106, 124));
+          cx = sx + (tx - sx) * k + (2150 - tx) * out; cy = sy + (ty - sy) * k + (1250 - ty) * out;
+        }
+        const press = Math.sin(Math.PI * ramp(F, CLICK - 1, CLICK + 3));
+        cursor.style.transform = `translate(${px(cx)}, ${px(cy)}) scale(${(1 - 0.15 * press).toFixed(3)})`;
       }
     }
 
