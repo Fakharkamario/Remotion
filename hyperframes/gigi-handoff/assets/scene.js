@@ -42,12 +42,20 @@
   };
   // source frame n → its true time (the reference repeats every fifth frame: 24 fps content in 30)
   const T = (n) => (n - Math.floor((n + 1) / 5)) * 1.25;
-  const track = (rows) => {
+  // light 1-2-1 passes take out the 1–2 px reading noise (it showed as shake); endpoints stay put
+  const smooth = (c, passes) => {
+    for (let k = 0; k < passes; k++) c = c.map((q, i) => (i === 0 || i === c.length - 1 ? q : [q[0], 0.25 * c[i - 1][1] + 0.5 * q[1] + 0.25 * c[i + 1][1]]));
+    return c;
+  };
+  const track = (rows, passes = 2) => {
     const seen = new Set(), clean = rows.filter(([n]) => { const t = T(n); if (seen.has(t)) return false; seen.add(t); return true; });
-    const cols = clean[0].slice(1).map((_, j) => clean.map((r) => [T(r[0]), r[j + 1]]));
+    const cols = clean[0].slice(1).map((_, j) => smooth(clean.map((r) => [T(r[0]), r[j + 1]]), passes));
     return (F) => cols.map((c) => keys(F, c));
   };
-  const TR = { old: track(REF.old), cur: track(REF.cur), arrow: track(REF.arrow), sent: track(REF.sent), card: track(REF.card), perfect: track(REF.perfect), typing: track(REF.typing), final: track(REF.final), tilt: track(REF.finalTilt) };
+  const TR = { old: track(REF.old), cur: track(REF.cur), arrow: track(REF.arrow), sent: track(REF.sent), card: track(REF.card, 1), perfect: track(REF.perfect, 3), typing: track(REF.typing, 3), final: track(REF.final, 1), tilt: track(REF.finalTilt, 0) };
+  // the chat's zoom, read off the sent message's height and fitted as a clean curve (raw heights step 2 px at a time)
+  const ZOOM = [[0, 1], [88, 1], [91, 1.07], [93, 1.15], [96, 1.19], [100, 1.215], [106, 1.235], [130, 1.245], [140, 1.255], [146, 1.28], [152, 1.31], [162, 1.34]];
+  const zoomAt = (F) => keys(F, ZOOM);
   const range = (rows) => [T(rows[0][0]), T(rows[rows.length - 1][0])];
   const R = Object.fromEntries(["sent", "card", "perfect", "typing", "final"].map((k) => [k, range(REF[k])]));
 
@@ -57,7 +65,7 @@
   const IN = [["i fucking love it!!", 131, 93], ["let's continue", 236, 123]];
   const IN_COL = -780;              // replies' left edge, from the sent message's right edge
   // the old chat swings in from the right: the reference's arrival (from below, overshoot, settle) turned sideways
-  const ENTRY = [[0, 1750], [1, 560], [2, 0]];
+  const ENTRY = [[0, 0], [1, 0]];
   const TYPED = "storyboard done ", LINK = "https://figma.com/gigiai";
   const BH = 120, CARD = [819, 426];
   const LIFT = (F) => -1600 * ei(ramp(F, 263, 284));
@@ -138,7 +146,7 @@
 
       // the sent message's track drives the chat's zoom once it exists
       const [, sx2, scy, sh] = TR.sent(F);
-      const Z = F >= 88 ? sh / 84 : 1;
+      const Z = zoomAt(F);
 
       // ---- old chat: rides the reference's blue bubble; its arrival is turned sideways
       const [ox2, ocy] = TR.old(F);
@@ -156,12 +164,19 @@
         bar.style.transform = `translate(${px(AX - 632 * S)}, ${px(AY - 60)})`;
         const nTyped = clamp(Math.floor((F - 22) / 1.15), 0, TYPED.length);
         const pasted = F >= 45, hl = pasted ? 1 - ramp(F, 47, 52) : 0;
-        ctx.innerHTML = F >= 61 ? '<span class="caret"></span>' :
+        ctx.innerHTML = F >= 64 ? '<span class="caret"></span>' :
           TYPED.slice(0, nTyped).replace(/ /g, "&nbsp;") + (pasted ? `<span class="paste" style="background:rgba(47,147,251,${(0.22 * hl).toFixed(3)})">${LINK}</span>` : "") + '<span class="caret"></span>';
       }
 
       // ---- the sent message grows out of the composer (right edge and height from the reference)
-      if (show(sent.b, F >= R.sent[0] && F <= R.sent[1])) put(sent.b, sx2 * S - L.sent, scy * S, sh / 84, "100% 50%", 0, 5 * (1 - ramp(F, 62, 67)));
+      // as in the reference: the message slides up and right out from behind the input, full size, and settles
+      if (show(sent.b, F >= 61.5 && F <= R.sent[1])) {
+        if (F < 71) {
+          const p = clamp((553 - scy) / (553 - 480), 0, 1);
+          const x0 = AX - 632 * S + 44 - 40, y0 = AY, x1 = 1030 * S - L.sent, y1 = 480 * S;
+          put(sent.b, x0 + (x1 - x0) * p, y0 + (y1 - y0) * p, 0.88 + 0.12 * p, "0 50%");
+        } else put(sent.b, sx2 * S - L.sent, scy * S, Z, "100% 50%");
+      }
 
       // ---- link preview: pops from its corner, then rides with the message
       if (show(card, F >= R.card[0] && F < 160)) {
