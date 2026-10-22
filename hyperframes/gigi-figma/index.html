@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>gigi storyboard</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Liberation Serif"; src: url("assets/fonts/LiberationSerif-Regular.ttf") format("truetype"); font-display: block; }
+      @font-face { font-family: "Caladea"; src: url("assets/fonts/Caladea-Regular.ttf") format("truetype"); font-display: block; }
+      @font-face { font-family: "FreeSerif"; src: url("assets/fonts/FreeSerif.ttf") format("truetype"); font-display: block; }
+      @font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/JetBrainsMono-Regular.ttf") format("truetype"); font-display: block; }
+      @font-face { font-family: "DejaVu Serif"; src: url("assets/fonts/DejaVuSerif.ttf") format("truetype"); font-display: block; }
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-Bold.otf") format("opentype"); font-weight: 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f4f4f6; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #f4f4f6; font-family: "Inter", system-ui, sans-serif; color: #1c1c1f; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      .fontwarm span:nth-child(1) { font-family: "Liberation Serif"; } .fontwarm span:nth-child(2) { font-family: "Caladea"; }
+      .fontwarm span:nth-child(3) { font-family: "FreeSerif"; } .fontwarm span:nth-child(4) { font-family: "JetBrains Mono"; }
+      .fontwarm span:nth-child(5) { font-family: "DejaVu Serif"; } .fontwarm span:nth-child(6) { font-family: "Inter Display"; font-weight: 700; }
+
+      #bg { background: radial-gradient(120% 95% at 45% 35%, #ffffff 0%, #f5f5f7 50%, #e9e9ed 100%); }
+      .blob { position: absolute; left: 0; top: 0; border-radius: 50%; filter: blur(110px); }
+
+      /* the design tool window (light theme, Inter, the brand blue for selection) */
+      #win { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; border-radius: 22px; overflow: hidden; background: #fff;
+        box-shadow: 0 40px 120px rgba(30,32,40,.16), 0 8px 24px rgba(30,32,40,.08), 0 0 0 1px rgba(30,32,40,.06); }
+      .top { position: absolute; left: 0; right: 0; top: 0; height: 48px; background: #fff; border-bottom: 1px solid #ececef; display: flex; align-items: center; padding: 0 14px; gap: 6px; font-size: 13px; }
+      .top .tool { width: 34px; height: 32px; border-radius: 7px; display: grid; place-items: center; color: #2a2b2f; }
+      .top .tool.on { background: #2f93fb; color: #fff; }
+      .top .tool svg { width: 18px; height: 18px; }
+      .top .sep { width: 1px; height: 22px; background: #ececef; margin: 0 6px; }
+      .top .title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 500; color: #8a8b91; white-space: nowrap; }
+      .top .title b { color: #1c1c1f; font-weight: 600; }
+      .top .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+      .top .av { width: 28px; height: 28px; border-radius: 50%; background: #1c1c1f; color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; box-shadow: 0 0 0 2px #fff; }
+      .top .av.b { background: #2f93fb; margin-left: -14px; }
+      .top .play { width: 30px; height: 30px; display: grid; place-items: center; color: #2a2b2f; }
+      .top .play svg { width: 16px; height: 16px; }
+      #share { height: 32px; padding: 0 16px; border-radius: 8px; background: #2f93fb; color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; transform-origin: 50% 50%; }
+      .top .zoom { font-size: 12px; color: #55565c; width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+
+      .left, .right { position: absolute; top: 48px; bottom: 0; width: 240px; background: #fff; font-size: 12px; color: #2a2b2f; }
+      .left { left: 0; border-right: 1px solid #ececef; }
+      .right { right: 0; border-left: 1px solid #ececef; }
+      .tabs { height: 42px; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid #ececef; font-weight: 600; }
+      .tabs span:not(:first-child) { color: #9a9ba1; font-weight: 500; }
+      .sect { padding: 12px 16px 8px; border-bottom: 1px solid #f1f1f3; }
+      .sect h6 { font-size: 11px; font-weight: 600; color: #1c1c1f; margin-bottom: 8px; }
+      .page { height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 6px; border-radius: 6px; }
+      .page.on { background: #f1f1f3; font-weight: 600; }
+      .lay { height: 28px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 6px; white-space: nowrap; color: #3a3b40; }
+      .lay i { width: 12px; height: 12px; border: 1.5px solid #9a9ba1; border-radius: 2px; flex: none; }
+      .lay.on { background: #e3f0ff; color: #0d6fd8; font-weight: 600; }
+      .lay.on i { border-color: #2f93fb; }
+      .row { display: flex; gap: 8px; margin-bottom: 8px; }
+      .fld { height: 30px; border-radius: 6px; background: #f4f4f6; display: flex; align-items: center; padding: 0 10px; gap: 6px; flex: 1; white-space: nowrap; overflow: hidden; color: #2a2b2f; }
+      .fld small { color: #9a9ba1; font-size: 11px; }
+      .fld.font { justify-content: space-between; }
+      .sw { width: 14px; height: 14px; border-radius: 3px; background: #1c1c1f; flex: none; }
+
+      #viewport { position: absolute; left: 240px; top: 48px; width: 1440px; height: 1032px; overflow: hidden; background: #f3f3f5; }
+      #canvas { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+      .cap { position: absolute; width: 560px; height: 78px; background: #e4e4e8; border-radius: 6px; display: grid; place-items: center; text-align: center; font-size: 15px; line-height: 1.35; color: #3a3b40; padding: 0 22px; }
+      .fr { position: absolute; width: 560px; height: 316px; background: #fff; overflow: hidden; border-radius: 3px; box-shadow: 0 1px 2px rgba(30,32,40,.08), 0 6px 18px rgba(30,32,40,.05); }
+      .fr img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .fname { position: absolute; font-size: 11px; color: #8a8b91; white-space: nowrap; transform: translateY(-17px); }
+      /* drawn frames */
+      .who { background: #f3f1ee; }
+      .who .card { position: absolute; width: 92px; height: 116px; border-radius: 5px; box-shadow: 0 2px 8px rgba(30,32,40,.08); }
+      .who .t { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 40px; white-space: nowrap; color: #1c1c1f; line-height: 1; }
+      .big { background: #fff; }
+      .big .w { position: absolute; left: 0; right: 0; top: 50%; text-align: center; font-weight: 800; letter-spacing: -0.045em; font-size: 62px; line-height: 1.2; color: #0d0d0f; white-space: nowrap; }
+
+      /* overlays in window space */
+      .sel { position: absolute; left: 0; top: 0; border: 2px solid #2f93fb; pointer-events: none; }
+      .sel .h { position: absolute; width: 10px; height: 10px; background: #fff; border: 2px solid #2f93fb; border-radius: 2px; }
+      .sel .tag { position: absolute; left: -2px; top: -26px; height: 20px; padding: 0 7px; border-radius: 4px; background: #2f93fb; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; white-space: nowrap; }
+      .sel .dim { position: absolute; left: 50%; bottom: -28px; transform: translateX(-50%); height: 20px; padding: 0 7px; border-radius: 4px; background: #2f93fb; color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; white-space: nowrap; }
+      #menu { position: absolute; left: 0; top: 0; width: 250px; padding: 8px; border-radius: 14px; background: rgba(255,255,255,.98); transform-origin: 0 0;
+        box-shadow: 0 24px 60px rgba(30,32,40,.16), 0 4px 12px rgba(30,32,40,.08), 0 0 0 1px rgba(30,32,40,.05); }
+      #menu .it { height: 38px; border-radius: 8px; display: flex; align-items: center; padding: 0 12px; font-size: 17px; color: #26272b; white-space: nowrap; }
+      #menu .it.on { background: #2f93fb; color: #fff; }
+      #menu .hd { font-size: 11px; font-weight: 600; color: #9a9ba1; padding: 4px 12px 8px; text-transform: uppercase; letter-spacing: .06em; }
+      #pop { position: absolute; left: 0; top: 0; width: 420px; border-radius: 18px; background: #fff; padding: 22px; transform-origin: 85% 0;
+        box-shadow: 0 30px 80px rgba(30,32,40,.18), 0 6px 16px rgba(30,32,40,.08), 0 0 0 1px rgba(30,32,40,.05); }
+      #pop h4 { font-size: 17px; font-weight: 650; color: #1c1c1f; letter-spacing: -0.01em; }
+      #pop .inv { margin-top: 16px; display: flex; gap: 8px; }
+      #pop .inv .fld { height: 38px; font-size: 13px; color: #9a9ba1; }
+      #pop .inv .btn { height: 38px; padding: 0 16px; border-radius: 9px; background: #1c1c1f; color: #fff; font-size: 13px; font-weight: 600; display: grid; place-items: center; }
+      #pop .who2 { margin-top: 18px; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3a3b40; }
+      #pop .who2 .av { width: 30px; height: 30px; border-radius: 50%; background: #1c1c1f; color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+      #pop .who2 .sp { flex: 1; }
+      #pop .who2 small { color: #9a9ba1; }
+      #pop hr { border: 0; height: 1px; background: #f0f0f2; margin: 18px -22px 16px; }
+      #pop .lnk { display: flex; align-items: center; gap: 10px; }
+      #pop .lnk .ic { width: 34px; height: 34px; border-radius: 9px; background: #f1f1f3; display: grid; place-items: center; color: #3a3b40; }
+      #pop .lnk .ic svg { width: 18px; height: 18px; }
+      #pop .lnk .tx { flex: 1; font-size: 13px; color: #3a3b40; line-height: 1.3; }
+      #pop .lnk .tx small { display: block; color: #9a9ba1; font-size: 12px; }
+      #copy { height: 38px; padding: 0 16px; border-radius: 9px; background: #2f93fb; color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap; transform-origin: 50% 50%; }
+      #copy svg { width: 15px; height: 15px; }
+      #toast { position: absolute; left: 0; top: 0; height: 46px; padding: 0 18px 0 14px; border-radius: 23px; background: #111214; color: #fff; display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; white-space: nowrap;
+        box-shadow: 0 16px 40px rgba(0,0,0,.2); transform-origin: 50% 50%; }
+      #toast i { width: 24px; height: 24px; border-radius: 50%; background: #2f93fb; display: grid; place-items: center; }
+      #toast i svg { width: 14px; height: 14px; }
+
+      /* cursor from the launch video: rounded brand-blue arrowhead with a soft halo, tip at its top-left */
+      #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+      #cursor svg { position: absolute; left: -9px; top: -9px; width: 64px; height: 64px; overflow: visible; filter: drop-shadow(0 4px 7px rgba(20,110,230,.25)); }
+      #ripple { position: absolute; left: 0; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid #2f93fb; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="11.5" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><b style="font-weight:800">Aa</b></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
