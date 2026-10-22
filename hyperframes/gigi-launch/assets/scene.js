@@ -79,7 +79,6 @@
 
     // ---------- chat (screen space; each bubble rides its own measured track) ----------
     const chat = el("div", "layer", stage);
-    const meta = el("div", "meta", chat, '<span class="av">g</span><span>Gigi AI</span>');
     function bubble(words, cls) {
       const b = el("div", "bub" + (cls ? " " + cls : ""), chat, TAIL);
       const txt = el("div", "txt", b);
@@ -92,36 +91,24 @@
     const b3 = bubble(["quick"]);
     const bb = bubble(["On", "it"], "blue");
     b1.dotsBox.style.display = b3.dotsBox.style.display = "none";
-    const seen = el("div", "meta", chat, "<span>Read 9:41</span>");
     const badge = el("div", "", chat, '<img src="assets/img/fire.png" alt="">'); badge.id = "badge";
 
     // ---------- board ----------
     const boardWrap = el("div", "layer", stage);
     const board = el("div", "", boardWrap); board.id = "board";
-    const column = (x, dot, name, n) => {
-      const c = el("div", "col", board);
-      c.style.left = x + "px";
-      el("div", "hd", c, `<span class="dot ${dot}"></span><span>${name}</span><span class="cnt">${n}</span><span class="sp"></span>${ICON.plus}${ICON.more}`);
-      el("div", "rule", c);
-      return c;
-    };
-    const todo = column(0, "ring", "To do", 0);
-    const doing = column(828, "half", "In progress", 2);
-    column(1656, "", "Done", 4);
-    const todoCnt = todo.querySelector(".cnt");
-    [[doing, 146], [doing, 320]].forEach(([c, y]) => { const g = el("div", "ghost", c); g.style.top = y + "px"; });
-    const card = el("div", "", todo, `<div class="tags"><span class="tag dark">${ICON.bolt}Launch</span><span class="tag lite">Video</span><span class="tag lite">Urgent</span></div>
-      <div class="ttl">Launch video for gigi ai</div><div class="bar"><i></i></div>
-      <div class="ft">${ICON.clock}<span>Due today</span><span class="sp"></span><span class="av">A</span></div>`);
+    const column = (x, name) => { const c = el("div", "col", board); c.style.left = x + "px"; el("div", "hd", c, name); return c; };
+    const todo = column(0, "TO-DO");
+    column(828, "IN PROGRESS");
+    const card = el("div", "", todo, `<div class="ttl">Launch video for gigi ai</div><div class="bar"></div><div class="ft">${ICON.clock}<span>Today</span></div>`);
     card.id = "card";
-    const cardBar = card.querySelector(".bar i");
 
     // ---------- held message (above the board) ----------
     const heldWrap = el("div", "layer", stage);
 
     // ---------- cursor ----------
     const cursor = el("div", "", stage); cursor.id = "cursor";
-    cursor.innerHTML = '<svg viewBox="0 0 31 35"><path d="M3 2 L3 29 L10.2 22.4 L15 33 L20 30.8 L15.4 20.6 L25 20.2 Z" fill="#0d0d0f" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/></svg><div class="tagn">Aizal</div>';
+    const ARROW = "M12 9 L86 41 L54 55 L41 90 Z";
+    cursor.innerHTML = `<svg viewBox="0 0 100 100"><path d="${ARROW}" fill="#cfe6ff" stroke="#e3f0ff" stroke-width="24" stroke-linejoin="round" opacity=".85"/><path d="${ARROW}" fill="#178bfc" stroke="#178bfc" stroke-width="11" stroke-linejoin="round"/></svg>`;
 
     // ---------- end line ----------
     const endWrap = el("div", "layer", stage);
@@ -200,6 +187,7 @@
       });
 
       // ---------- hey aizal ----------
+      b1.b.classList.toggle("last", f < 32); b2.b.classList.toggle("last", f >= 32 && f < 78); b3.b.classList.toggle("last", f >= 78);
       const r1 = f < 120 || f > 150 ? T.b1(f, 0.6) : null;
       if (show(b1.b, !!r1)) {
         const [x1, x2, cy, h] = r1, s = h / 192;
@@ -209,10 +197,7 @@
         const e = eo(ramp(f, 0, 6));
         put(b1.b, left, cy, w, s, -8 * (1 - e), 5 * (1 - eo(ramp(f, 0, 5))), 1);
         wordIn(b1.ws[0], f, -2); wordIn(b1.ws[1], f, 3);
-        show(meta, true, "flex");
-        meta.style.transform = `translate(${px(left + 6 * s)}, ${px(cy - (BH / 2 + 62) * s)}) scale(${s.toFixed(4)})`;
-        meta.style.opacity = eo(ramp(f, 8, 16)).toFixed(3);
-      } else show(meta, false);
+      }
 
       // ---------- typing → need a launch video (held and carried from 178) ----------
       const holding = f >= 176;
@@ -242,7 +227,7 @@
         let bx = x1 + EDGE * s, by = cy;
         if (holding) {
           // on release it settles into the card's slot as it fades
-          const d = eio(ramp(f, 211, 216)), cx = keys(f, REF.board) + 24 + 356, ccy = 121 + 146 + 120;
+          const d = eio(ramp(f, 211, 216)), cx = keys(f, REF.board) + 56 + 339, ccy = 121 + 158 + 110;
           bx = lerp(bx, cx - (w * s) / 2, d); by = lerp(by, ccy, d);
         }
         put(b2.b, bx, by, w, s, rot, blur, a);
@@ -262,14 +247,12 @@
 
       // ---------- On it ----------
       const B = f >= 103 && f < 199 ? blueBox(f) : null;
-      show(bb.b, !!B); show(seen, !!B, "flex");
+      show(bb.b, !!B);
       if (B) {
         put(bb.b, B.left, B.cy, B.w, B.s, 0, 0, 1);
         bb.txt.style.left = px((B.w - (L.wb - 2 * PAD)) / 2);
         dotsAt(bb, f, ramp(f, 124, 128), B.w / 2);
         wordIn(bb.ws[0], f, 128); wordIn(bb.ws[1], f, 131);
-        seen.style.transform = `translate(${px(B.left + (B.w - 128) * B.s)}, ${px(B.cy + (BH / 2 + 16) * B.s)}) scale(${B.s.toFixed(4)})`;
-        seen.style.opacity = eo(ramp(f, 144, 152)).toFixed(3);
       }
       // badge: placed on the blue bubble's top-left corner as in the reference, popping with its measured size
       const rb = B && f >= 135 ? T.badge(Math.max(f, 136.25), 0.6) : null;
@@ -287,8 +270,6 @@
         const cp = ramp(f, 212.5, 215.5);
         card.style.opacity = cp.toFixed(3);
         card.style.transform = `scale(${(0.94 + 0.06 * eo(cp)).toFixed(4)})`;
-        cardBar.style.width = (12 + 10 * eo(ramp(f, 218, 232))).toFixed(2) + "%";
-        todoCnt.textContent = f >= 213 ? "1" : "0";
       }
 
       // ---------- cursor (tip follows the reference arrow's tip) ----------
