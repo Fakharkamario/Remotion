@@ -207,8 +207,8 @@
         // centred while it is alone on screen, then left-aligned with the column it heads
         const left = lerp((x1 + x2) / 2 - (w * s) / 2, x1 + EDGE * s, f > 150 ? 1 : eio(ramp(f, 26, 40)));
         const e = eo(ramp(f, 0, 6));
-        put(b1.b, left, cy, w, s, -8 * (1 - e), 9 * (1 - eo(ramp(f, 0, 5))), clamp((f + 1) / 2, 0, 1));
-        wordIn(b1.ws[0], f, 0); wordIn(b1.ws[1], f, 3);
+        put(b1.b, left, cy, w, s, -8 * (1 - e), 5 * (1 - eo(ramp(f, 0, 5))), 1);
+        wordIn(b1.ws[0], f, -2); wordIn(b1.ws[1], f, 3);
         show(meta, true, "flex");
         meta.style.transform = `translate(${px(left + 6 * s)}, ${px(cy - (BH / 2 + 62) * s)}) scale(${s.toFixed(4)})`;
         meta.style.opacity = eo(ramp(f, 8, 16)).toFixed(3);
