@@ -113,6 +113,7 @@
     card.id = "card"; card.style.width = CARD[0] + "px"; card.style.height = CARD[1] + "px";
     const sheen = card.querySelector(".sheen");
     const sent = bubble(TYPED + LINK, true);
+    const sendIco = () => composer.querySelector(".send");
     const ins = IN.map(([t]) => bubble(t));
     const perfect = bubble("Perfect", true, "1:00");
     const typing = el("div", "bub blue", world, TAIL + '<div class="dots"><i></i><i></i><i></i></div>');
@@ -140,6 +141,9 @@
       ctx.innerHTML = TYPED.replace(/ /g, "&nbsp;") + `<span class="paste">${LINK}</span>`;
       const ps = ctx.querySelector(".paste");
       L.link = 44 + ps.offsetLeft - ctx.offsetLeft + ps.offsetWidth / 2; L.linkW = ps.offsetWidth;
+      const sd = bar.querySelector(".send"); L.sendX = sd.offsetLeft + sd.offsetWidth / 2; L.sendY = sd.offsetTop + sd.offsetHeight / 2;
+      // each reply's word right edges, so the bubble can widen word by word like the reference's
+      [...ins, anim].forEach((B) => { B.b.style.width = ""; B.edges = B.ws.map((w) => w.offsetLeft + w.offsetWidth); B.pad = B.b.offsetWidth - B.edges[B.edges.length - 1]; });
       composer.style.display = cd;
     };
     layout();
@@ -151,18 +155,31 @@
       n.style.transform = `translate(${px(x)}, ${px(cy - BH / 2)}) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(4)})`;
       n.style.filter = blurOf(blur); n.style.opacity = a.toFixed(3);
     };
+    // the reference's reply: the bubble widens as each word hops in from below (slight overshoot, no fade-blur)
+    const grow = (B, F, at, gap = 2.5) => {
+      let right = 0;
+      B.ws.forEach((w, i) => {
+        const k = ramp(F, at + i * gap, at + 5 + i * gap), prev = i ? B.edges[i - 1] : 0;
+        if (k > 0) right = prev + (B.edges[i] - prev) * eo(k / 0.7);
+        w.style.opacity = clamp(k * 3, 0, 1).toFixed(3);
+        w.style.transform = `translateY(${(0.55 * (1 - back(k, 2.2))).toFixed(3)}em)`;
+      });
+      B.b.style.width = px(B.pad + Math.max(right, 30));
+      B.b.style.overflow = "hidden";
+      B.ts.style.opacity = ramp(F, at + (B.ws.length - 1) * gap + 2, at + (B.ws.length - 1) * gap + 6).toFixed(3);
+    };
     const words = (B, F, at, gap = 1.2) => B.ws.forEach((w, i) => {
       const k = ramp(F, at + 1 + i * gap, at + 5 + i * gap);
       w.style.opacity = eo(k).toFixed(3);
       w.style.transform = `translateY(${(0.4 * (1 - eo(k))).toFixed(3)}em)`;
     });
 
-    const LCLICK = 53;
+    const LCLICK = 59;
     const cardBox = (F, full = false) => {
       const [, x2, cy, h] = TR.sent(F), z = zoomAt(F);
-      const scF = (1054 - 536) * S / CARD[0] * z, p = full ? 1 : ramp(F, 76, 94);
-      const sc = scF * (0.55 + 0.45 * eo(p));
-      const right = (x2 + 16 * z) * S, bottom = (cy - h / 2 - 32 * z) * S + 30 * (1 - eo(p));
+      const scF = (1054 - 536) * S / CARD[0] * z, p = full ? 1 : ramp(F, R.card[0], R.card[1]);
+      const [c1, , c2] = TR.card(F), sc = scF * (full || F >= R.card[1] ? 1 : (c2 - c1) / 518);
+      const right = (x2 + 16 * z) * S, bottom = (cy - h / 2 - 32 * z) * S;
       // scaled about its bottom-right corner (transform-origin 100% 100%), so place the unscaled box there
       return { x1: right - CARD[0], y1: bottom - CARD[1], sc, p, cx: right - (CARD[0] * scF) / 2, cyc: bottom - (CARD[1] * scF) / 2 };
     };
@@ -194,9 +211,11 @@
         plus.style.transform = `translate(${px(AX - 712 * S - 52)}, ${px(AY - 52)})`;
         bar.style.transform = `translate(${px(AX - 632 * S)}, ${px(AY - 60)})`;
         const nTyped = clamp(Math.floor((F - 22) / 1.15), 0, TYPED.length);
-        // pasted at 45 (soft highlight), then the cursor clicks it at LCLICK: it turns into a link with a quick select flash
-        const pasted = F >= 45, hl = pasted ? 1 - ramp(F, 46, 50) : 0, sel = Math.sin(Math.PI * ramp(F, LCLICK - 0.5, LCLICK + 6)), linked = F >= LCLICK;
-        const pst = `background:rgba(47,147,251,${(0.22 * Math.max(hl, sel)).toFixed(3)});${linked ? "color:#1d8ce0;text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px" : ""}`;
+        // pasted at 45 (soft highlight that fades), then the cursor clicks send at LCLICK
+        const pasted = F >= 45, hl = pasted ? 1 - ramp(F, 47, 53) : 0;
+        const pst = `background:rgba(47,147,251,${(0.22 * hl).toFixed(3)})`;
+        // the send icon dips as the cursor clicks it
+        sendIco().style.transform = `scale(${(1 - 0.22 * Math.sin(Math.PI * ramp(F, LCLICK - 1, LCLICK + 3))).toFixed(3)})`;
         ctx.innerHTML = F >= 64 ? '<span class="caret"></span>' :
           TYPED.slice(0, nTyped).replace(/ /g, "&nbsp;") + (pasted ? `<span class="paste" style="${pst}">${LINK}</span>` : "") + '<span class="caret"></span>';
       }
@@ -213,12 +232,11 @@
 
       // ---- link preview: eases in from its corner above the message (slower than the reference's snap),
       // then rides with it
-      if (show(card, F >= 76 && F < 160)) {
+      if (show(card, F >= R.card[0] && F < 160)) {
         const { x1, y1, sc, p } = cardBox(F);
         card.style.transformOrigin = "100% 100%";
         card.style.transform = `translate(${px(x1)}, ${px(y1)}) scale(${sc.toFixed(4)})`;
-        card.style.opacity = eo(ramp(F, 76, 85)).toFixed(3);
-        card.style.filter = blurOf(6 * (1 - eo(p)));
+        card.style.opacity = "1"; card.style.filter = "none";
         sheen.style.transform = `translateX(${px(-CARD[0] + 2 * CARD[0] * ramp(F, 82, 102))})`;
       }
 
@@ -226,17 +244,17 @@
       ins.forEach((B, i) => {
         const [, dy, at] = IN[i];
         if (!show(B.b, F >= at && F < 162)) return;
-        const p = ramp(F, at, at + 6);
+        const p = ramp(F, at, at + 5);
         const x = (sx2 + IN_COL * Z) * S, cy = (scy + dy * Z) * S;
-        put(B.b, x, cy + 20 * (1 - eo(p)), Z * (0.55 + 0.45 * back(p, 1.6)), "0% 100%", 0, 6 * (1 - eo(p)), clamp((F - at + 1) / 2, 0, 1));
-        words(B, F, at);
+        put(B.b, x, cy, Z * (0.35 + 0.65 * back(p, 1.4)), "0% 100%", 0, 0, clamp((F - at + 1) / 1.5, 0, 1));
+        grow(B, F, at);
         B.b.classList.toggle("last", i === (F >= IN[1][2] ? 1 : 0));
       });
 
       // ---- "Perfect" flies in from the lower right and settles big
       if (show(perfect.b, F >= R.perfect[0])) {
         const [, y1, x2, y2] = TR.perfect(Math.min(F, 240));
-        put(perfect.b, x2 * S - L.per, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%", 0, 5 * (1 - ramp(F, 158, 166)));
+        put(perfect.b, x2 * S - L.per, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%");
       }
       // ---- typing bubble grows from its corner and pulses
       if (show(typing, F >= R.typing[0] && F < 243.5)) {
@@ -248,21 +266,21 @@
       if (show(anim.b, F >= 242)) {
         const [, py1, px2, py2] = TR.perfect(240), [, , tx2] = TR.typing(242), p = ramp(F, 242, 249), sc = (py2 - py1) / 80;
         const cy = py2 * S + 22 + BH * sc / 2;   // directly under Perfect with a small gap, like a normal next message
-        put(anim.b, Math.max(px2, tx2) * S - L.anim, cy + 20 * (1 - eo(p)), sc * (0.6 + 0.4 * back(p, 1.6)), "100% 50%", 0, 5 * (1 - eo(p)), clamp((F - 241) / 2, 0, 1));
+        put(anim.b, Math.max(px2, tx2) * S - L.anim, cy + 20 * (1 - eo(p)), sc * (0.35 + 0.65 * back(p, 1.4)), "100% 50%", 0, 0, clamp((F - 241) / 1.5, 0, 1));
         anim.b.style.boxShadow = "";
         words(anim, F, 242);
       }
 
-      stamps.forEach((B) => { B.ts.style.opacity = B.ws[B.ws.length - 1].style.opacity || "1"; });
+      stamps.forEach((B) => { if (!ins.includes(B)) B.ts.style.opacity = B.ws[B.ws.length - 1].style.opacity || "1"; });
 
-      // ---- cursor: the reference's path while typing, then a short glide onto the pasted link in the text box,
-      // a click, and the reference's slip down out of frame as the message sends
-      if (show(cursor, F < 76)) {
+      // ---- cursor: the reference's path while typing, then a calm glide onto the send icon, a click,
+      // and the reference's slip down out of frame as the message goes
+      if (show(cursor, F < 78)) {
         const io = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
-        const [ax0, ay0] = TR.arrow(F), [rx, ry] = TR.cur(Math.min(F, 45)).map((v) => v * S);
-        const lx = ax0 * S - 632 * S + L.link, ly = ay0 * S + 14;
-        const k = io(ramp(F, 45, 52)), drop = 1 - Math.pow(1 - ramp(F, 57, 74), 2);
-        const cx = rx + (lx - rx) * k + 40 * drop, cy = ry + (ly - ry) * k + 420 * drop * drop;
+        const [ax0, ay0] = TR.arrow(F), [rx, ry] = TR.cur(Math.min(F, 46)).map((v) => v * S);
+        const lx = ax0 * S - 632 * S + L.sendX + 4, ly = ay0 * S - 60 + L.sendY + 6;
+        const k = io(ramp(F, 46, LCLICK - 1)), drop = Math.pow(ramp(F, LCLICK + 4, 77), 2);
+        const cx = rx + (lx - rx) * k + 30 * drop, cy = ry + (ly - ry) * k + 520 * drop;
         const press = Math.sin(Math.PI * ramp(F, LCLICK - 1, LCLICK + 3));
         cursor.style.transform = `translate(${px(cx)}, ${px(cy)}) scale(${(1 - 0.15 * press).toFixed(3)})`;
       }
