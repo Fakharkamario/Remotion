@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>gigi launch</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/ref-keys.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f4f4f6; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #f4f4f6; font-family: "Inter", system-ui, sans-serif; color: #1c1c1f; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+
+      /* background: soft white light drifting over a pale grey */
+      #bg { background: #efe7de url("assets/img/doodle.jpg") repeat; background-size: 700px auto; background-blend-mode: multiply; }
+      .blob { position: absolute; left: 0; top: 0; border-radius: 50%; filter: blur(110px); }
+
+      /* chat bubbles: frosted white, soft lift, no outline; only the last of a group has a tail */
+      /* messenger look: rounded white bubbles on the doodle wallpaper, ours in pale green with read ticks */
+      .bub { position: absolute; left: 0; top: 0; height: 176px; border-radius: 44px; white-space: nowrap; background: #ffffff;
+        box-shadow: 0 3px 3px rgba(11,20,26,.10), 0 10px 30px rgba(11,20,26,.06);
+        font-size: 76px; font-weight: 400; letter-spacing: -0.01em; line-height: 176px; color: #111b21; transform-origin: 50% 50%; }
+      .bub-probe { font-size: 76px; font-weight: 400; letter-spacing: -0.01em; }
+      .bub .tail { position: absolute; left: -14px; bottom: -2px; width: 56px; height: 48px; overflow: visible; display: none; }
+      .bub.last .tail { display: block; }
+      .bub .tail path { fill: #ffffff; }
+      .bub .txt { position: absolute; left: 56px; top: -6px; }
+      .bub .w { display: inline-block; white-space: pre; }
+      .bub .ts { position: absolute; right: 44px; bottom: 26px; font-size: 34px; line-height: 1; color: #8696a0; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+      .bub .ts svg { width: 46px; height: 32px; }
+      .bub .dots { position: absolute; left: 50%; top: 50%; display: flex; gap: 16px; transform: translate(-50%, -50%); }
+      .bub .dots i { width: 30px; height: 30px; border-radius: 50%; background: #a8b0b5; display: block; }
+      .bub.blue { background: #d9fdd3; color: #111b21; transform-origin: 50% 50%; box-shadow: 0 3px 3px rgba(11,20,26,.10), 0 10px 30px rgba(11,20,26,.06); }
+      .bub.blue .tail { left: auto; right: -14px; transform: scaleX(-1); display: block; }
+      .bub.blue .tail path { fill: #d9fdd3; }
+      .bub.blue .dots i { background: #8fb58a; }
+      #badge { position: absolute; left: -42px; top: -42px; width: 84px; height: 84px; border-radius: 50%; background: #fff; display: grid; place-items: center;
+        box-shadow: 0 8px 22px rgba(30,32,40,.1), 0 1px 3px rgba(30,32,40,.06); }
+      #badge img { width: 50px; height: 50px; }
+      #badge::after { content: ""; position: absolute; left: -14px; bottom: -6px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(30,32,40,.08); }
+
+      /* board: two frosted columns, centred caps headers, one quiet card */
+      #board { position: absolute; left: 0; top: 0; }
+      .col { position: absolute; top: 121px; width: 790px; height: 1240px; border-radius: 76px;
+        background: linear-gradient(180deg, rgba(255,255,255,.96) 0%, rgba(248,248,250,.9) 100%);
+        box-shadow: 0 24px 60px rgba(30,32,40,.06), 0 4px 14px rgba(30,32,40,.035), 0 0 0 1px rgba(255,255,255,.9); }
+      .col .hd { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font-size: 40px; font-weight: 700; letter-spacing: 0.01em; color: #232428; }
+      #card { position: absolute; left: 56px; top: 158px; width: 678px; height: 318px; border-radius: 48px; padding: 48px 48px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfbfc 100%);
+        box-shadow: 0 16px 40px rgba(30,32,40,.07), 0 3px 8px rgba(30,32,40,.04), 0 0 0 1px rgba(30,32,40,.03); transform-origin: 50% 50%; }
+      #card .ttl { font-size: 42px; font-weight: 500; letter-spacing: -0.012em; color: #26272b; white-space: nowrap; }
+      #card .bar { margin-top: 34px; width: 46%; height: 22px; border-radius: 11px; background: #d9d9de; }
+      #card .ft { margin-top: 64px; display: flex; align-items: center; gap: 14px; font-size: 32px; font-weight: 500; color: #3a3b40; }
+      #card .ft svg { width: 36px; height: 36px; }
+
+      /* cursor: a rounded arrowhead with a soft light halo, tip at its top-left */
+      #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+      #cursor svg { position: absolute; left: -14px; top: -14px; width: 112px; height: 112px; overflow: visible; filter: drop-shadow(0 6px 10px rgba(20,110,230,.22)); }
+
+      /* end line */
+      #endline { position: absolute; left: 0; top: 0; white-space: nowrap; }
+      .wm { position: relative; font-size: 236px; font-weight: 800; letter-spacing: -0.045em; line-height: 1.34; }
+      .wm .gh { color: rgba(255,255,255,.9); text-shadow: 0 0 1px rgba(30,32,40,.05), 0 10px 40px rgba(30,32,40,.06); }
+      .wm .fill { position: absolute; inset: 0; background: linear-gradient(180deg, #2a2b30 0%, #0b0b0d 75%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="9.7667" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:500">Aa</span><span style="font-weight:650">Aa</span><span style="font-weight:800">Aa</span></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
