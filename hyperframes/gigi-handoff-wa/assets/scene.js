@@ -119,6 +119,7 @@
     typing.style.width = "203px"; typing.style.padding = "0 0 0 52px";
     const dots = [...typing.querySelectorAll(".dots i")];
     const anim = bubble("Let's animate", true, "1:00");
+    typing.classList.add("notail"); anim.b.classList.add("notail");   // WhatsApp: only the first bubble of a run has a tail
 
     const composer = el("div", "", lift); composer.id = "composer";
     composer.innerHTML = `<div class="plus">${PLUS}</div><div class="barc"><div class="tx"></div><div class="send">${SEND}</div></div>`;
@@ -134,6 +135,12 @@
       [...world.children].forEach((n) => (n.style.display = "block"));
       const w = (b) => b.b.offsetWidth;
       L = { on: w(onit), sent: w(sent), per: w(perfect), anim: w(anim) };
+      // where the pasted link sits inside the text box (text starts 44 px into the bar)
+      const cd = composer.style.display; composer.style.display = "block";
+      ctx.innerHTML = TYPED.replace(/ /g, "&nbsp;") + `<span class="paste">${LINK}</span>`;
+      const ps = ctx.querySelector(".paste");
+      L.link = 44 + ps.offsetLeft - ctx.offsetLeft + ps.offsetWidth / 2; L.linkW = ps.offsetWidth;
+      composer.style.display = cd;
     };
     layout();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(R0._f); });
@@ -150,7 +157,7 @@
       w.style.transform = `translateY(${(0.4 * (1 - eo(k))).toFixed(3)}em)`;
     });
 
-    const CLICK = 98;
+    const LCLICK = 53;
     const cardBox = (F, full = false) => {
       const [, x2, cy, h] = TR.sent(F), z = zoomAt(F);
       const scF = (1054 - 536) * S / CARD[0] * z, p = full ? 1 : ramp(F, 76, 94);
@@ -187,9 +194,11 @@
         plus.style.transform = `translate(${px(AX - 712 * S - 52)}, ${px(AY - 52)})`;
         bar.style.transform = `translate(${px(AX - 632 * S)}, ${px(AY - 60)})`;
         const nTyped = clamp(Math.floor((F - 22) / 1.15), 0, TYPED.length);
-        const pasted = F >= 45, hl = pasted ? 1 - ramp(F, 47, 52) : 0;
+        // pasted at 45 (soft highlight), then the cursor clicks it at LCLICK: it turns into a link with a quick select flash
+        const pasted = F >= 45, hl = pasted ? 1 - ramp(F, 46, 50) : 0, sel = Math.sin(Math.PI * ramp(F, LCLICK - 0.5, LCLICK + 6)), linked = F >= LCLICK;
+        const pst = `background:rgba(47,147,251,${(0.22 * Math.max(hl, sel)).toFixed(3)});${linked ? "color:#1d8ce0;text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px" : ""}`;
         ctx.innerHTML = F >= 64 ? '<span class="caret"></span>' :
-          TYPED.slice(0, nTyped).replace(/ /g, "&nbsp;") + (pasted ? `<span class="paste" style="background:rgba(47,147,251,${(0.22 * hl).toFixed(3)})">${LINK}</span>` : "") + '<span class="caret"></span>';
+          TYPED.slice(0, nTyped).replace(/ /g, "&nbsp;") + (pasted ? `<span class="paste" style="${pst}">${LINK}</span>` : "") + '<span class="caret"></span>';
       }
 
       // ---- the sent message grows out of the composer (right edge and height from the reference)
@@ -203,12 +212,11 @@
       }
 
       // ---- link preview: eases in from its corner above the message (slower than the reference's snap),
-      // then rides with it; the cursor clicks it at CLICK
+      // then rides with it
       if (show(card, F >= 76 && F < 160)) {
         const { x1, y1, sc, p } = cardBox(F);
-        const press = 1 - 0.03 * Math.sin(Math.PI * ramp(F, CLICK - 1, CLICK + 5));
         card.style.transformOrigin = "100% 100%";
-        card.style.transform = `translate(${px(x1)}, ${px(y1)}) scale(${(sc * press).toFixed(4)})`;
+        card.style.transform = `translate(${px(x1)}, ${px(y1)}) scale(${sc.toFixed(4)})`;
         card.style.opacity = eo(ramp(F, 76, 85)).toFixed(3);
         card.style.filter = blurOf(6 * (1 - eo(p)));
         sheen.style.transform = `translateX(${px(-CARD[0] + 2 * CARD[0] * ramp(F, 82, 102))})`;
@@ -238,25 +246,24 @@
       }
       // ---- "Let's animate" takes the typing bubble's place and pops in like the other messages
       if (show(anim.b, F >= 242)) {
-        const [, ty1, tx2, ty2] = TR.typing(242), [, py1, , py2] = TR.perfect(240), p = ramp(F, 242, 249);
-        put(anim.b, tx2 * S - L.anim, (ty1 + ty2) / 2 * S + 20 * (1 - eo(p)), ((py2 - py1) / 80) * (0.6 + 0.4 * back(p, 1.6)), "100% 100%", 0, 5 * (1 - eo(p)), clamp((F - 241) / 2, 0, 1));
+        const [, py1, px2, py2] = TR.perfect(240), [, , tx2] = TR.typing(242), p = ramp(F, 242, 249), sc = (py2 - py1) / 80;
+        const cy = py2 * S + 22 + BH * sc / 2;   // directly under Perfect with a small gap, like a normal next message
+        put(anim.b, Math.max(px2, tx2) * S - L.anim, cy + 20 * (1 - eo(p)), sc * (0.6 + 0.4 * back(p, 1.6)), "100% 50%", 0, 5 * (1 - eo(p)), clamp((F - 241) / 2, 0, 1));
         anim.b.style.boxShadow = "";
         words(anim, F, 242);
       }
 
       stamps.forEach((B) => { B.ts.style.opacity = B.ws[B.ws.length - 1].style.opacity || "1"; });
 
-      // ---- cursor: the reference's own path (it types, then slips down out of frame as the message sends)
-      if (show(cursor, F < 124)) {
-        let cx, cy;
-        if (F < 58) [cx, cy] = TR.cur(F).map((v) => v * S);
-        else {
-          const [sx, sy] = TR.cur(58).map((v) => v * S), t = cardBox(F, true), tx = t.cx + 60, ty = t.cyc + 40;
-          const k = ((u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2))(ramp(F, 58, 92));
-          const out = ((u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2))(ramp(F, 106, 124));
-          cx = sx + (tx - sx) * k + (2150 - tx) * out; cy = sy + (ty - sy) * k + (1250 - ty) * out;
-        }
-        const press = Math.sin(Math.PI * ramp(F, CLICK - 1, CLICK + 3));
+      // ---- cursor: the reference's path while typing, then a short glide onto the pasted link in the text box,
+      // a click, and the reference's slip down out of frame as the message sends
+      if (show(cursor, F < 76)) {
+        const io = (u) => (u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+        const [ax0, ay0] = TR.arrow(F), [rx, ry] = TR.cur(Math.min(F, 45)).map((v) => v * S);
+        const lx = ax0 * S - 632 * S + L.link, ly = ay0 * S + 14;
+        const k = io(ramp(F, 45, 52)), drop = 1 - Math.pow(1 - ramp(F, 57, 74), 2);
+        const cx = rx + (lx - rx) * k + 40 * drop, cy = ry + (ly - ry) * k + 420 * drop * drop;
+        const press = Math.sin(Math.PI * ramp(F, LCLICK - 1, LCLICK + 3));
         cursor.style.transform = `translate(${px(cx)}, ${px(cy)}) scale(${(1 - 0.15 * press).toFixed(3)})`;
       }
     }
