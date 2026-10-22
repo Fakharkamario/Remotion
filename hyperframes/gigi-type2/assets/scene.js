@@ -4,12 +4,12 @@
 //   - after that, words rise into place from just under the baseline; the line re-centres smoothly as it grows
 //   - accent words wipe in from the right in a deep-to-bright blue gradient, then either fade to a pale tint,
 //     settle to ink, or stay brand blue
-//   - a light canvas, a black beat, and a lilac/blue gradient bloom that wipes in from the left and slowly swirls
+//   - a light canvas and a black beat
 //   0–22     "Are you..." types on, big and bold
 //   23–51    "Are you looking"
 //   52–112   black: "for a motion designer?"
 //   113–152  "Hit me up,"
-//   153–212  "let's cook" — the bloom wipes in — "together!"
+//   153–212  "let's cook together!"
 //   213–276  the profile card flips up in 3D and holds
 (function () {
   const FPS = 30, FRAMES = 276;
@@ -55,8 +55,7 @@
       const ws = L.words.map(([t, , kind]) => el("span", "wd" + (kind ? " acc" : ""), row, kind ? `<span class="t">${[...t].map((c) => `<span class="c">${c}</span>`).join("")}</span>` : `<span class="t">${t}</span>`));
       return { L, row, ws };
     });
-    const card = el("div", "pcard", stage, `<i class="sheen"></i><img class="av" src="assets/img/avatar.jpg" alt=""><div class="tx"><div class="nm">Aizal Khan <span class="bd">${BADGE}</span></div><div class="hn">@aizal_mp4</div></div>`);
-    const sheen = card.querySelector(".sheen");
+    const card = el("div", "pcard", stage, `<img class="av" src="assets/img/avatar.jpg" alt=""><div class="tx"><div class="nm">Aizal Khan <span class="bd">${BADGE}</span></div><div class="hn">@aizal_mp4</div></div>`);
 
     let G = null, OW = 0;
     const layout = () => {
@@ -87,7 +86,7 @@
       const li = LINES.findIndex((L) => F >= L.a && F < L.b), dark = li >= 0 && LINES[li].bg === "dark";
       show(bgDark, dark); show(bgLight, !dark && F < CARD);
       // the bloom: wipes in from the left, then its colours slowly swirl round a pale centre
-      if (show(bgBloom, F >= BLOOM && F < CARD)) {
+      if (show(bgBloom, false)) {
         const w = eo(ramp(F, BLOOM, BLOOM + 7)), r = (F - BLOOM) / 20;
         bgBloom.style.clipPath = `inset(0 ${(100 * (1 - w)).toFixed(2)}% 0 0)`;
         bgBloom.style.background = `radial-gradient(52% 46% at 50% 50%, rgba(246,247,250,1) 0%, rgba(246,247,250,.92) 45%, rgba(246,247,250,0) 100%),` +
@@ -154,7 +153,7 @@
       }
 
       // ---- the card flips up in 3D: it tips up from lying flat on a damped spring (a gentle overshoot past
-      // face-on and back), rising and growing as it comes; its shadow lands with it, then a sheen crosses it
+      // face-on and back), rising and growing as it comes; its shadow lands with it, then holds
       if (show(card, F >= CARD, "flex")) {
         const p = ramp(F, CARD, CARD + 22), spring = 1 - Math.exp(-5.5 * p) * Math.cos(7 * p), e = eo(ramp(F, CARD, CARD + 15));
         const rx = 82 * (1 - spring), ry = -6 * (1 - e), ty = 90 * (1 - e), sc = (0.84 + 0.16 * e) * (1 + 0.0009 * (F - CARD));
@@ -162,7 +161,6 @@
         card.style.opacity = clamp((F - CARD + 1) / 2, 0, 1).toFixed(3);
         card.style.filter = blurOf(2.5 * (1 - eo(ramp(F, CARD, CARD + 5))));
         card.style.boxShadow = `0 ${px(14 + 30 * e)} ${px(30 + 60 * e)} rgba(20,24,40,${(0.1 + 0.18 * e).toFixed(3)}), 0 ${px(4 + 6 * e)} ${px(10 + 14 * e)} rgba(20,24,40,${(0.06 + 0.1 * e).toFixed(3)}), inset 0 1px 0 rgba(255,255,255,.06)`;
-        sheen.style.transform = `translateX(${px(-700 + 2200 * eo(ramp(F, CARD + 14, CARD + 34)))}) skewX(-20deg)`;
       }
     }
 
