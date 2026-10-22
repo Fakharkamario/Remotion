@@ -43,10 +43,19 @@
     const runs = [];
     rows.forEach((r) => { const last = runs[runs.length - 1]; if (!last || r[0] - last[last.length - 1][0] > 4) runs.push([r]); else last.push(r); });
     const cols = runs.map((run) => run[0].slice(1).map((_, j) => run.map((r) => [r[0], r[j + 1]])));
-    // values at t, or null outside every run (pad lets a run hold its ends a little)
-    return (t, pad = 0) => {
-      const i = runs.findIndex((run) => t >= run[0][0] - pad && t <= run[run.length - 1][0] + pad);
-      return i < 0 ? null : cols[i].map((c) => keys(t, c));
+    // values at t, or null outside every run (pad lets a run hold its ends a little). ext carries a run past its
+    // last row with its measured speed and acceleration, so an element leaving frame keeps going instead of vanishing
+    return (t, pad = 0, ext = 0) => {
+      const i = runs.findIndex((run) => t >= run[0][0] - pad && t <= run[run.length - 1][0] + Math.max(pad, ext));
+      if (i < 0) return null;
+      const run = runs[i], n = run.length, last = run[n - 1];
+      if (t <= last[0] || n < 3) return cols[i].map((c) => keys(t, c));
+      const [a, b, c] = run.slice(-3), dt = t - c[0];
+      return c.slice(1).map((v, j) => {
+        const v1 = (c[j + 1] - b[j + 1]) / (c[0] - b[0]), v0 = (b[j + 1] - a[j + 1]) / (b[0] - a[0]);
+        const acc = (v1 - v0) / ((c[0] - a[0]) / 2);
+        return v + v1 * dt + 0.5 * Math.max(0, acc * Math.sign(v1 || 1)) * Math.sign(v1 || 1) * dt * dt;
+      });
     };
   };
   const T = { b1: track(REF.b1), b2: track(REF.b2), b3: track(REF.b3), blue: track(REF.blue), badge: track(REF.badge), cur: track(REF.cur) };
@@ -161,7 +170,7 @@
 
     // the blue bubble's box on screen at t (shared by the badge and the read receipt)
     const blueBox = (t) => {
-      const r = T.blue(t, 0.6);
+      const r = T.blue(t, 0.6, 8);
       if (!r) return null;
       const [x1, x2, cy, h] = r, s = sbof(t, h);
       const p = t < 124 ? 0 : clamp(((x2 - x1) / s - BL_TYP) / (BL_FIN - BL_TYP), 0, 1);
@@ -188,7 +197,7 @@
 
       // ---------- hey aizal ----------
       b1.b.classList.toggle("last", f < 32); b2.b.classList.toggle("last", f >= 32 && f < 78); b3.b.classList.toggle("last", f >= 78);
-      const r1 = f < 120 || f > 150 ? T.b1(f, 0.6) : null;
+      const r1 = f < 120 || f > 150 ? T.b1(f, 0.6, 8) : null;
       if (show(b1.b, !!r1)) {
         const [x1, x2, cy, h] = r1, s = h / 192;
         const w = lerp(L.wHey, L.w1, eo(ramp(f, 1, 8)));
@@ -238,7 +247,7 @@
       }
 
       // ---------- quick ----------
-      const r3 = f < 196 ? T.b3(f, 0.6) : null;
+      const r3 = T.b3(f, 0.6, 8);
       if (show(b3.b, !!r3 && !(f > 116 && f < 150))) {
         const [x1, , cy, h] = r3, s = s3of(h);
         put(b3.b, x1 + EDGE * s, cy, L.w3, s, 0, 8 * (1 - eo(ramp(f, 77, 81))), clamp((f - 77) / 1.5, 0, 1));
@@ -246,7 +255,7 @@
       }
 
       // ---------- On it ----------
-      const B = f >= 103 && f < 199 ? blueBox(f) : null;
+      const B = f >= 103 && f < 206 ? blueBox(f) : null;
       show(bb.b, !!B);
       if (B) {
         put(bb.b, B.left, B.cy, B.w, B.s, 0, 0, 1);
@@ -255,10 +264,11 @@
         wordIn(bb.ws[0], f, 128); wordIn(bb.ws[1], f, 131);
       }
       // badge: placed on the blue bubble's top-left corner as in the reference, popping with its measured size
-      const rb = B && f >= 135 ? T.badge(Math.max(f, 136.25), 0.6) : null;
+      // past the badge's last measured row it keeps its place on the bubble
+      const tb = clamp(f, 136.25, 195), rb = B && f >= 135 ? T.badge(tb, 0.6) : null, Bt = rb ? blueBox(tb) : null;
       if (show(badge, !!rb, "grid")) {
         const [, , w] = rb, s = B.s;
-        const dx = (rb[0] - B.rx1) / s, dy = (rb[1] - B.ry1) / s;
+        const dx = (rb[0] - Bt.rx1) / Bt.s, dy = (rb[1] - Bt.ry1) / Bt.s;
         let k = (w / s) / 88;
         if (f < 136.25) k = (48 / 88) * ramp(f, 135, 136.25);
         badge.style.transform = `translate(${px(B.left + dx * s)}, ${px(B.cy - (BH / 2) * s + dy * s)}) scale(${(k * s).toFixed(4)})`;
