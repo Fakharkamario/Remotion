@@ -113,10 +113,56 @@
       #cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
       #cursor svg { position: absolute; left: -9px; top: -9px; width: 64px; height: 64px; overflow: visible; filter: drop-shadow(0 4px 7px rgba(20,110,230,.25)); }
       #ripple { position: absolute; left: 0; top: 0; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid #2f93fb; }
+
+      /* ---- shot layers (screen space, hard cuts) ---- */
+      .shot { position: absolute; inset: 0; overflow: hidden; display: none; transform-origin: 50% 50%; }
+      .cv { position: absolute; inset: 0; background: radial-gradient(110% 90% at 50% 40%, #fafafb 0%, #f1f1f3 70%, #e9e9ed 100%); }
+      .abs { position: absolute; left: 0; top: 0; }
+      .art { position: absolute; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(30,32,40,.08), 0 10px 30px rgba(30,32,40,.06); }
+      .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .xsel { position: absolute; border: 2.5px solid #2f93fb; pointer-events: none; }
+      .xsel .tag { position: absolute; left: -2.5px; top: -34px; height: 28px; padding: 0 10px; border-radius: 6px; background: #2f93fb; color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; white-space: nowrap; }
+      .xsel .h { position: absolute; width: 14px; height: 14px; background: #fff; border: 2.5px solid #2f93fb; border-radius: 3px; }
+      .bar { position: absolute; height: 52px; border-radius: 14px; background: #fff; display: flex; align-items: center; gap: 4px; padding: 0 10px; font-size: 16px; color: #2a2b2f; white-space: nowrap;
+        box-shadow: 0 10px 30px rgba(30,32,40,.09), 0 2px 6px rgba(30,32,40,.05), 0 0 0 1px rgba(30,32,40,.04); }
+      .bar .b { height: 36px; padding: 0 12px; border-radius: 9px; display: flex; align-items: center; gap: 8px; }
+      .bar .b.dim { color: #8a8b91; }
+      .bar .b.ai { font-weight: 600; }
+      .bar .b.ai i { width: 18px; height: 18px; border-radius: 50%; background: conic-gradient(#2f93fb, #9bd0ff, #2f93fb); }
+      .bar .vs { width: 1px; height: 24px; background: #ececef; margin: 0 4px; }
+      .pill { position: absolute; height: 54px; border-radius: 27px; background: #fff; display: flex; align-items: center; padding: 0 24px; font-size: 18px; color: #26272b; white-space: nowrap; overflow: hidden;
+        box-shadow: 0 10px 28px rgba(30,32,40,.08), 0 2px 6px rgba(30,32,40,.05); transform-origin: 100% 50%; }
+      .orb { position: absolute; width: 64px; height: 64px; border-radius: 50%; background: #111214; display: grid; place-items: center; box-shadow: 0 10px 24px rgba(0,0,0,.18); }
+      .orb svg { width: 26px; height: 26px; }
+      .card2 { position: absolute; background: #fff; border-radius: 18px; padding: 14px; box-shadow: 0 18px 50px rgba(30,32,40,.12), 0 3px 8px rgba(30,32,40,.06), 0 0 0 1px rgba(30,32,40,.04); }
+      .dd .it { height: 44px; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; font-size: 20px; color: #26272b; white-space: nowrap; }
+      .dd .it.on { background: #2f93fb; color: #fff; }
+      .sl { margin: 14px 4px 0; font-size: 15px; color: #55565c; }
+      .sl .tr { margin-top: 10px; height: 4px; border-radius: 2px; background: #e6e6ea; position: relative; }
+      .sl .tr i { position: absolute; top: -7px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+      .lg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .lg .ic { width: 66px; height: 66px; border-radius: 12px; background: #eef5ff; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 12px; }
+      .lg .ic b { background: #2f93fb; border-radius: 3px; opacity: .85; }
+      .lg .ic.on { background: #2f93fb; } .lg .ic.on b { background: #fff; }
+      .irid { background: linear-gradient(90deg, #cfc6ff 0%, #c9f3d6 45%, #bfe0ff 75%, #e5d4ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+      .hl { position: absolute; white-space: nowrap; font-weight: 800; letter-spacing: -0.05em; line-height: 1; color: #0d0d0f; }
+      .lbl { position: absolute; font-size: 22px; font-weight: 600; color: #1c1c1f; white-space: nowrap; }
+      .lbl small { display: block; font-size: 16px; font-weight: 500; color: #55565c; margin-top: 6px; }
+      .prompt .row2 { height: 42px; display: flex; align-items: center; gap: 12px; padding: 0 12px; font-size: 17px; color: #3a3b40; }
+      .prompt .row2 i { width: 18px; height: 18px; border-radius: 5px; background: #eef5ff; border: 1.5px solid #bcdcff; }
+      .prompt .inp { margin-top: 10px; height: 64px; border-radius: 14px; background: #f5f5f7; display: flex; align-items: center; padding: 0 12px 0 18px; font-size: 19px; color: #1c1c1f; }
+      .prompt .inp .ty { flex: 1; white-space: nowrap; overflow: hidden; }
+      .prompt .inp .ty::after { content: ""; display: inline-block; width: 2px; height: 22px; background: #2f93fb; vertical-align: -4px; margin-left: 2px; }
+      .prompt .send { width: 40px; height: 40px; border-radius: 11px; background: #2f93fb; display: grid; place-items: center; }
+      .prompt .send svg { width: 20px; height: 20px; }
+      .stripe { position: absolute; left: 0; right: 0; height: 70px; background: #0d0d0f; color: #fff; display: flex; align-items: center; gap: 40px; padding: 0 40px; font-size: 20px; font-weight: 600; white-space: nowrap; }
+      .stripe span:nth-child(2) { color: #8fc6ff; }
+      .dark { background: #111214; }
+      .gl { position: absolute; inset: 0; background: radial-gradient(70% 60% at 50% 110%, rgba(47,147,251,.35), rgba(47,147,251,0) 70%), radial-gradient(60% 50% at 0% 0%, rgba(47,147,251,.18), rgba(47,147,251,0) 70%), linear-gradient(180deg, #ffffff, #eef3f9); }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="11.5" data-width="1920" data-height="1080">
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="11.0667" data-width="1920" data-height="1080">
       <div class="fontwarm"><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><span>Aa</span><b style="font-weight:800">Aa</b></div>
       <div id="stage" class="layer"></div>
     </div>
