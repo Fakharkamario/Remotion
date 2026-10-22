@@ -51,7 +51,8 @@
     const chars = [...OPEN.text].map((c) => el("span", "ch", open, c === " " ? "&nbsp;" : c));
     const lines = LINES.map((L) => {
       const row = el("div", "row " + L.bg, stage);
-      const ws = L.words.map(([t, , kind]) => { const w = el("span", "wd" + (kind ? " acc" : ""), row, `<span class="t">${t}</span>`); return w; });
+      // accent words are typed character by character, so each letter can sweep its own colour as it lands
+      const ws = L.words.map(([t, , kind]) => el("span", "wd" + (kind ? " acc" : ""), row, kind ? `<span class="t">${[...t].map((c) => `<span class="c">${c}</span>`).join("")}</span>` : `<span class="t">${t}</span>`));
       return { L, row, ws };
     });
     const card = el("div", "pcard", stage, `<i class="sheen"></i><img class="av" src="assets/img/avatar.jpg" alt=""><div class="tx"><div class="nm">Aizal Khan <span class="bd">${BADGE}</span></div><div class="hn">@aizal_mp4</div></div>`);
@@ -135,13 +136,20 @@
             t.style.backgroundImage = "none";
             return;
           }
-          // accent: wipes in from the right in deep-to-bright blue, then fades, settles or stays
-          w.style.transform = `translateY(${(0.14 * (1 - eo(k / 5))).toFixed(3)}em)`;
-          t.style.clipPath = `inset(-20% 0 -20% ${(100 * (1 - eo(k / 5))).toFixed(2)}%)`;
-          let c1 = mix(NAVY, BLUE, k / 6), c2 = mix(NAVY, BLUE2, k / 6);
-          if (kind === "fade") { const b = sio(ramp(k, 12, 28)); c2 = mix(c2, PALE, b); c1 = mix(c1, mix(BLUE, PALE, 0.25), b); }
-          if (kind === "settle") { const b = sio(ramp(k, 9, 17)); c1 = mix(c1, base, b); c2 = mix(c2, base, b); }
-          t.style.backgroundImage = `linear-gradient(90deg, ${rgb(c1)} 0%, ${rgb(c2)} 100%)`;
+          // accent: typed letter by letter; each letter rises a touch and sweeps white → pale → bright blue, then
+          // "keep" stays blue, "settle" carries on down to the line colour, "fade" pales again from the tail end
+          w.style.transform = "none";
+          const cs = [...t.children], n = cs.length;
+          cs.forEach((c, j) => {
+            const kj = k - j * 1.15;
+            if (kj < 0) { c.style.opacity = "0"; return; }
+            c.style.opacity = clamp((kj + 1) / 2, 0, 1).toFixed(3);
+            c.style.transform = `translateY(${(0.22 * (1 - eo(kj / 5))).toFixed(3)}em)`;
+            let col = ramp3([WHITE, PALE, BLUE2, BLUE], kj / 7);
+            if (kind === "settle") col = ramp3([WHITE, PALE, BLUE2, BLUE, NAVY, base], kj / 16);
+            if (kind === "fade") col = mix(col, PALE, sio(ramp(k, n * 1.15 + 8 + j * 1.5, n * 1.15 + 22 + j * 1.5)) * clamp(0.25 + 0.9 * j / Math.max(1, n - 1), 0, 1));
+            c.style.color = rgb(col);
+          });
         });
       }
 

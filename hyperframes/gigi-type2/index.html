@@ -8,31 +8,32 @@
     <script src="assets/scene.js"></script>
     <style>
       @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Figtree"; src: url("assets/fonts/figtree-latin-wght.woff2") format("woff2"); font-weight: 300 900; font-display: block; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f3f3f4; }
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #f3f3f4; font-family: "Inter", system-ui, sans-serif; }
       .layer { position: absolute; inset: 0; }
       .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
       /* the opener: big, bold, typed letter by letter */
-      .open { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 230px; font-weight: 700; letter-spacing: -0.045em; line-height: 1.1; display: none; transform-origin: 50% 50%; }
+      .open { position: absolute; left: 0; top: 0; white-space: nowrap; font-family: "Figtree"; font-size: 240px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.1; display: none; transform-origin: 50% 50%; }
       .open .ch { display: inline-block; transform-origin: 50% 80%; }
       /* the lines: medium weight, tight */
-      .row { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 96px; font-weight: 560; letter-spacing: -0.035em; line-height: 1.3; display: none; transform-origin: 0 0; }
+      .row { position: absolute; left: 0; top: 0; white-space: nowrap; font-family: "Figtree"; font-size: 96px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.3; display: none; transform-origin: 0 0; }
       .wd { display: inline-block; margin: 0 0.12em; }
       .wd .t { display: inline-block; }
-      .wd.acc .t { -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 0.02em; }
+      .wd.acc .c { display: inline-block; white-space: pre; }
       /* the profile card */
       .pcard { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 44px; padding: 44px 120px 44px 44px; border-radius: 60px; background: #1c1c1e; overflow: hidden; transform-origin: 50% 50%; }
       .pcard .sheen { position: absolute; left: 0; top: -20%; width: 260px; height: 140%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.14), rgba(255,255,255,0)); pointer-events: none; }
       .pcard .av { width: 220px; height: 220px; border-radius: 50%; display: block; }
-      .pcard .nm { font-size: 86px; font-weight: 700; color: #fff; letter-spacing: -0.03em; display: flex; align-items: center; gap: 18px; white-space: nowrap; line-height: 1.1; }
+      .pcard .nm { font-family: "Figtree"; font-size: 86px; font-weight: 700; color: #fff; letter-spacing: -0.03em; display: flex; align-items: center; gap: 18px; white-space: nowrap; line-height: 1.1; }
       .pcard .bd svg { width: 72px; height: 72px; display: block; }
-      .pcard .hn { font-size: 56px; color: #8b8b91; margin-top: 6px; letter-spacing: -0.01em; }
+      .pcard .hn { font-family: "Figtree"; font-size: 56px; color: #8b8b91; margin-top: 6px; letter-spacing: -0.01em; }
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="9.2" data-width="1920" data-height="1080">
-      <div class="fontwarm"><b style="font-weight:700">Aa</b><span style="font-weight:560">Aa</span></div>
+      <div class="fontwarm" style="font-family:Figtree"><b style="font-weight:700">Aa</b><span style="font-weight:600">Aa</span></div>
       <div id="stage" class="layer"></div>
     </div>
     <script>

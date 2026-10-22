@@ -1,6 +1,6 @@
 # Gigi kinetic type, second style
 
-A 9.2 s, 30 fps, 1920×1080 kinetic-type piece in the Gigi launch look (Inter, light grey, brand blue, black), following the second type reference. The opener types on letter by letter, each letter sweeping white → pale blue → brand blue → ink. After that, words rise into place from just under the baseline while the line re-centres smoothly. Accent words wipe in from the right in a deep-to-bright blue, then fade to a pale tint, settle to ink, or stay blue. The scenes are a light canvas, a black beat, and a lilac/blue bloom that wipes in from the left and swirls. It ends with the 3D profile card.
+A 9.2 s, 30 fps, 1920×1080 kinetic-type piece in the Gigi colours (light grey, brand blue, black), following the second type reference. It is set in Figtree, the open geometric grotesk closest to the reference's face (`assets/fonts`, SIL OFL). The opener types on letter by letter, each letter sweeping white → pale blue → brand blue → ink. After that, words rise into place from just under the baseline while the line re-centres smoothly. Accent words type on letter by letter, each letter sweeping white → pale → bright blue, then fading to a pale tint from the tail end, settling to ink, or staying blue. The scenes are a light canvas, a black beat, and a lilac/blue bloom that wipes in from the left and swirls. It ends with the 3D profile card.
 
 | frames | beat |
 | --- | --- |
