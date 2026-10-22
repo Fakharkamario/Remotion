@@ -245,10 +245,13 @@
     let M = null;
     const measure = () => {
       shots.forEach((s) => (s.style.display = "block"));
+      pills2.forEach((pl) => { pl.style.display = "flex"; pl.style.transform = "none"; });
       pop.style.left = POP.x + "px"; pop.style.top = POP.y + "px"; pop.style.display = "block";
+      const eh = pills2[2].getBoundingClientRect(), sr = stage.getBoundingClientRect();
       const [shx, shy] = posIn(W8.share, W8.win), [cpx, cpy] = posIn(copy, W8.win), [sbx, sby] = posIn(sendB, p1);
       M = {
         dd: (i) => [250 + 200, 590 + 14 + 22 + 44 * i],
+        enhance: [eh.left - sr.left + eh.width * 0.42, eh.top - sr.top + eh.height * 0.55],
         share: [shx + W8.share.offsetWidth * 0.6, shy + W8.share.offsetHeight * 0.6], copy: [cpx + copy.offsetWidth * 0.6, cpy + copy.offsetHeight * 0.62], popB: POP.y + pop.offsetHeight,
         send: [sbx + 22, sby + 24],
         h1w: H1a.w.offsetWidth, h3w: Math.max(H3a.w.offsetWidth, H4a.w.offsetWidth),
@@ -317,7 +320,8 @@
         const tx = M.dd(0)[0] + 10 * Math.sin(F / 9), ty = glide(F, FONT_SEQ.map(([k, i]) => [k, M.dd(i)[1]]), sio);
         cur = [960 + (tx - 960) * sc, 540 + (ty - 540) * sc + rise]; curScale = sc;
       } else if (shot === 1) {
-        shots[1].style.transform = `scale(${((1 + 0.0005 * (f - 38)) * kick(F, 38)).toFixed(4)})`;
+        const sc2 = (1 + 0.0005 * (f - 38)) * kick(F, 38);
+        shots[1].style.transform = `scale(${sc2.toFixed(4)})`;
         pillIn(pills2, f, 38);
         const fade = ramp(f, 86, 91);
         pills2.forEach((p) => (p.style.opacity = (1 - fade).toFixed(3)));
@@ -328,28 +332,35 @@
         img2.im.style.filter = img2b.style.filter = blurOf(8 * Math.sin(Math.PI * ramp(f, 70, 88)));
         orb2.style.background = f >= 68 ? `conic-gradient(from ${f * 24}deg, #2f93fb, #9bd0ff, #2f93fb)` : "#111214";
         pills2[2].style.background = f >= 64 && f < 86 ? "#eef5ff" : "#fff";
-        cur = [glide(F, [[38, 640], [64, 1600], [92, 1612]], sio), glide(F, [[38, 990], [64, 800], [92, 808]], sio)];
+        // glides onto the Enhance pill, rests, clicks at 68 (mapped through the shot's push)
+        const ex = M.enhance[0], ey = M.enhance[1];
+        const cx2 = glide(F, [[38, 640], [64, ex], [92, ex + 8]], sio), cy2 = glide(F, [[38, 990], [64, ey], [92, ey + 6]], sio);
+        cur = [960 + (cx2 - 960) * sc2, 540 + (cy2 - 540) * sc2]; curScale = sc2;
       } else if (shot === 2) {
-        shots[2].style.transform = `scale(${((1 + 0.0005 * (f - 92)) * kick(F, 92)).toFixed(4)})`;
+        const sc3 = (1 + 0.0005 * (f - 92)) * kick(F, 92);
+        shots[2].style.transform = `scale(${sc3.toFixed(4)})`;
         pillIn(pills3, f, 92);
         lgCard.style.transform = `scale(${(0.9 + 0.1 * back(ramp(f, 92, 96), 1.4)).toFixed(4)})`;
         const [, li, src] = LAYOUT_SEQ.filter(([k]) => f >= k).pop();
         if (!img3.im.src.endsWith(src + ".jpg")) img3.im.src = `assets/sb/${src}.jpg`;
         lgIcons.forEach((ic, i) => ic.classList.toggle("on", i === li));
         const pts = LAYOUT_SEQ.slice(1).map(([k, i]) => [k, ...M.lg(i)]);
-        cur = [glide(F, [[92, 1240], ...pts.map(([k, x]) => [k, x])], sio), glide(F, [[92, 990], ...pts.map(([k, , y]) => [k, y])], sio)];
+        const cx3 = glide(F, [[92, 1240], ...pts.map(([k, x]) => [k, x])], sio), cy3 = glide(F, [[92, 990], ...pts.map(([k, , y]) => [k, y])], sio);
+        cur = [960 + (cx3 - 960) * sc3, 540 + (cy3 - 540) * sc3]; curScale = sc3;
       } else if (shot === 3) {
         windowAt(W4, (0.84 + 0.0022 * (f - 130)) * kick(F, 130, 0.14, 9), 0, 0, 0.4, 1210, 520, F);
       } else if (shot === 4) {
         const sy = F >= 209 ? scrollAt(SCROLL.p1, F) : 0;
         p1.style.transform = `translateY(${px(-sy)})`;
         // lands with a punch, then a snap push mid-shot like the reference's step zooms
-        shots[4].style.transform = `scale(${((1 + 0.0003 * (f - 146)) * kick(F, 146) * (1 + 0.035 * eo(ramp(F, 176, 180)))).toFixed(4)})`;
+        const sc5 = (1 + 0.0003 * (f - 146)) * kick(F, 146) * (1 + 0.035 * eo(ramp(F, 176, 180)));
+        shots[4].style.transform = `scale(${sc5.toFixed(4)})`;
         typed.textContent = PROMPT.slice(0, clamp(Math.floor((f - 150) / 1.45), 0, PROMPT.length));
         morph(H1a, H1b, f, 209);
         at(sel5, 16, 682, M.h1w + 16, 316); show(sel5, f < 209);
         sendB.style.transform = `scale(${(1 - 0.12 * Math.sin(Math.PI * ramp(f, 205, 210))).toFixed(3)})`;
-        cur = [glide(F, [[146, 1040], [184, 1080], [204, M.send[0]], [239, M.send[0] + 10]], sio), glide(F, [[146, 470], [184, 500], [204, M.send[1]], [239, M.send[1] + 8]], sio) - sy];
+        const cx5 = glide(F, [[146, 1040], [184, 1080], [204, M.send[0]], [239, M.send[0] + 10]], sio), cy5 = glide(F, [[146, 470], [184, 500], [204, M.send[1]], [239, M.send[1] + 8]], sio) - sy;
+        cur = [960 + (cx5 - 960) * sc5, 540 + (cy5 - 540) * sc5]; curScale = sc5;
       } else if (shot === 5) {
         p2.style.transform = `translateY(${px(-scrollAt(SCROLL.p2, F))})`;
         shots[5].style.transform = `scale(${kick(F, 239, 0.05).toFixed(4)})`;
