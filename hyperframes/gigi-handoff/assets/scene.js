@@ -10,7 +10,7 @@
 // Every element rides a track measured from its counterpart in the reference edit, one row per real source frame
 // at its true (24 fps) time, threaded with a monotone cubic (assets/ref-keys.js). Coordinates there are 1280×720.
 (function () {
-  const FPS = 30, FRAMES = 286, S = 1.5;
+  const FPS = 30, FRAMES = 220, S = 1.5;
   const REF = window.REF;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const ramp = (f, a, b) => clamp((f - a) / (b - a), 0, 1);
@@ -68,7 +68,17 @@
   const ENTRY = [[0, 0], [1, 0]];
   const TYPED = "storyboard done ", LINK = "https://figma.com/gigiai";
   const BH = 120, CARD = [819, 426];
-  const LIFT = (F) => -1600 * ei(ramp(F, 263, 284));
+  const LIFT = (F) => -1600 * ei(ramp(F, 198, 218));
+  // the closing message plays the launch video's "On it" beat, shifted D frames later
+  const D = 48, FIN = "Perfect, let's animate", TYPW = 146, WORDS_AT = [128, 130.5, 133];
+  // only the fly-in and hold (the launch video pulls back after 149; here it lifts away instead)
+  const ONIT = REF.onit.filter((r) => r[0] <= 149), ONB = REF.onitBadge.filter((r) => r[0] <= 149);
+  const onitCols = ONIT[0].slice(1).map((_, j) => smooth(ONIT.map((r) => [r[0] + D, r[j + 1]]), 1));
+  const badgeCols = ONB[0].slice(1).map((_, j) => smooth(ONB.map((r) => [r[0] + D, r[j + 1]]), 1));
+  const onitAt = (F) => onitCols.map((c) => keys(F, c)), badgeAt = (F) => badgeCols.map((c) => keys(F, c));
+  const sOf = (t, h) => Math.max(h, t < 107 ? 258 : 0) / 184;
+  const avgW = (a, b) => { const r = REF.onit.filter((q) => q[0] >= a && q[0] <= b); return r.reduce((m, q) => m + (q[2] - q[1]) / sOf(q[0], q[4]), 0) / r.length; };
+  const ON_TYP = avgW(108, 124), ON_FIN = avgW(136, 150);
 
   const TAIL = '<svg class="tail" viewBox="0 0 52 44"><path d="M22 0 C22 20 16 34 0 44 C20 44 38 38 52 24 Z"/></svg>';
   const SEND = '<svg viewBox="0 0 24 24"><path d="M4 12l15-7-4 7 4 7z" fill="#2f93fb" stroke="#2f93fb" stroke-width="1.6" stroke-linejoin="round"/></svg>';
@@ -100,11 +110,12 @@
     const sheen = card.querySelector(".sheen");
     const sent = bubble(TYPED + LINK, true);
     const ins = IN.map(([t]) => bubble(t));
-    const perfect = bubble("Perfect", true);
-    const typing = el("div", "bub blue", world, TAIL + '<div class="dots"><i></i><i></i><i></i></div>');
-    typing.style.width = "203px"; typing.style.padding = "0 0 0 52px";
-    const dots = [...typing.querySelectorAll(".dots i")];
-    const anim = bubble("Let's animate", true);
+    const fin = bubble(FIN, true);
+    fin.b.style.overflow = "visible";
+    const finDots = el("div", "dots", fin.b, "<i></i><i></i><i></i>");
+    finDots.style.cssText += "position:absolute;left:50%;top:0;transform:translateX(-50%)";
+    const dots = [...finDots.children];
+    const finBadge = el("div", "badge", world, '<img src="assets/img/fire.png" alt="">');
 
     const composer = el("div", "", lift); composer.id = "composer";
     composer.innerHTML = `<div class="plus">${PLUS}</div><div class="barc"><div class="tx"></div><div class="send">${SEND}</div></div>`;
@@ -119,7 +130,7 @@
     const layout = () => {
       [...world.children].forEach((n) => (n.style.display = "block"));
       const w = (b) => b.b.offsetWidth;
-      L = { on: w(onit), sent: w(sent), per: w(perfect), anim: w(anim) };
+      L = { on: w(onit), sent: w(sent), fin: w(fin) };
     };
     layout();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(R0._f); });
@@ -205,23 +216,25 @@
         B.b.classList.toggle("last", i === (F >= IN[1][2] ? 1 : 0));
       });
 
-      // ---- "Perfect" flies in from the lower right and settles big
-      if (show(perfect.b, F >= R.perfect[0])) {
-        const [, y1, x2, y2] = TR.perfect(F);
-        put(perfect.b, x2 * S - L.per, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%", 0, 5 * (1 - ramp(F, 158, 166)));
-      }
-      // ---- typing bubble grows from its corner and pulses
-      if (show(typing, F >= R.typing[0] && F < 243.5)) {
-        const [, y1, x2, y2] = TR.typing(F);
-        put(typing, x2 * S - 203, (y1 + y2) / 2 * S, (y2 - y1) / 80, "100% 50%");
-        dots.forEach((d, i) => { const k = 0.5 + 0.5 * Math.sin(F / 4 - i * 1.1); d.style.opacity = (0.45 + 0.55 * k).toFixed(3); d.style.transform = `translateY(${(-4 * k).toFixed(2)}px)`; });
-      }
-      // ---- it opens into "Let's animate", tilted, then settles
-      if (show(anim.b, F >= 242.5)) {
-        const [x1, y1, x2, y2] = TR.final(F), [tilt] = TR.tilt(F);
-        put(anim.b, (x1 + x2) / 2 * S - L.anim / 2, (y1 + y2) / 2 * S, (y2 - y1) / 80, "50% 50%", tilt, 3 * (1 - ramp(F, 243, 248)), eo(ramp(F, 242.5, 244)));
-        anim.b.style.boxShadow = `0 16px 40px rgba(30,130,250,.22), 0 0 ${px(50 * (1 - ramp(F, 246, 262)) + 18)} rgba(47,147,251,${(0.4 * (1 - ramp(F, 246, 262)) + 0.12).toFixed(3)})`;
-        words(anim, F, 242, 1.5);
+      // ---- closing message: the launch video's "On it" — a blue typing bubble flies in from the right,
+      // its dots pulse, it opens into the line word by word, and the 🔥 badge pops on its corner
+      const tl = F - D;
+      const onFin = show(fin.b, tl >= 103.5);
+      show(finBadge, onFin && tl >= 136, "grid");
+      if (onFin) {
+        const [x1, x2, cy, h] = onitAt(F), s2 = sOf(tl, h), k = s2 * 184 / BH;
+        const p = tl < 124 ? 0 : clamp(((x2 - x1) / s2 - ON_TYP) / (ON_FIN - ON_TYP), 0, 1);
+        const w = TYPW + (L.fin - TYPW) * eo(p), cx = (x1 + x2) / 2;
+        fin.b.style.width = px(w);
+        put(fin.b, cx - w / 2, cy, k, "50% 50%");
+        dots.forEach((d, i) => { const q = 0.5 + 0.5 * Math.sin(F / 4 - i * 1.1); d.style.opacity = ((0.45 + 0.55 * q) * (1 - ramp(tl, 124, 128))).toFixed(3); d.style.transform = `translateY(${(-4 * q).toFixed(2)}px)`; });
+        fin.ws.forEach((wd, i) => { const at = WORDS_AT[i], q = ramp(tl, at, at + 5); wd.style.opacity = eo(q).toFixed(3); wd.style.transform = `translateY(${(0.42 * (1 - eo(q))).toFixed(3)}em)`; wd.style.filter = blurOf(5 * (1 - eo(q))); });
+        if (tl >= 136) {
+          const [bcx, bcy, bw] = badgeAt(F);
+          const rx1 = x1, rtop = cy - h / 2, left = cx - (w * k) / 2, top = cy - (BH * k) / 2;
+          const sc = tl < 136.2 ? 0 : (bw * 0.9) / 62;
+          finBadge.style.transform = `translate(${px(left + (bcx - rx1) - 31)}, ${px(top + (bcy - rtop) - 31)}) scale(${sc.toFixed(4)})`;
+        }
       }
 
       // ---- cursor: the reference's own path (it types, then slips down out of frame as the message sends)
