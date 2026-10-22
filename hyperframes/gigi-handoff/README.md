@@ -12,7 +12,7 @@ A 9.53 s, 30 fps, 1920×1080 clip that picks up where the storyboard cut leaves 
 | 240–262 | it opens into "Let's animate" with a tilt that settles |
 | 262–286 | everything lifts away upward |
 
-The camera follows the reference edit's measured per-frame pan and zoom. Each bubble is placed by inverting that camera at the frame where the reference shows its counterpart. The link is a mock URL.
+Every element rides a track measured from its counterpart in the reference edit: the old chat, the cursor, the composer, the sent message, the preview card, the replies, "Perfect", the typing bubble and the final message with its tilt. The tracks are stored in `assets/ref-keys.js` with one row per real source frame at its true 24 fps time, and a monotone cubic runs through them so the motion keeps the reference's speed curves and plays smoothly. The link is a mock URL.
 
 - Preview: `npx --yes hyperframes@0.8.114 preview`
 - Render with motion blur: `scripts/render-mb.sh` (outputs `renders/gigi-handoff.mp4`)
