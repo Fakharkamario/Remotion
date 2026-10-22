@@ -5,14 +5,13 @@
 //   - words drop off from the left without the rest moving
 //   - backgrounds are very soft fields: a glowing arc rising on dark, a pale haze, black, and a bloom from below
 //   - the boxed words ride the reference's measured drag paths with their cursors
-//   0–13     "We see you" zooms in from far as the arc rises
-//   13–57    "spent way too long", then the words drop off from the left
-//   57–70    "hunting for"; the arc melts into the pale haze
-//   65–132   two cursors drag "solid" and "legit" in; "& … designers" completes the line
-//   133–160  "But no stress"
-//   160–191  cut to black: "we move FAST fr!!"
-//   191–231  a bloom from below: "Let's cook it up!", italicising word by word at the end
-//   232–276  cut: the profile card flips up and holds
+//   0–13     "Are you" zooms in from far as the arc rises
+//   13–74    "looking for a", then the words drop off from the left
+//   65–132   the arc melts into the pale haze; two cursors drag "motion" and "designer?" in
+//   133–160  "Hit me up,"
+//   160–191  cut to black: "let's COOK"
+//   191–231  a bloom from below: "together!", italicising at the end
+//   232–276  cut: the profile card flips up in 3D and holds
 (function () {
   const FPS = 30, FRAMES = 276;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -35,13 +34,12 @@
   const WHITE = [255, 255, 255], NAVY = [36, 50, 72], BLUE = [47, 147, 251], MINT = [184, 247, 214];
   // [text, frame, kind]: "hi" arrives highlighted and settles; "fast" keeps the brand gradient; "box"/"box2" are dragged in
   const LINES = [
-    { a: 0, b: 13, bg: "arc", w: 950, words: [["We", 0], ["see", 1, "hi"], ["you", 5, "hi"]] },
-    { a: 13, b: 57, bg: "arc", w: 1250, grow: true, words: [["spent", 13, "hi"], ["way", 23, "hi"], ["too", 26], ["long", 28, "hi"]], exits: [[51, 0], [52, 1], [55, 2]] },
-    { a: 57, b: 74, bg: "arc", w: 830, words: [["hunting", 57], ["for", 58, "hi"]] },
-    { a: 74, b: 133, bg: "haze", w: 1380, words: [["solid", 65, "box"], ["&", 80], ["legit", 73, "box2"], ["designers", 82, "hi"]] },
-    { a: 133, b: 160, bg: "haze", w: 940, words: [["But", 133, "hi"], ["no", 135, "hi"], ["stress", 137, "hi"]] },
-    { a: 160, b: 191, bg: "dark", w: 960, words: [["we", 160], ["move", 161], ["FAST", 163, "fast"], ["fr!!", 166]] },
-    { a: 191, b: 232, bg: "bloom", w: 1240, words: [["Let's", 192], ["cook", 192, "hi"], ["it", 195], ["up!", 195, "hi"]] },
+    { a: 0, b: 13, bg: "arc", w: 760, words: [["Are", 0], ["you", 5, "hi"]] },
+    { a: 13, b: 74, bg: "arc", w: 1150, grow: true, words: [["looking", 13, "hi"], ["for", 23], ["a", 26, "hi"]], exits: [[51, 0], [53, 1]] },
+    { a: 74, b: 133, bg: "haze", w: 1250, words: [["motion", 65, "box"], ["designer?", 73, "box2"]] },
+    { a: 133, b: 160, bg: "haze", w: 900, words: [["Hit", 133, "hi"], ["me", 135], ["up,", 137, "hi"]] },
+    { a: 160, b: 191, bg: "dark", w: 880, words: [["let's", 160], ["COOK", 163, "fast"]] },
+    { a: 191, b: 232, bg: "bloom", w: 860, words: [["together!", 192, "hi"]] },
   ];
   const CARD = 232;
   // the reference's own line motion, measured on every frame (1280×720): [source frame, ink left, ink right, ink mid-y].
@@ -55,7 +53,7 @@
     const a = rows[rows.length - 2], b = rows[rows.length - 1];
     return b[j] + (b[j] - a[j]) / (b[0] - a[0]) * (n - b[0]);      // carry on at the last speed
   };
-  const SEG = [seg(3, 13), seg(14, 51), seg(58, 70), seg(85, 133), seg(137, 159), seg(161, 191), seg(197, 231)];
+  const SEG = [seg(3, 13), seg(14, 51), seg(85, 133), seg(137, 159), seg(161, 191), seg(197, 231)];
   // the reference's drag paths: box centres in screen fractions, ending where the line puts them
   const GOOD = [[65, 0.5, -0.06], [69, 0.51, 0.05], [70, 0.5, 0.1], [71, 0.46, 0.17], [72, 0.41, 0.25], [73, 0.375, 0.29], [75, 0.335, 0.345], [76, 0.305, 0.39], [77, 0.285, 0.42], [78, 0.265, 0.435], [80, 0.245, 0.455], [81, 0.235, 0.475], [83, 0.235, 0.48], [97, 0.225, 0.495]];
   const REL = [[73, 0.63, 1.06], [75, 0.62, 0.99], [76, 0.595, 0.91], [77, 0.575, 0.83], [78, 0.55, 0.755], [80, 0.535, 0.7], [81, 0.52, 0.645], [82, 0.5, 0.575], [84, 0.49, 0.57], [85, 0.49, 0.55], [86, 0.48, 0.525], [88, 0.47, 0.505], [89, 0.47, 0.485], [97, 0.47, 0.48]];
@@ -82,8 +80,9 @@
       return { L, row, ws };
     });
     const curG = el("div", "cur", stage, cur("#2f93fb", "G")), curC = el("div", "cur", stage, cur("#111214", "C"));
-    const card = el("div", "pcard", stage, `<img class="av" src="assets/img/avatar.jpg" alt=""><div class="tx"><div class="nm">Aizal Khan <span class="bd">${BADGE}</span></div><div class="hn">@aizal_mp4</div></div>`);
+    const card = el("div", "pcard", stage, `<i class="sheen"></i><img class="av" src="assets/img/avatar.jpg" alt=""><div class="tx"><div class="nm">Aizal Khan <span class="bd">${BADGE}</span></div><div class="hn">@aizal_mp4</div></div>`);
 
+    const sheen = card.querySelector(".sheen");
     let G = null;
     const layout = () => {
       G = lines.map(({ L, row, ws }) => {
@@ -114,8 +113,8 @@
     const lineXform = (k, F, g) => {
       const n = F + 1, rows = SEG[k], cy = 1.5 * at(rows, n, 3) + 0.08 * g.h;
       let x = 960 - lineShift(k, F), sc = 1;
-      if (k === 1 || k === 2) x = 1.5 * at(rows, n, 1) - (g.x[0] - g.lw[0] / 2);    // the visible span's left edge, drifting
-      if (k === 6) sc = (at(rows, n, 2) - at(rows, n, 1)) / (rows[0][2] - rows[0][1]);
+      if (k === 1) x = 1.5 * at(rows, n, 1) - (g.x[0] - g.lw[0] / 2);    // the visible span's left edge, drifting
+      if (k === 5) sc = (at(rows, n, 2) - at(rows, n, 1)) / (rows[0][2] - rows[0][1]);
       return `translate(${px(x)}, ${px(cy - g.h / 2)}) translate(${px(g.rw / 2)}, ${px(g.h / 2)}) scale(${sc.toFixed(4)}) translate(${px(-g.rw / 2)}, ${px(-g.h / 2)})`;
     };
 
@@ -171,33 +170,38 @@
           t.style.textShadow = glow > 0.02 ? `0 0 ${(0.18 * g.fs).toFixed(1)}px ${rgb(MINT, 0.7 * glow)}` : "";
           w.style.filter = blurOf(bl);
           // the italic flick at the end, word by word
-          const it = k === 6 ? ramp(F, 227 + i * 1.2, 229 + i * 1.2) : 0;
+          const it = k === 5 ? ramp(F, 227 + i * 1.2, 229 + i * 1.2) : 0;
           w.style.transform = `translate(${px(dx)}, ${px(dy)}) scale(${sc.toFixed(4)}) skewX(${(-11 * it).toFixed(2)}deg)`;
         });
       };
       const li = LINES.findIndex((L) => F >= L.a && F < L.b);
       if (li >= 0) drawLine(li);
-      if (F >= 65 && F < 74) { drawLine(2, 1 - ramp(F, 69, 73)); drawLine(3); }
+      if (F >= 65 && F < 74) { drawLine(1, 1 - ramp(F, 69, 73)); drawLine(2); }
       // the zoom in from far at the open
       const z = lerp(0.32, 1, eo(ramp(F, 0, 4.5)));
       group.style.transform = `scale(${z.toFixed(4)})`;
       group.style.filter = blurOf(5 * (1 - eo(ramp(F, 0, 4))));
 
       // ---- cursors carry the boxes, then let go: G drifts off bottom-left, C flies up
-      const g3 = G[3], sh3 = lineShift(3, F);
-      [[curG, GOOD, 0, [-0.38, 0.62], [97, 106, -560, 240]], [curC, REL, 2, [0.36, 0.42], [97, 106, -40, -620]]].forEach(([c, P, wi, off, lv]) => {
+      const g3 = G[2], sh3 = lineShift(2, F);
+      [[curG, GOOD, 0, [-0.38, 0.62], [97, 106, -560, 240]], [curC, REL, 1, [0.36, 0.42], [97, 106, -40, -620]]].forEach(([c, P, wi, off, lv]) => {
         if (!show(c, F >= P[0][0] && F < lv[1])) return;
         const [x0, y0] = path(F, P), [, x1, y1] = P[P.length - 1];
-        const bx = 960 - sh3 + g3.x[wi] + (x0 - x1) * 1920, by = 1.5 * at(SEG[3], F + 1, 3) + 0.08 * g3.h + (y0 - y1) * 1080;
+        const bx = 960 - sh3 + g3.x[wi] + (x0 - x1) * 1920, by = 1.5 * at(SEG[2], F + 1, 3) + 0.08 * g3.h + (y0 - y1) * 1080;
         const q = ei(ramp(F, lv[0], lv[1]));
         c.style.transform = `translate(${px(bx + off[0] * g3.lw[wi] + lv[2] * q)}, ${px(by + off[1] * g3.fs + lv[3] * q)})`;
       });
 
-      // ---- the card flips up (the reference's turn: flat, then face-on in ~4 frames), then a slow push
+      // ---- the card flips up in 3D: it tips up from lying flat on a damped spring (a gentle overshoot past face-on
+      // and back), rising and growing as it comes; its shadow lands with it, then a light sheen crosses it
       if (show(card, F >= CARD, "flex")) {
-        const p = ramp(F, CARD, CARD + 4);
-        card.style.transform = `translate(-50%, -50%) perspective(1600px) rotateX(${(86 * (1 - back(p, 1.1))).toFixed(2)}deg) scale(${((0.97 + 0.03 * eo(p)) * (1 + 0.0009 * (F - CARD))).toFixed(4)})`;
-        card.style.filter = blurOf(3 * (1 - eo(p)));
+        const p = ramp(F, CARD, CARD + 22), spring = 1 - Math.exp(-5.5 * p) * Math.cos(7 * p), e = eo(ramp(F, CARD, CARD + 15));
+        const rx = 82 * (1 - spring), ry = -6 * (1 - e), ty = 90 * (1 - e), sc = (0.84 + 0.16 * e) * (1 + 0.0009 * (F - CARD));
+        card.style.transform = `translate(-50%, -50%) translateY(${px(ty)}) perspective(1800px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
+        card.style.opacity = clamp((F - CARD + 1) / 2, 0, 1).toFixed(3);
+        card.style.filter = blurOf(2.5 * (1 - eo(ramp(F, CARD, CARD + 5))));
+        card.style.boxShadow = `0 ${px(14 + 30 * e)} ${px(30 + 60 * e)} rgba(20,24,40,${(0.1 + 0.18 * e).toFixed(3)}), 0 ${px(4 + 6 * e)} ${px(10 + 14 * e)} rgba(20,24,40,${(0.06 + 0.1 * e).toFixed(3)}), inset 0 1px 0 rgba(255,255,255,.06)`;
+        sheen.style.transform = `translateX(${px(-700 + 2200 * eo(ramp(F, CARD + 14, CARD + 34)))}) skewX(-20deg)`;
       }
     }
 

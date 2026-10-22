@@ -4,14 +4,13 @@ A 9.2 s, 30 fps, 1920×1080 kinetic-type piece in the Gigi launch look (Inter, w
 
 | frames | beat |
 | --- | --- |
-| 0–13 | "We see you" zooms in from far as the glowing arc rises |
-| 13–57 | "spent way too long" grows word by word, then drops off from the left |
-| 57–70 | "hunting for"; the arc melts into the pale haze |
-| 65–132 | two cursors drag "solid" and "legit" in on the reference's measured paths; "& … designers" completes the line |
-| 133–160 | "But no stress" |
-| 160–191 | cut to black: "we move FAST fr!!" |
-| 191–231 | a bloom from below: "Let's cook it up!", italicising word by word at the end |
-| 232–276 | cut: the profile card flips up and holds |
+| 0–13 | "Are you" zooms in from far as the glowing arc rises |
+| 13–74 | "looking for a" grows word by word, drifting left, then drops off from the left |
+| 65–132 | the arc melts into the pale haze; two cursors drag "motion" and "designer?" in on the reference's measured paths |
+| 133–160 | "Hit me up," |
+| 160–191 | cut to black: "let's COOK" |
+| 191–231 | a bloom from below: "together!", italicising at the end |
+| 232–276 | cut: the profile card flips up in 3D on a damped spring, its shadow lands, a sheen crosses it |
 
 - Preview: `npx --yes hyperframes@0.8.114 preview`
 - Render: `scripts/render-mb.sh` (outputs `renders/gigi-type.mp4`)

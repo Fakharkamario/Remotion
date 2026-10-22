@@ -35,6 +35,8 @@
       /* the profile card */
       .pcard { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 44px; padding: 44px 120px 44px 44px; border-radius: 60px; background: #1c1c1e;
         box-shadow: 0 40px 90px rgba(20,24,40,.28), 0 10px 24px rgba(20,24,40,.16), inset 0 1px 0 rgba(255,255,255,.06); transform-origin: 50% 50%; }
+      .pcard { overflow: hidden; }
+      .pcard .sheen { position: absolute; left: 0; top: -20%; width: 260px; height: 140%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.14), rgba(255,255,255,0)); pointer-events: none; }
       .pcard .av { width: 220px; height: 220px; border-radius: 50%; display: block; }
       .pcard .nm { font-size: 86px; font-weight: 700; color: #fff; letter-spacing: -0.03em; display: flex; align-items: center; gap: 18px; white-space: nowrap; line-height: 1.1; }
       .pcard .bd svg { width: 72px; height: 72px; display: block; }
