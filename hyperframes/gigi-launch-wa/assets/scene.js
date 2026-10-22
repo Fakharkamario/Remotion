@@ -83,6 +83,7 @@
     // ---------- background ----------
     const bg = el("div", "layer", stage); bg.id = "bg";
     const blobs = [];
+    const doodle = el("div", "layer", stage); doodle.id = "doodle";
 
     // ---------- chat (screen space; each bubble rides its own measured track) ----------
     const chat = el("div", "layer", stage);
@@ -192,6 +193,10 @@
     };
 
     function render(f) {
+      // the wallpaper slides off left just ahead of the incoming board, uncovering the plain background
+      const dx = f > 214 ? -1e4 : Math.min(0, (keys(f, REF.board) - keys(184, REF.board)) * 1.18);
+      doodle.style.display = dx > -1930 ? "block" : "none";
+      doodle.style.transform = `translateX(${px(dx)})`;
       blobs.forEach((o, i) => {
         const t = f / FRAMES;
         o.b.style.transform = `translate(${px(o.x - o.s / 2 + 160 * Math.sin(t * 3.1 + i * 1.7))}, ${px(o.y - o.s / 2 + 110 * Math.cos(t * 2.6 + i))})`;

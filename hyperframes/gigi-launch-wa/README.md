@@ -1,6 +1,6 @@
 # (Messenger version) Gigi AI — launch chat
 
-A 9.77 s, 30 fps, 1920×1080 clip. The motion follows a reference chat edit shot for shot. The content is new. This copy of `../gigi-launch` restyles the chat as a full-screen messenger: rounded white incoming bubbles and a pale-green outgoing "On it", each with a time stamp (and read ticks on ours), on the doodle wallpaper in `assets/img/doodle.jpg`. The motion, the board and the "Working" ending are unchanged:
+A 9.77 s, 30 fps, 1920×1080 clip. The motion follows a reference chat edit shot for shot. The content is new. This copy of `../gigi-launch` restyles the chat as a full-screen messenger: rounded white incoming bubbles and a pale-green outgoing "On it", each with a time stamp (and read ticks on ours), on the doodle wallpaper in `assets/img/doodle.jpg`. The wallpaper sits behind the chat only and slides off with it as the board comes in. The motion, the board and the "Working" ending are unchanged:
 
 | frames | beat |
 | --- | --- |
