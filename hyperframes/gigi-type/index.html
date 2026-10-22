@@ -13,19 +13,25 @@
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0d0f14; font-family: "Inter", system-ui, sans-serif; }
       .layer { position: absolute; inset: 0; }
       .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; font-weight: 700; }
-      .disc { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; margin: -500px 0 0 -500px; border-radius: 50%;
-        background: radial-gradient(closest-side, #f2f6fa 0%, #f2f6fa 45%, rgba(242,246,250,.6) 75%, rgba(242,246,250,0) 100%); }
+      .rise { position: absolute; left: 0; top: 0; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; border-radius: 50%;
+        background: radial-gradient(closest-side, #eef3f8 0%, #eef3f8 48%, rgba(238,243,248,.55) 72%, rgba(238,243,248,0) 100%); }
       .grp { position: absolute; inset: 0; transform-origin: 960px 540px; }
-      /* the type: Inter bold, tight, one line */
-      .row { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; letter-spacing: -0.04em; line-height: 1.25; display: none; }
-      .wd { display: inline-block; margin: 0 0.14em; transform-origin: 50% 60%; }
-      .wd.fast { font-weight: 850; letter-spacing: -0.02em; transform-origin: 50% 60%; }
-      .bx { position: relative; padding: 0 0.1em; border: 3px solid rgba(47,147,251,.85); line-height: 1.05; }
-      .bx.box2 { border-color: rgba(138,108,255,.85); }
-      .bx .hd { position: absolute; left: -7px; top: -7px; width: 11px; height: 11px; background: #fff; border: 2.5px solid currentColor; }
-      .bx .hd.r { left: auto; right: -7px; } .bx .hd.b { top: auto; bottom: -7px; }
+      /* the type: Inter bold, tight; lines laid out whole, words pop in place */
+      .row { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; letter-spacing: -0.045em; line-height: 1.3; display: none; color: #fff; }
+      .row.haze, .row.bloom { color: #243248; }
+      .row.dark .t { text-shadow: 0 0 0.25em rgba(255,255,255,.28); }
+      .wd { display: inline-block; margin: 0 0.11em; transform-origin: 50% 70%; position: relative; }
+      .wd .t { display: inline-block; }
+      .wd.fast .t { font-weight: 800; letter-spacing: -0.02em; transform: scaleX(0.9); background: linear-gradient(90deg, #2f93fb, #6fd0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      /* the dragged words: thin navy box with corner handles, gradient-filled text */
+      .bx { padding: 0 0.08em; outline: 2px solid rgba(36,50,72,.75); outline-offset: 0; line-height: 1.1; }
+      .bx .t { background: linear-gradient(90deg, #2f93fb, #5cb4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .bx.box2 .t { background: linear-gradient(90deg, #6ab8ff, #8a6cff); -webkit-background-clip: text; background-clip: text; }
+      .bx .hd { position: absolute; left: -5px; top: -5px; width: 9px; height: 9px; background: #243248; }
+      .bx .hd.r { left: auto; right: -5px; } .bx .hd.b { top: auto; bottom: -5px; }
       .cur { position: absolute; left: 0; top: 0; width: 0; height: 0; }
-      .cur svg { position: absolute; left: -10px; top: -10px; width: 74px; height: 74px; overflow: visible; filter: drop-shadow(0 4px 8px rgba(20,40,80,.25)); }
+      .cur svg { position: absolute; left: -12px; top: -12px; width: 64px; height: 64px; overflow: visible; filter: drop-shadow(0 3px 6px rgba(20,40,80,.25)); transform: rotate(-12deg); }
+      .cur b { position: absolute; left: -16px; top: 40px; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; color: #fff; font-size: 20px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 3px 8px rgba(20,40,80,.25); }
       /* the profile card */
       .pcard { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 44px; padding: 44px 120px 44px 44px; border-radius: 60px; background: #1c1c1e;
         box-shadow: 0 40px 90px rgba(20,24,40,.28), 0 10px 24px rgba(20,24,40,.16), inset 0 1px 0 rgba(255,255,255,.06); transform-origin: 50% 50%; }
