@@ -119,7 +119,6 @@
     const card = el("div", "", world, `<div class="th"><img src="assets/img/thumb.jpg" alt=""><div class="shade"></div><div class="pl">${PLAY}</div><div class="len">${VID}0:45</div></div>`);
     card.id = "card"; card.style.width = CARD[0] + "px"; card.style.height = CARD[1] + "px";
     const sent = bubble(TYPED, true, "1:01");
-    sent.b.classList.add("cap");
     const sendIco = () => composer.querySelector(".send");
     const ins = IN.map(([t]) => bubble(t, false, "1:01"));
 
@@ -136,8 +135,6 @@
     const layout = () => {
       [...world.children].forEach((n) => (n.style.display = "block"));
       const w = (b) => b.b.offsetWidth;
-      // the caption bubble is as wide as the video above it once the chat has pushed in
-      sent.b.style.width = px((1054 - 536) * S);
       L = { ours: ours.map(w), sent: w(sent) };
       const cd = composer.style.display; composer.style.display = "block";
       const sd = bar.querySelector(".send"); L.sendX = sd.offsetLeft + sd.offsetWidth / 2; L.sendY = sd.offsetTop + sd.offsetHeight / 2;
