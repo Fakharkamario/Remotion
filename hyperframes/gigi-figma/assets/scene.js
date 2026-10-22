@@ -19,6 +19,10 @@
   const blurOf = (b) => (b > 0.05 ? `blur(${b.toFixed(2)}px)` : "none");
   const eo = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
   const ei = (t) => (t = clamp(t, 0, 1), t <= 0 ? 0 : Math.pow(2, 10 * t - 10));
+  // professional cursor moves: gentle start, gentle stop
+  const sio = (t) => (t = clamp(t, 0, 1), t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  // a punch on a cut: the shot lands a touch oversized and settles
+  const kick = (F, at, amt = 0.07, dur = 7) => 1 + amt * (1 - eo(ramp(F, at, at + dur)));
   const back = (t, s = 1.8) => (t = clamp(t, 0, 1) - 1, 1 + (s + 1) * t * t * t + s * t * t);
   // the reference runs 25 fps content in 30: every sixth frame repeats the one before
   const q = (F) => { const i = Math.floor(F); return i % 6 === 1 ? i - 1 : i; };
@@ -48,10 +52,11 @@
 
   const SHOTS = [[0, 38], [38, 92], [92, 130], [130, 146], [146, 239], [239, 276], [276, 333]];
   const FONTS = ["Inter Display", "Liberation Serif", "Caladea", "JetBrains Mono", "DejaVu Serif", "FreeSerif"];
-  const FONT_SEQ = [[0, 3], [5, 1], [15, 0], [18, 2], [20, 4], [22, 0]];
+  const FONT_SEQ = [[0, 3], [6, 1], [12, 2], [18, 4], [24, 5], [30, 0]];
   const LAYOUT_SEQ = [[0, -1, "whoisD"], [100, 0, "whoisA"], [106, 2, "whoisB"], [112, 3, "whoisC"], [118, 1, "whoisD"]];
   const PROMPT = "Say it the way Gigi would";
-  const CLICKS = [68, 122, 206, 294, 306];
+  const CLICKS = [31, 68, 122, 206, 294, 306];
+  const CUTS = [38, 92, 130, 146, 239, 276];
 
   const ICON = {
     sparkle: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg>',
@@ -152,7 +157,7 @@
 
     // S4 and S8 · the whole design tool
     const buildWindow = (parent) => {
-      el("div", "gl", parent);
+      const gl = el("div", "gl", parent);
       const win = el("div", "", parent);
       win.style.cssText = "position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;border-radius:22px;overflow:hidden;background:#fff;box-shadow:0 40px 120px rgba(30,32,40,.18),0 8px 24px rgba(30,32,40,.08),0 0 0 1px rgba(30,32,40,.06)";
       const top = el("div", "top", win, `<span class="tool on">${ICON.move}</span><span class="tool">${ICON.frame}</span><span class="tool">${ICON.rect}</span>
@@ -174,7 +179,7 @@
         frames.forEach((name, r) => { const fr = el("div", "fr", canvas); fr.style.left = c * COLW + "px"; fr.style.top = r * ROWH + "px"; el("img", "", fr).src = `assets/sb/${name}.jpg`; });
       });
       const ov = el("div", "layer", win);
-      return { win, canvas, ov, share: top.querySelector(".shareb"), zoom: top.querySelector(".zoom") };
+      return { gl, win, canvas, ov, share: top.querySelector(".shareb"), zoom: top.querySelector(".zoom") };
     };
     const W4 = buildWindow(shots[3]);
     const W8 = buildWindow(shots[6]);
@@ -211,7 +216,7 @@
     // S7 · dark section, morph while scrolling
     const s6 = shots[5];
     const p2 = el("div", "abs dark", s6); p2.style.cssText += "width:1920px;height:2600px";
-    el("div", "abs", p2).style.cssText += "width:1920px;height:2600px;background:radial-gradient(60% 40% at 80% 30%, rgba(47,147,251,.22), rgba(47,147,251,0) 70%), radial-gradient(50% 35% at 10% 75%, rgba(47,147,251,.14), rgba(47,147,251,0) 70%)";
+    const glow7 = el("div", "abs", p2); glow7.style.cssText += "width:1920px;height:2600px;background:radial-gradient(60% 40% at 80% 30%, rgba(47,147,251,.22), rgba(47,147,251,0) 70%), radial-gradient(50% 35% at 10% 75%, rgba(47,147,251,.14), rgba(47,147,251,0) 70%)";
     el("div", "lbl", p2, "/ Your network<small style='color:#9a9ba1'>Every conversation, a different app.</small>").style.cssText += "left:60px;top:120px;color:#fff";
     const H3a = twoLayer(p2, "Your", 280), H3b = twoLayer(p2, "is a terrible", 280), H4a = twoLayer(p2, "WhatsApp.", 280), H4b = twoLayer(p2, "database", 280);
     [H3a, H3b].forEach((h) => at(h.w, 40, 300)); [H4a, H4b].forEach((h) => at(h.w, 40, 600));
@@ -224,6 +229,10 @@
     art(p2, "hugo", 1100, 1480, 640, 360);
     art(p2, "convo", 160, 1560, 620, 350);
     el("div", "lbl", p2, "gigi.co").style.cssText += "left:60px;top:2050px;color:#fff;font-size:22px";
+
+    // a soft colour wash rides across every cut
+    const wash = el("div", "layer", stage);
+    wash.style.cssText += "pointer-events:none;background:linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(47,147,251,.0) 18%, rgba(110,180,255,.85) 38%, rgba(205,190,255,.8) 52%, rgba(190,240,210,.75) 66%, rgba(255,255,255,0) 86%);background-size:320% 100%;filter:blur(24px);mix-blend-mode:normal";
 
     // cursor + ripple (screen space, on top)
     const ripple = el("div", "", stage); ripple.id = "ripple"; ripple.style.cssText += "width:70px;height:70px;margin:-35px 0 0 -35px";
@@ -253,6 +262,7 @@
     // iridescent change: the old line turns pastel for a beat, the new one arrives pastel, then settles solid
     const morph = (A, B, f, t0) => {
       const p = f - t0;
+      [A.i, B.i].forEach((n) => { n.style.backgroundSize = "220% 100%"; n.style.backgroundPosition = `${(100 - p * 9).toFixed(1)}% 0`; });
       A.w.style.display = p < 3 ? "block" : "none";
       B.w.style.display = p >= 3 ? "block" : "none";
       A.b.style.opacity = p < 0 ? 1 : 0; A.i.style.opacity = p < 0 ? 0 : 0.85; A.w.style.filter = blurOf(p < 0 ? 0 : 1.5);
@@ -266,7 +276,16 @@
       p.style.transform = `scaleX(${(0.2 + 0.8 * eo(k)).toFixed(3)})`;
       p.style.color = k < 0.7 ? "transparent" : "#26272b";
     });
-    const windowAt = (W, s, oy, ox, z, cx, cy) => {
+    // brand gradient behind the tool: blue, lilac and mint light drifting like the reference's colour fields
+    const flow = (F) => {
+      const a = F / 20;
+      return `radial-gradient(55% 60% at ${50 + 30 * Math.sin(a)}% ${85 + 12 * Math.cos(a * 0.8)}%, rgba(47,147,251,.62), rgba(47,147,251,0) 70%),` +
+        `radial-gradient(45% 50% at ${12 + 14 * Math.cos(a * 1.1)}% ${18 + 10 * Math.sin(a)}%, rgba(160,140,255,.38), rgba(160,140,255,0) 70%),` +
+        `radial-gradient(40% 45% at ${88 + 8 * Math.sin(a * 1.3)}% ${20 + 14 * Math.cos(a * 0.9)}%, rgba(120,225,185,.32), rgba(120,225,185,0) 70%),` +
+        `linear-gradient(180deg, #ffffff 0%, #eaf3ff 100%)`;
+    };
+    const windowAt = (W, s, oy, ox, z, cx, cy, F = 0) => {
+      W.gl.style.background = flow(F);
       W.win.style.transform = `translate(${px(960 + ox)}, ${px(540 + oy)}) scale(${s.toFixed(5)}) translate(-960px, -540px)`;
       W.canvas.style.transform = `translate(720px, 516px) scale(${z.toFixed(5)}) translate(${px(-cx)}, ${px(-cy)})`;
       W.zoom.textContent = Math.round(z * 100) + "%";
@@ -287,17 +306,18 @@
         const fi = step(f, FONT_SEQ);
         whoT.style.fontFamily = `"${FONTS[fi]}"`; whoT.style.fontWeight = fi === 0 ? 700 : 400; whoT.style.letterSpacing = fi === 0 ? "-0.03em" : "0";
         bar1font.textContent = FONTS[fi];
+        // each new face lands with a small pop
+        const lastSwap = FONT_SEQ.filter(([k]) => f >= k).pop()[0];
+        whoT.style.transform = `translate(-50%, -50%) scale(${(1 + 0.06 * (1 - eo(ramp(F, lastSwap, lastSwap + 4))) * (lastSwap > 0 ? 1 : 0)).toFixed(4)})`;
         ddItems.forEach((it, j) => it.classList.toggle("on", j === fi));
         const ww = whoT.offsetWidth, wh = whoT.offsetHeight;
         at(sel1, 140 + 820 - ww / 2 - 14, 130 + 462 - wh / 2 - 8, ww + 28, wh + 16);
         pillIn(pills1, f, -10);
-        const si = FONT_SEQ.filter(([k]) => f >= k).length - 1, sw = FONT_SEQ[si][0], prev = FONT_SEQ[Math.max(0, si - 1)][1];
-        const [x0, y0] = M.dd(prev), [x1, y1] = M.dd(fi), k = si === 0 ? 1 : eo(ramp(F, sw - 2, sw));
-        // map dropdown spot through the shot's push/rise
-        const tx = lerp(x0, x1, k), ty = lerp(y0, y1, k);
+        // the cursor glides down the list and arrives on each face as it previews
+        const tx = M.dd(0)[0] + 10 * Math.sin(F / 9), ty = glide(F, FONT_SEQ.map(([k, i]) => [k, M.dd(i)[1]]), sio);
         cur = [960 + (tx - 960) * sc, 540 + (ty - 540) * sc + rise]; curScale = sc;
       } else if (shot === 1) {
-        shots[1].style.transform = `scale(${(1 + 0.0005 * (f - 38)).toFixed(4)})`;
+        shots[1].style.transform = `scale(${((1 + 0.0005 * (f - 38)) * kick(F, 38)).toFixed(4)})`;
         pillIn(pills2, f, 38);
         const fade = ramp(f, 86, 91);
         pills2.forEach((p) => (p.style.opacity = (1 - fade).toFixed(3)));
@@ -308,37 +328,40 @@
         img2.im.style.filter = img2b.style.filter = blurOf(8 * Math.sin(Math.PI * ramp(f, 70, 88)));
         orb2.style.background = f >= 68 ? `conic-gradient(from ${f * 24}deg, #2f93fb, #9bd0ff, #2f93fb)` : "#111214";
         pills2[2].style.background = f >= 64 && f < 86 ? "#eef5ff" : "#fff";
-        cur = [glide(F, [[38, 560], [50, 1080], [62, 1600], [92, 1610]]), glide(F, [[38, 990], [50, 905], [62, 800], [92, 806]])];
+        cur = [glide(F, [[38, 640], [64, 1600], [92, 1612]], sio), glide(F, [[38, 990], [64, 800], [92, 808]], sio)];
       } else if (shot === 2) {
-        shots[2].style.transform = `scale(${(1 + 0.0005 * (f - 92)).toFixed(4)})`;
+        shots[2].style.transform = `scale(${((1 + 0.0005 * (f - 92)) * kick(F, 92)).toFixed(4)})`;
         pillIn(pills3, f, 92);
         lgCard.style.transform = `scale(${(0.9 + 0.1 * back(ramp(f, 92, 96), 1.4)).toFixed(4)})`;
         const [, li, src] = LAYOUT_SEQ.filter(([k]) => f >= k).pop();
         if (!img3.im.src.endsWith(src + ".jpg")) img3.im.src = `assets/sb/${src}.jpg`;
         lgIcons.forEach((ic, i) => ic.classList.toggle("on", i === li));
         const pts = LAYOUT_SEQ.slice(1).map(([k, i]) => [k, ...M.lg(i)]);
-        cur = [glide(F, [[92, 1500], [98, 900], ...pts.map(([k, x]) => [k, x])]), glide(F, [[92, 1000], [98, 820], ...pts.map(([k, , y]) => [k, y])])];
+        cur = [glide(F, [[92, 1240], ...pts.map(([k, x]) => [k, x])], sio), glide(F, [[92, 990], ...pts.map(([k, , y]) => [k, y])], sio)];
       } else if (shot === 3) {
-        windowAt(W4, 0.84 + 0.0022 * (f - 130), 0, 0, 0.4, 1210, 520);
+        windowAt(W4, (0.84 + 0.0022 * (f - 130)) * kick(F, 130, 0.14, 9), 0, 0, 0.4, 1210, 520, F);
       } else if (shot === 4) {
         const sy = F >= 209 ? scrollAt(SCROLL.p1, F) : 0;
         p1.style.transform = `translateY(${px(-sy)})`;
-        shots[4].style.transform = `scale(${(1 + 0.0003 * (f - 146)).toFixed(4)})`;
+        // lands with a punch, then a snap push mid-shot like the reference's step zooms
+        shots[4].style.transform = `scale(${((1 + 0.0003 * (f - 146)) * kick(F, 146) * (1 + 0.035 * eo(ramp(F, 176, 180)))).toFixed(4)})`;
         typed.textContent = PROMPT.slice(0, clamp(Math.floor((f - 150) / 1.45), 0, PROMPT.length));
         morph(H1a, H1b, f, 209);
         at(sel5, 16, 682, M.h1w + 16, 316); show(sel5, f < 209);
         sendB.style.transform = `scale(${(1 - 0.12 * Math.sin(Math.PI * ramp(f, 205, 210))).toFixed(3)})`;
-        cur = [glide(F, [[146, 1040], [190, 1060], [204, M.send[0]], [239, M.send[0] + 10]]), glide(F, [[146, 470], [190, 480], [204, M.send[1]], [239, M.send[1] + 8]]) - sy];
+        cur = [glide(F, [[146, 1040], [184, 1080], [204, M.send[0]], [239, M.send[0] + 10]], sio), glide(F, [[146, 470], [184, 500], [204, M.send[1]], [239, M.send[1] + 8]], sio) - sy];
       } else if (shot === 5) {
         p2.style.transform = `translateY(${px(-scrollAt(SCROLL.p2, F))})`;
+        shots[5].style.transform = `scale(${kick(F, 239, 0.05).toFixed(4)})`;
+        glow7.style.transform = `translate(${px(160 * Math.sin(F / 14))}, ${px(120 * Math.cos(F / 17))})`;
         morph(H3a, H3b, f, 246); morph(H4a, H4b, f, 246);
         at(sel7, 30, 290, M.h3w + 24, 600); show(sel7, f < 246 || f >= 256);
       } else if (shot === 6) {
         // arrives still drifting up with the reference's settle, then the share flow, then whips off left
         const oy = scrollTotal(SCROLL.p3) - scrollAt(SCROLL.p3, F);
         const ox = -2700 * ei(ramp(F, 314, 332));
-        const s = 0.9 + 0.0012 * (f - 276);
-        windowAt(W8, s, oy, ox, 0.26, (8 * COLW + FW) / 2, 600);
+        const s = (0.9 + 0.0012 * (f - 276)) * kick(F, 276, 0.06);
+        windowAt(W8, s, oy, ox, 0.26, (8 * COLW + FW) / 2, 600, F);
         const toScr = ([x, y]) => [960 + ox + (x - 960) * s, 540 + oy + (y - 540) * s];
         W8.share.style.transform = `scale(${(1 - 0.08 * Math.sin(Math.PI * ramp(f, 293, 298))).toFixed(3)})`;
         if (show(pop, f >= 295)) {
@@ -356,14 +379,22 @@
           toast.style.transform = `translate(${px(POP.x + 210 - toast.offsetWidth / 2)}, ${px(M.popB + 22 + 16 * (1 - eo(ramp(f, 308, 314))))}) scale(${(0.82 + 0.18 * back(ramp(f, 308, 314), 1.6)).toFixed(4)})`;
           toast.style.opacity = eo(ramp(f, 308, 311)).toFixed(3);
         }
-        const wx = glide(F, [[276, 1250], [284, 1300], [292, M.share[0]], [296, M.share[0] - 4], [305, M.copy[0]], [332, M.copy[0] + 18]]);
-        const wy = glide(F, [[276, 760], [284, 700], [292, M.share[1]], [296, M.share[1] + 30], [305, M.copy[1]], [332, M.copy[1] + 22]]);
+        const wx = glide(F, [[276, 1250], [292, M.share[0]], [296, M.share[0] - 4], [305, M.copy[0]], [332, M.copy[0] + 18]], sio);
+        const wy = glide(F, [[276, 760], [292, M.share[1]], [296, M.share[1] + 30], [305, M.copy[1]], [332, M.copy[1] + 22]], sio);
         cur = toScr([wx, wy]); curScale = s;
+      }
+
+      // colour wash across the nearest cut
+      const wc = CUTS.find((c) => F >= c - 3 && F < c + 6);
+      if (show(wash, wc != null)) {
+        const p = ramp(F, wc - 3, wc + 6);
+        wash.style.opacity = (0.5 * Math.sin(Math.PI * p)).toFixed(3);
+        wash.style.backgroundPosition = `${(110 - 120 * p).toFixed(1)}% 0`;
       }
 
       // cursor
       if (show(cursor, !!cur)) {
-        const press = CLICKS.reduce((m, c) => Math.max(m, Math.sin(Math.PI * ramp(f, c - 1, c + 3))), 0) + FONT_SEQ.slice(1).reduce((m, [c]) => Math.max(m, Math.sin(Math.PI * ramp(f, c - 1, c + 2))), 0) * (shot === 0 ? 1 : 0);
+        const press = CLICKS.reduce((m, c) => Math.max(m, Math.sin(Math.PI * ramp(F, c - 1, c + 3))), 0);
         cursor.style.transform = `translate(${px(cur[0])}, ${px(cur[1])}) scale(${((1 - 0.15 * Math.min(1, press)) * curScale).toFixed(4)})`;
       }
       const rc = CLICKS.find((c) => f >= c && f < c + 9);
