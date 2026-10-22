@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>gigi type</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0d0f14; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0d0f14; font-family: "Inter", system-ui, sans-serif; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; font-weight: 700; }
+      .disc { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; margin: -500px 0 0 -500px; border-radius: 50%;
+        background: radial-gradient(closest-side, #f2f6fa 0%, #f2f6fa 45%, rgba(242,246,250,.6) 75%, rgba(242,246,250,0) 100%); }
+      .grp { position: absolute; inset: 0; transform-origin: 960px 540px; }
+      /* the type: Inter bold, tight, one line */
+      .row { position: absolute; left: 0; top: 0; white-space: nowrap; font-weight: 700; letter-spacing: -0.04em; line-height: 1.25; display: none; }
+      .wd { display: inline-block; margin: 0 0.14em; transform-origin: 50% 60%; }
+      .wd.fast { font-weight: 850; letter-spacing: -0.02em; transform-origin: 50% 60%; }
+      .bx { position: relative; padding: 0 0.1em; border: 3px solid rgba(47,147,251,.85); line-height: 1.05; }
+      .bx.box2 { border-color: rgba(138,108,255,.85); }
+      .bx .hd { position: absolute; left: -7px; top: -7px; width: 11px; height: 11px; background: #fff; border: 2.5px solid currentColor; }
+      .bx .hd.r { left: auto; right: -7px; } .bx .hd.b { top: auto; bottom: -7px; }
+      .cur { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+      .cur svg { position: absolute; left: -10px; top: -10px; width: 74px; height: 74px; overflow: visible; filter: drop-shadow(0 4px 8px rgba(20,40,80,.25)); }
+      /* the profile card */
+      .pcard { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 44px; padding: 44px 120px 44px 44px; border-radius: 60px; background: #1c1c1e;
+        box-shadow: 0 40px 90px rgba(20,24,40,.28), 0 10px 24px rgba(20,24,40,.16), inset 0 1px 0 rgba(255,255,255,.06); transform-origin: 50% 50%; }
+      .pcard .av { width: 220px; height: 220px; border-radius: 50%; display: block; }
+      .pcard .nm { font-size: 86px; font-weight: 700; color: #fff; letter-spacing: -0.03em; display: flex; align-items: center; gap: 18px; white-space: nowrap; line-height: 1.1; }
+      .pcard .bd svg { width: 72px; height: 72px; display: block; }
+      .pcard .hn { font-size: 56px; color: #8b8b91; margin-top: 6px; letter-spacing: -0.01em; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="9.2" data-width="1920" data-height="1080">
+      <div class="fontwarm">Aa <b style="font-weight:850">Aa</b></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
