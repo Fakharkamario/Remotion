@@ -1,4 +1,4 @@
-// Gigi in After Effects — 10.6 s, 30 fps, 318 frames. One continuous session in the real (dark) After Effects UI,
+// Gigi in After Effects — 13 s, 30 fps, 390 frames. One continuous session in the real (dark) After Effects UI,
 // animating storyboard frame 04: the camera rides the work, punching in on every interaction, and every click does
 // what it does in the app.
 //   0–26     the app rises in from below, slow push
@@ -7,10 +7,10 @@
 //   132–176  both keyframes marquee-selected, right-click → Keyframe Assistant → Easy Ease
 //   176–220  Graph Editor: the speed graph; the out-handle is dragged for a snappier landing
 //   220–254  Play: the preview runs, the word scales in, the cache bar fills green
-//   254–296  Composition → Add to Render Queue → Render; progress fills, Done
-//   296–318  pull out, the whole window slides off left
+//   254–354  Composition → Add to Render Queue, a calm glide to the queue → Render; progress fills over 1.4 s, Done holds
+//   354–390  pull out, the whole window slides off left
 (function () {
-  const FPS = 30, FRAMES = 318;
+  const FPS = 30, FRAMES = 390;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const ramp = (f, a, b) => clamp((f - a) / (b - a), 0, 1);
@@ -45,8 +45,8 @@
   const T = {
     grab1: 32, drag1: [34, 56], twirl: 66, watch: 80, grab2: 88, drag2: [90, 102],
     scrub: [112, 126], mq: [138, 148], rclick: 154, hover: 160, ease: 170,
-    graph: 186, hgrab: 196, hdrag: [198, 210], play: 222, comp: 258, rq: 266, render: 280, prog: [281, 291],
-    out: [292, 300], whip: [302, 318],
+    graph: 186, hgrab: 196, hdrag: [198, 210], play: 222, comp: 258, rq: 266, render: 298, prog: [300, 342],
+    out: [354, 366], whip: [368, 390],
   };
   const CLICKS = [T.grab1, T.twirl, T.watch, T.grab2, T.scrub[0] - 2, T.mq[0] - 2, T.rclick, T.ease, T.graph, T.hgrab, T.play, T.comp, T.rq, T.render];
 
@@ -260,7 +260,7 @@
       [222, 1260, 420, 1.12],
       [224, 915, 352, 1.55], [254, 915, 352, 1.64],
       [254, 330, 210, 1.7], [270, 360, 220, 1.72],
-      [278, 1150, 664, 1.3], [292, 1170, 676, 1.34],
+      [272, 360, 222, 1.72], [290, 1150, 664, 1.3], [T.out[0], 1175, 676, 1.36],
       [T.out[1], 960, 540, 0.9],
     ];
     const CUTS = CAM.filter((c, i) => i && CAM[i - 1][0] === c[0]).map((c) => c[0]);
@@ -347,7 +347,7 @@
       show(rq, rqOn); show(tlBody, !rqOn);
       rqTab.classList.toggle("on", rqOn); cmTab.classList.toggle("on", !rqOn);
       if (rqOn) {
-        const p = ramp(F, T.prog[0], T.prog[1]), started = F >= T.render + 1, done = F >= T.prog[1];
+        const p = sio(ramp(F, T.prog[0], T.prog[1])), started = F >= T.render + 1, done = F >= T.prog[1];
         rqFill.style.width = (100 * p).toFixed(2) + "%";
         rqBtn.classList.toggle("press", F >= T.render - 1 && F < T.render + 3);
         rqBtn.textContent = started && !done ? "Pause" : "Render";
