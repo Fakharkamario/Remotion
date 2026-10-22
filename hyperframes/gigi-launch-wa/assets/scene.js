@@ -42,7 +42,20 @@
   const track = (rows) => {
     const runs = [];
     rows.forEach((r) => { const last = runs[runs.length - 1]; if (!last || r[0] - last[last.length - 1][0] > 4) runs.push([r]); else last.push(r); });
-    const cols = runs.map((run) => run[0].slice(1).map((_, j) => run.map((r) => [r[0], r[j + 1]])));
+    // steady where the reference is slow: its 4 px reading steps are averaged out wherever the element barely moves
+    // (and its height, which sets the bubble's size, is always taken as a smooth curve); fast moves keep every sample
+    const steady = (c, isSize) => {
+      const sm = (q, n) => { for (let k = 0; k < n; k++) q = q.map((p, i) => (i === 0 || i === q.length - 1 ? p : [p[0], 0.25 * q[i - 1][1] + 0.5 * p[1] + 0.25 * q[i + 1][1]])); return q; };
+      const heavy = sm(c, isSize ? 10 : 8);
+      if (isSize) return heavy;
+      return c.map((p, i) => {
+        const a = heavy[Math.max(0, i - 1)], b = heavy[Math.min(heavy.length - 1, i + 1)];
+        const v = Math.abs((b[1] - a[1]) / Math.max(0.5, b[0] - a[0]));
+        const w = clamp(1 - (v - 3) / 9, 0, 1);
+        return [p[0], w * heavy[i][1] + (1 - w) * p[1]];
+      });
+    };
+    const cols = runs.map((run) => run[0].slice(1).map((_, j) => steady(run.map((r) => [r[0], r[j + 1]]), j === run[0].length - 2 && run[0].length === 5)));
     // values at t, or null outside every run (pad lets a run hold its ends a little). ext carries a run past its
     // last row with its measured speed and acceleration, so an element leaving frame keeps going instead of vanishing
     return (t, pad = 0, ext = 0) => {
@@ -226,7 +239,8 @@
       if (r2 && f < 217 && (b2.b.parentNode === heldWrap) !== holding) (holding ? heldWrap : chat).appendChild(b2.b);
       if (show(b2.b, !!r2 && f < 217)) {
         const [x1, x2, cy, h] = r2;
-        let s = s2of(h), rot = 0, a = 1, blur = 0;
+        const g = T.b1(f, 0.6, 8);
+        let s = g ? lerp(s2of(h), g[3] / 192, ramp(f, 34, 40)) : s2of(h), rot = 0, a = 1, blur = 0;
         if (holding) {
           // lift: scale from the reference's width (its height grows with the tilt), then a small tilt
           const r0 = T.b2(176), rn = T.b2(Math.min(f, 195));
@@ -256,7 +270,7 @@
       // ---------- quick ----------
       const r3 = T.b3(f, 0.6, 8);
       if (show(b3.b, !!r3 && !(f > 116 && f < 150))) {
-        const [x1, , cy, h] = r3, s = s3of(h);
+        const g3 = T.b1(f, 0.6, 8), [x1, , cy, h] = r3, s = g3 ? lerp(s3of(h), g3[3] / 192, ramp(f, 80, 86)) : s3of(h);
         put(b3.b, x1 + EDGE * s, cy, L.w3, s, 0, 8 * (1 - eo(ramp(f, 77, 81))), clamp((f - 77) / 1.5, 0, 1));
         wordIn(b3.ws[0], f, 78);
       }
