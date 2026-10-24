@@ -29,14 +29,14 @@
       /* glowing wordmark */
       .wm { position: absolute; left: 0; top: 0; font: 700 300px "Inter", sans-serif; line-height: 1; white-space: pre; transform-origin: 50% 60%; }
 
-      /* status pill: dark glass, rainbow rim, four bouncing dots */
-      .pill { position: absolute; left: 960px; top: 540px; height: 120px; padding: 0 46px 0 36px; display: flex; align-items: center; gap: 26px; border-radius: 60px; white-space: nowrap; transform-origin: 50% 50%;
-        border: 3px solid transparent; background: linear-gradient(#141416, #141416) padding-box, linear-gradient(90deg, #2f7dff, #8fd43c, #f6b926, #fd26d3, #8a5cff) border-box;
-        box-shadow: 0 0 40px rgba(120, 100, 255, .25), 0 18px 50px rgba(0, 0, 0, .5); }
+      /* status pill: white, four bouncing dots */
+      .pill { position: absolute; left: 960px; top: 540px; height: 116px; padding: 0 46px 0 38px; display: flex; align-items: center; gap: 26px; border-radius: 58px; white-space: nowrap; transform-origin: 50% 50%;
+        background: #f4f4f6; box-shadow: 0 24px 60px rgba(0, 0, 0, .55), 0 2px 6px rgba(0, 0, 0, .3); }
       .spin { position: relative; width: 92px; height: 40px; flex: none; }
       .spin i { position: absolute; top: 12px; width: 18px; height: 18px; border-radius: 50%; }
-      .pill .pt { font: 500 52px "Inter", sans-serif; letter-spacing: -0.01em; color: transparent; -webkit-background-clip: text; background-clip: text;
-        background-image: linear-gradient(100deg, #f2f2f2 0%, #f2f2f2 40%, #5d5d63 50%, #f2f2f2 60%, #f2f2f2 100%); background-size: 250% 100%; }
+      .pill .pt { font: 550 50px "Inter", sans-serif; letter-spacing: -0.015em; color: transparent; -webkit-background-clip: text; background-clip: text;
+        background-image: linear-gradient(100deg, #141416 0%, #141416 40%, #a4a4ab 50%, #141416 60%, #141416 100%); background-size: 250% 100%; }
+      .ring { position: absolute; left: 0; top: 0; border-radius: 50%; border: 5px solid; display: none; }
 
       /* S2 chat bubbles */
       .bub { position: absolute; left: 230px; top: 0; padding: 30px 48px; border-radius: 48px 48px 48px 14px; background: #1c1c1e; font: 500 64px "Inter", sans-serif; letter-spacing: -0.015em; white-space: nowrap; transform-origin: 0 100%; }
@@ -47,15 +47,15 @@
       #ptext { font: 400 37px "Inter", sans-serif; line-height: 1.55; color: #ececec; min-height: 57px; letter-spacing: -0.01em; }
       .chip { display: inline-flex; align-items: center; gap: 9px; height: 52px; padding: 0 14px 0 10px; vertical-align: -10px; background: #1d1d20; border: 1.5px solid #303036; border-radius: 12px; color: #fff; transform-origin: 50% 60%; }
       .chip svg { width: 28px; height: 28px; }
-      .cur { display: inline-block; width: 3px; height: 44px; vertical-align: -9px; margin-left: 3px; background: #2f7dff; }
+      .cur { display: inline-block; width: 3px; height: 44px; vertical-align: -9px; margin-left: 3px; background: #fff; }
       #pctl { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
       #pctl .plus { font: 300 40px "Inter", sans-serif; color: #c9c9c9; }
       #pctl .rt { display: flex; align-items: center; gap: 34px; }
       #pctl .model { font: 450 25px "Inter", sans-serif; color: #a6a6a6; }
       #pctl .mic { width: 30px; height: 30px; }
-      #send { position: relative; width: 68px; height: 68px; border-radius: 34px; background: linear-gradient(135deg, #2f7dff, #8a5cff 55%, #fd26d3); transform-origin: 50% 100%; }
+      #send { position: relative; width: 68px; height: 68px; border-radius: 34px; background: #f4f4f6; transform-origin: 50% 50%; }
       #send svg { position: absolute; left: 17px; top: 17px; width: 34px; height: 34px; }
-      #ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 2.5px solid rgba(160, 120, 255, .9); pointer-events: none; }
+      #ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 2.5px solid rgba(255, 255, 255, .9); pointer-events: none; }
       #pIcons { position: absolute; left: 471px; top: 392px; height: 52px; }
       .appic { position: absolute; top: 0; width: 52px; height: 52px; border-radius: 14px; background: #1d1d20; border: 1.5px solid #303036; display: grid; place-items: center; }
       .appic svg { width: 30px; height: 30px; }
@@ -71,18 +71,19 @@
       .tile { position: absolute; left: 0; top: 0; width: 140px; height: 140px; border-radius: 36px; background: rgba(22, 22, 26, .92); border: 2px solid #2e2e34; display: grid; place-items: center; box-shadow: 0 20px 50px rgba(0, 0, 0, .5); }
       .tile svg { width: 74px; height: 74px; }
       .tile b { position: absolute; top: 158px; left: 50%; transform: translateX(-50%); font: 500 30px "Inter", sans-serif; color: #b9b9c0; white-space: nowrap; }
-      #cam9 { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
-      #card { position: absolute; left: 174px; top: 189px; width: 1569px; height: 699px; background: #121214; border: 2px solid #26262b; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, .55); }
-      #card .date { position: absolute; left: 81px; top: 66px; font: 400 38px "Inter", sans-serif; color: #8d8d95; white-space: pre; height: 50px; }
-      #card .date span { display: inline-block; white-space: pre; }
-      #card .ttl { position: absolute; left: 81px; top: 112px; font: 650 60px "Inter", sans-serif; color: #fff; letter-spacing: -0.02em; }
-      #card .rule { position: absolute; left: 81px; right: 81px; top: 212px; height: 2px; background: #26262b; }
-      #card .body { position: absolute; left: 81px; width: 1407px; font: 400 44px "Inter", sans-serif; line-height: 64px; color: #d9d9de; letter-spacing: -0.01em; }
+      #feed { position: absolute; inset: 0; }
+      .fcard { position: absolute; left: 0; top: 0; width: 1300px; height: 560px; background: #121214; border: 2px solid #26262b; border-radius: 30px; overflow: hidden; box-shadow: 0 40px 100px rgba(0, 0, 0, .6); transform-origin: 650px 280px; }
+      .fcard .date { position: absolute; left: 76px; top: 60px; font: 450 38px "Inter", sans-serif; color: #8d8d95; }
+      .fcard .ttl { position: absolute; left: 76px; top: 108px; font: 700 66px "Inter", sans-serif; color: #fff; letter-spacing: -0.03em; }
+      .fcard .rule { position: absolute; left: 76px; right: 76px; top: 212px; height: 2px; background: #26262b; }
+      .fcard .body { position: absolute; left: 76px; right: 76px; top: 248px; font: 400 44px/64px "Inter", sans-serif; color: #d9d9de; letter-spacing: -0.01em; }
+      .fcard .foot { position: absolute; left: 76px; bottom: 52px; display: flex; align-items: center; gap: 9px; font: 500 32px "Inter", sans-serif; color: #8d8d95; }
+      .fcard .foot i { width: 14px; height: 14px; border-radius: 50%; }
+      .fcard .foot span { margin-left: 12px; }
       .ln { display: block; white-space: nowrap; }
 
       /* S10 */
       .big { position: absolute; left: 0; top: 0; font: 700 150px "Inter", sans-serif; letter-spacing: -0.035em; white-space: pre; line-height: 1; }
-      .grad { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(90deg, #4f8dff, #9bd43a 35%, #f6b926 62%, #fd26d3); }
       .tag { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 16px; height: 84px; padding: 0 34px 0 28px; border-radius: 42px; background: #17171a; border: 2px solid #2a2a2f; font: 500 38px "Inter", sans-serif; color: #c4c4cb; white-space: nowrap; transform-origin: 50% 50%; }
       .tag i { width: 16px; height: 16px; border-radius: 50%; }
 

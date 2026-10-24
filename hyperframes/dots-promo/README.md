@@ -1,6 +1,6 @@
 # dots — promo
 
-A 23.3 s, 30 fps, 1920×1080 promo for "OpenAI Dots", cut to the supplied voiceover (`assets/voiceover.mp3`). The motion language follows a reference edit (kinetic type, a self-scrolling stack, a smash zoom onto a prompt, fast app-UI cuts with a status pill, a pixel dissolve, rolling cards, a line that breaks apart and rebuilds the end card). The shots are written for this script and dressed in the dots brand: black, the glowing blue/green/yellow/pink wordmark and the four felt characters.
+A 23.3 s, 30 fps, 1920×1080 promo for "OpenAI Dots", cut to the supplied voiceover (`assets/voiceover.mp3`). The motion language follows a reference edit: everything lands on springs with overshoot and squash-and-stretch, the camera keeps moving, and shots hand over with whips, smash zooms, a circle wipe and a pixel dissolve. The shots are written for this script and dressed in the dots brand: black, the glowing blue/green/yellow/pink wordmark and the four felt characters.
 
 | frames | VO | shot |
 | --- | --- | --- |
@@ -20,6 +20,7 @@ A 23.3 s, 30 fps, 1920×1080 promo for "OpenAI Dots", cut to the supplied voiceo
 Everything is drawn in `assets/scene.js` as a pure function of the frame. The characters are SVG with a felt filter (defined in `index.html`). Inter and GSAP are stored locally.
 
 - Preview: `npx --yes hyperframes@0.8.114 preview`
-- Render: `npx --yes hyperframes@0.8.114 render -q high -o renders/dots-promo.mp4`
+- Render with motion blur (recommended): `scripts/render-mb.sh` → `renders/dots-promo.mp4`
+- Quick render without blur: `npx --yes hyperframes@0.8.114 render -q high -o renders/dots-promo.mp4`
 
 App UIs, avatars and tool icons are generic stand-ins drawn in code; no third-party logos are used.
