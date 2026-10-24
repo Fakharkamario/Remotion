@@ -17,6 +17,7 @@
 //   568–700  "You focus on what's next. OpenAI Dots."   the line types, bursts into dots that slam back in as the end card
 (function () {
   const FPS = 30, FRAMES = 700, W = 1920, H = 1080;
+  const SUB = 0; // sub-frame time offset; scripts/render-mb.sh sets it for its second, interleaved pass
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lerp = (a, b, t) => a + (b - a) * t;
   const ramp = (f, a, b) => clamp((f - a) / (b - a), 0, 1);
@@ -887,7 +888,7 @@
     }
 
     const R0 = { _f: 0 };
-    Object.defineProperty(R0, "frame", { get: () => R0._f, set: (v) => { R0._f = v; render(v); } });
+    Object.defineProperty(R0, "frame", { get: () => R0._f, set: (v) => { R0._f = v; render(v + SUB); } });
     const tl = gsap.timeline({ paused: true });
     tl.fromTo(R0, { frame: 0 }, { frame: FRAMES, duration: FRAMES / FPS, ease: "none", immediateRender: true }, 0);
     tl.set({}, {}, FRAMES / FPS);
