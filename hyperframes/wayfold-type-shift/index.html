@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>wayfold type shift</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #faf1e4; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #faf1e4; font-family: "Inter", system-ui, sans-serif; color: #141414; }
+      .layer { position: absolute; inset: 0; overflow: hidden; }
+      .abs { position: absolute; left: 0; top: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      svg.art { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+      /* collage + phone backdrop */
+      #paper { background: radial-gradient(ellipse at 50% 55%, #fcf5ea 0%, #f8eedf 70%, #f4e8d6 100%); }
+      #rings { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      .bit { position: absolute; left: 0; top: 0; }
+      .tile { position: absolute; left: 0; top: 0; overflow: hidden; background: #ddd; transform-origin: 50% 50%; }
+
+      /* phone */
+      #phone { position: absolute; left: 760px; top: 147px; width: 400px; height: 786px; transform-origin: 200px 393px; }
+      #phoneCard { position: absolute; inset: 0; border-radius: 26px; background: #fff; box-shadow: 0 18px 50px rgba(120, 90, 50, .14), 0 2px 6px rgba(120, 90, 50, .08); }
+      #phoneClip { position: absolute; inset: 0; border-radius: 26px; overflow: hidden; }
+      .ph-top { position: absolute; left: 26px; right: 26px; top: 22px; height: 30px; display: flex; align-items: center; gap: 18px; font-size: 14px; font-weight: 600; letter-spacing: .02em; }
+      .ph-top .sp { flex: 1; }
+      .ph-top svg { width: 18px; height: 18px; }
+      .ph-title { position: absolute; left: 24px; top: 78px; font-size: 21px; font-weight: 600; line-height: 25px; letter-spacing: -.005em; text-transform: uppercase; width: 300px; }
+      .ph-bar { position: absolute; left: 18px; right: 18px; top: 718px; height: 48px; display: flex; gap: 8px; align-items: center; }
+      .ph-btn { width: 46px; height: 46px; border-radius: 12px; background: #f1f1f1; display: grid; place-items: center; }
+      .ph-btn svg { width: 22px; height: 22px; }
+      .ph-cta { flex: 1; height: 46px; border-radius: 12px; background: #f1f1f1; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 18px; font-weight: 600; white-space: nowrap; }
+      .ph-cta svg { width: 20px; height: 20px; }
+
+      /* prompt card */
+      #promptBg { background: #fbf1e6; }
+      #pcam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+      #ideas { position: absolute; left: 240px; top: 200px; display: flex; align-items: center; gap: 22px; font-size: 46px; font-weight: 450; letter-spacing: -.01em; }
+      #ideas svg { width: 44px; height: 56px; }
+      .pchip { position: absolute; top: 318px; height: 102px; border-radius: 51px; background: #efe9e1; display: flex; align-items: center; gap: 26px; padding: 0 44px; font-size: 47px; font-weight: 450; letter-spacing: -.012em; white-space: nowrap; overflow: hidden; }
+      .pchip svg { width: 36px; height: 46px; flex: none; }
+      #chip2 { -webkit-mask-image: linear-gradient(90deg, #000 78%, transparent 96%); mask-image: linear-gradient(90deg, #000 78%, transparent 96%); }
+      #chev { position: absolute; left: 1632px; top: 345px; width: 30px; height: 46px; }
+      #pcard { position: absolute; left: 213px; top: 468px; width: 1467px; height: 407px; border-radius: 22px; background: #fff; box-shadow: 0 1px 0 rgba(0,0,0,.02); }
+      #ptext { position: absolute; left: 48px; top: 46px; font-size: 52px; font-weight: 450; letter-spacing: -.018em; white-space: pre; }
+      #ptext .caret { display: inline-block; width: 3px; height: 54px; margin-left: 3px; background: #1a1a1a; vertical-align: -9px; }
+      .pfoot { position: absolute; top: 264px; display: flex; align-items: center; font-size: 46px; font-weight: 450; letter-spacing: -.01em; }
+      #pplus svg { width: 36px; height: 36px; }
+      #pmark { gap: 18px; }
+      #pmark svg { width: 52px; height: 52px; }
+      #pmic svg { width: 40px; height: 52px; }
+      #psend { color: #fff; position: absolute; left: 1326px; top: 264px; width: 112px; height: 108px; border-radius: 12px; background: #0b0b0b; display: grid; place-items: center; }
+      #psend svg { width: 52px; height: 52px; }
+      #bcur { position: absolute; left: 0; top: 0; width: 84px; height: 96px; }
+
+      /* audit (grid / dark / white strips) */
+      #audit { background: #fff; }
+      .strip { position: absolute; top: 0; height: 1080px; overflow: hidden; }
+      #gridStrip { background: #fff; }
+      #darkStrip { background: #1b1b1b; color: #fff; }
+      #whiteStrip { background: #fff; }
+      .content { position: absolute; left: 0; top: 0; }
+      .pimg { position: absolute; background: #ececec; overflow: hidden; }
+      .plus { position: absolute; width: 58px; height: 58px; background: #fff; display: grid; place-items: center; }
+      .plus svg { width: 30px; height: 30px; }
+      .pname { position: absolute; font-size: 25px; font-weight: 500; letter-spacing: .1em; white-space: nowrap; text-transform: uppercase; color: #222; }
+      .pprice { position: absolute; font-size: 22px; letter-spacing: .06em; color: #8a8a8a; white-space: nowrap; padding: 2px 4px; }
+      .psizes { position: absolute; display: flex; gap: 32px; font-size: 25px; letter-spacing: .05em; white-space: nowrap; color: #222; }
+      .pbadge { position: absolute; font-size: 25px; letter-spacing: .06em; white-space: nowrap; color: #222; background: #fff; padding: 8px 12px; }
+      .dk { position: absolute; white-space: nowrap; }
+      .dk-in { left: 0; top: -40px; width: 900px; height: 172px; border: 2px solid #3a3a3a; border-radius: 22px; }
+      .dk-ph { left: 34px; top: 30px; font-size: 40px; color: #6c6c6c; }
+      .dk-back { left: 0; top: 182px; width: 820px; height: 114px; border: 2px solid #3d3d3d; border-radius: 22px; display: flex; align-items: center; gap: 16px; padding-left: 30px; font-size: 40px; font-weight: 650; }
+      .dk-back svg { width: 40px; height: 40px; }
+      .dk-row { left: 0; font-size: 41px; display: flex; align-items: center; gap: 16px; }
+      .dk-row svg { width: 30px; height: 30px; }
+      .dk-total { left: 0; top: 527px; font-size: 54px; font-weight: 700; }
+      .dk-tax { left: -6px; top: 610px; font-size: 41px; color: #6c6c6c; padding: 4px 6px; }
+      .dk-help { left: 520px; top: 585px; font-size: 32px; font-weight: 700; letter-spacing: .06em; }
+      .dk-cta { left: 0; top: 835px; width: 820px; height: 140px; border: 2px solid #3d3d3d; border-radius: 26px; }
+      .wh { position: absolute; white-space: nowrap; }
+      .pill { position: absolute; left: 0; top: 0; height: 50px; border-radius: 25px; overflow: hidden; color: #fff; font-size: 25px; font-weight: 500; white-space: nowrap; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); }
+      .pill span { position: absolute; left: 22px; top: 11px; }
+      .ccur { position: absolute; left: 0; top: 0; width: 66px; height: 66px; }
+
+      /* end card */
+      #endc { background: #000; }
+      #halo { position: absolute; left: 960px; top: 540px; width: 1400px; height: 800px; margin: -400px 0 0 -700px; border-radius: 50%; background: radial-gradient(closest-side, rgba(150,150,150,.30), rgba(150,150,150,.10) 55%, rgba(150,150,150,0)); }
+      #word { position: absolute; left: 960px; top: 540px; font-size: 112px; font-weight: 600; letter-spacing: -.02em; color: #fff; white-space: nowrap; line-height: 1;
+        text-shadow: 0 0 10px rgba(255,255,255,.7), 0 0 34px rgba(255,255,255,.45), 0 0 90px rgba(230,230,230,.35); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="20.0667" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:450">Aa</span><span style="font-weight:600">Aa</span><span style="font-weight:700">Aa</span></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
