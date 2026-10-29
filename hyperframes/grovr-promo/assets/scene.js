@@ -3,8 +3,8 @@
 // nodes, a mockup cascade, a spinning-coin ring wrapped in spiral text, app UI, 3D cards, an arched word and the
 // end card). The brand, copy, palette, logo and every drawing are new: grovr rounds up card purchases and invests
 // the spare change in climate projects. Lime / forest / cream / lilac / stone, the sprout mark and jade coins.
-//   0–78      "Every" types huge, shrinks into "Every coin can", "MATTER" rises and wobbles
-//   78–122    glyph slams on alternating grounds, then a scatter of symbols
+//   0–68      "Every" types huge under a pull-back, hard cut to "Every coin can", "MATTER" rises turning in perspective
+//   68–122    glyph cuts on alternating grounds, then a scatter of symbols
 //   116–168   "Put your → / spare (mark) change / to work." lights up word by word; push in, whip
 //   168–248   outline letters of "grovr" pan past with their nodes and handles
 //   248–290   the wordmark slams in, ground cuts to lime
@@ -30,9 +30,9 @@
   const ei = (t) => Math.pow(clamp(t, 0, 1), 3);
   const eio = (t) => (t = clamp(t, 0, 1), t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   const e5 = (t) => (t = clamp(t, 0, 1), t < 0.5 ? 16 * t ** 5 : 1 - Math.pow(-2 * t + 2, 5) / 2);
-  // damped spring 0 → 1 over about d frames (settles by 1.5 d); spr overshoots ~14 %, sprB ~26 %
-  const spr = (f, t0, d) => { const p = (f - t0) / d; return p <= 0 ? 0 : p >= 2 ? 1 : 1 - Math.exp(-4 * p) * Math.cos(6.5 * p); };
-  const sprB = (f, t0, d) => { const p = (f - t0) / d; return p <= 0 ? 0 : p >= 2.5 ? 1 : 1 - Math.exp(-3 * p) * Math.cos(7 * p); };
+  // expo ease-out 0 → 1 over 2 d frames; it lands and stops, no overshoot (the reference never springs)
+  const spr = (f, t0, d) => { const p = (f - t0) / (2 * d); return p <= 0 ? 0 : p >= 1 ? 1 : (1 - Math.pow(2, -10 * p)) / (1 - Math.pow(2, -10)); };
+  const sprB = spr;
   const shk = (f, t0, a, ph = 0) => (f < t0 ? 0 : a * Math.exp(-(f - t0) / 3.5) * Math.sin((f - t0) * 2.6 + ph));
   const hex = (s) => [1, 3, 5].map((i) => parseInt(s.slice(i, i + 2), 16));
   const mix = (a, b, t) => { const A = hex(a), B = hex(b); t = clamp(t, 0, 1); return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(",")})`; };
@@ -64,8 +64,8 @@
   const blurOf = (b) => (b > 0.05 ? `blur(${b.toFixed(2)}px)` : "none");
 
   // a slam: from big and soft to a squashed landing, a small rebound, settled
-  const SLAM_S = [[0, 2.4], [3, 0.92], [5, 1.04], [7.5, 0.99], [10, 1]];
-  const SLAM_B = [[0, 12], [3, 0]];
+  const SLAM_S = [[0, 1.18], [3, 1.03], [8, 1]];
+  const SLAM_B = [[0, 6], [2, 0]];
 
   // brand
   const LIME = "#BFF24A", FOREST = "#0F2B21", CREAM = "#F2EEE3", LILAC = "#D8CFF2", STONE = "#D8D0BD", CORAL = "#FF7A59", NIGHT = "#08130E";
@@ -115,7 +115,7 @@
     // a word broken into letters, laid out by prefix width so kerning survives
     const letters = (host, s, font, color) => s.split("").map((c, i) => {
       const e = txt(host, c, font, color);
-      Object.defineProperty(e, "_x", { get: () => measure(s.slice(0, i), font) + measure(c, font) / 2 });
+      Object.defineProperty(e, "_x", { get: () => measure(s.slice(0, i), e._font) + measure(c, e._font) / 2 });
       return e;
     });
 
@@ -150,50 +150,65 @@
     const big1 = letters(s1, "Every", FBIG, FOREST);
     const small1 = ["coin", "can"].map((w) => txt(s1, w, FSM, FOREST));
     const mat = letters(s1, "MATTER", FMAT, FOREST);
+    const persp1 = mk(s1, "abs", null, "width:1920px;height:1080px;perspective:1400px;perspective-origin:960px 600px");
+    const matBox = mk(persp1, "abs", null, "width:1920px;height:1080px;transform-style:preserve-3d");
+    mat.forEach((e) => matBox.appendChild(e));
     function renderS1(f) {
-      s1.style.background = f < 56 ? LIME : CREAM;
-      // phase A: letters type in, the word slides left to keep the newest letter on screen
-      const t = [0, 4, 8, 12, 16];
+      // 0–23: the camera pulls back on a huge "Every" while it types; hard cut to the small line
+      const big = f < 23, mid = f >= 23 && f < 49;
+      s1.style.background = f < 49 ? LIME : CREAM;
+      const t = [0, 3, 7, 11, 15];
+      const zs = keys(f, [[0, 1.55], [8, 1.22], [16, 1.06], [23, 1]]);
       const fullW = measure("Every", FBIG);
-      let shown = 0;
-      t.forEach((ti, i) => { shown += measure("Every".slice(i, i + 1), FBIG) * clamp(spr(f, ti, 4), 0, 1.1); });
-      const wordX = Math.min(70, 1870 - shown);
-      // phase B: the whole word shrinks into the small line
-      const lineW = measure("Every coin can", FSM), lineL = 960 - lineW / 2;
-      const k = e5(ramp(f, 22, 31));
-      const up = eio(ramp(f, 50, 58));
-      const ly = lerp(540, 330, up), lcol = mix(FOREST, "#8c8f86", up);
-      const sc = lerp(1, 56 / 430, k);
-      const bigCx = wordX + fullW / 2, smCx = lineL + measure("Every", FSM) / 2;
-      const gx = lerp(bigCx, smCx, k), gy = lerp(290, ly, k);
       big1.forEach((e, i) => {
-        const a = spr(f, t[i], 4);
-        const lx = (e._x - fullW / 2) * sc, dy = (1 - a) * 90 * sc;
-        const bob = k > 0.98 ? 7 * Math.sin((f - 30) * 0.32 + i * 0.4) * Math.exp(-(f - 31) / 30) : 0;
-        place(e, gx + lx, gy + dy + bob, sc * (0.55 + 0.45 * a), f >= t[i] ? 1 : 0);
-        e.style.color = lcol;
+        e.style.font = big ? FBIG : FSM;
+        e._font = big ? FBIG : FSM;
+        e._h = big ? 430 : 56;
       });
-      const offs = [measure("Every ", FSM), measure("Every coin ", FSM)];
-      small1.forEach((e, i) => {
-        const ti = 31 + i * 5, a = sprB(f, ti, 5);
-        const bob = (i === 0 ? 10 : -8) * Math.sin((f - ti) * 0.3) * Math.exp(-(f - ti) / 18);
-        place(e, lineL + offs[i] + e._w / 2, ly + (1 - a) * 40 + bob, Math.max(0, a), f >= ti ? 1 : 0, (1 - a) * (i ? 8 : -8));
-        e.style.color = lcol;
-      });
-      // MATTER rises from below, sheared, then wobbles out; the whole line shrinks away at the end
-      const mt = 54, ma = spr(f, mt, 7);
-      const skew = keys(f, rel(mt, [[0, -22], [6, 9], [10, -5], [14, 3], [19, 0]]));
-      const rot = keys(f, rel(mt, [[0, -9], [6, 4], [11, -2], [16, 0]]));
-      const out = eio(ramp(f, 70, 78)), gs = lerp(1, 0.5, out);
-      const mW = measure("MATTER", FMAT), my = lerp(1450, 640, ma);
-      mat.forEach((e, j) => {
-        const wave = 34 * Math.sin(j * 0.95 + (f - mt) * 0.55) * Math.exp(-(f - mt) / 9);
-        const syk = 1 + 0.1 * Math.sin(j * 1.3 + (f - mt) * 0.5) * Math.exp(-(f - mt) / 10);
-        const x = 960 + (e._x - mW / 2) * gs, y = lerp(my, 560, out) + wave;
-        place(e, x, y, gs, f >= mt ? 1 : 0, rot, `skewX(${skew.toFixed(2)}deg) scaleY(${syk.toFixed(4)})`);
-      });
-      if (f >= 70) {
-        big1.concat(small1).forEach((e) => { e.style.opacity = (1 - out).toFixed(3); });
+      const lineW = measure("Every coin can", FSM), lineL = 960 - lineW / 2;
+      const offs = [0, measure("Every ", FSM), measure("Every coin ", FSM)];
+      const words = [big1, small1[0], small1[1]];
+      if (big) {
+        big1.forEach((e, i) => place(e, 60 + e._x * zs, 300 + 40 * (zs - 1), zs, f >= t[i] ? 1 : 0));
+        big1.forEach((e) => (e.style.color = FOREST));
+        small1.forEach((e) => (e.style.opacity = 0));
+      } else if (mid) {
+        // the small words arrive on staggered baselines and ease into one line while the line drifts
+        const settle = eio(ramp(f, 23, 40)), lift = eio(ramp(f, 41, 49));
+        const base = [22, -6, -30], ly = lerp(552, 540, ramp(f, 23, 49)) - 200 * lift;
+        const spreadY = [0, 18, 34];
+        words.forEach((w, i) => {
+          const wy = ly + base[i] * (1 - settle) + spreadY[i] * lift;
+          const on = f >= 23 + i * 2;
+          if (i === 0) big1.forEach((e) => place(e, lineL + e._x, wy, 1, 1));
+          else place(w, lineL + offs[i] + w._w / 2, wy, 1, on ? 1 : 0);
+        });
+        [...big1, ...small1].forEach((e) => (e.style.color = mix(FOREST, "#4a5a3a", lift)));
+      }
+      // 49–68: on cream the line sits grey above; MATTER rises in perspective and turns flat, then pulls away
+      const late = f >= 49;
+      persp1.style.display = late ? "block" : "none";
+      if (late) {
+        const ly = 330 + 8 * ramp(f, 49, 68);
+        const shrink = ei(ramp(f, 63, 68)), gs = lerp(1, 0.55, shrink);
+        words.forEach((w, i) => {
+          const els = i === 0 ? big1 : [w];
+          els.forEach((e) => {
+            const x = i === 0 ? lineL + e._x : lineL + offs[i] + e._w / 2;
+            place(e, 960 + (x - 960) * gs, lerp(ly, 470, shrink), gs, 1);
+            e.style.color = "#8b8f86";
+          });
+        });
+        const rise = eo(ramp(f, 49, 56));
+        const mW = measure("MATTER", FMAT);
+        mat.forEach((e, j) => {
+          const lt = clamp((f - 49 - j * 0.6) / 7, 0, 1);
+          const y = lerp(1250, 640, eo(lt));
+          place(e, 960 + (e._x - mW / 2), y, 1, f >= 49 + j * 0.6 ? 1 : 0);
+        });
+        const ry = keys(f, [[49, 34], [56, 14], [68, -6]]), rx = keys(f, [[49, -26], [56, -8], [68, 4]]);
+        matBox.style.transformOrigin = "960px 640px";
+        matBox.style.transform = `translate(0, ${px(lerp(0, -90, shrink))}) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) scale(${(gs * lerp(1.12, 1, rise)).toFixed(4)})`;
       }
     }
 
@@ -201,10 +216,10 @@
     // S2  glyph slams, then a scatter of symbols on lilac
     const s2 = scene("s2", FOREST);
     const GL = [
-      { t: 78, bg: FOREST, c: LIME, k: "$" },
-      { t: 84, bg: CREAM, c: FOREST, k: "%" },
-      { t: 90, bg: FOREST, c: LIME, k: "arrow" },
-      { t: 96, bg: LIME, c: FOREST, k: "mark" },
+      { t: 68, bg: FOREST, c: LIME, k: "$" },
+      { t: 73, bg: CREAM, c: FOREST, k: "%" },
+      { t: 77, bg: FOREST, c: LIME, k: "arrow" },
+      { t: 82, bg: LIME, c: FOREST, k: "mark" },
     ];
     GL.forEach((g) => {
       g.el = g.k === "arrow" ? icon(s2, ARROW(g.c, 15), 720) : g.k === "mark" ? icon(s2, mark(g.c), 760) : txt(s2, g.k, F(800, 900), g.c);
@@ -212,28 +227,28 @@
     const SCAT = [["$", 380, 330, -8], ["%", 1430, 300, 6], ["+", 860, 760, 0], ["arrow", 560, 760, 0], ["mark", 1160, 520, -6], ["@", 1500, 760, 4], ["=", 300, 640, 0], ["$", 1720, 520, 10]];
     SCAT.forEach((s, i) => {
       s.el = s[0] === "arrow" ? icon(s2, ARROW(FOREST, 14), 170) : s[0] === "mark" ? icon(s2, mark(FOREST), 190) : txt(s2, s[0], F(800, 200), FOREST);
-      s.t = 102 + i * 1.6;
+      s.t = 87 + [0, 0, 3, 3, 6, 6, 9, 9][i];
     });
     function renderS2(f) {
       const cur = [...GL].reverse().find((g) => f >= g.t);
-      s2.style.background = f >= 102 ? LILAC : cur ? cur.bg : FOREST;
+      s2.style.background = f >= 87 ? LILAC : cur ? cur.bg : FOREST;
       GL.forEach((g) => {
-        const on = f >= 102 ? false : cur === g;
+        const on = f >= 87 ? false : cur === g;
         if (!on) { g.el.style.display = "none"; return; }
         g.el.style.display = "block";
         const lt = f - g.t;
-        const s = keys(lt, [[0, 1.55], [2.5, 0.95], [4, 1.03], [6, 1]]) * (1 + 0.012 * lt);
-        place(g.el, 960 + keys(lt, [[0, 60], [3, 0]]), 540, s, 1, keys(lt, [[0, -12], [2.5, 2], [5, 0]]));
-        g.el.style.filter = blurOf(keys(lt, [[0, 14], [2.5, 0]]));
+        // each glyph is cut in already in place and only pushes in slowly
+        place(g.el, 960, 540, 1.04 + 0.012 * lt, 1);
+        g.el.style.filter = "none";
       });
       SCAT.forEach((s, i) => {
         const on = f >= s.t && f < 122;
         s.el.style.display = on ? "block" : "none";
         if (!on) return;
-        const a = sprB(f, s.t, 5), lt = f - s.t;
-        const drift = eio(ramp(f, 113, 121));
-        const x = lerp(s[1] + lt * 1.4, 1800, drift * 0.25), y = s[2] - lt * 0.8;
-        place(s.el, x, y, a * lerp(1, 0.6, drift), 1 - drift, s[3] + (1 - a) * 25);
+        const lt = f - 87;
+        const drift = eio(ramp(f, 110, 120));
+        const x = lerp(s[1] + lt * 2.2, 1800, drift * 0.3), y = s[2] - lt * 1.1;
+        place(s.el, x, y, lerp(1.08, 1, ramp(f, 87, 116)), 1 - drift, s[3]);
       });
     }
 
@@ -353,8 +368,8 @@
       const wOn = f >= 249;
       wm4.style.display = wOn ? "flex" : "none";
       if (wOn) {
-        const s = f < 257 ? keys(f, rel(249, SLAM_S)) : 1 + 0.12 * (1 - spr(f, 257, 6)) * (f < 258 ? 1 : 1) - 0.12 * (f < 257 ? 0 : 0);
-        const bump = f >= 257 ? 1 + 0.1 * Math.exp(-(f - 257) / 4) * Math.cos((f - 257) * 0.9) : 1;
+        const s = keys(f, rel(249, SLAM_S));
+        const bump = 1;
         place(wm4, 960 + 0.8 * (f - 249), 540 - 0.5 * (f - 249), s * bump * (1 + 0.0015 * (f - 249)) * 0.62, 1);
         wm4.style.color = f < 257 ? LIME : FOREST;
         wm4.querySelector("path").setAttribute("fill", f < 257 ? LIME : FOREST);
@@ -411,8 +426,9 @@
         place(arr5, 100 + 85 + slide, 600 + (1 - spr(f, 354, 5)) * 160, spr(f, 354, 5), 1);
         ev5.forEach((e, j) => {
           const t = 355 + j * 1.6, a = spr(f, t, 5);
-          place(e, 310 + e._x + slide, 590 + (1 - a) * 230, 1, f >= t ? 1 : 0, (1 - a) * 12);
-          e.style.clipPath = "none";
+          const dy = (1 - a) * 230;
+          place(e, 310 + e._x + slide, 590 + dy, 1, f >= t ? 1 : 0);
+          e.style.clipPath = `inset(-20px -20px ${px(Math.max(0, dy - 4))} -20px)`;
         });
         const evR = 310 + measure("EVERYONE", F(800, 200)) + slide;
         sun5.style.display = "block";
@@ -765,7 +781,7 @@
       const s = lerp(0.35, 1, ga) * lerp(1, 0.5, out);
       good.forEach((e, k) => {
         const off = (e._x - gw / 2) * s, ang = off / R - Math.PI / 2;
-        const wob = 3 * Math.sin((f - 936) * 0.7 + k) * Math.exp(-(f - 936) / 8);
+        const wob = 0;
         const cy = lerp(560, 500, out) + R;
         place(e, 960 + R * Math.cos(ang), cy + R * Math.sin(ang), s, f >= 936 ? 1 : 0, (ang + Math.PI / 2) * 180 / Math.PI + wob);
       });
@@ -796,7 +812,7 @@
 
     // ---------- frame ----------
     const SC = [
-      [s1, 0, 78, renderS1], [s2, 78, 122, renderS2], [s3, 116, 168, renderS3], [s4, 168, 290, renderS4], [s5, 290, 392, renderS5],
+      [s1, 0, 68, renderS1], [s2, 68, 122, renderS2], [s3, 116, 168, renderS3], [s4, 168, 290, renderS4], [s5, 290, 392, renderS5],
       [s6, 392, 478, renderS6], [s7, 478, 540, renderS7], [s8, 540, 650, renderS8], [s9, 650, 700, renderS9], [s10, 700, 728, renderS10],
       [s11, 728, 762, renderS11], [s12, 762, 816, renderS12], [s13, 816, 866, renderS13], [s14, 866, 916, renderS14], [s15, 916, 972, renderS15],
       [s16, 972, FRAMES + 1, renderS16],

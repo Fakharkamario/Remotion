@@ -1,6 +1,6 @@
 # grovr — promo
 
-A 35.4 s, 30 fps, 1920×1080 HyperFrames promo. The motion follows a reference edit shot for shot: type that types huge and then shrinks, slams with a squash and rebound, glyph cuts on alternating grounds, outline letters drawn with their bezier nodes, a mockup cascade, spinning coins that chain into a ring inside spiral text, app UI, 3D cards, an arched word and a sliding end card. The content is new:
+A 35.4 s, 30 fps, 1920×1080 HyperFrames promo. The motion follows the feel of a reference edit: no springs or overshoot, moves land on expo ease-outs and stop dead, the camera keeps drifting, changes happen on hard cuts paced to the reference's cut rhythm, letters type on or rise through masks, and fast moves get real motion blur (`scripts/render-mb.sh`). Shots: type that types huge under a pull-back, then hard-cuts small, a bold word turning in perspective, glyph cuts on alternating grounds, outline letters drawn with their bezier nodes, a mockup cascade, spinning coins that chain into a ring inside spiral text, app UI, 3D cards, an arched word and a sliding end card. The content is new:
 
 - **Brand:** *grovr*, a made-up app that rounds up card purchases and invests the spare change in climate projects.
 - **Logo:** an original sprout mark (a stem with two leaves) and an Inter wordmark.
@@ -11,8 +11,8 @@ A 35.4 s, 30 fps, 1920×1080 HyperFrames promo. The motion follows a reference e
 
 | frames | shot |
 | --- | --- |
-| 0–78 | "Every" types huge, shrinks into "Every coin can", "MATTER" rises sheared and wobbles |
-| 78–122 | `$` `%` `↗` and the sprout slam on alternating grounds, then a scatter of symbols on lilac |
+| 0–68 | "Every" types huge under a pull-back, hard cut to "Every coin can", "MATTER" rises turning in perspective |
+| 68–122 | `$` `%` `↗` and the sprout cut on alternating grounds, then a scatter of symbols on lilac |
 | 116–168 | "Put your → / spare (sprout) change / to work." lights up word by word; push in, whip |
 | 168–248 | outline letters of "grovr" pan past with their nodes and handles; the ground switches lime / forest / lilac |
 | 248–290 | the wordmark slams in; the ground cuts to lime |
