@@ -367,6 +367,14 @@
     const PA = [[-170, 236, 150, 200], [56, 150, 288, 224], [392, 168, 150, 236], [-150, 470, 160, 180], [40, 392, 320, 262], [384, 440, 140, 206], [-140, 680, 150, 150], [90, 676, 220, 150], [372, 664, 150, 160]];
     const lerpBox = (a, b, t) => a.map((v, k) => lerp(v, b[k], t));
 
+    // layout and motion data, read by the After Effects generator (ae/generator) so both builds share one source
+    SCENE.consts = {
+      FPS: FPS, FRAMES: FRAMES, LOOP: LOOP, END: END, SEND: SEND, CT: CT, PL: PL, PA: PA, POPS: POPS, STEPS: STEPS, JIT: JIT,
+      P: { PHONE_S: PHONE_S, PHONE_Y: PHONE_Y, GRID_OUT: GRID_OUT, CARD_Y: CARD_Y, CARD_X: CARD_X, TYPE: TYPE, ZOOM_IN: ZOOM_IN, ZOOM_OUT: ZOOM_OUT,
+        CUR_IN: CUR_IN, CUR_PRESS: CUR_PRESS, BTN_PRESS: BTN_PRESS, BTN_HEAT: BTN_HEAT, LIST_IN: LIST_IN, LIST_DRIFT: LIST_DRIFT, PUSH1: PUSH1, PUSH2: PUSH2,
+        EXIT: EXIT, B_IN: B_IN, B_W: B_W, B_HOVER_X: B_HOVER_X, B_HOVER_Y: B_HOVER_Y, O_IN: O_IN, O_SQ: O_SQ, O_W: O_W, P_IN: P_IN, P_W: P_W, LOGO: LOGO },
+    };
+
     // ---------------------------------------------------------------- render
     function render(gf) {
       gf += SUB;
@@ -527,5 +535,6 @@
     tl.seek(0.001).seek(0);
     return tl;
   };
+  SCENE.art = art; SCENE.icons = I; SCENE.cursorSvg = CUR; SCENE.sets = SETS;
   window.SCENE = SCENE;
 })();

@@ -1,3 +1,5 @@
 renders/
 snapshots/
 *.mp4
+ae/*.zip
+ae/generator/__pycache__/
