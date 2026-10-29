@@ -1,18 +1,19 @@
-// Wayfold — 20.07 s, 30 fps, 602 frames. Original travel-app story cut to the rhythm of a reference "type shift"
-// edit: the same shot lengths, cuts, camera moves and cursor timing, with new art, copy and brand.
+// Wayfold — 20 s, 30 fps, 600 frames. Original travel-app story cut to the rhythm of a reference "type shift"
+// edit: the same shot lengths and cut points, with each move's timing and easing measured from the reference
+// (see "motion profiles"), applied to new art, copy, layouts and brand.
 // The 9 s loop plays twice (second pass with new copy), then the end card.
 //   loop frame
-//   0–15     postcard collage pops in on a swinging camera, confetti squares blink on the paper
-//   15–17    "type shift": the postcards jump into the phone layout at large scale
-//   17–63    the Wayfold phone settles, its grid reshuffles twice
+//   0–17     postcard collage pops on in type-shift steps, then a slow push-in; confetti blinks on the paper
+//   17–63    the postcards re-flow into the Wayfold phone, the card settles, then scrolls out upwards
 //   63–97    the prompt card types the request
-//   97–138   close-up on the send button: cursor rises, presses, button turns brown → orange
+//   98–138   close-up on the send button: cursor rises, button heats black → orange, cursor presses
 //   138–183  stay listing slides in; blue cursor + note pill
 //   183–224  dark checkout pushes in from the left; orange cursor, tax line highlights
-//   224–270  white panel pushes in; pink cursor + note pill
-//   539–602  black end card, glowing wordmark shrinks away
+//   207–269  white panel pushes in; pink cursor + note pill; everything eases off right into the cut
+//   (loop 2 runs 269–538 with new copy)
+//   538–600  black end card, glowing wordmark settles and shrinks away
 (function () {
-  const FPS = 30, FRAMES = 602, LOOP = 270, END = 539;
+  const FPS = 30, FRAMES = 600, LOOP = 269, END = 538;
   // sub-frame offset for the motion-blur render's second pass (scripts/render-mb.sh)
   const SUB = 0;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -219,7 +220,7 @@
     const pact = el("div", "pfoot", pcard); pact.style.left = "1076px"; pact.style.top = "288px";
     const pmic = el("div", "pfoot", pcard, I.mic); pmic.id = "pmic"; pmic.style.left = "1230px"; pmic.style.top = "290px";
     const psend = el("div", "", pcard, I.up); psend.id = "psend";
-    const bcur = el("div", "", promptL, CUR("#0b0b0b")); bcur.id = "bcur";
+    const bcur = el("div", "", promptL, '<svg viewBox="0 0 112 135" style="overflow:visible"><path d="M66 4L108 128 64 104 12 124z" fill="#0b0b0b" stroke="#fff" stroke-width="4" stroke-linejoin="round"/></svg>'); bcur.id = "bcur";
     // send button centre in prompt-world px (close-up zooms around it)
     const SEND = [213 + 1326 + 56, 468 + 264 + 54];
 
@@ -242,6 +243,8 @@
     const endc = el("div", "layer", stage); endc.id = "endc";
     const halo = el("div", "", endc); halo.id = "halo";
     const word = el("div", "", endc, "wayfold"); word.id = "word";
+    // the settled wordmark is about 540 px wide
+    let WORD_FIT = 1;
 
     // ---------------------------------------------------------------- per-pass content
     let builtSet = -1, pillW = [0, 0, 0], taxEl = null, priceEl = null;
@@ -295,6 +298,8 @@
         `<div class="wh" style="left:105px;top:500px;width:800px;height:175px;background:#9eae9c"></div>` +
         `<div class="wh" style="left:105px;top:552px;width:620px;text-align:center;color:#fff;font-size:24px;line-height:34px;letter-spacing:.02em">${S.deal[0]}<br>${S.deal[1]}</div>`;
 
+      endc.style.display = "block";
+      WORD_FIT = 540 / Math.max(1, word.offsetWidth);
       // measure the notes while the strip is laid out (render() sets the real visibility right after)
       audit.style.display = "block";
       [[pillB, S.blue], [pillO, S.orange], [pillP, S.pink]].forEach(([p, t], i) => {
@@ -319,6 +324,49 @@
       });
     }
 
+    // ---------------------------------------------------------------- motion profiles
+    // Timing and easing measured frame by frame from the reference edit (cut points, how fast each move
+    // starts and settles), stored as normalised 0..1 curves and applied to this film's own layout.
+    const PHONE_S = [[17, 0.925], [19, 0.925], [22, 0.933], [24, 0.937], [25, 0.944], [27, 0.948], [29, 0.955], [30, 0.981], [32, 0.993], [34, 0.996], [37, 1]];
+    const PHONE_Y = [[17, 1], [19, 1], [37, 0], [46, -1], [54, -2], [57, -4.5], [59, -7], [60, -10], [62, -19]];
+    const GRID_OUT = [[54, 0], [57, -6], [59, -14], [60, -20], [62, -40]];
+    const CARD_Y = [[63, 62], [64, 62], [65, 21], [67, 13.5], [69, 9], [73, 4.5], [83, 4.5], [86, 0], [97, 0]];
+    const CARD_X = [[63, 0], [89, 0], [91, -12], [94, -17], [96, -22], [97, -36]];
+    const TYPE = [[63, 0.3], [65, 0.3], [67, 0.37], [68, 0.48], [70, 0.54], [72, 0.61], [73, 0.65], [75, 0.74], [77, 0.79], [78, 0.83], [80, 0.85], [82, 0.87], [83, 0.89], [85, 0.91], [87, 0.96], [88, 0.98], [90, 1]];
+    const ZOOM_IN = [[98, 1], [100, 0.5625], [102, 0.344], [103, 0.219], [105, 0.156], [107, 0.094], [108, 0.0625], [110, 0.031], [112, 0]];
+    const ZOOM_OUT = [[128, 0], [130, 1.5], [132, 4.5], [133, 7.5], [135, 13.5], [137, 24]];
+    const CUR_IN = [[98, 1], [100, 0.658], [102, 0.474], [103, 0.353], [105, 0.268], [107, 0.2], [108, 0.153], [110, 0.116], [112, 0.084], [113, 0.058], [115, 0.042], [117, 0.026], [118, 0.011], [120, 0]];
+    const CUR_PRESS = [[120, 1], [122, 0.973], [123, 0.933], [125, 0.867], [127, 0.827], [128, 0.813], [130, 0.827], [132, 0.853], [133, 0.907], [135, 0.92], [137, 0.933]];
+    const BTN_PRESS = [[120, 1], [122, 0.99], [123, 0.96], [125, 0.9], [127, 0.86], [128, 0.84], [130, 0.86], [132, 0.9], [133, 0.93], [135, 0.97], [137, 0.97]];
+    const BTN_HEAT = [[103, 0], [105, 0.03], [107, 0.07], [109, 0.13], [111, 0.2], [113, 0.42], [115, 0.58], [117, 0.78], [119, 0.95], [121, 1]];
+    const LIST_IN = [[138, 1], [140, 0.3], [142, 0.2], [143, 0.13], [145, 0.11], [147, 0.065], [148, 0.043], [152, 0.022], [155, 0]];
+    const LIST_DRIFT = [[155, 0], [160, 0], [162, -3], [163, -9], [165, -18], [168, -24], [180, -27]];
+    const PUSH1 = [[167, 0], [170, 0.002], [172, 0.005], [173, 0.009], [175, 0.016], [177, 0.023], [178, 0.036], [180, 0.056], [182, 0.0875], [183, 0.148], [185, 0.347], [187, 0.908], [188, 0.947], [190, 0.964], [192, 0.975], [193, 0.981], [195, 0.986], [197, 0.989], [198, 0.991], [200, 0.992], [202, 0.994], [203, 0.995], [207, 0.997], [212, 1]];
+    const PUSH2 = [[207, 0], [208, 0.002], [210, 0.007], [212, 0.012], [213, 0.019], [215, 0.03], [217, 0.047], [218, 0.075], [220, 0.117], [222, 0.204], [223, 0.654], [225, 0.966], [227, 0.982], [228, 0.991], [230, 0.996], [232, 0.998], [252, 1]];
+    const EXIT = [[252, 0], [255, 1.5], [258, 4.5], [260, 7.5], [262, 10.5], [263, 16.5], [265, 25.5], [267, 37.5], [268, 60]];
+    const B_IN = [[138, 1], [140, 0.397], [142, 0.246], [143, 0.159], [145, 0.111], [147, 0.071], [148, 0.048], [150, 0.032], [152, 0.016], [153, 0.008], [155, 0]];
+    const B_W = [[138, 0.33], [140, 0.63], [142, 0.72], [143, 0.77], [145, 0.81], [147, 0.84], [148, 0.86], [150, 0.88], [152, 0.895], [155, 0.915], [158, 0.93], [163, 0.905], [168, 0.915], [172, 0.953], [173, 0.987], [175, 1]];
+    const B_HOVER_X = [[155, 0], [160, -3], [163, -10], [168, -14], [172, -6], [175, 0]];
+    const B_HOVER_Y = [[155, 0], [160, -5], [163, -9], [168, -12], [172, -5], [175, 0]];
+    const O_IN = [[187, 1], [188, 0.6], [190, 0.405], [192, 0.284], [193, 0.189], [195, 0.135], [197, 0.095], [198, 0.068], [200, 0.041], [202, 0.014], [203, 0]];
+    const O_SQ = [[205, 1], [207, 0.98], [208, 0.95], [210, 0.91], [212, 0.89], [213, 0.86], [215, 0.86], [217, 0.89], [218, 0.91], [220, 0.93], [222, 0.95], [223, 1]];
+    const O_W = [[187, 0.69], [188, 0.8], [190, 0.866], [192, 0.906], [193, 0.94], [195, 0.966], [197, 0.98], [198, 0.997], [200, 1.007], [203, 1.02], [205, 1.02], [207, 1], [208, 0.956], [210, 0.93], [213, 0.916], [215, 0.916], [217, 0.926], [218, 0.946], [220, 0.976], [222, 0.99], [223, 1]];
+    const P_IN = [[223, 1], [225, 0.748], [227, 0.504], [228, 0.374], [230, 0.293], [232, 0.228], [233, 0.179], [235, 0.146], [237, 0.114], [238, 0.098], [240, 0.073], [242, 0.057], [243, 0.041], [245, 0.033], [248, 0.016], [252, 0.008], [255, 0]];
+    const P_W = [[223, 0.264], [225, 0.509], [227, 0.692], [228, 0.786], [230, 0.843], [232, 0.88], [233, 0.906], [235, 0.931], [237, 0.956], [238, 0.962], [240, 0.969], [242, 0.975], [243, 0.987], [247, 1]];
+    const LOGO = [[538, 1.94], [540, 1.54], [542, 1.355], [544, 1.255], [546, 1.183], [548, 1.133], [550, 1.097], [552, 1.066], [554, 1.05], [556, 1.039], [558, 1.022], [560, 1.017], [562, 1.011], [564, 1.006], [566, 1.003], [568, 1], [574, 0.994], [578, 0.989], [582, 0.983], [584, 0.972], [586, 0.961], [588, 0.95], [590, 0.928], [592, 0.892], [594, 0.828], [596, 0.693], [597.5, 0.58]];
+
+    // collage: cards pop on in pairs on the same beats as the reference (0, 2, 4), jump to their places on 5
+    const POPS = [0, 0, 2, 2, 4, 4, 5];
+    const STEPS = [
+      { dx: 150, dy: 200, s: 0.8, j: 1 },
+      { dx: 70, dy: 110, s: 0.92, j: 0.7 },
+      { dx: 26, dy: 34, s: 0.97, j: 0.35 },
+    ];
+    const JIT = [[-60, 40], [50, -70], [-40, -90], [70, 60], [-30, 80], [60, -40], [0, 0]];
+    // phone grid re-flow: two big postcards → mid → masonry (the PL[0] layout)
+    const PA = [[-170, 236, 150, 200], [56, 150, 288, 224], [392, 168, 150, 236], [-150, 470, 160, 180], [40, 392, 320, 262], [384, 440, 140, 206], [-140, 680, 150, 150], [90, 676, 220, 150], [372, 664, 150, 160]];
+    const lerpBox = (a, b, t) => a.map((v, k) => lerp(v, b[k], t));
+
     // ---------------------------------------------------------------- render
     function render(gf) {
       gf += SUB;
@@ -329,142 +377,140 @@
       build(si);
       const S = SETS[si];
 
-      const sCollage = !inEnd && lf < 15, sPhone = !inEnd && lf >= 15 && lf < 63;
+      const sCollage = !inEnd && lf < 17, sPhone = !inEnd && lf >= 17 && lf < 63;
       const sPrompt = !inEnd && lf >= 63 && lf < 138, sAudit = !inEnd && lf >= 138;
       show(paper, sCollage || sPhone); show(collage, sCollage); show(phoneL, sPhone);
-      show(promptL, sPrompt); show(audit, sAudit); show(endc, inEnd);
+      show(promptL, sPrompt); show(audit, sAudit); show(endc, inEnd && f < 598);
       if (sCollage || sPhone) paintPaper(lf, Math.floor(gf));
 
-      // ---- collage: camera swings in from lower right while the postcards pop on
+      // ---- collage: type-shift steps, then a slow push-in
       if (sCollage) {
-        const cx = keys(lf, [[0, 170], [2, 70], [5, 0], [15, -14]]), cy = keys(lf, [[0, 190], [2, 50], [5, 0], [15, -12]]);
-        const cs = keys(lf, [[0, 0.8], [2, 0.92], [5, 1], [15, 1.035]]);
-        cam.style.transform = `translate(${px(cx)}, ${px(cy)}) scale(${cs.toFixed(4)})`;
+        const step = lf < 2 ? 0 : lf < 4 ? 1 : lf < 5 ? 2 : 3;
+        const zoom = step < 3 ? 1 : keys(lf, [[5, 1], [16, 1.022]]);
+        cam.style.transform = `scale(${zoom.toFixed(4)})`;
         ctiles.forEach((t, i) => {
-          const [x, y, w, h, a] = CT[i];
-          const on = lf >= a;
+          const [x, y, w, h] = CT[i];
+          const on = lf >= POPS[i];
           t.style.display = on ? "block" : "none";
           if (!on) return;
-          const s = keys(lf, [[a, 0.55], [a + 1, 1.06], [a + 2.5, 0.99], [a + 4, 1]]);
-          // each card keeps a slight float of its own
-          const fx = Math.sin(lf * 0.21 + i * 1.7) * 3, fy = Math.cos(lf * 0.17 + i) * 3;
+          let dx = 0, dy = 0, s = 1;
+          if (step < 3) {
+            const st = STEPS[step];
+            dx = st.dx + JIT[i][0] * st.j; dy = st.dy + JIT[i][1] * st.j; s = st.s;
+          }
           place(t, x, y, w, h);
-          t.style.transform = `translate(${px(fx)}, ${px(fy)}) scale(${s.toFixed(4)})`;
+          // a card that has just appeared lands with a small overshoot
+          const pop = keys(lf - POPS[i], [[0, 0.88], [1, 1.03], [2, 1]]);
+          t.style.transform = `translate(${px((x + w / 2 - 960) * (s - 1) + dx)}, ${px((y + h / 2 - 540) * (s - 1) + dy)}) scale(${(s * pop).toFixed(4)})`;
         });
       }
 
-      // ---- phone: big "type shift" jump, then the card settles and the grid reshuffles
+      // ---- phone: the postcards re-flow into the grid, the card settles, then scrolls out upwards
       if (sPhone) {
-        const s = keys(lf, [[15, 1.62], [16.5, 1.58], [17, 1.14], [21, 1.06], [22, 1.0], [63, 0.985]]);
-        const tx = keys(lf, [[15, 150], [16.5, 140], [17, 0], [63, 6]]), ty = keys(lf, [[15, 70], [16.5, 64], [17, 0], [63, -10]]);
-        phone.style.transform = `translate(${px(tx)}, ${px(ty)}) scale(${s.toFixed(4)})`;
-        const cardOn = lf >= 22;
+        const s = keys(lf, PHONE_S);
+        phone.style.transform = `translate(0px, ${px(keys(lf, PHONE_Y))}) scale(${s.toFixed(4)})`;
+        const cardOn = lf >= 19;
         phoneCard.style.opacity = cardOn ? 1 : 0;
         phoneClip.style.overflow = cardOn ? "hidden" : "visible";
-        phTop.style.opacity = phTitle.style.opacity = lf >= 15 ? 1 : 0;
-        phBar.style.opacity = lf >= 17 ? 1 : 0;
-        const li = lf < 29 ? 0 : lf < 45 ? 1 : 2;
-        const shift = li * 4;
+        phTop.style.opacity = phTitle.style.opacity = 1;
+        phBar.style.opacity = cardOn ? 1 : 0;
+        const out = keys(lf, GRID_OUT);
         ptiles.forEach((t, i) => {
-          const [x, y, w, h] = PL[li][i];
-          place(t, x, y, w, h);
-          const key = S.phone[(i + shift) % S.phone.length];
+          let box;
+          if (lf < 24) box = PA[i];
+          else if (lf < 30) box = lerpBox(PA[i], PL[0][i], 0.5 * keys(lf, [[24, 0.55], [25, 0.75], [27, 0.9], [29, 1]]));
+          else box = PL[0][i];
+          place(t, box[0], box[1] + out, box[2], box[3]);
+          const key = S.phone[i];
           if (t.dataset.k !== key + si) { t.dataset.k = key + si; t.innerHTML = art(key); }
-          // tiles land a frame apart after each shuffle
-          const since = lf - (li === 0 ? 15 : li === 1 ? 29 : 45);
-          const pop = keys(since - (i % 3) * 0.5, [[0, 0.9], [1.5, 1.03], [3, 1]]);
-          t.style.transform = `scale(${pop.toFixed(4)})`;
+          const settle = lf >= 30 ? keys(lf, [[30, 1.035], [32, 1.012], [34, 1.004], [37, 1]]) : 1;
+          t.style.transformOrigin = `${px(200 - box[0])} ${px(393 - box[1])}`;
+          t.style.transform = `scale(${settle.toFixed(4)})`;
         });
       }
 
-      // ---- prompt card typing, then the send-button close-up
+      // ---- prompt card glides up and types, then the send-button close-up
       if (sPrompt) {
         const full = S.prompt;
-        const n = Math.round(keys(lf, [[63, 15], [92, full.length]]));
-        ptextT.textContent = full.slice(0, clamp(n, 0, full.length));
-        let s, tx, ty;
-        if (lf < 97) {
-          s = keys(lf, [[63, 1], [97, 1.025]]);
-          tx = 960 - s * 960 + keys(lf, [[63, 0], [97, -6]]); ty = 560 - s * 560 + keys(lf, [[63, 0], [97, -4]]);
+        ptextT.textContent = full.slice(0, Math.floor(keys(lf, TYPE) * full.length + 0.001));
+        let s, tx, ty, BL = 0, BT = 0;
+        if (lf < 98) {
+          s = 1; tx = keys(lf, CARD_X); ty = keys(lf, CARD_Y);
           caret.style.opacity = 1;
           show(bcur, false);
         } else {
-          s = keys(lf, [[97, 1.6], [138, 1.62]]);
-          const ax = keys(lf, [[97, 1030], [100, 1002], [106, 984], [138, 972]]), ay = keys(lf, [[97, 562], [106, 545], [138, 549]]);
-          tx = ax - s * SEND[0]; ty = ay - s * SEND[1];
-          caret.style.opacity = Math.floor((lf - 97) / 8) % 2 ? 0 : 1;
-          // cursor rises from below and parks on the button's lower-left corner
-          const cx = keys(lf, [[97, 600], [99, 700], [104, 842], [108, 884], [138, 892]]);
-          const cy = keys(lf, [[97, 830], [99, 760], [104, 664], [108, 640], [122, 646], [138, 642]]);
+          s = 1.6;
+          BL = 876 + 48 * keys(lf, ZOOM_IN); BT = 460 + keys(lf, ZOOM_OUT);
+          tx = BL - s * (SEND[0] - 56); ty = BT - s * (SEND[1] - 54);
+          caret.style.opacity = Math.floor((lf - 98) / 8) % 2 ? 0 : 1;
+          // the cursor rises in from lower left, parks on the button's corner, then presses
+          const cs = keys(lf, CUR_PRESS), press = (1 - cs) / (1 - 0.813);
+          const k = keys(lf, CUR_IN);
+          const cx = BL - 40 - 330 * k + 39 * press, cy = BT + 126 + 232 * k - 33 * press;
           show(bcur, true);
-          bcur.style.transform = `translate(${px(cx - 10)}, ${px(cy - 6)}) rotate(28deg)`;
-          bcur.style.transformOrigin = "0 0";
+          bcur.style.transform = `translate(${px(cx)}, ${px(cy)}) scale(${cs.toFixed(4)})`;
         }
-        pcam.style.transform = `translate(${px(tx)}, ${px(ty)}) scale(${s.toFixed(4)})`;
-        // press: black → brown → orange
-        const c1 = mix("#0b0b0b", "#5b3a12", (lf - 106) / 4), c2 = mix("#5b3a12", "#e8930c", (lf - 115) / 3);
-        psend.style.background = lf < 115 ? c1 : c2;
-        psend.style.transform = `scale(${keys(lf, [[105, 1], [107, 0.94], [111, 0.97], [116, 1.02], [119, 1]]).toFixed(4)})`;
+        pcam.style.transform = `translate(${px(tx)}, ${px(ty)}) scale(${s})`;
+        psend.style.background = mix("#0b0b0b", "#e28c04", keys(lf, BTN_HEAT));
+        psend.style.transform = `scale(${keys(lf, BTN_PRESS).toFixed(4)})`;
       }
 
       // ---- audit strips: listing, then dark checkout and white panel push in from the left
       if (sAudit) {
-        // dark strip left/right edges, white strip right edge, listing shift
-        const push1 = [[183, 0], [184, 0.26], [186, 0.73], [188, 0.94], [190, 0.99], [194, 1]];
-        const push2 = [[224, 0], [225, 0.26], [227, 0.73], [229, 0.94], [231, 0.99], [235, 1]];
-        const p1 = keys(lf, push1), p2 = keys(lf, push2);
-        const dL = lerp(-950, 0, p1) + 640 * p2, dR = lerp(0, 950, p1) + 328 * p2;
-        const wR = 640 * p2;
-        const gShift = 485 * p1 + 151 * p2;
-        const gy = keys(lf, [[138, -140], [139, -32], [141, -9], [146, 0], [270, 6]]);
+        const p1 = keys(lf, PUSH1), p2 = keys(lf, PUSH2), ex = keys(lf, EXIT);
+        const dL = -960 * (1 - p1) + 640 * p2 + ex, dR = 960 * p1 + 320 * p2 + ex;
+        const wR = 640 * p2 + ex;
+        const gx = 562 * p1 + 123 * p2 + ex;
+        const gy = -140 * keys(lf, LIST_IN) + keys(lf, LIST_DRIFT);
 
-        gridStrip.style.left = px(dR); gridStrip.style.width = px(1920 - dR);
-        gridC.style.transform = `translate(${px(gShift - dR)}, ${px(gy)})`;
+        gridStrip.style.left = px(dR); gridStrip.style.width = px(Math.max(0, 1920 - dR));
+        gridC.style.transform = `translate(${px(gx - dR)}, ${px(gy)})`;
         darkStrip.style.left = px(dL); darkStrip.style.width = px(Math.max(0, dR - dL));
-        const dcx = lerp(360, 267, p2) + (dL < 0 ? 0 : 0);
-        darkC.style.transform = `translate(${px(dcx)}, 0px)`;
-        whiteStrip.style.left = "0px"; whiteStrip.style.width = px(wR);
+        const rel = 384 - 121 * p2;
+        darkC.style.transform = `translate(${px(rel)}, 0px)`;
+        whiteStrip.style.left = "0px"; whiteStrip.style.width = px(Math.max(0, wR));
         whiteC.style.transform = `translate(${px(wR - 640)}, 0px)`;
-        show(darkStrip, lf >= 183); show(whiteStrip, lf >= 224);
+        show(darkStrip, dR > 0.5); show(whiteStrip, wR > 0.5);
 
-        // the price tag gets a soft blue select once the blue note lands
+        // the price gets a soft blue select once the blue note has landed
         priceEl.style.background = lf >= 160 ? "rgba(31,111,229,.13)" : "transparent";
         priceEl.style.color = lf >= 160 ? "#1f6fe5" : "#8a8a8a";
 
-        // blue cursor + note (attached to the listing)
-        const bx = gShift + keys(lf, [[139, -260], [142, -80], [146, -8], [150, 0]]) + 1024 + Math.sin(lf * 0.3) * 2;
-        const by = gy + keys(lf, [[139, 300], [142, 90], [146, 10], [150, 0]]) + 588 + Math.cos(lf * 0.27) * 2;
-        cursor(curB, pillB, lf >= 139, bx, by, bx + 34, by + 40, pillW[0] * keys(lf, [[141, 0], [146, 0.18], [152, 0.62], [160, 1]]));
+        // blue cursor + note ride the listing
+        const bk = keys(lf, B_IN);
+        const bx = 995 + gx + 190 * bk + keys(lf, B_HOVER_X), by = 575 + gy + 45 * bk + keys(lf, B_HOVER_Y);
+        cursor(curB, pillB, true, bx, by, bx + 64, by + 56, pillW[0] * keys(lf, B_W), 1);
 
-        // orange cursor + note (attached to the dark panel)
-        const ox = dL + dcx + 128 + keys(lf, [[190, -260], [193, -50], [197, 0]]) + Math.sin(lf * 0.25 + 1) * 2;
-        const oy = keys(lf, [[190, 900], [193, 712], [197, 676], [270, 672]]);
-        const ow = pillW[1] * keys(lf, [[195, 0], [199, 0.2], [205, 0.66], [212, 1]]);
-        cursor(curO, pillO, lf >= 190, ox, oy, ox - 340, oy + 52, ow);
+        // orange cursor + note ride the dark panel, with a squash as it marks the fee
+        const T = dL + rel;
+        const ok = keys(lf, O_IN), sq = keys(lf, O_SQ);
+        const ox = T + 300 - 222 * ok, oy = 648 + 105 * ok;
+        const ow = pillW[1] * keys(lf, O_W) * (0.85 + 0.15 * sq);
+        cursor(curO, pillO, lf >= 187, ox, oy, ox + 12 - ow, oy + 70 + (1 - sq) * 18, ow, sq);
         const hl = keys(lf, [[205, 0], [213, 1]]);
         taxEl.style.background = `linear-gradient(90deg, rgba(240,138,36,.28) ${(hl * 100).toFixed(1)}%, transparent ${(hl * 100).toFixed(1)}%)`;
         taxEl.style.color = mix("#6c6c6c", "#d9813a", hl);
 
-        // pink cursor + note (attached to the white panel)
-        const kx = wR - 640 + 300 + keys(lf, [[226, -200], [229, -40], [233, 0]]) + Math.sin(lf * 0.3 + 2) * 2;
-        const ky = keys(lf, [[226, 880], [229, 720], [233, 690], [270, 688]]);
-        cursor(curP, pillP, lf >= 226, kx, ky, kx + 12, ky + 40, pillW[2] * keys(lf, [[231, 0], [235, 0.2], [240, 0.66], [247, 1]]));
+        // pink cursor + note ride the white panel
+        const pk = keys(lf, P_IN);
+        const kx = wR - 640 + 300 - 40 * pk, ky = 662 + 185 * pk;
+        cursor(curP, pillP, lf >= 223, kx, ky, kx + 45, ky + 60, pillW[2] * keys(lf, P_W), 1);
       }
 
       // ---- end card
       if (inEnd) {
-        const s = keys(f, [[539, 1.1], [541, 1], [588, 0.92], [594, 0.82], [598, 0.7], [602, 0.6]]);
+        const s = WORD_FIT * keys(f, LOGO);
         word.style.transform = `translate(-50%, -52%) scale(${s.toFixed(4)})`;
-        word.style.filter = `blur(${keys(f, [[539, 6], [541.5, 0]]).toFixed(2)}px)`;
-        halo.style.transform = `scale(${s.toFixed(4)})`;
-        halo.style.opacity = keys(f, [[539, 0], [542, 1]]);
+        word.style.filter = `blur(${keys(f, [[538, 10], [541, 2], [544, 0]]).toFixed(2)}px)`;
+        word.style.opacity = halo.style.opacity = keys(f, [[595, 1], [597.5, 0.15]]);
+        halo.style.transform = `scale(${(s / WORD_FIT).toFixed(4)})`;
       }
     }
 
-    function cursor(cur, pill, on, x, y, pxl, pyl, w) {
+    function cursor(cur, pill, on, x, y, pxl, pyl, w, sc) {
       show(cur, on);
       if (!on) { show(pill, false); return; }
-      cur.style.transform = `translate(${px(x)}, ${px(y)})`;
+      cur.style.transform = `translate(${px(x)}, ${px(y)}) scale(${sc.toFixed(4)})`;
       show(pill, w > 2);
       const h = parseFloat(pill.style.height) || 50;
       pill.style.width = px(Math.max(h, w));
