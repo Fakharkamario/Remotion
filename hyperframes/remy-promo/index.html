@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>remy promo</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      @font-face { font-family: "Newsreader"; src: url("assets/fonts/newsreader-latin-wght.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+      @font-face { font-family: "Newsreader"; font-style: italic; src: url("assets/fonts/newsreader-italic-latin-wght.woff2") format("woff2"); font-weight: 200 800; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fff; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #fff; font-family: "Inter", system-ui, sans-serif; color: #111; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; white-space: nowrap; }
+      .scene { position: absolute; inset: 0; overflow: hidden; visibility: hidden; }
+      .world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+      .abs { position: absolute; left: 0; top: 0; }
+
+      /* backdrop behind the phone: out-of-focus foliage, with grain */
+      .foliage { position: absolute; left: -240px; top: -160px; width: 2400px; height: 1400px; filter: blur(34px);
+        background:
+          radial-gradient(ellipse 340px 300px at 64% 22%, #1a2c14 0%, rgba(26, 44, 20, 0) 75%),
+          radial-gradient(ellipse 520px 420px at 84% 36%, #e2ea78 0%, #bfd352 32%, rgba(150, 180, 60, 0) 72%),
+          radial-gradient(ellipse 380px 520px at 76% 86%, #d3e066 0%, rgba(170, 196, 70, 0) 70%),
+          radial-gradient(ellipse 300px 260px at 92% 70%, #20361a 0%, rgba(32, 54, 26, 0) 75%),
+          radial-gradient(ellipse 420px 360px at 22% 78%, #a9c34c 0%, rgba(150, 180, 70, 0) 72%),
+          radial-gradient(ellipse 520px 460px at 12% 26%, #44702d 0%, rgba(60, 100, 40, 0) 75%),
+          radial-gradient(ellipse 260px 300px at 30% 46%, #1b2f15 0%, rgba(27, 47, 21, 0) 75%),
+          linear-gradient(115deg, #2c4a22 0%, #3b6128 45%, #5b8432 70%, #789f3b 100%); }
+      .grain { position: absolute; inset: -64px; opacity: .2; mix-blend-mode: overlay; pointer-events: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>"); }
+      .grain.dk { mix-blend-mode: multiply; opacity: .16;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1.1 -.2'/></filter><rect width='256' height='256' filter='url(%23n)'/></svg>"); }
+
+      /* phone */
+      .pframe { position: absolute; left: -70px; top: -70px; width: 2244px; height: 4694px; border-radius: 372px;
+        background: linear-gradient(90deg, #a9481a 0%, #f08a43 1.4%, #e9732c 3%, #d9611f 50%, #e9732c 97%, #f39a55 98.6%, #a9481a 100%);
+        box-shadow: 0 60px 160px rgba(10, 25, 5, .55), inset 0 0 0 3px rgba(255, 210, 170, .35); }
+      .pbtn { position: absolute; width: 18px; border-radius: 9px; background: linear-gradient(90deg, #b5521f, #f2904a, #c25a22); }
+      .pbezel { position: absolute; left: -42px; top: -42px; width: 2188px; height: 4638px; border-radius: 344px; background: #0a0a0b; }
+      .pscreen { position: absolute; left: 0; top: 0; width: 2104px; height: 4554px; border-radius: 302px; overflow: hidden; background: #fff; }
+      .plist { position: absolute; left: 0; top: 0; width: 2104px; height: 0; }
+      .it { position: absolute; left: 0; top: 0; width: 2104px; height: 0; }
+      .bub { position: absolute; top: 0; font: 400 64px/90px "Inter", sans-serif; letter-spacing: -0.012em; padding: 30px 60px 30px 62px; border-radius: 48px; max-width: 1330px; white-space: pre-wrap; word-break: normal; transform-origin: 0 100%; }
+      .bub.in { left: 146px; background: #ededf0; color: #121214; }
+      .bub.out { right: 150px; background: #1f80fa; color: #fff; transform-origin: 100% 100%; }
+      .bub .tail { position: absolute; bottom: 0; width: 44px; height: 44px; }
+      .bub.in .tail { left: -14px; }
+      .bub.out .tail { right: -14px; }
+      .quote { position: absolute; top: 0; right: 410px; font: 500 30px/40px "Inter", sans-serif; color: #5e9bf2; padding: 12px 34px; border: 3px solid #b8d3fb; border-radius: 40px; background: #fff; white-space: nowrap; transform-origin: 100% 100%; }
+      .photo { position: absolute; top: 0; right: 150px; width: 742px; height: 970px; border-radius: 92px; overflow: hidden; transform-origin: 100% 0; background: #2b2420; }
+      .react { position: absolute; left: 0; top: 0; transform-origin: 50% 70%; }
+
+      .card { position: absolute; left: 146px; top: 0; width: 1282px; height: 315px; }
+      .card .bg { position: absolute; border-radius: 50px; background: #fff; }
+      .card svg.ol { position: absolute; left: 0; top: 0; overflow: visible; }
+      .card .bar { position: absolute; left: 56px; top: 64px; width: 22px; height: 188px; border-radius: 11px; background: #7c5cff; transform-origin: 50% 50%; }
+      .card .ttl { position: absolute; left: 135px; top: 88px; font: 500 52px/1 "Inter", sans-serif; letter-spacing: -0.015em; color: #18181b; white-space: pre; }
+      .card .tm { position: absolute; left: 137px; top: 172px; font: 400 40px/1 "Inter", sans-serif; color: #b2b2b8; white-space: pre; }
+      .chip { position: absolute; top: 48px; right: 45px; width: 495px; height: 218px; border-radius: 42px; }
+      .chip .cbg { position: absolute; inset: 0; border-radius: 42px; background: #fff; border: 2.5px solid #ececf0; box-shadow: 0 8px 26px rgba(20, 20, 40, .06); }
+      .chip .ico { position: absolute; left: 24px; top: 53px; width: 112px; height: 112px; border-radius: 28px; background: #7c5cff; display: grid; place-items: center; }
+      .chip .ico svg { width: 74px; height: 74px; }
+      .chip .ct { position: absolute; left: 156px; top: 84px; font: 500 50px/1 "Inter", sans-serif; letter-spacing: -0.02em; color: #1b1b1f; white-space: pre; }
+
+      .phead { position: absolute; left: 0; top: 0; width: 2104px; height: 780px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, .97) 70%, rgba(255, 255, 255, .78) 88%, rgba(255, 255, 255, 0) 100%); }
+      .island { position: absolute; left: 715px; top: 70px; width: 674px; height: 150px; border-radius: 75px; background: #000; }
+      .clock { position: absolute; left: 262px; top: 112px; font: 600 60px/1 "Inter", sans-serif; letter-spacing: -0.02em; }
+      .sicons { position: absolute; left: 1580px; top: 112px; }
+      .avatar { position: absolute; left: 886px; top: 290px; width: 332px; height: 332px; border-radius: 50%; background: #111; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .15); }
+      .avatar svg { width: 210px; height: 210px; }
+      .pname { position: absolute; left: 952px; top: 610px; width: 200px; height: 82px; border-radius: 41px; background: rgba(255, 255, 255, .96); box-shadow: 0 6px 20px rgba(0, 0, 0, .08); font: 500 46px/82px "Inter", sans-serif; text-align: center; color: #111; }
+      .hbtn { position: absolute; top: 368px; width: 180px; height: 180px; border-radius: 50%; background: rgba(246, 246, 248, .96); box-shadow: 0 8px 24px rgba(0, 0, 0, .07); display: grid; place-items: center; }
+      .hbtn svg { width: 74px; height: 74px; }
+
+      .pinput { position: absolute; left: 0; top: 2694px; width: 2104px; height: 206px; }
+      .pinput .plus { position: absolute; left: 146px; top: 0; width: 206px; height: 206px; border-radius: 50%; background: #f4f4f6; box-shadow: 0 6px 18px rgba(0, 0, 0, .06); display: grid; place-items: center; }
+      .pinput .field { position: absolute; left: 400px; top: 0; width: 1560px; height: 206px; border-radius: 103px; background: #f7f7f8; box-shadow: 0 6px 18px rgba(0, 0, 0, .05); }
+      .pinput .ph { position: absolute; left: 70px; top: 70px; font: 400 58px/1 "Inter", sans-serif; color: #b9b9bf; white-space: pre; }
+      .pinput .mic { position: absolute; right: 66px; top: 62px; width: 56px; height: 82px; }
+      .pkbd { position: absolute; left: 0; top: 3040px; width: 2104px; height: 1575px; background: linear-gradient(180deg, rgba(232, 233, 237, .97), #d7d9de 30%); border-radius: 110px 110px 0 0; }
+      .key { position: absolute; height: 236px; border-radius: 34px; background: #fff; box-shadow: 0 3px 0 rgba(0, 0, 0, .18); font: 300 88px/236px "Inter", sans-serif; text-align: center; color: #111; }
+
+      /* search-card bubble */
+      .scard { position: absolute; left: 0; top: 0; width: 608px; height: 476px; border-radius: 56px; background: #ececf0; overflow: visible; }
+      .scard .thumb { position: absolute; left: 0; top: 0; width: 608px; height: 250px; border-radius: 56px 56px 0 0; overflow: hidden; }
+      .scard .q { position: absolute; left: 92px; top: 292px; font: 600 38px/1 "Inter", sans-serif; color: #1b1b1f; white-space: pre; }
+      .scard .sub { position: absolute; left: 92px; top: 372px; font: 400 30px/1 "Inter", sans-serif; color: #b0b0b6; }
+
+      /* booking page */
+      .bk { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; font-family: "Inter", sans-serif; }
+      .bx { position: absolute; white-space: nowrap; }
+
+      /* clouds chat */
+      .cb { position: absolute; left: 0; top: 0; width: max-content; font: 400 39px/58px "Inter", sans-serif; letter-spacing: -0.01em; padding: 18px 34px; border-radius: 34px; white-space: pre-wrap; }
+      .cb.in { background: rgba(255, 255, 255, .93); color: #1d1d22; box-shadow: 0 10px 30px rgba(10, 40, 110, .18); }
+      .cb.out { background: #1c7ff6; color: #fff; box-shadow: 0 10px 30px rgba(10, 40, 110, .25); }
+
+      /* end card */
+      .endl { position: absolute; left: 0; top: 0; font: 600 104px/1 "Newsreader", serif; letter-spacing: -0.025em; color: #22302a; white-space: pre; }
+      .url { position: absolute; left: 0; top: 0; width: 440px; height: 102px; border-radius: 26px; background: #050505; color: #fff; font: 500 30px/102px "Inter", sans-serif; text-align: center; white-space: pre; }
+      .cap { position: absolute; left: 0; top: 0; width: 600px; text-align: center; font: 400 21px/1 "Inter", sans-serif; color: #c4c4ca; }
+      .logo { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 26px; white-space: nowrap; }
+      .logo .wm { font: 700 128px/1 "Newsreader", serif; letter-spacing: -0.035em; color: #18181a; }
+      .logo svg { width: 150px; height: 150px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="30.9333" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span>Aa</span><span style="font-weight:500">Aa</span><span style="font-weight:600">Aa</span><span style="font-family:Newsreader;font-weight:600">Aa</span><span style="font-family:Newsreader;font-weight:700">Aa</span><span style="font-family:Newsreader;font-style:italic">Aa</span></div>
+      <svg width="0" height="0" style="position:absolute">
+        <defs>
+          <filter id="vblur" x="-5%" y="-40%" width="110%" height="180%"><feGaussianBlur id="vblurS" stdDeviation="0 0" /></filter>
+          <filter id="hblur" x="-40%" y="-5%" width="180%" height="110%"><feGaussianBlur id="hblurS" stdDeviation="0 0" /></filter>
+        </defs>
+      </svg>
+      <div id="stage" class="layer"></div>
+      <audio id="soundtrack" src="assets/audio.m4a" data-start="0" data-duration="30.83" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
