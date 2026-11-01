@@ -28,12 +28,16 @@ reference, and the brand and copy are new:
 
 How the motion is matched:
 
-- **Anchored cameras.** Every shot pins one anchor (the event card, the phone, a bubble, the map pin…) to a
-  screen position and scale measured off the reference. Values are written in reference pixels (x2.25) on
-  reference frame numbers, and replayed through a monotone cubic.
+- **Reference-driven cameras.** `scripts/track_reference.py` tracks the reference with optical flow and writes
+  its frame-to-frame pan and zoom for every shot to `assets/motion.js`. Phone shots are tracked on the phone
+  only (keyboard or header band), so the camera stays separate from the chat scrolling. Each shot's anchor
+  (the event card, the phone, a bubble, the map pin…) starts where the hand-keyed framing puts it, then rides
+  that measured motion frame by frame, so every push-in, drift, whip and settle follows the reference.
+  Usage: `python3 scripts/track_reference.py assets/motion.js reference.mp4`.
 - **Chat engine.** Bubbles appear at their final size (a quick blur/scale-in), then the text types inside
   them with a per-character fade. Untyped text stays in the layout, invisible, so lines never reflow. Lists
-  are bottom-anchored like a real chat, so new messages push the thread up.
+  are bottom-anchored like a real chat, so new messages push the thread up, with the reference's measured scroll
+  ease: 82% over 10 frames, then a slow 30-frame settle.
 - **Whips and cuts** use directional SVG blur at the same frames as the reference.
 - Everything is drawn in code: the phone, foliage backdrop with live grain, the map, the clouds (fractal
   noise with slope lighting), the wine photo and the booking page. No third-party logos.

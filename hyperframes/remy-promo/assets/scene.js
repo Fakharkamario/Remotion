@@ -345,11 +345,12 @@
     function layoutList(ph, f, mode) {
       let y = 0; const pos = [];
       for (const it of ph.items) {
-        const a = it.t0 <= -999 ? 1 : eo(ramp(f, it.t0, it.t0 + 7));
+        // the reference scrolls each new message in fast (8 frames), then settles slowly over ~25 more
+        const a = it.t0 <= -999 ? 1 : 0.82 * eio(ramp(f, it.t0, it.t0 + 10)) + 0.18 * eio(ramp(f, it.t0 + 2, it.t0 + 32));
         pos.push(y + it.gap * a);
         y += (it.gap + it.h) * a;
       }
-      const off = mode.bottom ? LIST_BOTTOM - y : mode.y - pos[mode.idx];
+      const off = mode.bottom ? (ph.lb || LIST_BOTTOM) - y : mode.y - pos[mode.idx];
       ph.items.forEach((it, i) => { it.y = off + pos[i]; set(it.el, "transform", `translate(0px,${it.y.toFixed(2)}px)`); });
     }
     const center = (it) => ({ x: it.x + it.w / 2, y: it.y + it.h / 2 });
@@ -391,14 +392,15 @@
 
     // ======== phone 1: S1–S3 ========
     const P1 = buildPhone(sc.p1);
+    P1.lb = 2381;
     P1.phTimes = charTimes("Message Remy", [[104, 0], [110, 7], [124, 12]]);
     const card = addCard(P1);
     addBub(P1, { name: "recap", side: "in", gap: 36, t0: 37, text: "btw here's the sync notes from your marketing team - looks like they want some founder reels.", ks: [[37, 0], [39, 52], [63, 94]] });
     addBub(P1, { name: "drink", side: "in", gap: 18, t0: 71, text: "sounds like you need a drink..", ks: [[71, 0], [72, 7], [99, 30]] });
     addBub(P1, { name: "omg", side: "out", gap: 40, t0: 137, text: "omg YES", ks: [[137, 0], [140, 2], [146, 5], [150, 7]], react: { type: "haha", t: 155 } });
     addBub(P1, { name: "near", side: "out", gap: 18, t0: 158, text: "whats on near the office?", ks: [[158, 0], [161, 9], [171, 25]] });
-    addQuote(P1, { text: "whats on near the office?", t0: 197, gap: 64 });
-    const venue = addBub(P1, { name: "venue", side: "in", gap: 10, t0: 197, text: "Tribeca has a wine tasting tonight. just 300m from your office. starts at 9p. $35 unlim", ks: [[197, 0], [200, 46], [231, 86]], react: { type: "haha", t: 216 } });
+    addQuote(P1, { text: "whats on near the office?", t0: 199, gap: 64 });
+    const venue = addBub(P1, { name: "venue", side: "in", gap: 10, t0: 199, text: "Tribeca has a wine tasting tonight. just 300m from your office. starts at 9p. $35 unlim", ks: [[197, 0], [200, 46], [231, 86]], react: { type: "haha", t: 216 } });
     addBub(P1, { name: "down", side: "in", gap: 18, t0: 233, text: "u down?!?", ks: [[233, 0], [236, 2], [249, 9]], react: { type: "bang", t: 245 } });
     const book = addBub(P1, { name: "book", side: "out", gap: 40, t0: 263, text: "HAHA - ye book it.", ks: [[263, 0], [267, 5], [279, 18]], react: { type: "heart", t: 275 } });
     addBub(P1, { name: "lfg", side: "out", gap: 18, t0: 304, text: "LFG", ks: [[304, 0], [307, 3]] });
@@ -435,6 +437,7 @@
 
     // ======== phone 2: S7 ========
     const P2 = buildPhone(sc.p2);
+    P2.lb = 2434;
     P2.phTimes = charTimes("Message Remy", [[557, 0], [563, 7], [574, 12]]);
     const wine = addBub(P2, { name: "wine", side: "out", gap: 0, t0: 500, text: "dis good wine?", ks: [[500, 0], [503, 7], [516, 14]], react: { type: "haha", t: 509 } });
     addPhoto(P2, { t0: 532, gap: 18 });
@@ -442,7 +445,7 @@
     addBub(P2, { name: "notes1", side: "in", gap: 10, t0: 584, text: "it's an alta viña reserva 2016, rioja, tempranillo & garnacha", ks: [[584, 0], [587, 30], [612, 61]], react: { type: "haha", t: 605 } });
     addBub(P2, { name: "notes2", side: "in", gap: 18, t0: 619, text: "aged 14 months in french oak plus bottle time. 4.3 stars - good stuff", ks: [[619, 0], [622, 34], [637, 69]] });
     addBub(P2, { name: "lines", side: "out", gap: 40, t0: 646, text: "pick up lines based on what u know about me. QUICK", ks: [[646, 0], [650, 11], [666, 50]] });
-    const forget = addBub(P2, { name: "forget", side: "in", gap: 40, t0: 682, text: "forget e-signatures, you're the only contract i want to sign right now", ks: [[682, 0], [685, 33], [711, 70]], react: { type: "haha", t: 722 } });
+    const forget = addBub(P2, { name: "forget", side: "in", gap: 40, t0: 678, text: "forget e-signatures, you're the only contract i want to sign right now", ks: [[682, 0], [685, 33], [711, 70]], react: { type: "haha", t: 722 } });
     $(".bub", P2.items[5].el).style.maxWidth = "1290px";
 
     // ======== S4: map-link bubble with a search ========
@@ -575,36 +578,74 @@
     const hb = document.getElementById("hblurS");
     const hblur = (el, amt) => { hb.setAttribute("stdDeviation", `${amt.toFixed(2)} 0`); set(el, "filter", amt > 0.05 ? "url(#hblur)" : "none"); };
 
+    // ---------- reference-driven cameras ----------
+    // REFMO holds the reference's measured frame-to-frame similarity transform for each shot (pan of the frame
+    // centre + zoom, in reference px). A shot's anchor starts where the hand-keyed camera puts it at the segment's
+    // first frame, then rides the measured motion: p' = c + d + s (p - c), S' = S s.
+    const MO = window.REFMO || {};
+    const segP = {};
+    function segPath(name, init) {
+      if (segP[name]) return segP[name];
+      const sg = MO[name], c = { x: 427, y: 240 };
+      let p = { x: init.x, y: init.y }, S = init.S;
+      const P = [[p.x, p.y, S]];
+      for (const [dx, dy, sc] of sg.d) { p = { x: c.x + dx + sc * (p.x - c.x), y: c.y + dy + sc * (p.y - c.y) }; S *= sc; P.push([p.x, p.y, S]); }
+      return (segP[name] = P);
+    }
+    // camera for frame f of segment name: anchorW = world anchor now; initFn() -> {x, y, S} screen (ref px) at frame a
+    function segCam(name, f, anchorW, initFn) {
+      const sg = MO[name];
+      const P = segPath(name, segP[name] ? null : initFn());
+      const k = clamp(f - sg.a, 0, P.length - 1), i = Math.min(Math.floor(k), P.length - 2), t = k - i;
+      const q = P.length > 1 ? [lerp(P[i][0], P[i + 1][0], t), lerp(P[i][1], P[i + 1][1], t), P[i][2] * Math.pow(P[i + 1][2] / P[i][2], t)] : P[0];
+      return cam(anchorW, q[0], q[1], q[2]);
+    }
+    // screen position (ref px) of world point W under camera c
+    const scr = (W, c) => ({ x: (W.x * c.S + c.tx) / K, y: (W.y * c.S + c.ty) / K, S: c.S });
+    const atFrame = (ph, a, mode, fn) => { layoutList(ph, a, mode); return fn(); };
+
     // ---------- per-scene renders ----------
-    let cardFrozen = null;
     function renderP1(f) {
-      const pin = f < 200 ? { bottom: true } : { idx: QUOTE_IDX, y: 830 };
-      layoutList(P1, f, pin);
+      let pin = f < 200 ? { bottom: true } : { idx: QUOTE_IDX, y: 830 };
+      let c;
+      const oldA = (g) => cam({ x: 146, y: card.y }, keys(g, A_X), keys(g, A_Y), keys(g, A_S));
+      const cardA = () => ({ x: 146, y: card.y });
+      const initA1 = () => atFrame(P1, 36, { bottom: true }, () => scr(cardA(), oldA(36)));
+      if (f < 200) {
+        layoutList(P1, f, pin);
+        if (f < 36) c = oldA(f);
+        else if (f < 132) c = segCam("A1", f, cardA(), initA1);
+        else {
+          const initA2 = () => atFrame(P1, 132, { bottom: true }, () => scr(PLUS_W, segCam("A1", 132, cardA(), initA1)));
+          c = segCam("A2", f, PLUS_W, initA2);
+        }
+        layoutList(P1, f, pin);
+        phoneChrome(P1, f, { frame: ramp(f, 104, 109), input: ramp(f, 102, 110), kb: eo(ramp(f, 111, 122)) });
+        vblur(sc.p1, keys(f, [[196, 0], [199, 3], [200, 5]]));
+      } else if (f < 297) {
+        const top = { x: 1052, y: -70 };
+        c = segCam("B", f, top, () => scr(top, cam(top, keys(201, B_X), keys(201, B_Y), keys(201, B_S))));
+        // the thread scrolls up once as "u down?!?" lands (measured: ~48 ref px, fast then settling)
+        pin = { idx: QUOTE_IDX, y: 830 - (0.82 * eio(ramp(f, 232, 242)) + 0.18 * eio(ramp(f, 234, 262))) * 48 * K / c.S };
+        layoutList(P1, f, pin);
+        phoneChrome(P1, f, { frame: 1, input: 1, kb: 1 });
+        vblur(sc.p1, keys(f, [[200, 4], [201.5, 0]]));
+      } else {
+        layoutList(P1, f, pin);
+        c = segCam("C", f, center(book), () => atFrame(P1, 297, pin, () => scr(center(book), cam(center(book), keys(297, C_X), keys(297, C_Y), keys(297, C_S)))));
+        layoutList(P1, f, pin);
+        phoneChrome(P1, f, { frame: 1, input: 1, kb: 1 });
+        vblur(sc.p1, keys(f, [[297, 5], [299, 0]]));
+      }
       renderItems(P1, f);
       renderCard(f);
-      let c;
-      if (f < 200) {
-        if (f <= 136 || !cardFrozen) cardFrozen = { x: 146, y: card.y };
-        const P = f <= 136 ? { x: 146, y: card.y } : cardFrozen;
-        c = cam(P, keys(f, A_X), keys(f, A_Y), keys(f, A_S));
-        phoneChrome(P1, f, { frame: ramp(f, 104, 109), input: ramp(f, 102, 110), kb: eo(ramp(f, 111, 122)) });
-        vblur(sc.p1, keys(f, [[195, 0], [197, 6], [199, 22], [200, 30]]));
-      } else if (f < 297) {
-        c = cam({ x: 1052, y: -70 }, keys(f, B_X), keys(f, B_Y), keys(f, B_S));
-        phoneChrome(P1, f, { frame: 1, input: 1, kb: 1 });
-        vblur(sc.p1, keys(f, [[200, 7], [201, 3], [203, 0]]) + keys(f, [[264, 0], [268, 5], [272, 0]]));
-      } else {
-        c = cam(center(book), keys(f, C_X), keys(f, C_Y), keys(f, C_S));
-        phoneChrome(P1, f, { frame: 1, input: 1, kb: 1 });
-        vblur(sc.p1, keys(f, [[297, 8], [299, 0]]));
-      }
       applyCam(P1.root, c);
       set(P1.bg.firstChild, "transform", `translate(${(c.tx * 0.04).toFixed(1)}px,${(c.ty * 0.03).toFixed(1)}px)`);
     }
 
     function renderSearch(f) {
-      const S = keys(f, [[349, 270], [350, 252], [355, 222], [360, 200], [366, 188], [381, 181], [396, 173], [399, 170]]) / 270;
-      const sx = keys(f, [[349, 421], [381, 411], [390, 396], [396, 352], [399, 336]]) * K, sy = keys(f, [[349, 330], [352, 290], [356, 262], [362, 242], [370, 228], [399, 232]]) * K;
+      const S = keys(f, [[349, 270], [350, 252], [355, 222], [360, 200], [366, 188], [376, 182], [399, 181]]) / 270;
+      const sx = keys(f, [[349, 421], [378, 412], [384, 405], [390, 390], [396, 352], [399, 316]]) * K, sy = keys(f, [[349, 330], [352, 290], [356, 262], [362, 242], [370, 228], [399, 232]]) * K;
       const rz = keys(f, [[349, 9], [352, 5], [356, 2], [362, 0], [370, -3], [376, -6], [383, -3], [390, 0], [399, 2]]);
       const ry = keys(f, [[349, 28], [353, 12], [358, 4], [364, 0], [376, -10], [388, 0], [399, 4]]);
       const rx = keys(f, [[349, -14], [354, -4], [360, 0], [380, 6], [399, 0]]);
@@ -616,7 +657,9 @@
 
     function renderMap(f) {
       const S = keys(f, [[399, 0.42], [404, 0.52], [410, 0.62], [420, 0.8], [432, 1.0], [445, 1.14], [459, 1.24]]);
-      const c = cam({ x: 1800, y: 1180 }, keys(f, [[399, 455], [405, 446], [411, 420], [459, 419]]), keys(f, [[399, 240], [405, 225], [411, 226], [432, 215], [459, 200]]), S);
+      const PIN = { x: 1800, y: 1180 };
+      const old = (g) => cam(PIN, keys(g, [[399, 455], [405, 446], [411, 420], [459, 419]]), keys(g, [[399, 240], [405, 225], [411, 226], [432, 215], [459, 200]]), keys(g, [[399, 0.62], [459, 0.62]]));
+      const c = f < 400 ? old(f) : segCam("M", f, PIN, () => scr(PIN, old(400)));
       applyCam(MW, c);
       const ps = 1.45 * keys(f, [[399, 0], [403, 1.2], [407, 0.94], [411, 1]]);
       set(mpin, "transform", `scale(${Math.max(0.001, ps).toFixed(4)})`);
@@ -626,7 +669,9 @@
     }
 
     function renderBook(f) {
-      const c = cam({ x: 78 * K, y: 118 * K }, keys(f, [[459, 70], [470, 78], [490, 85], [501, 88]]), keys(f, [[459, 135], [470, 120], [480, 105], [490, 86], [501, 72]]), keys(f, [[459, 1.03], [470, 1], [490, 0.945], [501, 0.925]]));
+      const T = { x: 78 * K, y: 118 * K };
+      const old = (g) => cam(T, keys(g, [[459, 66], [462, 72], [470, 78]]), keys(g, [[459, 150], [462, 132], [470, 120]]), keys(g, [[459, 1.03], [462, 1.02], [470, 1]]));
+      const c = f < 462 ? old(f) : segCam("E", f, T, () => scr(T, old(462)));
       applyCam(BW, c);
       const out = 1 - ramp(f, 491, 499);
       set(bkt, "opacity", (eo(ramp(f, 459, 466)) * out).toFixed(3));
@@ -635,34 +680,38 @@
     }
 
     function renderP2(f) {
-      layoutList(P2, f, { bottom: true });
-      const fo = f >= 715 ? { keep: "forget", a: 719, b: 726, ka: 737, kb: 744 } : null;
+      const bm = { bottom: true };
+      let pin = bm, c;
+      layoutList(P2, f, bm);
+      const oldF = (g) => cam(center(wine), 420, keys(g, F_Y), keys(g, F_S));
+      const initF1 = () => atFrame(P2, 501, bm, () => scr(center(wine), oldF(501)));
+      const lines = P2.items[5];
+      if (f < 576) c = segCam("F1", Math.max(f, 501), center(wine), initF1);
+      else if (f < 651) {
+        const initF2 = () => atFrame(P2, 576, bm, () => scr(PLUS_W, segCam("F1", 576, center(wine), initF1)));
+        c = segCam("F2", f, PLUS_W, initF2);
+      } else if (f < 719) {
+        const initG = () => scr(PLUS_W, cam(PLUS_W, keys(651, G_X), 323, 0.83));
+        c = segCam("G", f, PLUS_W, initG);
+      } else c = segCam("Z", Math.max(f, 720), center(forget), () => atFrame(P2, 720, bm, () => scr(center(forget), cam(center(forget), 400, 181, 0.56))));
+      layoutList(P2, f, pin);
+      const fo = f >= 715 ? { keep: "forget", a: 719, b: 725, ka: 737, kb: 744 } : null;
       renderItems(P2, f, fo);
-      let c;
-      const Pp = cam(PLUS_W, 219, 323, keys(f, [[576, 0.551], [646, 0.556]]));
-      if (f < 576) {
-        const Fc = cam(center(wine), 420, keys(f, F_Y), keys(f, F_S));
-        c = blend(Fc, Pp, eio(ramp(f, 555, 576)));
-      } else if (f < 650) c = Pp;
-      else {
-        const G = cam(PLUS_W, keys(f, G_X), 323, 0.83);
-        c = f < 715 ? G : blend(G, cam(center(forget), keys(f, Z_X), keys(f, Z_Y), keys(f, Z_S)), eio(ramp(f, 715, 721)));
-      }
       applyCam(P2.root, c);
-      const chromeOut = 1 - ramp(f, 717, 723);
+      const chromeOut = 1 - ramp(f, 719, 723);
       phoneChrome(P2, f, { frame: ramp(f, 557, 561) * chromeOut, input: ramp(f, 557, 563) * chromeOut, kb: eo(ramp(f, 564, 575)), kbOp: chromeOut });
       set(P2.bg.firstChild, "transform", `translate(${(c.tx * 0.04).toFixed(1)}px,${(c.ty * 0.03).toFixed(1)}px)`);
-      hblur(sc.p2, keys(f, [[0, 0], [649.9, 0], [650, 10], [652, 2], [654, 0], [680.5, 0], [682.5, 4], [684.5, 0]]));
+      hblur(sc.p2, keys(f, [[0, 0], [646, 0], [649, 5], [650.4, 7], [651, 3], [653, 0], [679, 0], [682.5, 4], [686, 0]]));
     }
 
     function renderClouds(f) {
       const ent = eo(ramp(f, 737, 751));
-      set(CL, "transform", `translate(${(-340 - (f - 740) * 0.5).toFixed(1)}px,${(-260 + (1 - ent) * 520 - (f - 740) * 0.35).toFixed(1)}px) scale(${lerp(1.06, 1, ent).toFixed(4)})`);
+      set(CL, "transform", `translate(${(-340 - (f - 740) * 0.5).toFixed(1)}px,${(-260 + (1 - ent) * 300 - (f - 740) * 0.35).toFixed(1)}px) scale(${lerp(1.02, 1, ent).toFixed(4)})`);
       set(CL, "opacity", ramp(f, 738, 747).toFixed(3));
       set(cwhite, "opacity", (1 - ramp(f, 741, 750)).toFixed(3));
       const m = cbubs[0];
-      const c = cam({ x: m.x + m.w / 2, y: m.y + m.h / 2 }, keys(f, [[746, 235], [828, 236], [831, 243], [834, 256], [837, 270], [840, 288], [843, 318], [846, 350]]),
-        keys(f, [[745, 248], [750, 228], [753, 219], [756, 208], [771, 193], [780, 180], [783, 166], [786, 130], [789, 117], [792, 109], [801, 99], [807, 91], [810, 74], [813, 55], [816, 48], [822, 40], [846, 40]]), 1);
+      const MC = { x: m.x + m.w / 2, y: m.y + m.h / 2 };
+      const c = segCam("H", clamp(f, 746, 846), MC, () => scr(MC, cam(MC, 235, 245, 1)));
       applyCam(CW, c);
       for (const b of cbubs) {
         const p = ramp(f, b.t0, b.t0 + 6);
@@ -675,9 +724,10 @@
     }
 
     function renderEnd(f) {
-      const dx = keys(f, [[846, -60], [849, -40], [852, -27], [855, -18], [858, -12], [861, -6], [866, -2], [874, 0], [909, 3]]) * K;
-      const dy = keys(f, [[846, 8], [855, 4], [866, 0], [909, -2]]) * K;
-      set(EW, "transform", `translate(${dx.toFixed(2)}px,${dy.toFixed(2)}px)`);
+      const dx = keys(f, [[846, -100], [849, -55], [852, -31], [855, -20], [858, -12], [861, -7], [864, -4], [870, -1], [876, 0], [909, 0]]) * K;
+      const dy = keys(f, [[846, 8], [855, 4], [868, 0], [909, 0]]) * K;
+      const es = keys(f, [[846, 1.06], [849, 1.025], [852, 1.008], [858, 1]]);
+      set(EW, "transform", `translate(${(dx + 960).toFixed(2)}px,${(dy + 540).toFixed(2)}px) scale(${es.toFixed(4)}) translate(-960px,-540px)`);
       [[846, 853], [851, 858], [857, 864]].forEach(([a, b], i) => {
         set(ew[i], "opacity", ramp(f, a - 1, a + 1.5).toFixed(3));
         set(ew[i], "color", mix("#c6c6ca", "#22302a", ramp(f, a, b)));
@@ -690,7 +740,7 @@
     }
 
     function renderLogo(f) {
-      const s = keys(f, [[909, 1.035], [928, 1]]);
+      const s = 1;
       set(LW, "transform", `translate(960px,540px) scale(${s.toFixed(4)}) translate(-960px,-540px)`);
     }
 
