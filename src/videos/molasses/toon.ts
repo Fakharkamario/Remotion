@@ -986,8 +986,8 @@ export const fxSmell = (p: Pen, t: number) => {
       const v = i / 24, y = 660 - v * 560;
       pts.push([x0 + 26 * Math.sin(v * 9 - t * Math.PI * 2 + k * 1.7) * (0.4 + v), y]);
     }
-    p.stroke(pts, 26, INK);
-    p.stroke(pts, 15, k === 1 ? "#f2a7b8" : "#c98a4a");
+    p.stroke(pts, 40, INK);
+    p.stroke(pts, 26, k === 1 ? "#f7a3c0" : "#e0a050");
   }
 };
 /** molasses drip streaks on a 128 x 512 canvas (transparent around): glossy dark brown runs with bulbous ends */

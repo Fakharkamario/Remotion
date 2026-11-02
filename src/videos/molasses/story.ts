@@ -78,7 +78,7 @@ export const layersAt = (f: number): { id: number; alpha: number }[] => {
 export const PAINTER: V3 = [1.6, 0, 13.0];
 /** wall angle (rad from +z toward +x) and height range of the leak streaks the painter covers */
 export const DRIPS: { th: number; y0: number; y1: number; w: number }[] = [
-  { th: 0.02, y0: 1.2, y1: 5.2, w: 0.55 }, { th: 0.12, y0: 0.6, y1: 4.0, w: 0.4 }, { th: 0.2, y0: 1.6, y1: 6.2, w: 0.5 }, { th: -0.07, y0: 0.4, y1: 3.4, w: 0.35 },
+  { th: 0.02, y0: 1.2, y1: 5.2, w: 1.0 }, { th: 0.12, y0: 0.6, y1: 4.0, w: 0.8 }, { th: 0.2, y0: 1.6, y1: 6.2, w: 0.9 }, { th: -0.07, y0: 0.4, y1: 3.4, w: 0.7 },
 ];
 export const LEAK0 = 193, PAINT0 = 228, PAINT1 = 262; // "leaked" @193, "painted" @230
 export const NOTICE = 254; // "nobody would notice" @256: the painter turns to the lens
