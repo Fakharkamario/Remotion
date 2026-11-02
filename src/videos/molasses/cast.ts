@@ -244,7 +244,7 @@ const crowns = (cam: CamInfo, t: number, ts: number, out: Stage) => {
     const z = 17.5 + k * 2.8 + 0.6 * hh(k, 12), x = Math.sqrt(Math.max(0, rf * rf - z * z)) - 1.0;
     if (x <= 0 || cam.pos.distanceTo(tmp.set(x, hc, z)) < 4) continue;
     const u = q((t * 1.6 + hh(k, 13)) % 1, 20), sz = Math.max(2.5, hc * 1.25);
-    out.fx.push({ key: `msplash${u}`, cw: 800, ch: 800, draw: (p) => fxSplash(p, u, MOL), x, y: hc * 0.82 - sz * 0.38, z, w: sz, h: sz });
+    out.fx.push({ key: `msplash${u}`, cw: 800, ch: 800, draw: (p) => fxSplash(p, u, MOL), x, y: hc * 0.92 + sz * 0.12, z, w: sz, h: sz * 0.8 });
   }
 };
 const MOL: [string, string] = ["#b0621e", "#5a2a0c"];
