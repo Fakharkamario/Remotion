@@ -321,7 +321,8 @@ const stuck = (cam: CamInfo, t: number, out: Stage) => {
     const u = ((t - 667 / FPS + hh(i, 11) * 1.4) % 1.4) / 1.4;
     if (t > 666 / FPS && u < 0.6) {
       const v = u / 0.6;
-      out.fx.push({ key: `puff${q(v, 20)}`, cw: 300, ch: 300, draw: (p) => fxPuff(p, q(v, 20)), x: x + cam.right.x * (0.18 + 0.25 * v), y: -0.05 + 1.72 + 0.25 * v, z: z + cam.right.z * (0.18 + 0.25 * v), w: 0.5 + 0.4 * v, h: 0.5 + 0.4 * v, soft: true });
+      const pv = q(0.45 + 0.55 * v, 20);
+      out.fx.push({ key: `puff${pv}`, cw: 300, ch: 300, draw: (p) => fxPuff(p, pv), x: x + cam.right.x * (0.3 + 0.25 * v), y: -0.05 + 1.72 + 0.25 * v, z: z + cam.right.z * (0.3 + 0.25 * v), w: 0.22 + 0.3 * v, h: 0.22 + 0.3 * v, soft: true });
     }
   });
 };
