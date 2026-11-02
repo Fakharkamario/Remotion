@@ -156,13 +156,11 @@ const S10b = (f: number) => zoom([BOARD[0] + 1.0, 1.75, BOARD[2] - 6.6], [BOARD[
 // shot 11: hot summer evening, the sniffer, then crane out over the waterfront
 const S11a = (f: number) => dolly([SNIFFER[0] + 3.2, 1.6, SNIFFER[2] - 3.4], [SNIFFER[0], 1.5, SNIFFER[2]], pushK(f, 806, 0.002), { fov: 38 });
 const S11b = (f: number) => dolly([SNIFFER[0] + 2.0, 1.55, SNIFFER[2] - 2.3], [SNIFFER[0], 1.6, SNIFFER[2]], pushK(f, 864, 0.003, 0.006, 30), { fov: 36, roll: 0.035 }); // "smells sweet"
-// crane out: a cubic path that first slides out from under the elevated deck toward the yard, then rises over the
-// warehouses and pulls back over the harbour (the lens never threads the deck or a roof)
-const CRANE: V3[] = [[-20, 3, 14.5], [-20, 40, 14.5], [10, 42, -50], [-6, 4, 18]];
+// ending: ease back and widen on the sniffer and the sweet street (stays under the elevated deck, clear of its columns)
 const S11c = (f: number): Shot => {
-  const a = S11b(888), s = glide((f - 888) / 50), r = 1 - s, [C1, C2, B, L] = CRANE;
-  return { pos: [0, 1, 2].map((i) => r * r * r * a.pos[i] + 3 * r * r * s * C1[i] + 3 * r * s * s * C2[i] + s * s * s * B[i]) as V3,
-    look: [0, 1, 2].map((i) => a.look[i] + (L[i] - a.look[i]) * s) as V3, fov: (a.fov ?? 36) + (44 - (a.fov ?? 36)) * s, roll: 0.035 * r };
+  const a = S11b(888), u = glide((f - 888) / 40);
+  return { pos: [a.pos[0] + 0.8 * u, a.pos[1] + 0.9 * u, a.pos[2] - 1.0 * u] as V3, look: [a.look[0], a.look[1] + 0.3 * u, a.look[2]] as V3,
+    fov: (a.fov ?? 36) + 12 * u, roll: 0.035 * (1 - u) };
 };
 
 const CAMS: Record<number, Key[]> = {
@@ -214,7 +212,7 @@ export const DOF: Dof[] = [
   { f: 691, cInf: 10, focus: () => [44.5, 1.5, 24.8] },
   { f: 742, cInf: 11, focus: () => [BOARD[0] + 0.3, 1.5, BOARD[2]] }, // engineer
   { f: 806, cInf: 12, focus: () => [SNIFFER[0], 1.6, SNIFFER[2]] }, // sniffer
-  { f: 888, dur: 30, cInf: 0 }, // crane out
+  { f: 888, dur: 30, cInf: 6, focus: () => [SNIFFER[0], 1.6, SNIFFER[2]] }, // ease back
 ];
 export const dofAt = (f: number) => {
   let i = 0; while (i + 1 < DOF.length && f >= DOF[i + 1].f) i++;
