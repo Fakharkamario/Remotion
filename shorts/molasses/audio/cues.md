@@ -1,0 +1,21 @@
+# Sound cues (s, frame @30)
+
+-   0.00 s (f    0): wave roar + running feet + whoas (hook)
+-   2.63 s (f   79): flash whoosh
+-   2.93 s (f   88): harbour air, gulls, distant street murmur
+-   6.43 s (f  193): drips
+-   7.60 s (f  228): brush strokes
+-   8.47 s (f  254): innocent whistle
+-   9.73 s (f  292): steel groan
+-  10.77 s (f  323): rivet gunshot
+-  11.40 s (f  342): rivet gunshot
+-  11.43 s (f  343): rivet gunshot
+-  12.37 s (f  371): BURST: crack + boom + splash + plates
+-  12.67 s (f  380): wave roar (ducks for 'Luckily', swells on 'Unluckily')
+-  20.60 s (f  618): spoon poke + boing
+-  21.93 s (f  658): cold wind + squelches
+-  25.73 s (f  772): stamp
+-  26.43 s (f  793): stamp
+-  27.00 s (f  810): summer birds + footsteps
+-  28.93 s (f  868): sniff sniff
+-  29.60 s (f  888): crane whoosh
