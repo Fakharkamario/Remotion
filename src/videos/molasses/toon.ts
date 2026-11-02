@@ -55,6 +55,16 @@ export const OFFICER: Outfit = { ...RIFLEMAN, hat: "shako_tall", buttons: "#e8c4
 export const KID: Outfit = { jacket: "#f08a2c", pants: "#3b5b9a", boots: "#f4f1ea", hat: "cap", cap: "#e2453c", build: "kid" };
 export const PARENT: Outfit = { jacket: "#7b5ac9", pants: "#3b3f52", boots: "#5a3b2a", hat: "hair", hair: "#5a3b2a" };
 export const SKINS = [SKIN, "#f5c9a0", "#ecd0b6", "#c99067"];
+// Boston, 1919: dock workers in flat caps, clerks in hats, women in long coats and bonnets
+export const PAINTER_O: Outfit = { jacket: "#e8e1cf", pants: "#d9d1bd", boots: "#5a3b2a", hat: "cap", cap: "#d9d1bd", skin: SKINS[1] };
+export const ENGINEER_O: Outfit = { jacket: "#2f3b5a", pants: "#3b3f52", boots: "#2a1e1a", hat: "tophat", moustache: "#4a3020", build: "stout", buttons: "#d9b45a" };
+export const bostonian = (v = 0): Outfit => {
+  const coats = ["#3f5f8f", "#8c3b4a", "#5d6a3a", "#9a5a3a", "#2f5f6a", "#6a5a8a", "#7a6a4a"];
+  const o: Outfit = { jacket: coats[v % 7], pants: ["#3b3f52", "#4a3f36", "#2f3540"][v % 3], boots: "#3a2a22", skin: SKINS[v % 4] };
+  if (v % 3 === 1) return { ...o, hat: "bonnet", dress: ["#b07a3a", "#8a4a6a", "#4a6a9a"][v % 3] };
+  if (v % 3 === 2) return { ...o, hat: "cap", cap: ["#5a5048", "#3d4450", "#6a5a42"][v % 3], moustache: v % 2 ? "#3a2a20" : undefined };
+  return { ...o, hat: "tophat", moustache: v % 4 === 0 ? "#4a3426" : undefined };
+};
 
 export const soldier = (v = 0, extra: Partial<Outfit> = {}): Outfit => {
   const o: Outfit = { ...RIFLEMAN, skin: SKINS[v % 4] };
@@ -424,7 +434,7 @@ const hatOn = (p: Pen, o: Outfit, hp: P2[], H: Blob, cx: number, hc: number, lig
 // ---------------- bodies ----------------
 export type Arms = [P2[], P2[]];
 /** held prop; for the hammer the number is the strike 0 (raised) .. 1 (struck) */
-export type Prop = null | "icecream" | "shako" | ["hammer", number];
+export type Prop = null | "icecream" | "shako" | ["hammer", number] | ["brush", number];
 
 const BUILD: Record<Build, { a: number; torso: number; legs: number; tw: number }> = {
   adult: { a: 118, torso: 1.1, legs: 1.4, tw: 0.8 },
@@ -580,8 +590,14 @@ export const bodyFront = (p: Pen, o: Outfit, opts: FrontOpts) => {
     } else if (Array.isArray(prop)) {
       const ang = rad(-70 + 105 * clamp(prop[1], 0, 1));
       const Rh = (pts: P2[]) => rotPts(pts, ang, hx, hy);
-      p.band(Rh([[hx, hy + 12 * u], [hx, hy - 44 * u]]), "#8a5a34", 5 * u, 1.5 * u, "round");
-      p.poly(Rh([[hx - 12 * u, hy - 58 * u], [hx + 20 * u, hy - 58 * u], [hx + 20 * u, hy - 42 * u], [hx - 12 * u, hy - 42 * u]]), "#7d848c", 2.2 * u);
+      if (prop[0] === "brush") { // wide wall brush loaded with brown paint
+        p.band(Rh([[hx, hy + 10 * u], [hx, hy - 36 * u]]), "#c99a5e", 4.5 * u, 1.4 * u, "round");
+        p.poly(Rh([[hx - 11 * u, hy - 36 * u], [hx + 11 * u, hy - 36 * u], [hx + 12 * u, hy - 46 * u], [hx - 12 * u, hy - 46 * u]]), "#9aa0a8", 2 * u);
+        p.poly(Rh([[hx - 12 * u, hy - 46 * u], [hx + 12 * u, hy - 46 * u], [hx + 10 * u, hy - 62 * u], [hx - 10 * u, hy - 62 * u]]), "#6b4428", 2 * u);
+      } else {
+        p.band(Rh([[hx, hy + 12 * u], [hx, hy - 44 * u]]), "#8a5a34", 5 * u, 1.5 * u, "round");
+        p.poly(Rh([[hx - 12 * u, hy - 58 * u], [hx + 20 * u, hy - 58 * u], [hx + 20 * u, hy - 42 * u], [hx - 12 * u, hy - 42 * u]]), "#7d848c", 2.2 * u);
+      }
       p.dot(hx, hy, 5.5 * u);
     }
   }
@@ -768,9 +784,9 @@ export const fxBurst = (p: Pen, t: number, col = "#fff3b0", rays = 10, r0 = 40, 
 };
 
 /** water splash crown on an 800 x 800 canvas; t in 0..1 */
-export const fxSplash = (p: Pen, t: number) => {
+export const fxSplash = (p: Pen, t: number, cols: [string, string] = ["#bfe8ff", "#6cc0f0"]) => {
   const c = 400, size = 800, rise = Math.sin(Math.min(1, t * 1.3) * Math.PI);
-  const blue = "#bfe8ff", deep = "#6cc0f0";
+  const [blue, deep] = cols;
   if (rise > 0.02) {
     const pts: P2[] = [];
     for (let i = 0; i < 19; i++) {
@@ -906,4 +922,85 @@ export const fxBlob = (p: Pen, col: string) => {
   const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   for (const [r, k] of [[0, 0], [0.5, 0.04], [0.64, 0.18], [0.76, 0.42], [0.87, 0.72], [0.95, 0.92], [1, 1]] as const) gr.addColorStop(r, mix(col, WHITE, k));
   g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+};
+
+// ---------------- molasses short effects ----------------
+const AMBER = "#c9781e", AMBER_D = "#8a4a12", AMBER_L = "#f0b04a";
+/** jar of cold honey with a spoon standing bolt upright in it, on a 500 x 700 canvas; wob = spoon lean in degrees */
+export const fxJar = (p: Pen, wob: number) => {
+  const g = p.g;
+  // spoon behind the glass front: handle out of the top
+  const a = rad(wob), sx = 250, sy = 330;
+  p.band([[sx + Math.sin(a) * 40, sy - Math.cos(a) * 40], [sx + Math.sin(a) * 330, sy - Math.cos(a) * 330]], "#c9ccd2", 22, 7, "round");
+  // jar body: glass with honey up to the shoulder
+  const body = rrect(90, 210, 410, 680, 60);
+  p.poly(body, "#fff4dc", 0);
+  p.clip(body, () => {
+    const gr = g.createLinearGradient(90, 0, 410, 0);
+    gr.addColorStop(0, AMBER_L); gr.addColorStop(0.45, AMBER); gr.addColorStop(1, AMBER_D);
+    g.fillStyle = gr; g.fillRect(90, 260, 320, 430);
+    p.ell(250, 262, 160, 26, AMBER_L, 6);
+    p.stroke([[130, 300], [130, 620]], 18, "rgba(255,255,255,0.55)");
+    p.stroke([[160, 320], [160, 420]], 8, "rgba(255,255,255,0.45)");
+  });
+  p.poly(body, null, 12);
+  // the spoon bowl sunk in the honey shows through the glass
+  p.ell(sx + Math.sin(a) * 30, sy + 40, 34, 52, "rgba(150,90,30,0.55)", 0);
+  // lid ring + frost sparkles (it came out of the fridge)
+  p.poly(rrect(110, 176, 390, 222, 14), "#d94c3a", 10);
+  for (const [x, y, r] of [[60, 260, 16], [440, 330, 12], [70, 520, 10], [452, 560, 15]] as const) {
+    p.stroke([[x - r, y], [x + r, y]], 6, "#e6f4ff"); p.stroke([[x, y - r], [x, y + r]], 6, "#e6f4ff");
+  }
+};
+/** engineering drawing of the tank on a 900 x 640 canvas; signed adds the signature + the approval stamp ring */
+export const fxPlan = (p: Pen, signed: boolean) => {
+  const W = "#f2f6ff", BLU = "#2f5fae";
+  p.poly(rrect(10, 10, 890, 630, 10), BLU, 12);
+  const g = p.g;
+  g.strokeStyle = "rgba(242,246,255,0.18)"; g.lineWidth = 2;
+  for (let x = 40; x < 880; x += 40) { g.beginPath(); g.moveTo(x, 20); g.lineTo(x, 620); g.stroke(); }
+  for (let y = 40; y < 620; y += 40) { g.beginPath(); g.moveTo(20, y); g.lineTo(880, y); g.stroke(); }
+  // tank elevation: walls, roof, plate rings, rivet rows, dimension lines (no text)
+  p.stroke([[150, 520], [150, 200], [430, 200], [430, 520], [150, 520]], 7, W);
+  p.stroke([[150, 200], [290, 150], [430, 200]], 7, W);
+  for (const y of [280, 360, 440]) { p.stroke([[150, y], [430, y]], 4, W); for (let x = 165; x < 430; x += 22) p.dot(x, y - 8, 4, W); }
+  p.stroke([[120, 200], [120, 520]], 3, W); p.stroke([[110, 200], [130, 200]], 3, W); p.stroke([[110, 520], [130, 520]], 3, W);
+  p.stroke([[150, 560], [430, 560]], 3, W); p.stroke([[150, 550], [150, 570]], 3, W); p.stroke([[430, 550], [430, 570]], 3, W);
+  // plan view circle + section
+  g.beginPath(); g.arc(640, 300, 130, 0, Math.PI * 2); g.strokeStyle = W; g.lineWidth = 7; g.stroke();
+  p.stroke([[510, 300], [770, 300]], 3, W); p.stroke([[640, 170], [640, 430]], 3, W);
+  // signature line
+  p.stroke([[520, 560], [850, 560]], 4, W);
+  if (signed) {
+    p.stroke([[530, 548], [560, 500], [575, 545], [600, 505], [610, 540], [650, 512], [690, 540], [720, 520], [770, 536], [830, 518]], 7, "#ffffff");
+    g.beginPath(); g.arc(760, 150, 78, 0, Math.PI * 2); g.strokeStyle = "#e0453a"; g.lineWidth = 12; g.stroke();
+    g.beginPath(); g.arc(760, 150, 58, 0, Math.PI * 2); g.lineWidth = 5; g.stroke();
+    p.stroke([[725, 152], [752, 180], [800, 118]], 16, "#e0453a");
+  }
+};
+/** rising wavy "sweet smell" ribbons on a 400 x 700 canvas; t loops 0..1 */
+export const fxSmell = (p: Pen, t: number) => {
+  for (let k = 0; k < 3; k++) {
+    const x0 = 110 + k * 90, pts: P2[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const v = i / 24, y = 660 - v * 560;
+      pts.push([x0 + 26 * Math.sin(v * 9 - t * Math.PI * 2 + k * 1.7) * (0.4 + v), y]);
+    }
+    p.stroke(pts, 26, INK);
+    p.stroke(pts, 15, k === 1 ? "#f2a7b8" : "#c98a4a");
+  }
+};
+/** molasses drip streaks on a 128 x 512 canvas (transparent around): glossy dark brown runs with bulbous ends */
+export const fxDrip = (p: Pen, seed: number) => {
+  const g = p.g;
+  for (let k = 0; k < 2; k++) {
+    const x = 36 + k * 56 + ((seed * 13 + k * 7) % 9), len = 300 + ((seed * 31 + k * 57) % 180), w = 30 + ((seed + k * 5) % 10);
+    g.fillStyle = "#2e1206";
+    g.beginPath(); g.moveTo(x - w / 2, 0); g.bezierCurveTo(x - w * 0.3, len * 0.5, x - w * 0.45, len * 0.8, x - w * 0.3, len); g.lineTo(x + w * 0.3, len);
+    g.bezierCurveTo(x + w * 0.45, len * 0.8, x + w * 0.3, len * 0.5, x + w / 2, 0); g.closePath(); g.fill();
+    g.beginPath(); g.ellipse(x, len, w * 0.5, w * 0.62, 0, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = "#140702"; g.lineWidth = 5; g.stroke();
+    g.fillStyle = "rgba(255,190,120,0.6)"; g.fillRect(x - w * 0.2, 10, 5, len * 0.75);
+  }
+  g.fillStyle = "#2e1206"; g.fillRect(8, 0, 112, 18);
 };

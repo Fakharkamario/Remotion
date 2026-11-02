@@ -5,12 +5,11 @@
 // Cards, effects and blobs live on the NOINK layer so the world ink pass never outlines their quads.
 import * as THREE from "three";
 import {
-  Pen, bodyFront, bodySide, swingKid, soldier, townsfolk, OFFICER, KID, PARENT, fxNote, fxBurst, fxSplash, fxStars, fxCreak, fxRing, fxBlob, fxShadow, fxContact, fxPlank, fxDrum,
+  Pen, bodyFront, bodySide, bostonian, KID, PAINTER_O, ENGINEER_O, fxNote, fxBurst, fxCreak, fxShadow, fxContact, fxPuff, fxJar, fxSmell, fxSplash,
   Outfit, Expr, FrontOpts, SideOpts,
 } from "./toon";
 import {
-  FPS, D0, FILES, ROW_GAP, COUNT, PARK, SHOTS, SNAP, DROP0, DROP1, DROP_H, V3, front, marchPhase, stomp, deckY, dropW, dropU, shapeZ,
-  smooth, clamp01, BridgeState,
+  FPS, D0, SHOTS, V3, smooth, clamp01, frontR, waveH, PAINTER, PAINT0, PAINT1, NOTICE, RIVETS, LOCAL, JAR, BOARD, STAMPS, SNIFFER, TANK_R,
 } from "./story";
 import { LIGHTS } from "./lights";
 import { NOINK } from "./ink";
@@ -120,9 +119,7 @@ export type CamInfo = { pos: THREE.Vector3; right: THREE.Vector3; sun?: THREE.Ve
 
 const hh = (i: number, s = 0) => { const v = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return v - Math.floor(v); };
 const q = (v: number, n = 120) => Math.round(v * n) / n;
-const SOLDIER = [0, 1, 2, 3].map((v) => soldier(v));
-const BARE = [0, 1, 2, 3].map((v) => soldier(v, { hat: null }));
-const FOLK = [0, 1, 2, 3, 4, 5].map((v) => townsfolk(v));
+const FOLK = Array.from({ length: 12 }, (_, v) => bostonian(v));
 const vOf = (i: number) => (i * 7 + (i >> 2)) % 4;
 /** head-shape seed: 7 shapes, so marching soldiers in step still share canvases */
 const seedOf = (i: number) => ((i * 5 + 3) % 7) + 1;
@@ -171,7 +168,7 @@ const LEAD = 2 / FPS;
 /** eyelid 0 open .. 1 shut. Reference: gaps 0.5-2.3 s, 4-frame blink half / shut / shut / half, plus a blink across
  *  every expression swap (the shut frames hide the swap) */
 const LID = [0.5, 1, 1, 0.5];
-const SWAPS: Record<number, number[]> = { 4: [16.17, 17.3], 5: [19.48, 20.6], 6: [21.9, 23.7], 7: [29.4, 30.6], 8: [SNAP] };
+const SWAPS: Record<number, number[]> = { 3: [NOTICE / FPS], 5: [12.37], 7: [561 / FPS], 8: [612 / FPS], 11: [868 / FPS] };
 const lidAt = (t: number, i: number, swaps: number[] = []) => {
   const f = Math.round(t * FPS);
   for (const ts of swaps) { const k = f - Math.round((ts - LEAD) * FPS) + 1; if (k >= 0 && k < 4) return LID[k]; }
@@ -223,251 +220,159 @@ const blob = (out: Stage, x: number, y: number, z: number, sc = 1, k = 1) => {
 
 // ---------------- crowd by shot ----------------
 export type Stage = { places: Place[]; fx: FxPlace[] };
+const folk = (i: number): Who => ({ i, o: FOLK[i % 12], okey: `f${i % 12}` });
+const swap = (t: number, f: number) => t >= f / FPS - LEAD;
 
-const exprMarch = (id: number, t: number, i: number, tau: number): { expr: Expr; look: number } => {
-  const lau = i % 3 === 0, whi = i % 5 === 1, L = LEAD;
-  switch (id) {
-    case 1: return { expr: lau ? "laugh" : whi ? "whistle" : "grin", look: 0 };
-    case 2: case 3: return { expr: i % 4 === 3 ? "smile_closed" : i % 2 ? "neutral" : "stern", look: 0 };
-    case 4: return t < 16.17 - L ? { expr: i % 2 ? "neutral" : "stern", look: 0 } : t < 17.3 - L ? { expr: lau ? "shock" : "nervous", look: 0 } : { expr: "neutral", look: 0 };
-    case 5: return { expr: t < 19.48 - L ? "neutral" : t < 20.6 - L ? "grin" : i % 2 ? "laugh" : "grin", look: 0 };
-    case 6: return { expr: (i === 2 && t > 21.9 - L) || (t > 23.7 - L && i % 4 === 1) ? "whistle" : t > 23.7 - L && lau ? "laugh" : "grin", look: 0 };
-    case 7: return t < 29.4 - L ? { expr: lau ? "laugh" : "grin", look: 0 } : t < 30.6 - L ? { expr: i % 2 ? "nervous" : "grin", look: -1 } : { expr: "nervous", look: 0 };
-    case 8: return { expr: tau < SNAP - L ? "nervous" : "shock", look: tau < SNAP + 0.6 ? -1 : 0 };
-    default: return { expr: whi ? "whistle" : "grin", look: 0 };
+/** townsfolk running from the wave toward the lens (front view, fast stride), each a few metres ahead of the front */
+const fleeing = (cam: CamInfo, t: number, ts: number, out: Stage, n: number) => {
+  const rf = frontR(ts);
+  for (let i = 0; i < n; i++) {
+    const z = 18.2 + 12 * hh(i, 1), gap = 2.5 + 6 * hh(i, 2) + 0.6 * i;
+    const x = Math.sqrt(Math.max(0, rf * rf - z * z)) + gap;
+    if (x > cam.pos.x - 3.5 || waveH(Math.hypot(x, z), ts) > 0) continue;
+    const ph = q((t * 2.6 + hh(i, 3)) % 1, 60);
+    const expr: Expr = (["shock", "nervous", "shock", "pained"] as Expr[])[i % 4];
+    const fo: FrontOpts = { mode: "march", phase: ph, lift: 95, expr, tilt: (hh(i, 4) - 0.5) * 10, blink: 0, look: i % 2 ? -1 : 1 };
+    out.places.push(person(cam, folk(i + 3), x, 0, z, { side: false, mirror: false }, fo, {}));
+    blob(out, x, 0, z);
   }
 };
-
-/** the marching column (shots 1-8, 13) */
-const column = (id: number, t: number, b: BridgeState, cam: CamInfo, out: Stage) => {
-  const s = SHOTS[id - 1], tau = s.tau(t);
-  const stopT = SNAP + 0.3, walkT = id === 8 ? Math.min(tau, stopT) : tau;
-  const F = front(walkT), ph = marchPhase(walkT), st = stomp(tau);
-  const falling = id === 8 && tau >= DROP0;
-  for (let i = 0; i < COUNT; i++) {
-    const row = i >> 2, x0 = FILES[i & 3] + (hh(i) - 0.5) * 0.08, z = F + row * ROW_GAP + (hh(i, 2) - 0.5) * 0.1;
-    let x = x0, y = Math.abs(z) <= 30 ? deckY(z, b) : D0;
-    const who: Who = { i, o: SOLDIER[vOf(i)], okey: `s${vOf(i)}` };
-    let { expr, look } = exprMarch(id, t, i, tau);
-    let mode: "march" | "stand" | "fall" | "sit" = id === 8 && tau >= SNAP + 0.25 ? "stand" : "march";
-    let tilt = 0;
-    if (falling) {
-      // the soldiers lag the falling deck a little (cartoon hang time), then sit in the water
-      const lagY = D0 + b.bounce * shapeZ(z) - dropU(tau - 0.13) * DROP_H * dropW(z);
-      const air = Math.max(0, lagY - y);
-      y += air;
-      const u = clamp01((tau - DROP0) / (DROP1 - DROP0));
-      x = x0 + (hh(i, 3) - 0.5) * 0.7 * u;
-      mode = tau < DROP1 + 0.13 ? "fall" : "sit";
-      tilt = mode === "fall" ? (hh(i, 4) - 0.5) * 50 * u : 0;
-      if (mode === "sit") expr = i % 3 ? "dazed" : "shock";
-    }
-    const view = viewOf(cam, x, z, 0, -1);
-    const blink = expr !== "whistle" ? lidAt(t, i, SWAPS[id]) : 0;
-    const fo: FrontOpts = { phase: mode === "march" ? ph : 0, expr, mode, look, blink, lift: 60 * st, tilt };
-    // side views: the stance foot keeps pace with the column (0.8 m steps at 2 steps/s), foreshortened by the view
-    const so: SideOpts = { phase: mode === "march" ? ph : 0, expr, mode: mode === "march" ? "march" : "stand", blink, stomp: st, stride: view.fs };
-    out.places.push(person(cam, who, x, y, z, mode === "fall" || mode === "sit" ? { side: false, mirror: false } : view, fo, so));
-    if (mode === "march" || mode === "stand") blob(out, x, y, z);
-    // whistled notes drift up from whistlers near the lens
-    if (expr === "whistle" && (id === 6 || id === 1 || id === 13) && cam.pos.distanceTo(tmp.set(x, y, z)) < 16) {
-      for (let n = 0; n < 4; n++) {
-        const age = ((t - 21.9 + n * 0.42 + hh(i, 5)) % 1.68) / 1.68;
-        const pop = Math.min(1, age * 7) * (age > 0.82 ? (1 - age) / 0.18 : 1);
-        if (pop <= 0.02) continue;
-        const kind = (n + i) % 2, side = 0.16 + 0.32 * age + 0.05 * Math.sin(age * 9 + n);
-        out.fx.push({ key: `note${kind}`, cw: 220, ch: 260, draw: (p) => fxNote(p, kind), x: x + cam.right.x * side, y: y + 1.5 + 0.85 * age, z: z + cam.right.z * side - 0.1,
-          w: 0.17 * pop, h: 0.2 * pop, rot: 0.3 * Math.sin(age * 6 + n) });
-      }
-    }
+/** brown splash crowns riding the front of the wave across the street */
+const crowns = (cam: CamInfo, t: number, ts: number, out: Stage) => {
+  const rf = frontR(ts), hc = waveH(rf - 7, ts);
+  for (let k = 0; k < 6; k++) {
+    const z = 17.5 + k * 2.8 + 0.6 * hh(k, 12), x = Math.sqrt(Math.max(0, rf * rf - z * z)) - 1.0;
+    if (x <= 0 || cam.pos.distanceTo(tmp.set(x, hc, z)) < 4) continue;
+    const u = q((t * 1.6 + hh(k, 13)) % 1, 20), sz = Math.max(2.5, hc * 1.25);
+    out.fx.push({ key: `msplash${u}`, cw: 800, ch: 800, draw: (p) => fxSplash(p, u, MOL), x, y: hc * 0.82 - sz * 0.38, z, w: sz, h: sz });
   }
 };
-
-const sitters = (cam: CamInfo, t: number, out: Stage, spots: [number, number, number][], exprs: (i: number) => Expr, stars: (i: number) => boolean, water: boolean) => {
+const MOL: [string, string] = ["#b0621e", "#5a2a0c"];
+/** people standing about (front view) */
+const standers = (cam: CamInfo, t: number, out: Stage, spots: [number, number, number][], expr: (i: number) => Expr, base = 0) =>
   spots.forEach(([x, y, z], i) => {
-    const bare = i % 3 === 1;
-    const v = vOf(i + 3), who: Who = { i, o: bare ? BARE[v] : SOLDIER[v], okey: `${bare ? "b" : "s"}${v}` };
-    const expr = exprs(i), bob = water ? 0.03 * Math.sin(t * 2.2 + i) : 0;
-    out.places.push(person(cam, who, x, y + bob, z, { side: false, mirror: false }, { mode: "sit", expr, blink: lidAt(t, i), look: 0 }, {}));
-    if (stars(i)) {
-      const u = (t * 0.9 + hh(i)) % 1;
-      out.fx.push({ key: `stars${q(u, 30)}`, cw: 420, ch: 210, draw: (p) => fxStars(p, q(u, 30)), x, y: y + bob + 1.3, z, w: 0.75, h: 0.375 });
-    }
-    if (water) {
-      const u = ((t + hh(i, 7) * 2) % 2.2) / 2.2;
-      out.fx.push({ key: `ring${q(u, 30)}`, cw: 600, ch: 600, draw: (p) => fxRing(p, q(u, 30)), x, y: 0.03, z, w: 2.0, h: 2.0, flat: true });
-      // darker water right where the body meets the surface (only the front arc shows below the card)
-      out.fx.push({ key: `blob|contact|${WATERLINE}`, cw: 128, ch: 128, draw: (p) => fxContact(p, WATERLINE), x, y: 0.034 + bob * 0.3, z, w: 0.7, h: 0.5, flat: true });
-      if (bare) out.fx.push({ key: "shako", cw: 200, ch: 200, draw: shakoAlone, x: x + 0.55 + 0.3 * hh(i, 8), y: 0.12 + 0.03 * Math.sin(t * 2 + i), z: z - 0.3, w: 0.42, h: 0.42, rot: -0.5 + hh(i, 6) });
-    } else {
-      out.fx.push({ key: "puddle", cw: 300, ch: 150, draw: puddle, x, y: D0 + 0.02, z: z - 0.05, w: 1.5, h: 0.75, flat: true });
-      blob(out, x, y, z, 1.05, 0.8);
-    }
+    const fo: FrontOpts = { mode: "stand", expr: expr(i), blink: lidAt(t, base + i, SWAPS[0]), look: Math.round((hh(i, 5) - 0.5) * 2) };
+    out.places.push(person(cam, folk(base + i), x, y, z, { side: false, mirror: false }, fo, {}));
+    if (y >= 0) blob(out, x, y, z);
   });
-};
-const WATERLINE = hexOf([0.3, 0.36, 0.52], 1);
-/** flotsam in the near water of the river shots (9-10), so the bottom of the frame is not empty: hats, planks, a drum.
- *  World positions 2.5-5 m in front of both river cameras (z -27 / -25.4 looking +z); half under the surface, bobbing. */
-const FLOAT: { kind: "shako" | "plank" | "drum"; x: number; z: number; s: number; r: number }[] = [
-  // round-4 river cameras sit at z -24.6 / -24.2: the two nearest pieces were 0.7-1.5 m from the lens (cut-off blobs)
-  { kind: "shako", x: -0.25, z: -22.5, s: 0.46, r: 0.6 }, // (drum removed: cut by the frame edge it read as a blob)
-  { kind: "shako", x: 0.95, z: -24.6, s: 0.42, r: 0.25 }, // (near plank removed: cut by the frame edge)
-];
-const flotsam = (t: number, out: Stage) =>
-  FLOAT.forEach((f, i) => {
-    const bob = 0.03 * Math.sin(t * 1.9 + i * 1.7), r = f.r + 0.08 * Math.sin(t * 1.3 + i);
-    const [cw, ch, draw, ar] = f.kind === "shako" ? [200, 200, shakoAlone, 1] as const : f.kind === "plank" ? [320, 110, fxPlank, 110 / 320] as const : [260, 240, fxDrum, 240 / 260] as const;
-    const w = f.s, h = f.s * ar;
-    out.fx.push({ key: f.kind, cw, ch, draw, x: f.x, y: 0.28 * h + bob, z: f.z, w, h, rot: r });
-    out.fx.push({ key: `ring${q(((t * 0.45 + i * 0.3) % 1), 30)}`, cw: 600, ch: 600, draw: (p) => fxRing(p, q(((t * 0.45 + i * 0.3) % 1), 30)), x: f.x, y: 0.03, z: f.z, w: 1.1 * f.s + 0.5, h: 1.1 * f.s + 0.5, flat: true });
-  });
-const shakoAlone = (p: Pen) => {
-  p.poly([[42, 160], [158, 160], [166, 50], [34, 50]], "#3a3d47", 8);
-  p.ell(100, 158, 60, 10, "#16171b", 7, 0, 180);
-  p.ell(100, 96, 14, 12, "#c9ccd2", 6);
-  p.ell(100, 36, 14, 14, "#2b7a4b", 6);
-};
-const puddle = (p: Pen) => { p.ell(150, 75, 140, 58, "#6f97c6", 0); p.ell(120, 62, 60, 16, "#a9c9ea", 0); };
-
-/** the extras hold still and only cheer on cue: "pride of the whole town", "like a crowd of tourists" */
-const CHEER: [number, number][] = [[8.01 - LEAD, 9.45], [65.96 - LEAD, 67.5]];
-const townsfolkAt = (cam: CamInfo, t: number, out: Stage) => {
-  const spots: [number, number][] = [];
-  for (let i = 0; i < 26; i++) {
-    const bank = i < 13 ? -1 : 1, k = i % 13, sx = k % 2 ? 1 : -1;
-    spots.push([sx * (5.2 + (k >> 1) * 1.7 + hh(i) * 0.6), bank * (31.6 + hh(i, 2) * 3.2)]);
-  }
-  const on = CHEER.some(([a, b]) => t >= a && t < b);
-  spots.forEach(([x, z], i) => {
-    const kid = i % 5 === 2, o = kid ? KID : FOLK[i % 6], hop = kid && on ? Math.max(0, Math.sin(t * 7 + i)) * 0.18 : 0;
-    const who: Who = { i: i + 200, o, okey: kid ? "kid" : `f${i % 6}` };
-    const expr: Expr = (["smile", "grin", "laugh", "smile_closed"] as Expr[])[i % 4];
-    const fo: FrontOpts = { mode: "stand", expr, wave: i % 3 === 2 || !on ? undefined : q(Math.sin(t * 9 + i * 1.3), 30), blink: lidAt(t, i + 40) };
-    out.places.push(person(cam, who, x, D0 + hop, z, { side: false, mirror: false }, fo, {}, kid ? 0.72 : 1));
-    blob(out, x, D0, z, kid ? 0.72 : 1, hop > 0 ? 0.6 : 1);
-  });
-};
-
-/** soldiers strolling out of step across the rebuilt bridge (shot 15): own pace kept (sound), poses on ones */
-const tourists = (cam: CamInfo, t: number, out: Stage) => {
-  const t0 = 62.08;
-  for (let i = 0; i < 24; i++) {
-    const sp = 0.55 + hh(i) * 0.5, z = -4 + (i / 24) * 28 + hh(i, 2) * 1.5 - sp * (t - t0), x = (hh(i, 3) - 0.5) * 4.0;
-    const bare = i % 5 === 2, v = vOf(i), who: Who = { i, o: bare ? BARE[v] : SOLDIER[v], okey: `${bare ? "b" : "s"}${v}` };
-    const prop = i % 7 === 3 ? "icecream" : bare ? "shako" : null;
-    const lick = prop === "icecream" && (t * 0.7 + hh(i, 4)) % 1 < 0.45;
-    const expr: Expr = lick ? "lick" : (["smile", "smile_closed", "grin", "smile"] as Expr[])[i % 4];
-    const phase = q(((t - t0) * sp / 1.4 + hh(i, 5)) % 1, 120); // cadence sp/1.4 Hz unchanged = 0.7 m per step
-    const look = Math.round(Math.sin(t * 0.8 + i * 1.7) * 1.2);
-    const fo: FrontOpts = { mode: "stroll", phase, expr, look: Math.max(-1, Math.min(1, look)), prop, blink: lidAt(t, i) };
-    const view = viewOf(cam, x, z, 0, -1);
-    const so: SideOpts = { mode: "march", phase, expr, stomp: 0.55, stride: 0.875 * view.fs };
-    out.places.push(person(cam, who, x, D0, z, view, fo, so));
-    blob(out, x, D0, z);
+/** strollers along the pavements (side view walking cycle, 0.7 m steps) */
+const strollers = (cam: CamInfo, t: number, out: Stage, x0: number, x1: number, n: number, base: number) => {
+  for (let i = 0; i < n; i++) {
+    const dir = i % 2 ? 1 : -1, sp = 0.9 + 0.4 * hh(i + base, 6), span = x1 - x0;
+    const x = x0 + ((((hh(i + base, 7) * span + dir * sp * t) % span) + span) % span), z = dir > 0 ? 18.3 + 1.6 * hh(i, 8) : 29.6 + 1.6 * hh(i, 8);
+    if (cam.pos.distanceTo(tmp.set(x, 1, z)) < 3) continue;
+    const phase = q(((t * sp) / 1.4 + hh(i, 9)) % 1, 120), view = viewOf(cam, x, z, dir, 0);
+    const expr: Expr = (["smile", "smile_closed", "neutral", "grin"] as Expr[])[i % 4];
+    const fo: FrontOpts = { mode: "stroll", phase, expr, blink: lidAt(t, base + i) }, so: SideOpts = { mode: "march", phase, expr, stomp: 0.55, stride: 0.875 * view.fs, blink: lidAt(t, base + i) };
+    out.places.push(person(cam, folk(base + i), x, 0.12, z, view, fo, so));
+    blob(out, x, 0.12, z);
   }
 };
 
-// officer hammering the new rule onto a sign at the bridge end (shot 14)
-export const HITS = [59.79, 60.33, 61.69];
-export const SIGN_AT: V3 = [2.25, D0, -30.9];
-/** 0 = hammer up, 1 = struck. Reference action timing: 4 f wind-up, held ~7 f at the top, a 1-frame strike on the word */
-const hammerK = (t: number) => {
+/** brush stroke cycle while painting (0 raised .. 1 down) */
+const brushK = (f: number) => (f < PAINT0 || f > PAINT1 + 4 ? 0.35 : 0.5 - 0.5 * Math.cos(((f - PAINT0) / 9) * Math.PI * 2));
+const painter = (cam: CamInfo, t: number, f: number, out: Stage) => {
+  const turned = swap(t, NOTICE);
+  const expr: Expr = turned ? (f < NOTICE + 26 ? "whistle" : "smile_closed") : f >= PAINT0 ? "stern" : "neutral";
+  const fo: FrontOpts = { mode: "stand", expr, prop: ["brush", q(brushK(f), 30)], blink: expr === "whistle" ? 0 : lidAt(t, 61, SWAPS[3]), look: turned ? 0 : 1, facing: turned ? 0 : 1 };
+  out.places.push(person(cam, { i: 61, o: PAINTER_O, okey: "painter" }, PAINTER[0], 0, PAINTER[2], { side: false, mirror: false }, fo, {}));
+  blob(out, PAINTER[0], 0, PAINTER[2]);
+  if (expr === "whistle") for (let n = 0; n < 3; n++) {
+    const age = ((t - NOTICE / FPS + n * 0.33) % 1) / 1, pop = Math.min(1, age * 6) * (age > 0.8 ? (1 - age) / 0.2 : 1);
+    if (t < NOTICE / FPS || pop <= 0.02) continue;
+    const kind = n % 2;
+    out.fx.push({ key: `note${kind}`, cw: 220, ch: 260, draw: (p) => fxNote(p, kind), x: PAINTER[0] + cam.right.x * (0.2 + 0.3 * age), y: 1.95 + 0.6 * age, z: PAINTER[2] + cam.right.z * (0.2 + 0.3 * age) + 0.1,
+      w: 0.15 * pop, h: 0.18 * pop, rot: 0.3 * Math.sin(age * 6 + n) });
+  }
+};
+const wallPt = (th: number, y: number, out = 0.15): V3 => [Math.sin(th) * (TANK_R + out), y, Math.cos(th) * (TANK_R + out)];
+const rivetFx = (f: number, out: Stage) => {
+  for (const [th, y, f0] of RIVETS) if (f >= f0 && f < f0 + 6) {
+    const u = (f - f0) / 6, [x, yy, z] = wallPt(th, y, 0.3);
+    out.fx.push({ key: `burst${q(u, 30)}`, cw: 500, ch: 500, draw: (p) => fxBurst(p, q(u, 30)), x, y: yy, z, w: 1.6, h: 1.6 });
+  }
+  if (f >= 290 && f < 316) [[0.0, 3.6], [0.14, 5.0], [-0.1, 6.4]].forEach(([th, y], i) => {
+    const [x, yy, z] = wallPt(th, y, 0.4), u = q((f / FPS * 1.3 + i * 0.37) % 1, 30);
+    out.fx.push({ key: `creak${u}`, cw: 300, ch: 300, draw: (p) => fxCreak(p, u), x, y: yy, z, w: 1.4, h: 1.4, rot: i * 0.6 - 0.6 });
+  });
+};
+const local = (cam: CamInfo, t: number, out: Stage) => {
+  const shocked = swap(t, 561);
+  const fo: FrontOpts = { mode: "stand", expr: shocked ? "shock" : "smile_closed", blink: lidAt(t, 71, SWAPS[7]), look: shocked ? -1 : 0, headTilt: shocked ? -4 : 3 };
+  out.places.push(person(cam, folk(7), LOCAL[0], 0.12, LOCAL[2], { side: false, mirror: false }, fo, {}));
+  blob(out, LOCAL[0], 0.12, LOCAL[2]);
+};
+const jar = (cam: CamInfo, t: number, f: number, out: Stage) => {
+  const poke = Math.max(0, f - 618) / FPS, wob = q(f < 618 ? 0 : 7 * Math.sin(poke * 14) * Math.exp(-poke * 3.5), 4);
+  out.fx.push({ key: `jar${wob}`, cw: 500, ch: 700, draw: (p) => fxJar(p, wob), x: JAR[0], y: 0.9 + 0.35, z: JAR[2], w: 0.5, h: 0.7 });
+  const kidX = JAR[0] + 0.62, kidZ = JAR[2] + 0.45, puzzled = swap(t, 612);
+  const fo: FrontOpts = { mode: "stand", expr: puzzled ? "nervous" : "neutral", blink: lidAt(t, 81, SWAPS[8]), look: -1, facing: -1, headTilt: puzzled ? -6 : 0 };
+  out.places.push(person(cam, { i: 81, o: KID, okey: "kid" }, kidX, 0.12, kidZ, { side: false, mirror: false }, fo, {}, 0.72));
+  blob(out, kidX, 0.12, kidZ, 0.72);
+};
+/** the morning after: townsfolk stuck waist-deep in set molasses, wriggling; their breath shows in the cold */
+const STUCK: [number, number][] = [[38.5, 23.2], [41.2, 26.8], [43.4, 21.4], [44.8, 25.0], [46.9, 28.6], [48.6, 22.6], [36.2, 28.9], [51.4, 26.4], [40.0, 19.6]];
+const stuck = (cam: CamInfo, t: number, out: Stage) => {
+  STUCK.forEach(([x, z], i) => {
+    const expr: Expr = (["pained", "nervous", "stern", "pained", "shock", "nervous"] as Expr[])[i % 6];
+    const wr = Math.sin(t * (3 + hh(i, 10)) + i * 2), tilt = q(5 * wr, 4);
+    const fo: FrontOpts = { mode: "stand", expr, blink: lidAt(t, 90 + i), tilt, wave: i % 3 === 0 ? q(Math.sin(t * 4 + i), 20) : undefined, look: Math.round(wr) };
+    out.places.push(person(cam, folk(i + 1), x, -0.05, z, { side: false, mirror: false }, fo, {}));
+    const u = ((t - 667 / FPS + hh(i, 11) * 1.4) % 1.4) / 1.4;
+    if (t > 666 / FPS && u < 0.6) {
+      const v = u / 0.6;
+      out.fx.push({ key: `puff${q(v, 20)}`, cw: 300, ch: 300, draw: (p) => fxPuff(p, q(v, 20)), x: x + cam.right.x * (0.18 + 0.25 * v), y: -0.05 + 1.72 + 0.25 * v, z: z + cam.right.z * (0.18 + 0.25 * v), w: 0.5 + 0.4 * v, h: 0.5 + 0.4 * v, soft: true });
+    }
+  });
+};
+const hitK = (f: number) => {
   let k = 1;
-  for (const th of HITS) {
-    const n = (t - th) * FPS; // frames to contact
-    if (n >= -11 && n < -7) k = Math.min(k, 1 - smooth((n + 11) / 4));
-    else if (n >= -7 && n < 0) k = 0;
-  }
+  for (const fh of STAMPS) { const n = f - fh; if (n >= -11 && n < -7) k = Math.min(k, 1 - smooth((n + 11) / 4)); else if (n >= -7 && n < 0) k = 0; }
   return k;
 };
-const officer = (cam: CamInfo, t: number, out: Stage) => {
-  const fo: FrontOpts = { mode: "stand", expr: "stern", prop: ["hammer", q(hammerK(t), 30)], blink: lidAt(t, 99), facing: 1 };
-  out.places.push(person(cam, { i: 99, o: OFFICER, okey: "off" }, 3.35, D0, -31.55, { side: false, mirror: false }, fo, {}));
-  blob(out, 3.35, D0, -31.55, 1.1);
-  for (const th of HITS) if (t >= th && t < th + 5 / FPS) {
-    const u = (t - th) / (5 / FPS);
-    out.fx.push({ key: `burst${q(u, 30)}`, cw: 500, ch: 500, draw: (p) => fxBurst(p, q(u, 30)), x: 2.95, y: D0 + 1.55, z: -31.0, w: 0.9, h: 0.9 });
+const engineer = (cam: CamInfo, t: number, f: number, out: Stage) => {
+  const fo: FrontOpts = { mode: "stand", expr: f >= STAMPS[0] ? "smile_closed" : "stern", prop: ["hammer", q(hitK(f), 30)], blink: lidAt(t, 99), facing: 1 };
+  const ex = BOARD[0] + 1.25, ez = BOARD[2] - 0.35;
+  out.places.push(person(cam, { i: 99, o: ENGINEER_O, okey: "eng" }, ex, 0.12, ez, { side: false, mirror: false }, fo, {}));
+  blob(out, ex, 0.12, ez, 1.1);
+  for (const fh of STAMPS) if (f >= fh && f < fh + 5) {
+    const u = (f - fh) / 5;
+    out.fx.push({ key: `burst${q(u, 30)}`, cw: 500, ch: 500, draw: (p) => fxBurst(p, q(u, 30)), x: BOARD[0] + 0.35, y: 1.45, z: BOARD[2] - 0.2, w: 0.8, h: 0.8 });
   }
 };
-
-// swing in the park (shot 12): pushes land at the back end of every swing, the arc grows
-export const SWING_T = 1.55, PUSH0 = 48.79;
-const pushes = [0, 1, 2, 3].map((k) => PUSH0 + k * SWING_T);
-export const swingAmp = (t: number) => 6 + pushes.reduce((a, tp) => a + 11 * smooth((t - tp) / 0.3), 0);
-export const swingAngle = (t: number) => -((swingAmp(t) * Math.PI) / 180) * Math.cos((2 * Math.PI * (t - PUSH0)) / SWING_T);
-/** the swing kid's back (seat + ~.12 m, ~8 cm behind the rope) in world space when the swing is at angle th */
-const kidBack = (th: number): [number, number] => {
-  const lx = -0.083, ly = -2.174; // local to the swing card (pivot at the origin), card yawed by PI
-  return [PARK[0] - (lx * Math.cos(th) - ly * Math.sin(th)), PARK[1] + 2.88 + lx * Math.sin(th) + ly * Math.cos(th)];
-};
-/** where the parent stands for push k: hands reach the kid's back at the back of the arc with the arms ~ straight */
-const pushSpot = (k: number) => {
-  const A = (swingAmp(pushes[k]) * Math.PI) / 180, [bx, by] = kidBack(-A);
-  const cy = 975 - (by - D0) / SU, dy = cy - 515, dx = Math.sqrt(Math.max(120 * 120, 222 * 222 - dy * dy));
-  return { px: bx + (53 + dx) * SU, hand: [300 + 53 + dx, cy] as [number, number] };
-};
-const park = (cam: CamInfo, t: number, out: Stage) => {
-  const th = swingAngle(t), vel = Math.sin((2 * Math.PI * (t - PUSH0)) / SWING_T);
-  const A = (swingAmp(t) * Math.PI) / 180, kick = q(0.35 + 0.55 * vel, 40);
-  const expr: Expr = A < 0.35 ? "smile" : A < 0.6 ? "grin" : "laugh";
-  const light = light2D(cam, true), lid = lidAt(t, 78);
-  out.places.push({ key: `swing|${kick}|${expr}|${q(light)}|${lid}`, geo: "swing", x: PARK[0], y: PARK[1] + 2.88, z: PARK[2], yaw: Math.PI, roll: th,
-    draw: (p) => swingKid(p, KID, kick, expr, light, lid), size: [490, 1610, 0.7] });
-  const push = Math.max(0, ...pushes.map((tp) => 1 - Math.abs(t - tp + 0.05) / 0.32));
-  // stand at this push's spot; step back to the next spot between pushes (the arc grows after every push)
-  let k = 0;
-  while (k < pushes.length - 1 && t > pushes[k] + 0.35) k++;
-  const cur = pushSpot(k), prev = pushSpot(Math.max(0, k - 1));
-  const step = k > 0 ? smooth((t - (pushes[k - 1] + 0.35)) / (SWING_T - 0.7)) : 1;
-  const px = prev.px + (cur.px - prev.px) * step, pz = PARK[2] + 0.1;
-  const so: SideOpts = { mode: "push", pose: q(push, 40), expr: push > 0.3 ? "grin" : "smile", blink: lidAt(t, 77), hand: cur.hand };
-  out.places.push({ ...person(cam, { i: 77, o: PARENT, okey: "parent" }, px, D0, pz, { side: true, mirror: true }, {}, so), mirror: false, yaw: Math.PI });
-  blob(out, px, D0, pz);
+const sniffer = (cam: CamInfo, t: number, f: number, out: Stage) => {
+  const sniff = swap(t, 868);
+  const fo: FrontOpts = { mode: "stand", expr: sniff ? "relief" : "smile_closed", blink: sniff ? 1 : lidAt(t, 111, SWAPS[11]), headTilt: sniff ? -7 : 0 };
+  out.places.push(person(cam, folk(4), SNIFFER[0], 0.12, SNIFFER[2], { side: false, mirror: false }, fo, {}));
+  blob(out, SNIFFER[0], 0.12, SNIFFER[2]);
+  // sweet smell ribbons rising off the warm cobbles
+  [[-0.9, 0.6], [0.8, 1.2], [-0.3, 2.4], [1.6, 3.0]].forEach(([dx, dz], i) => {
+    const u = q((t * 0.7 + i * 0.29) % 1, 30);
+    out.fx.push({ key: `smell${u}`, cw: 400, ch: 700, draw: (p) => fxSmell(p, u), x: SNIFFER[0] + dx, y: 0.12 + 0.75, z: SNIFFER[2] + dz, w: 0.8, h: 1.4 });
+  });
 };
 
-/** everything with a face in shot `id` at time t */
-export const stage = (id: number, t: number, b: BridgeState, cam: CamInfo): Stage => {
+/** everything with a face in shot `id` at time t (ts = seconds since the burst, or null) */
+export const stage = (id: number, t: number, ts: number | null, cam: CamInfo): Stage => {
   const out: Stage = { places: [], fx: [] };
-  const s = SHOTS[id - 1];
+  const s = SHOTS[id - 1], f = Math.round(t * FPS);
   LNAME = s.light;
   findSun(cam, SUN);
-  if (s.crowd === "march" || s.crowd === "fall") column(id, t, b, cam, out);
-  if (s.towns) townsfolkAt(cam, t, out);
-  if (s.crowd === "water") {
-    const spots: [number, number, number][] = [];
-    for (let i = 0; i < 40; i++) spots.push([FILES[i & 3] * 1.12 + (hh(i, 11) - 0.5) * 0.6, -0.6, -21.6 + (i >> 2) * 1.6 + (hh(i, 12) - 0.5) * 0.7]);
-    const happy: Expr[] = ["relief", "relief_open", "smile", "relief"], hurt: Expr[] = ["pained", "dazed", "pained", "dazed"];
-    sitters(cam, t, out, spots, (i) => (id === 9 ? happy : hurt)[i % 4], (i) => id === 10 && i % 4 === 1, true);
-    flotsam(t, out);
+  switch (id) {
+    case 1: fleeing(cam, t, ts ?? 0, out, 8); crowns(cam, t, ts ?? 0, out); break;
+    case 2: strollers(cam, t, out, -60, 80, 14, 20); break;
+    case 3: painter(cam, t, f, out); standers(cam, t, out, [[-6.5, 0.12, 19.4], [8.5, 0.12, 30.6]], () => "neutral", 40); break;
+    case 4: rivetFx(f, out);
+      standers(cam, t, out, [[2.6, 0.12, 15.2]], () => (f > 322 ? "shock" : "nervous"), 44); break;
+    case 5: standers(cam, t, out, [[9, 0, -13], [-4, 0, -17], [13.5, 0, -8.5], [4.5, 0, -19.5]].filter(([x, , z]) => (ts ?? -1) < 0 || waveH(Math.hypot(x, z), ts!) <= 0) as V3[],
+      (i) => (t >= 12.37 ? (i % 2 ? "shock" : "nervous") : "neutral"), 50); break;
+    case 6: fleeing(cam, t, ts ?? 0, out, 9); crowns(cam, t, ts ?? 0, out); break;
+    case 7: local(cam, t, out); fleeing(cam, t, ts ?? 0, out, 4); crowns(cam, t, ts ?? 0, out); break;
+    case 8: jar(cam, t, f, out); break;
+    case 9: stuck(cam, t, out); break;
+    case 10: engineer(cam, t, f, out); break;
+    case 11: sniffer(cam, t, f, out); strollers(cam, t, out, -60, 20, 10, 120); break;
   }
-  if (s.crowd === "bank") {
-    const spots: [number, number, number][] = [[-7.2, D0, -33.6], [-6.1, D0, -32.1], [-5.0, D0, -34.3], [-4.3, D0, -31.6], [-3.4, D0, -33.2],
-      [-2.4, D0, -31.9], [-6.8, D0, -35.4], [-4.1, D0, -35.6], [-1.9, D0, -34.6]];
-    const ex: Expr[] = ["dazed", "relief", "smile_closed", "pained"];
-    sitters(cam, t, out, spots, (i) => ex[i % 4], (i) => i % 4 === 0, false);
-    officer(cam, t, out);
-  }
-  if (s.crowd === "tourists") tourists(cam, t, out);
-  if (id === 12) park(cam, t, out);
   return out;
 };
-
-// ---------------- one-off effects ----------------
-export const snapFx = (tau: number, at: V3, out: Stage) => {
-  if (tau >= SNAP && tau < SNAP + 0.45) {
-    const u = (tau - SNAP) / 0.45;
-    out.fx.push({ key: `bigburst${q(u, 30)}`, cw: 500, ch: 500, draw: (p) => fxBurst(p, q(u, 30)), x: at[0], y: at[1] + 0.12, z: at[2] - 0.15, w: 1.5, h: 1.5 });
-  }
-};
-export const splashFx = (tau: number, out: Stage) => {
-  const u = (tau - DROP1) / 1.1;
-  if (u < 0 || u >= 1) return;
-  for (const [x, z, s] of [[-2.9, -24, 1], [2.9, -21, 0.9], [-2.9, -15, 0.85], [2.9, -9, 0.8], [0, -27.5, 1.2], [-2.9, -5, 0.6]] as const)
-    out.fx.push({ key: `splash${q(u, 30)}`, cw: 800, ch: 800, draw: (p) => fxSplash(p, q(u, 30)), x, y: 2.6 * s, z, w: 7 * s, h: 7 * s }); // base of the drawing on the water line
-};
-export const creakFx = (t: number, pts: V3[], out: Stage, size = 0.8) =>
-  pts.forEach(([x, y, z], i) => {
-    const u = q((t * 1.3 + i * 0.37) % 1, 30);
-    out.fx.push({ key: `creak${u}`, cw: 300, ch: 300, draw: (p) => fxCreak(p, u), x, y, z, w: size, h: size, rot: i * 0.6 - 0.6 });
-  });
-export { FPS };
+export { FPS, D0, clamp01 };

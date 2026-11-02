@@ -46,7 +46,7 @@ export const LOOK: Record<"day" | "golden", WorldLook> = {
   day: {
     // depth.md 2.2: horizon #9fb6e6 just above the skyline, upper sky #5e93d9 at ~20 deg (grade: frame top #5997e2)
     sky: { c: ["#b8d0ec", "#9cbfea", "#6a9fe0", "#4f8cdb", "#3373cc"], e: [0, 3, 8, 16, 40] },
-    water: { near: "#22a7b6", mid: "#167fb2", far: "#1a5596", crest: "#7ddfe8", trough: "#0e4a80", glint: "#ffffff", shade: [0.5, 0.56, 0.72] },
+    water: { near: "#2f86a6", mid: "#256c98", far: "#2a5486", crest: "#9fd4e4", trough: "#0e4a80", glint: "#ffffff", shade: [0.5, 0.56, 0.72] },
     cloud: { lit: "#fbf8f1", mid: "#e1e5f3", shade: "#c3cbe9" },
     bounce: [0, 0, 0],
     sat: 1.08,

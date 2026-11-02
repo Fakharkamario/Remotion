@@ -4,7 +4,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { D0 } from "./story";
-import { brick, rng, ctex, rep, facadeHD, roofHD, stoneHD } from "./paint";
+import { brick, rng, ctex, rep, facadeHD, roofHD, stoneHD, cobbleHD, beam } from "./paint";
 import { twoTone } from "./shade";
 
 export type Kit = Record<string, THREE.Object3D>;
@@ -700,4 +700,87 @@ export const buildTown = (root: THREE.Object3D, kit: Kit, rays: Ray[] = []) => {
   prop(b, kit, "lantern", 64.5, D0, -71, 2.8);
   b.build(root);
   sight = [];
+};
+
+// ---------------- Boston North End waterfront, 1919 (molasses short) ----------------
+// Commercial St runs along x (z 16..32) under the elevated railway (z = 24); four-storey brick blocks front it at
+// z = 34; warehouses flank the tank yard on the harbour side (fronts at z = 12); the quay wall is at z = -24.
+const BRICKY = [7, 2, 7, 1, 2, 7, 5, 0, 7, 2];
+export const buildBoston = (root: THREE.Object3D, rays: Ray[] = []) => {
+  const b = new Batch(), r = rng(19);
+  sight = rays;
+  const pick = <T,>(a: T[]) => a[Math.floor(r() * a.length) % a.length];
+  const cob = lam("cobbleHD", () => ({ map: cobbleHD() }));
+  const pave = lam("paveHD", () => ({ map: stoneHD("copeHD", ["#d9cdb8", "#cfc2ac", "#e0d5c2", "#c8baa3"], "#a89a86") }));
+  const yard = lam("yard", () => ({ map: stoneHD("wallHD", ["#bfae96", "#b3a28a", "#c7b8a2", "#ab9a82"], "#8f8070") }));
+  const quayM = lam("quayHD", () => ({ map: stoneHD("towerHD") }));
+  const wood = lam("wood", () => ({ map: beam() }));
+  const flat = (x0: number, x1: number, z0: number, z1: number, y: number, m: THREE.Material, tile: number) =>
+    b.add(quad(V(x0, y, z1), V(x1, y, z1), V(x1, y, z0), V(x0, y, z0), (x1 - x0) / tile, (z1 - z0) / tile), m);
+  flat(-400, 400, STREET0, STREET1, 0.0, cob, 8);
+  flat(-400, 400, 12, STREET0, 0.12, pave, 4);
+  b.add(boxGeo(V(-400, 0, STREET0 - 0.15), V(400, 0.12, STREET0), 2), pave);
+  flat(-400, 400, STREET1, 400, 0.12, pave, 4);
+  b.add(boxGeo(V(-400, 0, STREET1), V(400, 0.12, STREET1 + 0.15), 2), pave);
+  flat(-400, 400, -24, 12, 0.0, yard, 10);
+  // quay wall + piers
+  b.add(quad(V(400, -3, -24), V(-400, -3, -24), V(-400, 0, -24), V(400, 0, -24), 200, 1.5), quayM);
+  b.add(boxGeo(V(-400, -0.1, -24.6), V(400, 0.25, -23.4), 2), lam("copeHD", () => ({ map: stoneHD("copeHD") })));
+  for (const [x0, x1, z1] of [[-70, -58, -70], [36, 46, -64], [92, 102, -80]] as const) {
+    b.add(boxGeo(V(x0, -0.35, z1), V(x1, 0.05, -24), 3), wood);
+    for (let z = -28; z > z1; z -= 6) for (const x of [x0 + 0.4, x1 - 0.4]) b.add(boxGeo(V(x - 0.25, -3, z - 0.25), V(x + 0.25, -0.35, z + 0.25)), wood);
+  }
+  // north blocks: rows of tall brick houses; a side street at x 36..44 and -46..-38
+  const gaps = [[34, 46], [-48, -36]];
+  for (const [zf, rowH] of [[34, [9.8, 11.2, 12.6]], [52, [11.2, 12.6, 14]], [70, [9.8, 12.6, 14]]] as const) {
+    let x = -170;
+    while (x < 170) {
+      const w = pick([7, 8, 9]), cx = x + w / 2;
+      if (!gaps.some(([a, c]) => cx + w / 2 > a && cx - w / 2 < c)) house(b, cx, zf + 5, Math.PI, w, 10, pick(rowH as unknown as number[]), pick(BRICKY));
+      x += w + (r() < 0.12 ? 1.5 : 0.15);
+    }
+  }
+  // warehouses either side of the tank yard (harbour side)
+  for (const sx of [-1, 1]) {
+    let x = 20;
+    while (x < 170) {
+      const w = pick([12, 14]), cx = sx * (x + w / 2);
+      house(b, cx, 4, 0, w, 16, pick([8.4, 9.8]), pick([7, 2, 7, 1]));
+      x += w + 2.5;
+    }
+  }
+  // the steeple on the hill behind (a white church tower with a tall spire)
+  const st = lam("steeple", () => ({ color: "#eee6d6" })), sl = lam("roof#8f97a8", () => ({ map: roofHD("#8f97a8", true), side: THREE.DoubleSide }));
+  const CX = -62, CZ = 128, base = 6;
+  b.add(boxGeo(V(CX - 9, 0, CZ - 4), V(CX + 9, base + 10, CZ + 24), 4), lam("brickChurch", () => ({ map: facadeHD("brickChurch", 18, 16, { wall: "#b5543c", shutter: "#3b3f52", brick: true }) })));
+  b.add(boxGeo(V(CX - 4.5, 0, CZ - 9), V(CX + 4.5, base + 22, CZ)), lam("brickTower", () => ({ map: facadeHD("brickTower", 9, 28, { wall: "#b5543c", shutter: "#3b3f52", brick: true }) })));
+  b.add(boxGeo(V(CX - 3.6, base + 22, CZ - 8.1), V(CX + 3.6, base + 28, CZ - 0.9)), st);
+  b.add(boxGeo(V(CX - 2.6, base + 28, CZ - 7.1), V(CX + 2.6, base + 32, CZ - 1.9)), st);
+  const spire = new THREE.ConeGeometry(2.6, 16, 8); spire.translate(0, 8, 0);
+  b.add(spire, sl, new THREE.Matrix4().makeTranslation(CX, base + 32, CZ - 4.5));
+  const hill = new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2);
+  b.add(hill, lam("hillA", () => ({ color: "#8a9a6a" })), new THREE.Matrix4().compose(V(-40, -2, 160), new THREE.Quaternion(), V(130, 10, 60)));
+  // elevated railway: lattice-girder deck on paired columns, dark green iron
+  const iron = twoTone(new THREE.MeshPhongMaterial({ color: "#3d4f46", specular: "#6a7a70", shininess: 40 }), 0.15);
+  const Y = EL_Y0;
+  for (let x = -198; x <= 198; x += 12) for (const z of [20.4, 27.6]) {
+    b.add(boxGeo(V(x - 0.22, 0, z - 0.22), V(x + 0.22, Y, z + 0.22)), iron);
+    b.add(boxGeo(V(x - 0.4, 0, z - 0.4), V(x + 0.4, 0.5, z + 0.4)), iron);
+    b.add(boxGeo(V(x - 0.6, Y - 0.6, z - 0.15), V(x + 0.6, Y, z + 0.15), 0, true), iron); // knee brace
+  }
+  for (const z of [20.4, 27.6]) {
+    b.add(boxGeo(V(-400, Y, z - 0.3), V(400, Y + 1.1, z + 0.3), 2, true), iron);
+    for (let x = -396; x < 400; x += 3) b.add(beamBetween0(V(x, Y + 0.08, z + 0.32), V(x + 1.5, Y + 1.02, z + 0.32), 0.07), iron);
+  }
+  b.add(boxGeo(V(-400, Y + 1.1, 20), V(400, Y + 1.3, 28), 2, true), wood);
+  for (let x = -398; x < 400; x += 2.4) b.add(boxGeo(V(x - 0.12, Y + 0.9, 20.2), V(x + 0.12, Y + 1.1, 27.8), 0, true), iron); // floor beams under the deck
+  for (const z of [21.8, 23.2, 24.8, 26.2]) b.add(boxGeo(V(-400, Y + 1.3, z - 0.06), V(400, Y + 1.45, z + 0.06)), iron);
+  b.build(root);
+  sight = [];
+};
+const STREET0 = 16, STREET1 = 32, EL_Y0 = 6.4;
+const beamBetween0 = (a: THREE.Vector3, c: THREE.Vector3, th: number) => {
+  const g = new THREE.BoxGeometry(th, a.distanceTo(c), th);
+  return g.applyMatrix4(new THREE.Matrix4().compose(a.clone().add(c).multiplyScalar(0.5),
+    new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), c.clone().sub(a).normalize()), V(1, 1, 1)));
 };
