@@ -53,7 +53,7 @@ export const SHOTS: ShotDef[] = [
   { id: 2, a: 88, b: 186, light: "day", tank: "intact", wave: () => null },                 // waterfront aerial
   { id: 3, a: 186, b: 288, light: "day", tank: "intact", wave: () => null, sunAz: 150, sunEl: 38 },                // the painter
   { id: 4, a: 288, b: 362, light: "day", tank: "intact", wave: () => null, sunAz: 140, sunEl: 40 },                // groan + rivets
-  { id: 5, a: 362, b: 390, light: "day", tank: "burst", wave: after },                      // burst
+  { id: 5, a: 362, b: 390, light: "day", tank: "burst", wave: after, sunAz: 155, sunEl: 35 },                      // burst
   { id: 6, a: 390, b: 505, light: "day", tank: "burst", wave: after },                      // the wave down the street
   { id: 7, a: 505, b: 590, light: "day", tank: "burst", wave: after },                      // luckily / unluckily
   { id: 8, a: 590, b: 658, light: "day", tank: "intact", wave: () => null },                // honey from the fridge
