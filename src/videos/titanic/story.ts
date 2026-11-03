@@ -183,8 +183,8 @@ const S9a = (f: number) => dolly([22.5, 17.6, 7.9], [22.5 - 3.0, 17.5, 7.9 - 1.4
 const S10a = (f: number) => dolly([31, 17.3, 8.7], [23.6, 17.1, 5.6], pushK(f, 558, 0.0025), { fov: 44 });
 const S10b = (f: number) => dolly([28.2, 17.4, 8.2], [24.0, 17.2, 5.8], pushK(f, 600, 0.0025), { fov: 42, roll: 0.03 }); // "nobody panics" @608
 // 11 low over the water looking up the hull: a half-empty boat comes down
-const S11a = (f: number) => zoom([30, 7.5, 30], [41, 13.5, 12.5], 48, pushK(f, 637, 0.0025));
-const S11b = (f: number) => zoom([32, 7.0, 28], [41, 11.2, 12.8], 42, pushK(f, 668, 0.003), { roll: -0.03 }); // "half empty" @676
+const S11a = (f: number) => zoom([30, 11.5, 30], [41, 14.5, 12.5], 48, pushK(f, 637, 0.0025));
+const S11b = (f: number) => zoom([32, 11.0, 28], [41, 12.4, 12.8], 42, pushK(f, 668, 0.003), { roll: -0.03 }); // "half empty" @676
 // 12 flooded corridor: low, the water runs at the lens
 const S12a = (f: number) => dolly([-5.5, 1.15, 0.6], [4, 0.7, -0.2], pushK(f, 704, 0.0028), { fov: 46 });
 const S12b = (f: number) => dolly([-4.2, 0.8, 0.55], [4, 0.5, -0.1], pushK(f, 731, 0.003), { fov: 46, roll: 0.04 }); // "creeps" @731
