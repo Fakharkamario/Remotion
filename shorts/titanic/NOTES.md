@@ -18,3 +18,17 @@
 - Rendering: one full 2K render takes ~2.2 h here and is killed by the 2 h background-job limit, so render in chunks with
   `shorts/titanic/render_chunk.sh <start> <end> <name>` (0-449, 450-899, 900-1349) and join with the ffmpeg concat demuxer.
 - QA fix: the shot-11 camera rides with the sinking ship and dipped under the sea at f661 (sea vanished). Lifted it 4 m.
+
+## v2 (user's ElevenLabs voice-over, animated host)
+- Voice: `voice/el/voice_el.mp3` (55.3 s) -> `voice/el/align.py` (pocketsphinx forced alignment, HF/whisper hosts are
+  blocked) -> `voice/make_voice_el.py`: pauses tightened (phrase gaps 0.2-0.5 s, inside phrases 0.1 s, 10 ms
+  crossfades) -> voice.wav 47.25 s, words.json, warp.json, mouth.json and generated `src/videos/titanic/voicemap.ts`.
+- Time warp: shots and cues stay on the old story timeline. Bridge.tsx maps output frame F -> storyF(F) (smoothed
+  gaussian 0.28 s, anchors on phrase edges + punch words, speed 0.41..1.44, hits within ±9 f). REAL.F = output frame for
+  lip-sync, kicks, acting. make_audio.py moves every cue through warp.json. Old stand-in: words_old.json, voice_old.wav,
+  shots_old.json.
+- Host: `hostrig.ts` deforms the user's PNG on a subdivided mesh (head roll/nod about the neck, breathing, sway, lean,
+  capsule-weighted arm swings, squash), draws blinks (skin-colour lids) and a voice-driven mouth on the texture.
+  Per-shot acting in `cast.ts` hostPose (4 point/shrug, 7 thinking, 9 laugh, 12 nervous, 13 shock recoil).
+- New cut: punch-in close-up on "horrifying" (story f 31, S1b).
+- Render: 1418 output frames in 3 chunks (0-472, 473-945, 946-1417) with render_chunk.sh, concat, mux mix.wav.
