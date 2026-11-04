@@ -1,0 +1,23 @@
+# Sound cues (s, frame @30)
+
+-   0.00 s (f    0): summer: cicadas, sparrows, street murmur (muffled indoors)
+-   0.05 s (f    2): clock tick every second until the flash
+-   0.45 s (f   14): score: koto figure in D In scale over a soft pad
+-   4.87 s (f  146): newspaper rustle
+-   7.07 s (f  212): cup lifted (clink)
+-   7.90 s (f  237): sip
+-  16.67 s (f  500): kids' running feet
+-  19.50 s (f  585): score darkens: Eb over D, low pulses from 'thirty'
+-  20.20 s (f  606): B-29 drone: faint -> heavier -> roaring alongside -> distant
+-  28.10 s (f  843): shoji slides open
+-  30.40 s (f  912): glint shimmer
+-  36.63 s (f 1099): heartbeat to the flash
+-  36.63 s (f 1099): swell to the flash; koto on five / three / one
+-  36.63 s (f 1099): wind at altitude
+-  38.43 s (f 1153): bomb bay release clunk
+-  39.37 s (f 1181): the fall: rising wind
+-  43.00 s (f 1290): tatami creak as he stands
+-  46.77 s (f 1403): flash crack + ring
+-  47.60 s (f 1428): the blast: boom and long roll
+-  48.73 s (f 1462): aftermath wind
+-  49.00 s (f 1470): lament into the fade
