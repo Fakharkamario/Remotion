@@ -71,7 +71,7 @@ export const bostonian = (v = 0): Outfit => {
 
 // ---- Hiroshima cast ----
 /** the narrator (the user's character sheet): dark-brown curly mop, big round eyes, black hoodie, grey jeans, dark shoes */
-export const NARRATOR: Outfit = { jacket: "#2e2e34", pants: "#6a6e78", boots: "#2a2c34", sole: "#8a8e98", hat: "curly", hair: "#3b2a22",
+export const NARRATOR: Outfit = { jacket: "#2e2e34", pants: "#6a6e78", boots: "#2a2c34", sole: "#8a8e98", hat: "curly", hair: "#4a3226",
   skin: "#f6dcc6", hoodie: true, eyes: "round", limbK: 1.75, skinHands: true };
 /** the old couple: grandpa in the khaki civilian "national uniform", balding with grey tufts, glasses and a grey moustache;
  *  grandma in an indigo kasuri top and brown monpe work trousers, grey hair in a bun */
@@ -474,31 +474,45 @@ const hatOn = (p: Pen, o: Outfit, hp: P2[], H: Blob, cx: number, hc: number, lig
       }
     }
   } else if (o.hat === "curly") {
-    // the narrator's curly mop: scalloped outer edge from ear to ear over the crown, curls dipping onto the forehead
-    const col = o.hair!, N = 96, pts: P2[] = [];
-    for (let i = 0; i <= N; i++) {
-      const t = rad(148 + (244 * i) / N), k = i / N;
-      const sc = 1.15 + 0.085 * Math.abs(Math.sin(k * Math.PI * 9.5 + seed * 0.7)) + 0.07 * Math.sin(k * Math.PI);
-      pts.push([cx + Math.cos(t) * H.a * sc * 1.04, hc + Math.sin(t) * H.b * sc]);
+    // the narrator's curly top: a cloud of round curl clumps, fuller on the crown, tapered at the sides, a curly fringe.
+    // Pass 1 inks every clump a little larger (one outer outline for the whole mop), pass 2 fills each clump with its own
+    // light-side shading, pass 3 adds C-curl strokes and highlights so every clump reads as a ringlet.
+    const col = o.hair!, dk = mix(col, "#000000", 0.38), hi = mix(col, "#ffffff", 0.2);
+    const back = side ? -0.18 * H.a : 0; // in profile the mop sits toward the back of the head
+    const C: [number, number, number][] = []; // [x, y, r] in head units (x / H.a, y / H.b from the head centre)
+    // crown ring: big clumps over the top, smaller toward the temples
+    for (let i = 0; i <= 10; i++) {
+      const t = rad(196 + (148 * i) / 10), k = Math.sin((i / 10) * Math.PI);
+      const r = 0.24 + 0.1 * k + 0.02 * (rnd(seed, 300 + i) - 0.5);
+      C.push([Math.cos(t) * (0.9 + 0.06 * k), Math.sin(t) * (0.93 + 0.2 * k) - 0.04, r]);
     }
-    const fy = hc - 0.74 * H.b;
-    pts.push([cx + 0.9 * H.a, hc + 0.25 * H.b], [cx + 0.86 * H.a, hc - 0.3 * H.b]);
-    for (let i = 0; i <= 14; i++) {
-      const tt = i / 14, x = cx + 0.86 * H.a - tt * 1.72 * H.a;
-      const dip = Math.abs(Math.sin(tt * Math.PI * 4.5)) * 0.15 * H.b + (tt > 0.15 && tt < 0.5 ? 0.06 * H.b * Math.sin(((tt - 0.15) / 0.35) * Math.PI) : 0);
-      pts.push([x, fy + dip]);
+    // side tufts just above the ears, kept short
+    for (const s2 of [-1, 1]) C.push([s2 * 0.95, -0.2, 0.2], [s2 * 0.98, 0.02, 0.15]);
+    // inner fill so the cloud has no gaps
+    C.push([0, -1.0, 0.42], [-0.44, -0.9, 0.3], [0.44, -0.9, 0.3]);
+    // fringe: a row of curls over the forehead, one curl dropping a little lower off-centre
+    const F: [number, number, number][] = [[-0.72, -0.7, 0.17], [-0.4, -0.82, 0.18], [-0.04, -0.8, 0.18], [0.32, -0.83, 0.18], [0.68, -0.72, 0.17],
+      [-0.2, -0.74, 0.13]];
+    const toPx = ([x, y, r]: [number, number, number]): [number, number, number] => {
+      const [px, py] = R([[cx + back + x * H.a * (side && x > 0.3 ? 0.8 : 1), hc + y * H.b]])[0];
+      return [px, py, r * H.a];
+    };
+    const all = [...C, ...F].map(toPx), fr = F.map(toPx);
+    for (const [x, y, r] of all) p.dot(x, y, r + ow * 0.6, INK);
+    for (const [x, y, r] of all) {
+      const e = ellPts(x, y, r, r * 0.96, 0, 360, 0, 28);
+      p.shadedFill(e, col, mul(col, SH_FELT), light, r, 0.5, 0.75, 1.3);
     }
-    pts.push([cx - 0.86 * H.a, hc - 0.3 * H.b], [cx - 0.9 * H.a, hc + 0.25 * H.b]);
-    p.shadedFill(pts, col, mul(col, SH_FELT), light, H.a * 1.1, 0.35);
-    p.clip(pts, () => {
-      for (let i = 0; i < 14; i++) {
-        const a = rad(185 + 170 * rnd(seed, 40 + i)), r = 0.55 + 0.5 * rnd(seed, 60 + i);
-        const x = cx + Math.cos(a) * H.a * r, y = hc + Math.sin(a) * H.b * r * 0.95 - 0.12 * H.b;
-        p.arc(x, y, 6 * u, 5 * u, 160 + 60 * rnd(seed, 80 + i), 330 + 40 * rnd(seed, 90 + i), 1.8 * u, mix(col, "#000000", 0.3));
-        if (i % 3 === 0) p.arc(x + 2 * u, y - 2 * u, 4 * u, 3 * u, 210, 310, 1.4 * u, mix(col, "#ffffff", 0.12));
+    // fringe curls get their own lower rim so they read as separate ringlets on the forehead
+    for (const [x, y, r] of fr) p.arc(x, y, r, r * 0.96, 15, 165, ow * 0.55, INK);
+    all.forEach(([x, y, r], i) => {
+      const sp = 140 + 60 * rnd(seed, 120 + i);
+      p.arc(x - 0.05 * r, y + 0.05 * r, r * 0.55, r * 0.5, sp, sp + 200, Math.max(1.4 * u, 0.13 * r), dk); // C-curl
+      if (i % 2 === 0) {
+        const la = (light * 180) / Math.PI;
+        p.arc(x, y, r * 0.62, r * 0.58, la - 35, la + 35, Math.max(1.2 * u, 0.09 * r), hi); // highlight on the lit side
       }
     });
-    p.poly(pts, null, ow);
   } else if (o.hat === "balding" || o.hat === "bun") {
     if (o.hat === "balding") for (const s2 of [-1, 1]) { // grey tufts over the ears, bare crown
       const tp = ellPts(cx + s2 * 0.93 * H.a, hc - 0.08 * H.b, 0.2 * H.a, 0.34 * H.b, 0, 360, s2 * 12);
