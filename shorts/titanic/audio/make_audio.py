@@ -11,10 +11,15 @@ from sfx_gen import creak, clink, whoosh, splash_big, bubbles, whoa, babble, bre
 from dsp import smooth_noise, colored
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-FPS, TOTAL = 30, 1350
+# Story frames (the numbers below) -> seconds on the real voice-over's timeline, through the picture's own time map
+# (voice/warp.json: output frame -> story frame, monotone), so every hit lands where the picture shows it.
+import json
+_W = json.load(open(os.path.join(HERE, "..", "voice", "warp.json")))
+_OLD = np.array(_W["old"], float)
+FPS, TOTAL = 30, _W["frames"]
 DUR = TOTAL / FPS
 N = ns(DUR)
-fr = lambda f: f / FPS
+fr = lambda f: float(np.interp(f, _OLD, np.arange(len(_OLD)))) / FPS
 R = rng(1912)
 cues = []
 
@@ -187,18 +192,18 @@ def sfx():
     place(S, st(whoosh(0.6, R, peak=0.25, f_lo=500, f_hi=4000)), FLASH - 0.3, 0.6)
     cue(0.0, "engine hum + calm sea"); cue(FLASH - 0.3, "flash whoosh")
     # the iceberg: grinding along the hull, three jolts, ice chunks clattering on the deck
-    place(S, st(grind(fr(215 - 168), R)), fr(168), 1.0)
+    place(S, st(grind((fr(215) - fr(168)), R)), fr(168), 1.0)
     for t0 in SCRAPE:
         place(S, st(crack(R, 0.6)), t0, 0.55)
     for k in range(10):
         place(S, pan(clink(R, f0=R.uniform(1800, 3400), dur=0.25, bright=0.9), R.uniform(-0.6, 0.6)), SCRAPE[0] + 0.35 + k * 0.11 + R.uniform(0, 0.05), 0.4)
     cue(SCRAPE[0], "grinding scrape + jolts + ice clatter")
     # cabin: muffled hum, sheets as the sleeper rolls over
-    place(S, st(hum(fr(300 - 215), R, muff=0.5)), fr(215), 0.35)
+    place(S, st(hum((fr(300) - fr(215)), R, muff=0.5)), fr(215), 0.35)
     place(S, pan(rustle(R, 0.7), -0.2), ROLL - 0.1, 0.8)
     cue(ROLL, "sheet rustle")
     # corridor: a knock, two raps; footsteps
-    place(S, st(hum(fr(400 - 300), R, muff=0.5)), fr(300), 0.3)
+    place(S, st(hum((fr(400) - fr(300)), R, muff=0.5)), fr(300), 0.3)
     for t0 in KNOCKS:
         place(S, pan(knock(R), -0.15), t0, 0.9)
     for k in range(4):
@@ -209,39 +214,39 @@ def sfx():
     place(S, st(breeze(d, R, 0.6, gust=0.2, bright=1100)), fr(400), 0.5)
     place(S, water_bed(d, R, close=0.3, slosh_rate=0.3), fr(400), 0.25)
     for k, b in enumerate((150, 120, 210, 180)):
-        place(S, pan(babble(fr(637 - 400), R, b, 1.0), (-0.6, 0.5, -0.2, 0.3)[k]), fr(400), 0.07)
+        place(S, pan(babble((fr(637) - fr(400)), R, b, 1.0), (-0.6, 0.5, -0.2, 0.3)[k]), fr(400), 0.07)
     cue(fr(400), "breeze + crowd murmur on deck")
     # lowering a boat: pulley squeaks, rope creaks
     for k in range(6):
         place(S, pan(creak(0.35, R, rate0=180, rate1=260, rough=0.1, scale=0.9), 0.3), LOWER0 + 0.2 + k * 0.36, 0.5)
     cue(LOWER0, "davit rope creaks")
     # flooded corridor: water running, bubbling, the hull groaning
-    place(S, water_bed(fr(777 - 704), R, close=1.2, slosh_rate=1.5), FLOOD0, 0.8)
+    place(S, water_bed((fr(777) - fr(704)), R, close=1.2, slosh_rate=1.5), FLOOD0, 0.8)
     place(S, st(metal_groan(1.6, R)), FLOOD0 + 0.6, 0.5)
     cue(FLOOD0, "water rushing down the hallway + hull groan")
     # panic: shouting crowd
     for k in range(6):
-        place(S, pan(babble(fr(887 - 800), R, 160 + 30 * k, 1.1, rate=6.0, active=0.9), R.uniform(-0.7, 0.7)), fr(800), 0.12)
+        place(S, pan(babble((fr(887) - fr(800)), R, 160 + 30 * k, 1.1, rate=6.0, active=0.9), R.uniform(-0.7, 0.7)), fr(800), 0.12)
     for t0 in (PANIC0 + 0.3, PANIC0 + 1.0, PANIC0 + 1.6):
         place(S, pan(whoa(R), R.uniform(-0.5, 0.5)), t0, 0.3)
     cue(PANIC0, "panicking crowd")
     # lights out: the generators die
     place(S, st(power_down(R)), LIGHTS_OUT - 0.05, 0.9)
-    place(S, st(breeze(fr(968 - 891), R, 0.5, gust=0.15, bright=700)), LIGHTS_OUT, 0.4)
+    place(S, st(breeze((fr(968) - fr(891)), R, 0.5, gust=0.15, bright=700)), LIGHTS_OUT, 0.4)
     cue(LIGHTS_OUT, "power down: hum glides away, fizz, clunk")
     # the snap: rising groan, the break, debris splashes
-    place(S, st(metal_groan(fr(1005 - 968) + 0.3, R)), SNAP0, 0.9)
+    place(S, st(metal_groan((fr(1005) - fr(968)) + 0.3, R)), SNAP0, 0.9)
     place(S, st(crack(R, 1.8)), BREAK, 1.0)
     place(S, st(crack(R, 1.0)), BREAK + 0.25, 0.5)
     for k in range(5):
         place(S, pan(splash_big(R), R.uniform(-0.6, 0.6)), BREAK + 0.5 + k * 0.28, 0.35)
     cue(BREAK, "SNAP: crack + boom + debris splashes")
     # calm sea: gentle lapping; the cold: breath, shivering, small splashes
-    place(S, water_bed(fr(1350 - 1046), R, close=0.35, slosh_rate=0.25), CALM, 0.4)
-    place(S, st(breeze(fr(1350 - 1046), R, 0.4, gust=0.1, bright=800)), CALM, 0.3)
+    place(S, water_bed((DUR - fr(1046)), R, close=0.35, slosh_rate=0.25), CALM, 0.4)
+    place(S, st(breeze((DUR - fr(1046)), R, 0.4, gust=0.1, bright=800)), CALM, 0.3)
     for k in range(7):
         place(S, pan(shiver_breath(R), R.uniform(-0.6, 0.6)), COLD + 0.1 + k * 0.32, 0.5)
-    place(S, water_bed(fr(1178 - 1108), R, close=1.0, slosh_rate=1.2), COLD, 0.4)
+    place(S, water_bed((fr(1178) - fr(1108)), R, close=1.0, slosh_rate=1.2), COLD, 0.4)
     cue(CALM, "calm lapping"); cue(COLD, "shivering breath + splashes")
     return S
 

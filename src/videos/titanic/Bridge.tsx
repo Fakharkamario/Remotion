@@ -18,9 +18,9 @@ import { InkPass, noInkFallback } from "./ink";
 import { LensBlur, GrainEffect } from "./lensblur";
 import { GradeEffect, GRADES, GRADE_STRENGTH, gradeFor } from "./grade";
 import { Kit } from "./build";
-import { TOTAL, FLASH_AT, FADE_OUT, SHOTS, layersAt, dofAt } from "./story";
+import { SHOTS, layersAt, dofAt, storyF, REAL, OUT_TOTAL, OUT_FLASH, OUT_FADE } from "./story";
 
-export const TITANIC_FRAMES = TOTAL;
+export const TITANIC_FRAMES = OUT_TOTAL;
 
 /** A/B switches for test stills only (Remotion inputProps `{ post: { ink: false, ... } }`); everything is on by default. */
 type PostToggles = { ink: boolean; lens: boolean; pre: boolean; bloom: boolean; grade: boolean; grain: boolean };
@@ -47,7 +47,8 @@ const useKit = () => {
 };
 
 const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
-  const f = useCurrentFrame();
+  const F = useCurrentFrame(), f = storyF(F);
+  REAL.F = F;
   const { camera, scene } = useThree();
   const world = useMemo(() => new World(kit), [kit]);
   const target = useMemo(() => new THREE.Vector3(), []);
@@ -83,7 +84,7 @@ const Inner: React.FC<{ id: number; kit: Kit }> = ({ id, kit }) => {
   fx.lens.focus = Math.max(0.3, fpt.sub(cam.position).dot(fwd));
   fx.lens.cInf = d.cInf;
   gradeFor(fx.grade, SHOTS[id - 1].light);
-  fx.grain.seed = f; // deterministic per frame
+  fx.grain.seed = F; // deterministic per frame
   return (
     <>
       <primitive object={world.root} dispose={null} />
@@ -104,15 +105,15 @@ const ShotView: React.FC<{ id: number; kit: Kit; alpha: number }> = ({ id, kit, 
 );
 
 export const TitanicShort: React.FC = () => {
-  const f = useCurrentFrame();
+  const F = useCurrentFrame(), f = storyF(F);
   const kit = useKit();
   if (!kit) return null;
-  const flash = f >= FLASH_AT && f < FLASH_AT + 4 ? [1, 0.75, 0.45, 0.2][f - FLASH_AT] : 0;
+  const flash = F >= OUT_FLASH && F < OUT_FLASH + 4 ? [1, 0.75, 0.45, 0.2][F - OUT_FLASH] : 0;
   return (
     <AbsoluteFill style={{ background: "#05070f" }}>
       {layersAt(f).map((l, i) => <ShotView key={i ? "over" : "base"} id={l.id} kit={kit} alpha={l.alpha} />)}
       {flash > 0 && <AbsoluteFill style={{ background: "#ffffff", opacity: flash }} />}
-      {f >= FADE_OUT && <AbsoluteFill style={{ background: "#000000", opacity: Math.min(1, (f - FADE_OUT + 1) / (TOTAL - FADE_OUT)) }} />}
+      {F >= OUT_FADE && <AbsoluteFill style={{ background: "#000000", opacity: Math.min(1, (F - OUT_FADE + 1) / (OUT_TOTAL - OUT_FADE)) }} />}
     </AbsoluteFill>
   );
 };

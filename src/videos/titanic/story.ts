@@ -4,6 +4,7 @@
 // Ship frame (metres): bow toward +x, starboard +z, waterline y = 0 (hull top 10, boat deck 16). The ship pitches
 // bow-down about the break point (BREAK_X, 0, 0) and settles; shots on board keep their cameras in the ship frame,
 // so the sea and the horizon tilt while the deck stays put. Interiors (cabin, corridor) are their own small sets.
+import { WARP_OLD } from "./voicemap";
 export const FPS = 30;
 export const TOTAL = 1350;
 export const D0 = 0;
@@ -56,7 +57,7 @@ export const halvesAt = (f: number): { front: Pose; back: Pose } => {
 export const LIGHTS_OUT = 893;
 export const lampsAt = (f: number) => {
   if (f < LIGHTS_OUT - 2) return 1;
-  const k = f - (LIGHTS_OUT - 2);
+  const k = Math.floor(f - (LIGHTS_OUT - 2));
   const fl = [0.2, 0.9, 0.1, 0.7, 0.05, 0.4, 0, 0.15, 0];
   return k < fl.length ? fl[k] : 0;
 };
@@ -114,6 +115,18 @@ export const XFADE: Record<number, number> = { 4: 8, 5: 6, 12: 8, 17: 10, 19: 10
 export const FLASH_AT = 80;
 export const FADE_OUT = 1322; // fade to black over the last frames
 
+// ---------------- the voice-over clock ----------------
+// Every frame number in this file is on the STORY timeline (the one the shots were built on). The real voice-over is
+// played back through voicemap.ts: output frame F shows story frame storyF(F) (fractional, speed 0.6-1.35, smoothed).
+export const OUT_TOTAL = WARP_OLD.length;
+export const storyF = (F: number) => WARP_OLD[Math.max(0, Math.min(WARP_OLD.length - 1, Math.round(F)))];
+/** first output frame at or after story frame f */
+export const outF = (f: number) => { let i = 0; while (i < WARP_OLD.length - 1 && WARP_OLD[i] < f) i++; return i; };
+/** the output frame being drawn (set by Bridge.tsx before the world updates): lip-sync, kicks, the host's acting */
+export const REAL = { F: 0 };
+export const OUT_FLASH = outF(FLASH_AT);
+export const OUT_FADE = OUT_TOTAL - 28;
+
 export const shotAt = (f: number) => SHOTS.find((s) => f >= s.a && f < s.b) ?? SHOTS[SHOTS.length - 1];
 export const layersAt = (f: number): { id: number; alpha: number }[] => {
   for (const s of SHOTS) {
@@ -158,6 +171,7 @@ export const BUST_D = 0.78;
 
 // 1 hook: low on the boat deck, the host in front of the funnels; punch in on "horrifying" (@33)
 const S1a = (f: number) => dolly([32.4, 17.0, 8.3], [27.6, 18.1, 5.9], pushK(f, 0, 0.0022, 0.006, 30), { fov: 50 });
+const S1b = (f: number) => dolly([30.5, 17.45, 7.5], [27.9, 17.35, 6.3], pushK(f, 31, 0.003), { fov: 40, roll: -0.03 }); // punch-in cut on "horrifying" @33
 // 2 aerial from astern-port, the berg ahead in the dark; glide forward toward the bow
 const S2a = (f: number) => dolly([-150, 62, -120], [55, 4, 10], pushK(f, 80, 0.0025), { fov: 42 });
 const S2b = (f: number) => dolly([-40, 44, -95], [95, 2, 14], pushK(f, 112, 0.0025), { fov: 40 });
@@ -213,7 +227,7 @@ const S19b = (f: number): Shot => {
 };
 
 const CAMS: Record<number, Key[]> = {
-  1: [{ f: 0, s: S1a }],
+  1: [{ f: 0, s: S1a }, { f: 31, cut: true, s: S1b }],
   2: [{ f: 80, s: S2a }, { f: 106, dur: 40, s: S2b }],
   3: [{ f: 150, s: S3a }, { f: 186, dur: 20, s: S3b }],
   4: [{ f: 215, s: S4a }, { f: 260, cut: true, s: S4b }],
@@ -239,7 +253,7 @@ const KICKS: [number, number][] = [[SCRAPE_F / FPS, 1.0], [184 / FPS, 0.8], [196
 export const kickAt = (t: number) => {
   let a = 0;
   for (const [t0, g] of KICKS) {
-    const n = Math.floor((t - t0) * FPS + 1e-6);
+    const n = REAL.F - outF(t0 * FPS); // in output frames, so the shake flips sign every frame whatever the speed
     if (n >= 0 && n < 7) a += g * (n % 2 ? -1 : 1) * (1 - n / 7) ** 1.5;
   }
   return a;
@@ -261,6 +275,7 @@ const bustFocus = (id: number) => (f: number): V3 => { const c = run(CAMS[id], f
   return [c.pos[0] + (d[0] / n) * BUST_D, c.pos[1] + (d[1] / n) * BUST_D, c.pos[2] + (d[2] / n) * BUST_D]; };
 export const DOF: Dof[] = [
   { f: 0, cInf: 9, focus: () => [H1[0], H1[1] + 1.6, H1[2]] },
+  { f: 31, cInf: 12, focus: () => [H1[0], H1[1] + 1.6, H1[2]] },
   { f: 80, cInf: 0 },
   { f: 150, cInf: 0 },
   { f: 215, cInf: 8, focus: () => [SLEEPER[0], 0.8, SLEEPER[2]] },

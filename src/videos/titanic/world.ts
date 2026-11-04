@@ -567,6 +567,7 @@ export class World {
       const e2 = this.fx(fi++);
       e2.r = this.pool.req(p.key, p.cw, p.ch, 1, p.draw);
       e2.use(!!p.soft);
+      e2.shape(p.warp, p.cw, p.ch);
       e2.tint(p.tint);
       e2.mesh.visible = true;
       e2.mesh.position.copy(w);

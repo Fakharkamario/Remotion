@@ -10,9 +10,11 @@ import {
 } from "./toon";
 import {
   FPS, D0, SHOTS, V3, smooth, clamp01, DECK, H1, SLEEPER, HOST_CABIN, STEWARD, KNOCK_F, TURN_F, OFFICERS, BAND, LOWER, HOST_HALL,
-  RAFT, SWIM, LAST, SEA_BOATS, BUST_D, SCRAPE_F, iceX, ICE_Z, BREAK_X, BREAK_F, halvesAt, sinkAt,
+  RAFT, SWIM, LAST, SEA_BOATS, BUST_D, SCRAPE_F, iceX, ICE_Z, BREAK_X, BREAK_F, halvesAt, sinkAt, REAL, outF,
 } from "./story";
 import { LIGHTS } from "./lights";
+import { RIGS, REST, Pose, deform, drawFace, hostLid, mouthAt, accent } from "./hostrig";
+import { WORDS } from "./voicemap";
 import { NOINK } from "./ink";
 import { cardShade, blobMaterial, CARD_K } from "./cardshade";
 
@@ -97,6 +99,20 @@ export class Fx {
     parent.add(this.mesh);
   }
   use(soft: boolean) { this.mesh.material = soft ? this.soft : this.mat; }
+  private grid: THREE.PlaneGeometry | null = null; private gridN = "";
+  /** bent card (the host puppet): fn maps a source pixel to its posed pixel; none = the flat unit card */
+  shape(warp: FxWarp | undefined, cw: number, ch: number) {
+    if (!warp) { this.mesh.geometry = CARD; this.mesh.frustumCulled = true; return; }
+    const n = `${warp.nx}x${warp.ny}`;
+    if (!this.grid || this.gridN !== n) { this.grid?.dispose(); this.grid = new THREE.PlaneGeometry(1, 1, warp.nx, warp.ny); this.gridN = n; }
+    const pos = this.grid.attributes.position as THREE.BufferAttribute, uv = this.grid.attributes.uv as THREE.BufferAttribute;
+    for (let i = 0; i < pos.count; i++) {
+      const [x, y] = warp.fn(uv.getX(i) * cw, (1 - uv.getY(i)) * ch);
+      pos.setXY(i, x / cw - 0.5, 0.5 - y / ch);
+    }
+    pos.needsUpdate = true;
+    this.mesh.geometry = this.grid; this.mesh.frustumCulled = false;
+  }
   tint(c?: [number, number, number]) { const [r, g, b] = c ?? [1, 1, 1]; this.mat.color.setRGB(r, g, b); this.soft.color.setRGB(r, g, b); }
   bind() {
     const t = this.r?.tex;
@@ -117,7 +133,8 @@ export type Place = {
 };
 export type FxPlace = { key: string; cw: number; ch: number; draw: (p: Pen) => void; x: number; y: number; z: number; w: number; h: number; flat?: boolean; rot?: number; soft?: boolean;
   /** camera-relative placement [right, up, forward] in metres (busts) */ cam?: [number, number, number];
-  tint?: [number, number, number]; upright?: boolean; mirror?: boolean };
+  tint?: [number, number, number]; upright?: boolean; mirror?: boolean; warp?: FxWarp };
+export type FxWarp = { nx: number; ny: number; fn: (x: number, y: number) => [number, number] };
 /** sun = world direction TOWARD the sun (optional: when absent the scene's shadow-casting light is used) */
 export type CamInfo = { pos: THREE.Vector3; right: THREE.Vector3; up?: THREE.Vector3; fwd?: THREE.Vector3; sun?: THREE.Vector3 };
 
@@ -144,26 +161,78 @@ export const HOST_IMG: Record<string, HTMLImageElement> = {};
 const HOST_H = 1.78; // metres, crown to soles
 const tintOf = (light: "day" | "golden", dk = 0): [number, number, number] =>
   (light === "golden" ? [1.0, 0.9, 0.8] : [0.84, 0.88, 1.02]).map((v) => v * (1 - 0.32 * dk)) as [number, number, number];
-const hostFx = (name: string): Pick<FxPlace, "key" | "cw" | "ch" | "draw"> | null => {
-  const im = HOST_IMG[name];
+/** the host puppet card for this frame: artwork + face layers (cached per mouth/lid state), bent by the pose */
+const hostFx = (name: string, P: Pose, n: [number, number]): Pick<FxPlace, "key" | "cw" | "ch" | "draw" | "warp"> | null => {
+  const im = HOST_IMG[name], rig = RIGS[name];
   if (!im) return null;
-  return { key: `host|${name}`, cw: im.naturalWidth, ch: im.naturalHeight, draw: (p) => p.g.drawImage(im, 0, 0) };
+  const cw = im.naturalWidth, ch = im.naturalHeight, m = q(P.mouth, 4), l = P.lid;
+  return { key: `host|${name}|${m}|${l}`, cw, ch, draw: (p) => drawFace(p.g, im, rig, m, l), warp: { nx: n[0], ny: n[1], fn: deform(rig, P, cw, ch) } };
 };
 /** full-body host standing at (x, y, z) in the shot frame, yaw-billboarded */
-const hostBody = (out: Stage, name: "front" | "three", x: number, y: number, z: number, tint: [number, number, number], mirror = false) => {
-  const h = hostFx(name);
+const hostBody = (out: Stage, name: "front" | "three", x: number, y: number, z: number, tint: [number, number, number], P: Pose, mirror = false) => {
+  const h = hostFx(name, P, [20, 64]);
   if (!h) return;
   const w = (HOST_H * h.cw) / h.ch;
   out.fx.push({ ...h, x, y: y + HOST_H / 2 - 0.01, z, w, h: HOST_H, upright: true, tint, mirror });
   blob(out, x, y, z, 1.05);
 };
 /** bust close-up held in front of the lens: fills the frame width, bottom edge below the frame */
-const hostBust = (out: Stage, name: "smile" | "shock" | "think" | "laugh", fov: number, tint: [number, number, number], k = 0.98, dx = 0, mirror = false) => {
-  const h = hostFx(name);
+const hostBust = (out: Stage, name: "smile" | "shock" | "think" | "laugh", fov: number, tint: [number, number, number], P: Pose, k = 0.98, dx = 0, mirror = false) => {
+  const h = hostFx(name, P, [24, 32]);
   if (!h) return;
   const hh = BUST_D * Math.tan((fov * Math.PI) / 360), hw = hh * (9 / 16), w = 2 * hw * k, ht = (w * h.ch) / h.cw;
   out.fx.push({ ...h, x: 0, y: 0, z: 0, w, h: ht, cam: [dx * hw, -hh - 0.012 + ht / 2, BUST_D], tint, mirror });
 };
+/** output frame of the first spoken word `w` at or after story frame `after` */
+const wordF = (w: string, after = 0) => { const a = outF(after); return (WORDS.find(([x, on]) => x === w && on >= a - 2)?.[1] ?? 1e9) - 2; };
+const ease = (F: number, a: number, d = 6) => sm01((F - a) / d);
+const sm01 = (x: number) => { const t = Math.max(0, Math.min(1, x)); return t * t * (3 - 2 * t); };
+/** the host's acting in shot `id` at output frame F (ch = artwork height, px) */
+const hostPose = (id: number, F: number, ch: number): Pose => {
+  const T = F / FPS, s0 = outF(SHOTS[id - 1].a), k = F - s0, ac = accent(F);
+  const P: Pose = {
+    ...REST, arms: [0, 0],
+    breath: 0.008 * Math.sin((2 * Math.PI * T) / 3.4),
+    head: 0.035 * Math.sin(0.9 * T + id) + 0.025 * ac * (id % 2 ? 1 : -1),
+    hy: 0.006 * ch * ac, hx: 0,
+    body: 0.012 * Math.sin(1.1 * T + 0.5 * id), lean: 0.012 * Math.sin(0.7 * T + 1),
+    mouth: mouthAt(F), lid: hostLid(F),
+  };
+  switch (id) {
+    case 4: { // "Most people just rolled over ..." : points at the sleeper, then shrugs on "back to sleep"
+      const pt = ease(F, wordF("rolled", 215) - 4, 6) * (1 - ease(F, wordF("back", 215) - 2, 5));
+      const sh = ease(F, wordF("back", 215) - 2, 5) * (1 - ease(F, wordF("sleep", 215) + 10, 8));
+      P.arms = [0.07 * sh, -0.09 * pt - 0.07 * sh];
+      P.hy -= 0.008 * ch * sh; P.head += 0.06 * pt - 0.05 * sh; P.lean += 0.02 * pt;
+      break;
+    }
+    case 7: // thinking: slow tilt into the hand, small "hmm" nods
+      P.head = 0.07 * sm01(k / 30) + 0.012 * Math.sin(T * 5) * sm01(k / 10); P.body *= 0.5; P.hy = 0.004 * ch * ac;
+      break;
+    case 9: { // laughing: "ha-ha" bounces, head thrown back, shoulders shaking
+      const b = Math.abs(Math.sin((Math.PI * k) / 4)) * Math.exp(-k / 40);
+      P.hy = -0.014 * ch * b; P.head = -0.04 * sm01(k / 6) + 0.015 * Math.sin((Math.PI * k) / 4);
+      P.body = 0.012 * Math.sin((Math.PI * k) / 4); P.sq = 1 + 0.02 * b; P.breath = 0.01 * b;
+      break;
+    }
+    case 12: { // seawater rising: hands lifted off the water, quick nervous glances, fast breath
+      const up = sm01(k / 20);
+      P.arms = [0.07 * up + 0.015 * Math.sin(T * 9), -0.07 * up - 0.015 * Math.sin(T * 9 + 1)];
+      P.head = 0.07 * Math.tanh(4 * Math.sin(T * 1.6)); P.breath = 0.014 * Math.sin((2 * Math.PI * T) / 1.3);
+      P.lean = 0.02 * Math.sin(T * 2.2);
+      break;
+    }
+    case 13: { // "it hits you": recoil pop, then a tremble; mouth hangs open
+      P.sq = 1 + 0.07 * Math.exp(-k / 3) * Math.cos(k * 0.9);
+      P.hy = -0.022 * ch * Math.exp(-k / 7) + 0.004 * ch * ac;
+      P.head = 0.008 * Math.sin(F * 2.7) + 0.02 * ac; P.body = 0.006 * Math.sin(F * 2.1);
+      P.mouth = Math.max(0.3, P.mouth); P.lid = k < 18 ? 0 : P.lid;
+      break;
+    }
+  }
+  return P;
+};
+
 const vOf = (i: number) => (i * 7 + (i >> 2)) % 4;
 /** head-shape seed: 7 shapes, so marching soldiers in step still share canvases */
 const seedOf = (i: number) => ((i * 5 + 3) % 7) + 1;
@@ -329,7 +398,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
   findSun(cam, SUN);
   switch (id) {
     case 1:
-      hostBody(out, "front", H1[0], H1[1], H1[2], tint);
+      hostBody(out, "front", H1[0], H1[1], H1[2], tint, hostPose(1, REAL.F, 2090));
       standers(cam, t, out, [[18.5, DECK, 7.6, "smile", 1], [17.4, DECK, 8.3, "smile_closed", -1]], 2, (i) => ({ i: 200 + i, o: { ...MUSIC(i + 3), hat: i ? "bonnet" : "tophat", dress: i ? "#7a3a5a" : undefined }, okey: `eve${i}` }));
       break;
     case 3: iceShower(cam, f, out); break;
@@ -338,7 +407,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       const fo: FrontOpts = { mode: "stand", expr: "neutral", blink: 1, facing: rolled ? -1 : 1, headTilt: rolled ? 8 : -6 };
       const p = person(cam, folk(0), SLEEPER[0], SLEEPER[1] + hop, SLEEPER[2], front(), fo, {});
       out.places.push({ ...p, yaw: 0, roll: Math.PI / 2 });
-      hostBody(out, "three", HOST_CABIN[0], HOST_CABIN[1], HOST_CABIN[2], tint, true);
+      hostBody(out, "three", HOST_CABIN[0], HOST_CABIN[1], HOST_CABIN[2], tint, hostPose(4, REAL.F, 2106), true);
       break;
     }
     case 5: {
@@ -355,14 +424,14 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       break;
     }
     case 6: standers(cam, t, out, CROWD6, 10); break;
-    case 7: standers(cam, t, out, CROWD6, 10); hostBust(out, "think", 40, tint, 0.92, 0.04); break;
+    case 7: standers(cam, t, out, CROWD6, 10); hostBust(out, "think", 40, tint, hostPose(7, REAL.F, 1401), 0.92, 0.04); break;
     case 8: {
       const knows = swap(t, 494);
       standers(cam, t, out, [[OFFICERS[0][0], DECK, OFFICERS[0][2], knows ? "stern" : "neutral", 1, 1], [OFFICERS[1][0], DECK, OFFICERS[1][2], knows ? "nervous" : "stern", -1, -1]], 30,
         (i) => ({ i: 30 + i, o: i ? OFFICER2_O : OFFICER_O, okey: `off${i}` }));
       break;
     }
-    case 9: standers(cam, t, out, CROWD6.slice(0, 6).map(([x, y, z, , fc]) => [x - 5, y, z, "smile", fc] as Spot), 10); hostBust(out, "laugh", 40, tint, 0.98, 0.0); break;
+    case 9: standers(cam, t, out, CROWD6.slice(0, 6).map(([x, y, z, , fc]) => [x - 5, y, z, "smile", fc] as Spot), 10); hostBust(out, "laugh", 40, tint, hostPose(9, REAL.F, 1314), 0.98, 0.0); break;
     case 10: {
       const spots: Spot[] = [0, 1, 2, 3, 4].map((k) => [BAND[0] - 2.2 + k * 1.1, DECK, BAND[2] + (k % 2) * 0.25, (["smile", "grin", "whistle", "smile_closed", "grin"] as Expr[])[k], 0] as Spot);
       standers(cam, t, out, spots, 40, (i) => ({ i: 40 + i, o: MUSIC(i), okey: `mus${i}` }), (i) => ({ tilt: q(4 * Math.sin(t * 7.5 + i * 1.3), 4), wave: i % 2 ? q(Math.sin(t * 9 + i), 10) : undefined }));
@@ -376,8 +445,8 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       standers(cam, t, out, [[37.5, DECK, 8.9, "nervous"], [44.6, DECK, 8.8, "shock"], [46, DECK, 8.6, "neutral"]], 64);
       break;
     }
-    case 12: hostBody(out, "three", HOST_HALL[0], HOST_HALL[1], HOST_HALL[2], tint, true); break;
-    case 13: standers(cam, t, out, CROWD14.slice(0, 10).map(([x, y, z, e, fc]) => [x - 3, y, z, e, fc] as Spot), 70); hostBust(out, "shock", 40, tint, 0.98, 0.0); break;
+    case 12: hostBody(out, "three", HOST_HALL[0], HOST_HALL[1], HOST_HALL[2], tint, hostPose(12, REAL.F, 2106), true); break;
+    case 13: standers(cam, t, out, CROWD14.slice(0, 10).map(([x, y, z, e, fc]) => [x - 3, y, z, e, fc] as Spot), 70); hostBust(out, "shock", 40, tint, hostPose(13, REAL.F, 1212), 0.98, 0.0); break;
     case 14: standers(cam, t, out, CROWD14, 70, undefined, (i) => ({ wave: i % 4 === 0 ? q(Math.sin(t * 6 + i), 10) : undefined, tilt: q(3 * Math.sin(t * 3 + i), 4) })); break;
     case 16: {
       if (f >= BREAK_F && f < BREAK_F + 8) {

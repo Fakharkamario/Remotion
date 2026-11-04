@@ -1,15 +1,15 @@
 # Sound cues (s, frame @30)
 
 -   0.00 s (f    0): engine hum + calm sea
--   2.37 s (f   71): flash whoosh
--   5.77 s (f  173): grinding scrape + jolts + ice clatter
--   8.03 s (f  241): sheet rustle
--  11.40 s (f  342): knock knock
--  13.33 s (f  400): breeze + crowd murmur on deck
--  21.23 s (f  637): davit rope creaks
--  23.47 s (f  704): water rushing down the hallway + hull groan
--  27.40 s (f  822): panicking crowd
--  29.70 s (f  891): power down: hum glides away, fizz, clunk
--  33.50 s (f 1005): SNAP: crack + boom + debris splashes
--  34.87 s (f 1046): calm lapping
--  36.93 s (f 1108): shivering breath + splashes
+-   3.34 s (f  100): flash whoosh
+-   7.06 s (f  212): grinding scrape + jolts + ice clatter
+-   9.49 s (f  285): sheet rustle
+-  12.49 s (f  375): knock knock
+-  14.36 s (f  431): breeze + crowd murmur on deck
+-  22.70 s (f  681): davit rope creaks
+-  24.90 s (f  747): water rushing down the hallway + hull groan
+-  29.22 s (f  877): panicking crowd
+-  31.71 s (f  951): power down: hum glides away, fizz, clunk
+-  35.35 s (f 1061): SNAP: crack + boom + debris splashes
+-  36.84 s (f 1105): calm lapping
+-  38.98 s (f 1169): shivering breath + splashes
