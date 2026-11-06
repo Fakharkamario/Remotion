@@ -12,7 +12,7 @@ for r in 0-424 425-849 850-1274 1275-1694; do
   mv "$f.tmp.mp4" "$f"
   echo "chunk $r done $(date +%T)"
 done
-ls out/sword/chunks/c_*.mp4 | sort -t_ -k2 -n | sed "s/^/file '..\//;s/$/'/" | sed "s|file '../out/sword/|file '|" > out/sword/chunks/list.txt
-(cd out/sword && ffmpeg -v error -y -f concat -safe 0 -i chunks/list.txt -c copy video.mp4)
+for r in 0-424 425-849 850-1274 1275-1694; do echo "file 'c_$r.mp4'"; done > out/sword/chunks/list.txt
+ffmpeg -v error -y -f concat -safe 0 -i out/sword/chunks/list.txt -c copy out/sword/video.mp4
 ffmpeg -v error -y -i out/sword/video.mp4 -i shorts/sword/audio/mix.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest out/sword/how_sharp_can_a_sword_get.mp4
 echo ALL DONE
