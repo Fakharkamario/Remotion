@@ -120,7 +120,7 @@ export class World {
     const c = camAt(id, f);
     cam.position.set(...c.pos); cam.up.set(0, 1, 0); cam.lookAt(...c.look); cam.rotateZ(c.roll);
     const close = s.place === "lab" || s.place === "diag" || id === 8 || id === 10;
-    cam.fov = c.fov; cam.near = close ? 0.03 : 0.12; cam.far = 1500; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    cam.fov = c.fov; cam.near = 0.05; cam.far = 1500; void close; // one near plane for every shot: the lens effect keeps the near value it first saw cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     const focus = V(...c.look), dist = cam.position.distanceTo(focus);
     cam.layers.enable(NOINK);
     // ---- places ----
