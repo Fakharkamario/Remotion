@@ -54,7 +54,7 @@ export const SHOTS: ShotDef[] = [
   { id: 12, a: 1198, b: 1328, light: "day", place: "lab" },                          // the tungsten needle
   { id: 13, a: 1328, b: 1440, light: "day", place: "nano" },                         // a single atom ... bump
   { id: 14, a: 1440, b: 1500, light: "golden", place: "yard", sunAz: 130, sunEl: 20 },// polisher stops early
-  { id: 15, a: 1500, b: 1595, light: "golden", place: "diag" },                      // rounded edge cross-section
+  { id: 15, a: 1500, b: 1595, light: "day", place: "diag" },                      // rounded edge cross-section
   { id: 16, a: 1595, b: TOTAL, light: "golden", place: "yard", sunAz: 125, sunEl: 20 },// the best sword
 ];
 export const XFADE: Record<number, number> = { 10: 8, 12: 8, 13: 10, 14: 10, 15: 8, 16: 8 };
@@ -118,7 +118,7 @@ export const N2: V3 = [WHET[0] + 0.05, 0, WHET[2] - 0.6];
 export const N3: V3 = [-7.0, 0, 0.1];
 export const N5: V3 = [3.2, 0, -1.6];
 export const N6: V3 = [TABLE[0] + 0.05, 0, TABLE[2] - 0.52];
-export const N7: V3 = [MAT[0] - 0.8, 0, MAT[2] - 0.55];
+export const N7: V3 = [MAT[0] - 0.66, 0, MAT[2] - 0.46];
 export const N9: V3 = [BAMBOO_T[0] - 0.85, 0, BAMBOO_T[2] - 0.6];
 export const N10: V3 = [AZ[0] + 0.3, 0, AZ[2] + 4];
 export const N11: V3 = [AZ[0] - 0.75, 0, AZ[2] + 4.05];
@@ -133,31 +133,31 @@ const S1b = (f: number) => dolly(add(N1, [0.2, 1.4, 2.5]), add(N1, [0, 1.3, 0]),
 const S2a = (f: number) => dolly(add(N2, [1.2, 1.3, 3.0]), add(N2, [0.05, 0.75, 0.35]), pushK(f, 68, 0.003), { fov: 40, roll: -0.03 });
 const S2b = (f: number) => dolly(add(N2, [0.35, 1.2, 2.4]), add(N2, [0, 1.0, 0]), pushK(f, 140, 0.004, 0.009, 20), { fov: 38 });
 const S3a = (f: number) => dolly(add(ANVIL, [2.4, 1.3, 3.2]), add(ANVIL, [-0.1, 0.85, -0.2]), pushK(f, 163, 0.003), { fov: 40, roll: 0.03 });
-const S3b = (f: number) => dolly(add(TROUGH, [0.9, 1.5, 2.9]), add(TROUGH, [-0.45, 0.85, 0]), pushK(f, 207, 0.003), { fov: 42 });
+const S3b = (f: number) => dolly(add(TROUGH, [-0.5, 1.5, 2.9]), add(TROUGH, [-0.45, 0.85, 0]), pushK(f, 207, 0.003), { fov: 42 });
 const S3c = (f: number) => dolly([-7.7, 1.5, 4.2], [-7.76, 1.15, -0.35], pushK(f, 228, 0.003), { fov: 40, roll: -0.03 });
 const S4a = (f: number) => dolly(add(N3, [0.5, 1.4, 2.4]), add(N3, [0.05, 1.15, 0]), pushK(f, 255, 0.003), { fov: 38 });
 const S4b = (f: number) => dolly(add(N3, [0.35, 1.25, 1.45]), add(N3, [0.12, 1.05, 0.25]), pushK(f, 296, 0.003, 0.007, 20), { fov: 36, roll: 0.035 });
 const S5a = (f: number) => dolly([6.8, 1.7, 5.6], [1.6, 0.95, -3.2], pushK(f, 322, 0.0022), { fov: 42 });
 const S5b = (f: number) => dolly([2.6, 1.25, -0.6], [1.25, 0.85, -3.7], pushK(f, 396, 0.003), { fov: 38, roll: -0.03 });
-const S5c = (f: number) => { const u = smooth((f - 444) / 52); return { pos: [lerp(1.7, 3.9, u), 1.05, -2.35] as V3, look: [lerp(2.0, 3.85, u), 0.52, STONES_Z] as V3, fov: 34, roll: 0.02 }; };
+const S5c = (f: number) => { const u = smooth((f - 444) / 52); return { pos: [lerp(1.7, 3.9, u), 1.2, -1.75] as V3, look: [lerp(2.0, 3.85, u), 0.52, STONES_Z] as V3, fov: 34, roll: 0.02 }; };
 const S6a = (f: number) => dolly(add(TABLE, [0.9, 1.5, 2.6]), add(TABLE, [0, 0.95, 0]), pushK(f, 497, 0.003), { fov: 38 });
 const S6b = (f: number) => dolly(add(TABLE, [0.4, 1.25, 1.1]), add(TABLE, [0, 0.82, 0]), pushK(f, 550, 0.003, 0.008, 20), { fov: 36, roll: 0.035 });
 const S7a = (f: number) => dolly(add(MAT, [0.9, 1.4, 4.6]), add(MAT, [-0.4, 1.1, -0.2]), pushK(f, 588, 0.0025), { fov: 40 });
 const S7b = (f: number) => dolly(add(MAT, [0.7, 1.35, 2.0]), add(MAT, [0, 1.2, 0]), pushK(f, 690, 0.003, 0.006, 20), { fov: 36, roll: -0.03 });
 const S8a = (f: number) => dolly(add(N7, [0.4, 1.45, 2.4]), add(N7, [0, 1.3, 0]), pushK(f, 746, 0.003), { fov: 38 });
-const S8b = (f: number) => dolly(add(N7, [0.36, 1.2, 1.4]), add(N7, [-0.01, 1.1, 0.89]), pushK(f, 818, 0.0035, 0.008, 22), { fov: 32, roll: 0.03 });
+const S8b = (f: number) => dolly(add(N7, [-0.66, 1.2, 0.5]), add(N7, [-0.01, 1.14, 0.89]), pushK(f, 818, 0.0035, 0.008, 22), { fov: 34, roll: 0.03 });
 const S9a = (f: number) => dolly(add(N9, [1.3, 1.35, 3.9]), add(N9, [0.45, 1.2, 0.3]), pushK(f, 863, 0.003), { fov: 42, roll: 0.03 });
 const S9b = (f: number) => dolly(add(N9, [0.5, 1.35, 2.3]), add(N9, [0.1, 1.22, 0.2]), pushK(f, 912, 0.003, 0.006, 20), { fov: 36 });
 const S10a = (f: number) => dolly(add(N10, [0.5, 1.5, 3.0]), add(N10, [0, 1.3, 0]), pushK(f, 953, 0.003), { fov: 40 });
 const S10b = (f: number) => dolly(add(N10, [0.4, 1.35, 2.1]), add(N10, [0.05, 1.22, 0.2]), pushK(f, 996, 0.0035), { fov: 36, roll: -0.03 });
-const S10c = (f: number) => dolly(add(N10, [0.4, 1.25, 1.45]), add(N10, [0.15, 1.18, 0.4]), pushK(f, 1030, 0.005), { fov: 32, roll: 0.02 });
+const S10c = (f: number) => dolly(add(N10, [0.5, 1.32, 1.95]), add(N10, [0.12, 1.2, 0.35]), pushK(f, 1030, 0.003), { fov: 34, roll: 0.02 });
 const S11a = (f: number) => dolly(add(AZ, [0.2, 1.5, 8.6]), add(AZ, [0, 1.25, 4.2]), pushK(f, 1085, 0.0025), { fov: 42 });
 const S11b = (f: number) => dolly(add(AZ, [0.25, 1.75, 7.4]), add(AZ, [-0.1, 1.55, 4.1]), pushK(f, 1150, 0.004), { fov: 40, roll: 0.04 });
 const S12a = (f: number) => dolly(add(LAB, [1.6, 1.6, 4.2]), add(LAB, [0.4, 1.1, 0]), pushK(f, 1198, 0.003), { fov: 40 });
 const S12b = (f: number) => { const u = easeIn((f - 1250) / 78); return { pos: lerp3(add(LAB, [0.9, 1.5, 2.3]), add(LAB, [0.03, 1.36, 0.16]), u), look: lerp3(add(LAB, [0.2, 1.2, 0]), add(LAB, [0, 1.32, 0]), u), fov: lerp(38, 30, u), roll: 0.02 }; };
 const S13a = (f: number) => { const u = easeOut((f - 1328) / 26); return { pos: lerp3(add(NANO, [0, 6.6, 1.4]), add(NANO, [6.0, 2.6, 10.5]), u), look: lerp3(add(NANO, [0, 6.3, 0]), add(NANO, [1.8, 3.0, 0.5]), u), fov: 42, roll: 0 }; };
 const S13b = (f: number) => dolly(add(NANO, [6.0, 2.6, 10.5]), add(NANO, [1.8, 3.0, 0.5]), pushK(f, 1356, 0.0025), { fov: 42 });
-const S13c = (f: number) => dolly(add(N13, [0.6, 1.5, 2.2]), add(N13, [-0.3, 1.5, 0]), pushK(f, 1400, 0.004, 0.007, 20), { fov: 38, roll: 0.04 });
+const S13c = (f: number) => dolly(add(N13, [0.35, 1.45, 2.5]), add(N13, [0.02, 1.32, 0]), pushK(f, 1400, 0.004, 0.007, 20), { fov: 38, roll: 0.04 });
 const S14a = (f: number) => dolly([2.2, 1.35, -0.2], [1.2, 1.05, -3.9], pushK(f, 1440, 0.0025), { fov: 38 });
 const S14b = (f: number) => dolly([1.75, 1.3, -1.6], [1.18, 1.2, -3.9], pushK(f, 1478, 0.003), { fov: 34, roll: 0.03 });
 const S15a = (f: number) => dolly(add(DIAG, [0.0, 1.25, 5.0]), add(DIAG, [-0.35, 1.1, 0]), pushK(f, 1500, 0.002), { fov: 38 });
@@ -219,7 +219,7 @@ export const DOF: Dof[] = [
   { f: 588, cInf: 6, focus: () => [MAT[0] - 0.4, 1.1, MAT[2]] },
   { f: 690, cInf: 11, focus: () => [MAT[0], 1.25, MAT[2]] },
   { f: 746, cInf: 11, focus: () => eyes(N7) },
-  { f: 818, cInf: 14, focus: () => [N7[0] + 0.18, 1.15, N7[2] + 0.38] },
+  { f: 818, cInf: 12, focus: () => [N7[0] - 0.01, 1.12, N7[2] + 0.89] },
   { f: 863, cInf: 6, focus: () => [N9[0] + 0.4, 1.3, N9[2]] },
   { f: 912, cInf: 11, focus: () => eyes(N9) },
   { f: 953, cInf: 10, focus: () => eyes(N10) },

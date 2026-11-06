@@ -24,7 +24,7 @@ export const LIGHTS: Record<"day" | "golden", LightPreset> = {
   },
   golden: {
     az: 6, el: 7,
-    lit: [1.5, 0.68, 0.24], shade: [0.15, 0.15, 0.3], lift: [0.04, 0.06, 0.17], lambert: 0.35, sideK: 0.82, term: 0.07,
+    lit: [1.62, 1.12, 0.72], shade: [0.34, 0.29, 0.38], lift: [0.03, 0.03, 0.06], lambert: 0.35, sideK: 0.82, term: 0.07,
     charTint: [1.0, 0.78, 0.56], charShade: 0.88, charGrad: 0.1, bodyGrad: 0.25, sideTint: [0.85, 0.80, 0.95],
     blob: [0.75, 0.74, 0.9], actorShadow: true,
     top: "#6a4f8c", hor: "#ffd08a", skyCurve: [0.05, 0.6, 1.0], fog: "#efb489", fogNear: 50, fogFar: 380, sunDisc: "#ffcf9e",

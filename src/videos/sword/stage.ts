@@ -333,7 +333,7 @@ export function stage(id: number, f: number, o: Objs, cam: THREE.PerspectiveCame
         if (knap >= 0) sparks(core.position.clone().add(V(0.05, 0.03, 0.04)), B.knap, 8, 21, 0.8, 8);
         if (f >= B.nm - 4) {
           const a = flake.position;
-          for (let k = 0; k < 9; k++) { const s = k / 8 - 0.5; fx.add("soft", V(a.x + s * 0.09, a.y + 0.006 - Math.abs(s) * 0.01, a.z + 0.02), 0.012, [2.4, 2.6, 3.2], clamp01((f - B.nm + 4) / 6), 0, true); }
+          for (let k = 0; k < 5; k++) { const s = k / 4 - 0.5; fx.add("soft", V(a.x + s * 0.08, a.y + 0.006 - Math.abs(s) * 0.01, a.z + 0.02), 0.006, [2.4, 2.6, 3.2], clamp01((f - B.nm + 4) / 6), 0, true); }
           glint(V(a.x + 0.03, a.y + 0.005, a.z + 0.02), B.nm + 2, 14, 0.14);
         }
       }
@@ -341,7 +341,7 @@ export function stage(id: number, f: number, o: Objs, cam: THREE.PerspectiveCame
     }
     // ------------------------------------------------------------------ 11: macuahuitl vs steel
     case 11: {
-      const ay = yawTo(AZTEC_AT, N11) - 0.35, ny = yawTo(N11, AZTEC_AT) + 0.35;
+      const ay = yawTo(AZTEC_AT, N11) + 0.4, ny = yawTo(N11, AZTEC_AT) - 0.4;
       const raise = smooth((f - 1095) / 22), sw = easeIn(clamp01((f - 1138) / 14)), hit = f >= B.steel;
       const block = smooth((f - 1128) / 14);
       // narrator: katana raised flat over his head

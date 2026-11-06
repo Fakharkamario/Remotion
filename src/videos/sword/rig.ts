@@ -252,7 +252,7 @@ export class Character {
       const knot = mesh(new THREE.CapsuleGeometry(0.04, 0.09, 4, 10), mat(L.hairCol));
       knot.rotation.x = Math.PI / 2 - 0.3; knot.position.set(0, r * 1.02, -0.02); P.add(knot);
       const band = mesh(new THREE.TorusGeometry(r * 0.99, 0.028, 8, 40), mat(L.band ?? "#ffffff"));
-      band.rotation.x = Math.PI / 2 + 0.45; band.position.set(0, 0.15, -0.03); band.scale.setScalar(0.98); P.add(band);
+      band.rotation.x = Math.PI / 2 + 0.22; band.position.set(0, 0.14, -0.01); band.scale.setScalar(0.9); P.add(band);
       const tie = mesh(new THREE.BoxGeometry(0.03, 0.12, 0.02), mat(L.band ?? "#ffffff")); tie.position.set(0.04, 0.05, -r); tie.rotation.z = 0.5; P.add(tie);
     } else if (L.hair === "polisher") {
       const ring = mesh(new THREE.SphereGeometry(r * 1.035, 28, 10, Math.PI - 0.35, Math.PI + 0.7, 1.25, 0.75), mat(L.hairCol));
@@ -262,7 +262,7 @@ export class Character {
       const capG = new THREE.SphereGeometry(r * 1.05, 32, 22, 0, Math.PI * 2, 0, 1.75);
       const cap = mesh(capG, mat(L.hairCol)); cap.rotation.x = -1.05; cap.position.set(0, 0.02, -0.03); P.add(cap);
       const band = mesh(new THREE.TorusGeometry(r * 1.02, 0.03, 8, 40), mat(L.band ?? "#2a9d8f"));
-      band.rotation.x = Math.PI / 2 + 0.4; band.position.set(0, 0.15, -0.03); P.add(band);
+      band.rotation.x = Math.PI / 2 + 0.22; band.position.set(0, 0.15, -0.01); band.scale.setScalar(0.9); P.add(band);
       const cols = ["#2a9d8f", "#e63946", "#f2c14e", "#2a9d8f", "#e63946"];
       cols.forEach((c, i) => {
         const fth = mesh(new THREE.CapsuleGeometry(0.03, 0.32, 4, 8), mat(c));

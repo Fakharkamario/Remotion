@@ -192,7 +192,7 @@ export const buildYard = (root: THREE.Object3D) => {
   // engawa deck + edge beam + posts holding the eaves
   b.add(boxGeo(V(hx0 - 0.3, ENGAWA_Y - 0.1, hz1), V(hx1 + 0.3, ENGAWA_Y, ENGAWA_Z), 2.4), deck);
   box(b, wood, hx0 - 0.3, ENGAWA_Y - 0.2, ENGAWA_Z - 0.12, hx1 + 0.3, ENGAWA_Y - 0.08, ENGAWA_Z + 0.01);
-  for (let x = hx0; x <= hx1 + 0.01; x += (hx1 - hx0) / 4) b.add(at(cyl(0.075, 0.075, top - ENGAWA_Y + 0.05, 10), x, ENGAWA_Y, ENGAWA_Z - 0.1), wood);
+  for (const x of [hx0, hx1]) b.add(at(cyl(0.075, 0.075, top - ENGAWA_Y + 0.05, 10), x, ENGAWA_Y, ENGAWA_Z - 0.1), wood);
   for (const x of [hx0 - 0.1, hx1 + 0.1]) b.add(at(cyl(0.11, 0.12, 0.25, 8), x, 0, ENGAWA_Z - 0.1), lamC("#9d978c"));
   box(b, wood, hx0 - 0.2, top - 0.18, ENGAWA_Z - 0.2, hx1 + 0.2, top, ENGAWA_Z); // eave beam
   // step stone up to the engawa
@@ -457,7 +457,7 @@ export class Diagram {
       const gs = new THREE.Shape(); gs.moveTo(-W / 2, 0); gs.lineTo(W / 2, 0); gs.lineTo(0.004, H); gs.lineTo(-0.004, H); gs.closePath();
       const gg = new THREE.ShapeGeometry(gs); gg.translate(0, 0, 0.18); this.ghost.geometry = gg;
     }
-    this.ghost.visible = k > 0.02; (this.ghost.material as THREE.MeshBasicMaterial).opacity = 0.35 * Math.min(1, k * 3);
+    this.ghost.visible = false;
     this.edgeLine.position.set(DIAG[0], 0.3 + H - tipR * 0.5, DIAG[2] + 0.19);
     this.edgeLine.scale.setScalar(0.6 + 1.5 * k);
   }
