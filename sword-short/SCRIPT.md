@@ -11,11 +11,11 @@ Narrator: "The Narrator" (curly top, round eyes, black hoodie, grey jeans), full
 - Single-atom-tip tungsten needles are made for field-ion / electron microscopy (e.g. NRC/NINT Canada, 2000s).
 - Polishers deliberately leave a slightly convex "hamaguri-ba" (clam-shell) edge for toughness.
 
-## Script (178 words, ~48-55 s)
+## Script (183 words, ~50-56 s)
 
 | # | Line | On screen | Narrator face/pose |
 |---|------|-----------|--------------------|
-| 1 | Sharpen a sword forever, and it stops cutting anything. | Narrator spins a katana, sparks, white flash | grin → shrug |
+| 1 | The sharpest thing ever made can't cut anything. So let's sharpen a sword till we find out why. | Narrator holds up a katana, grinding wheel sparks, white flash | serious → grin |
 | 2 | A smith forges a katana, quenches it, hands it over... and it's dull. Paper just bends. | Forge, hiss of steam, paper folds on the blade | smile → dazed |
 | 3 | The edge comes from someone else: a polisher. Weeks on one blade, with stones that keep getting finer. | Polisher at stones, days flipping by | explain |
 | 4 | A few stones in, it bites. Tomato? Halved. | Tomato drops in two halves | shocked |
@@ -26,11 +26,11 @@ Narrator: "The Narrator" (curly top, round eyes, black hoodie, grey jeans), full
 | 9 | The Aztecs lined real swords with it. Hit steel, and it shatters. | Obsidian club vs steel, shards | shocked |
 | 10 | One step left. The sharpest thing humans have ever made is a tungsten needle. Its tip? A single atom. | Zoom down a needle to one glowing atom | look up |
 | 11 | Bump it into anything, and it's ruined. | Tap — tip crumbles | nervous |
-| 12 | So here's the strange part. A real polisher stops early. He rounds the edge, on purpose, so it's less sharp than it could be. | Polisher lifts the blade, slight curve on the edge | serious |
+| 12 | That's why real polishers stop early. They round the edge on purpose, so it's less sharp than it could be. | Polisher lifts the blade, slight curve on the edge | serious |
 | 13 | Because the best sword in the world... isn't the sharpest one. | Narrator sheathes the katana, camera pulls out | content |
 
 ## Plain read for the voiceover
-Sharpen a sword forever, and it stops cutting anything.
+The sharpest thing ever made can't cut anything. So let's sharpen a sword till we find out why.
 A smith forges a katana, quenches it, hands it over... and it's dull. Paper just bends.
 The edge comes from someone else: a polisher. Weeks on one blade, with stones that keep getting finer.
 A few stones in, it bites. Tomato? Halved.
@@ -41,5 +41,5 @@ So, switch to glass. Obsidian breaks to an edge three nanometres wide.
 The Aztecs lined real swords with it. Hit steel, and it shatters.
 One step left. The sharpest thing humans have ever made is a tungsten needle. Its tip? A single atom.
 Bump it into anything, and it's ruined.
-So here's the strange part. A real polisher stops early. He rounds the edge, on purpose, so it's less sharp than it could be.
+That's why real polishers stop early. They round the edge on purpose, so it's less sharp than it could be.
 Because the best sword in the world... isn't the sharpest one.
