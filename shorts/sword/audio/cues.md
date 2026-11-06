@@ -1,0 +1,26 @@
+# Sound cues (s, frame @30)
+
+-   0.20 s (f    6): sword shing
+-   2.67 s (f   80): whetstone strokes
+-   5.37 s (f  161): flash whoosh
+-   5.60 s (f  168): hammer on anvil
+-   6.00 s (f  180): hammer on anvil
+-   6.40 s (f  192): hammer on anvil
+-   7.03 s (f  211): quench hiss
+-  10.00 s (f  300): paper bends + sad boing
+-  10.73 s (f  322): polishing strokes
+-  14.80 s (f  444): stone glint tings
+-  17.67 s (f  530): slice
+-  19.07 s (f  572): tomato halves squish
+-  21.00 s (f  630): mat cut
+-  24.60 s (f  738): top half slides off + thud
+-  28.20 s (f  846): hair split ting
+-  29.77 s (f  893): CLANG on bamboo
+-  30.67 s (f  920): foil crumple
+-  33.73 s (f 1012): knap click
+-  34.87 s (f 1046): edge sparkle
+-  38.40 s (f 1152): clang + obsidian shatter
+-  41.67 s (f 1250): zoom riser into the needle
+-  46.20 s (f 1386): BUMP pop + atoms scatter
+-  53.87 s (f 1616): final shing
+-  54.67 s (f 1640): crane whoosh
