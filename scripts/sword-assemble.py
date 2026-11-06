@@ -2,7 +2,7 @@
 import subprocess
 C = "out/sword/chunks/"
 chunks = {(0, 424): "c_0-424", (425, 849): "c_425-849", (850, 1274): "c_850-1274", (1275, 1694): "c_1275-1694"}
-fixes = [(746, 849), (863, 952), (1085, 1197), (1328, 1499), (1595, 1694)]
+fixes = [(746, 849), (850, 862), (863, 952), (1085, 1197), (1328, 1499), (1595, 1694)]
 segs, f = [], 0
 while f <= 1694:
     fx = next((r for r in fixes if r[0] <= f <= r[1]), None)
@@ -20,5 +20,5 @@ fl.append("".join(f"[v{i}]" for i in range(len(segs))) + f"concat=n={len(segs)}:
 args += ["-filter_complex", ";".join(fl), "-map", "[out]", "-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-r", "30", "out/sword/video.mp4"]
 print(segs); subprocess.run(args, check=True)
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", "out/sword/video.mp4", "-i", "shorts/sword/audio/mix.wav", "-map", "0:v:0", "-map", "1:a:0",
-                "-c:v", "copy", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart", "out/sword/how_sharp_can_a_sword_get.mp4"], check=True)
+                "-c:v", "copy", "-af", "volume=-0.8dB,alimiter=limit=0.8:level=false", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags", "+faststart", "out/sword/how_sharp_can_a_sword_get.mp4"], check=True)
 print("assembled")
