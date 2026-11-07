@@ -3,3 +3,5 @@ out
 .DS_Store
 renders
 out/
+__pycache__/
+shorts/deadtax/voice/*16k.wav
