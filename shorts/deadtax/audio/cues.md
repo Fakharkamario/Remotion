@@ -1,0 +1,24 @@
+# Sound cues (s, frame @30)
+
+-   2.20 s (f   66): phone buzz
+-   4.70 s (f  141): ghost rises: poof + woo
+-   6.47 s (f  194): bill slap
+-   7.00 s (f  210): flash whoosh
+-   8.73 s (f  262): last coin clinks in the empty chest
+-  11.50 s (f  345): oof + thud
+-  12.20 s (f  366): oof + thud
+-  12.97 s (f  389): 12 little poofs
+-  18.00 s (f  540): quill scratch
+-  19.77 s (f  593): stamp
+-  21.67 s (f  650): ALIVE stamp
+-  25.17 s (f  755): pages flapping + racing clock
+-  26.83 s (f  805): dazed boing
+-  29.37 s (f  881): grandpa thud + twinkle stars
+-  32.33 s (f  970): coin caught
+-  33.17 s (f  995): coin caught
+-  36.73 s (f 1102): facepalm slap
+-  39.13 s (f 1174): coin bag handover
+-  40.63 s (f 1219): crane whoosh
+-  42.60 s (f 1278): ghost choir woo
+-  45.00 s (f 1350): coin explosion + rain
+-  53.63 s (f 1609): ghost grandpa pops up
