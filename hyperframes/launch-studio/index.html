@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Launch Studio</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/film.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #F4F5F7; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #F4F5F7; font-family: "Inter", system-ui, sans-serif; }
+      #stage { position: absolute; inset: 0; }
+      #stage canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+      /* warms the font weights the canvas uses before the first frame is drawn */
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      .preload { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="11" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-weight:400">Aa</span><span style="font-weight:420">Aa</span><span style="font-weight:640">Aa</span></div>
+      <img class="preload" src="assets/mark.png" alt="" /><img class="preload" src="assets/launch.png" alt="" /><img class="preload" src="assets/studio.png" alt="" />
+      <div id="stage"></div>
+      <audio id="soundtrack" src="assets/audio/soundtrack.wav" data-start="0" data-duration="11" data-track-index="10" data-volume="1"></audio>
+    </div>
+    <script>
+      (function () {
+        // Scene 1 (0-2.7s) "You built the product", scene 2 (2.6-5.7s) "But nobody understands it.",
+        // scene 3 (5.6-8.6s) "Let's launch it with Launch Studio", outro (8.2-11s) logo.
+        // All drawing lives in assets/film.js as a pure function of the frame.
+        const cv = document.createElement("canvas");
+        cv.width = FILM.W; cv.height = FILM.H;
+        document.getElementById("stage").appendChild(cv);
+        const ctx = cv.getContext("2d");
+        let cur = 0;
+        const render = (f) => { cur = f; FILM.draw(ctx, Math.max(0, Math.min(FILM.TOTAL - 1, f))); };
+        const R = { frame(v) { if (v === undefined) return cur; render(v); } };
+        const dur = FILM.TOTAL / FILM.FPS;
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo(R, { frame: 0 }, { frame: FILM.TOTAL, duration: dur, ease: "none", immediateRender: true }, 0);
+        tl.set({}, {}, dur);
+        const redraw = () => render(cur);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(redraw);
+        document.querySelectorAll("img.preload").forEach((im) => { if (!im.complete) im.addEventListener("load", redraw); });
+        tl.seek(0.001).seek(0);
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>
