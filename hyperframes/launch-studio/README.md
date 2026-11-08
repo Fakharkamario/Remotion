@@ -1,15 +1,22 @@
 # Launch Studio (HyperFrames)
 
-An 11 s, 1920x1080 / 30 fps HyperFrames spot (330 frames) in the style of the reference clip: off-white paper
-with soft window-blind shadows, typed headlines (fresh letters land light and settle to ink), blue gradient
-type, a blurred blue wave wipe, and a glossy 3D blue cursor that carries the story between scenes.
+A 6.3 s, 1920x1080 / 30 fps HyperFrames spot (190 frames). Its motion is taken frame by frame from the
+reference clip: the camera's scale and position were tracked with SIFT feature matching on the type, the
+typing cadence was read from how far each line had been typed in each frame, the cursor's centre, size and
+angle were measured from its blue silhouette, and the blue wave is a tint field sampled from the reference
+(text removed) and multiplied over the paper. The tables live in `assets/motion.js`.
 
-| frames  | seconds   | beat |
-|---------|-----------|------|
-| 0–85    | 0.0–2.8   | **Scene 1** — "You built" types in blue gradient while the camera leans after the caret; a blue wave rises, "the product" reads white on it, then the wave sweeps off the top |
-| 78–172  | 2.6–5.7   | **Scene 2** — "But nobody / understands it." types in; the cursor pops up, looks left and right, then turns to point right; whip pan out with motion blur |
-| 169–262 | 5.6–8.7   | **Scene 3** — "Let's launch it" whips in and types with the cursor riding the caret; "with **Launch Studio**" (blue) follows |
-| 246–330 | 8.2–11.0  | **Outro** — the text drifts out of focus, the cursor turns up, grows and becomes the Launch Studio mark; light sweep; LAUNCH / STUDIO track in |
+| frames  | copy | motion source (reference frames) |
+|---------|------|-----------------------------------|
+| 0–42    | **Scene 1** "You built / the product" | 0–42: zoom-out from 1.24x while typing, wave rises, swallows the line, sweeps off the top |
+| 43      | blank paper | 43 |
+| 44–75   | **Scene 2** "But nobody / understands it." | 88–119: hard cut in mid-typing, slide-in from the right, cursor swings from up-left to pointing at line 2, accelerating exit upward |
+| 76–120  | **Scene 3** "Let's launch it / with Launch Studio" | 219–263: rises in from below, cursor flies in from the right and parks after line 1 |
+| 121–189 | **Logo** mark + LAUNCH / STUDIO | 44–75: the mark takes the cursor's rise from the bottom edge, then eases to a hold |
+
+Fresh words land at mid grey and settle to ink with the reference's measured curve; the shutter is ~0.15 frame,
+as measured on the reference's fast moves. Where the new copy is wider than the reference's, each block is
+shifted to keep the reference's centre and the cursor moves with whatever it was anchored to.
 
 Every frame is drawn on one canvas by `assets/film.js` as a pure function of the frame number, mounted on the
 root timeline in `index.html`. The mark and wordmark are clean alpha masks traced from the supplied logo

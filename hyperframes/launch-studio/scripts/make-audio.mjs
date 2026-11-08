@@ -88,29 +88,28 @@ function hat(t0, vel) {
 }
 
 // harmony (MIDI): scene 1 hopeful, scene 2 suspended/minor, scene 3 lift, outro resolve
+const B = FILM.FPS, at = (f) => f / B;
 const chords = [
-  [0.0, [53, 60, 64, 67, 72], 2.0],   // Fmaj9-ish
-  [2.0, [57, 60, 64, 67], 1.0],       // Am7
-  [3.0, [50, 57, 60, 65], 2.6],       // Dm7 (nobody understands)
-  [5.6, [46, 53, 58, 62, 65], 2.0],   // Bbmaj7
-  [7.6, [48, 55, 60, 64, 67], 1.2],   // C
-  [8.8, [53, 60, 65, 69, 72, 76], 2.4], // F (logo)
+  [0.0, [53, 60, 64, 67, 72], at(44)],          // Fmaj9-ish: "You built the product"
+  [at(44), [50, 57, 60, 65], at(32)],           // Dm7: "But nobody understands it."
+  [at(76), [46, 53, 58, 62, 65], at(45)],       // Bbmaj7: "Let's launch it"
+  [at(121), [53, 60, 65, 69, 72, 76], 2.3],     // F: logo
 ];
-chords.forEach(([t, ch, d], i) => pad(t, ch, d, i === 2 ? 0.16 : 0.2, i === 2 ? 900 : 1500 + i * 150));
+chords.forEach(([t, ch, d], i) => pad(t, ch, d, i === 1 ? 0.16 : 0.2, i === 1 ? 900 : 1500 + i * 150));
 // arpeggio plucks on eighths
 const arpNotes = (ch) => ch.map((m) => m + 12);
 chords.forEach(([t, ch, d], ci) => {
   const notes = arpNotes(ch);
   const steps = Math.floor(d / (BEAT / 2));
   for (let s = 0; s < steps; s++) {
-    if (ci === 2 && s % 2) continue; // sparser in scene 2
-    if (ci === 5 && s > 3) break;
+    if (ci === 1 && s % 2) continue; // sparser in scene 2
+    if (ci === 3 && s > 3) break;
     const m = notes[(s * 2 + ci) % notes.length];
     epiano(t + s * BEAT / 2, m, 0.18, 0.06 + (s % 4 === 0 ? 0.03 : 0), ((s % 3) - 1) * 0.4);
   }
 });
 // pulse in scene 3
-for (let t = 5.75; t < 8.7; t += BEAT) { kick(t, 0.32); hat(t + BEAT / 2, 0.05); }
+for (let t = at(76); t < at(120); t += BEAT) { kick(t, 0.32); hat(t + BEAT / 2, 0.05); }
 
 // ----------------------------------------------------------------- sfx
 function key(t0, vel) {
