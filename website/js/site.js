@@ -8,10 +8,10 @@
 
   /* ---------- content config (edit here) ---------- */
   const FILMS = [
-    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4' },
-    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4' },
-    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4' },
-    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4' },
+    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=4' },
+    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=4' },
+    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=4' },
+    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=4' },
   ];
   const PRICES = {
     type:  { social: 750, feature: 1500, launch: 2500, brand: 3500 },
@@ -38,13 +38,17 @@
   addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
   /* ---------- now playing → mini player ---------- */
-  const np = $('#np'), npTitle = $('#np-title'), mini = $('#mini'), mv = $('#mini-video'), mTitle = $('#mini-title'), mProg = $('#mini-progress');
+  const np = $('#np'), npTitle = $('#np-title'), mini = $('#mini'), mv = $('#mini-video'), mTitle = $('#mini-title');
   let filmIdx = 0;
   function loadFilm(i, play) {
     filmIdx = (i + FILMS.length) % FILMS.length;
     const f = FILMS[filmIdx];
     npTitle.textContent = mTitle.textContent = f.title;
-    if (play) { mv.src = f.src; mini.hidden = false; mv.play().catch(() => {}); }
+    if (play) {
+      mv.src = f.src; mini.hidden = false;
+      // if the browser refuses to start with sound, the native controls stay up so one tap plays it
+      mv.play().catch(() => { np.classList.remove('is-playing'); });
+    }
   }
   $('#np-play').addEventListener('click', () => {
     if (mini.hidden || !mv.src) loadFilm(filmIdx, true);
@@ -55,8 +59,7 @@
   mv.addEventListener('play', () => { np.classList.add('is-playing'); $('#np-play').setAttribute('aria-label', 'Pause'); });
   mv.addEventListener('pause', () => { np.classList.remove('is-playing'); $('#np-play').setAttribute('aria-label', 'Play'); });
   mv.addEventListener('ended', () => loadFilm(filmIdx + 1, true));
-  mv.addEventListener('timeupdate', () => { mProg.style.width = (mv.currentTime / (mv.duration || 1) * 100) + '%'; });
-  mv.addEventListener('click', () => { const f = FILMS[filmIdx]; mv.pause(); openPlayer(f.key, mv.currentTime); });
+  $('#mini-expand').addEventListener('click', () => { const f = FILMS[filmIdx], at = mv.currentTime; mv.pause(); openPlayer(f.key, at); });
   $('#mini-close').addEventListener('click', () => { mv.pause(); mini.hidden = true; });
 
   /* ---------- big player ---------- */
