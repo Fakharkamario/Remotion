@@ -1,343 +1,365 @@
 /* Launch Studio — page interactions */
 (function () {
-  const root = document.documentElement;
-  root.classList.add('js');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-  /* ---------- config (edit here) ---------- */
-  const VIDEOS = {
-    'reel':        { src: 'assets/video/reel.mp4',        title: 'Launch Studio — Reel 2026' },
-    'dig-ai':      { src: 'assets/video/dig-ai.mp4',      title: 'DIG AI — Product launch' },
-    'latentgraph': { src: 'assets/video/latentgraph.mp4', title: 'LatentGraph — Launch film' },
-    'island':      { src: 'assets/video/island.mp4',      title: 'Island — Feature campaign' },
-  };
-  const PREVIEWS = {
-    'reel':        { src: 'assets/video/reel-loop.mp4',           poster: 'assets/img/reel-poster.jpg',        cap: 'Customer stories / brand' },
-    'dig-ai':      { src: 'assets/video/dig-ai-preview.mp4',      poster: 'assets/img/dig-ai-poster.jpg',      cap: 'DIG AI / launch' },
-    'latentgraph': { src: 'assets/video/latentgraph-preview.mp4', poster: 'assets/img/latentgraph-poster.jpg', cap: 'LatentGraph / explain' },
-    'island':      { src: 'assets/video/island-preview.mp4',      poster: 'assets/img/island-poster.jpg',      cap: 'Island / convert' },
-  };
+  /* ---------- content config (edit here) ---------- */
+  const FILMS = [
+    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4' },
+    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4' },
+    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4' },
+    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4' },
+  ];
   const PRICES = {
-    type:  { feature: 1500, launch: 2500, social: 750, brand: 3500 },
+    type:  { social: 750, feature: 1500, launch: 2500, brand: 3500 },
     level: { standard: 0, premium: 750, cinematic: 1500 },
     speed: { normal: 0, fast: 500, rush: 1000 },
   };
 
-  /* ---------- nav ---------- */
-  const nav = $('#nav');
-  const inks = $$('.band-ink');
-  let lastY = scrollY;
-  addEventListener('scroll', () => {
-    const y = scrollY;
-    nav.classList.toggle('is-scrolled', y > 20);
-    nav.classList.toggle('is-hidden', y > 400 && y > lastY + 4 && !menuOpen());
-    if (y < lastY - 4 || y < 400) nav.classList.remove('is-hidden');
-    lastY = y;
-    nav.classList.toggle('on-ink', inks.some(el => { const r = el.getBoundingClientRect(); return r.top <= 40 && r.bottom >= 40; }));
-  }, { passive: true });
+  /* ---------- lazy videos: load + play only while on screen ---------- */
+  const lazyVideos = $$('video[data-src]');
+  const vio = new IntersectionObserver(es => es.forEach(en => {
+    const v = en.target;
+    if (en.isIntersecting) {
+      if (!v.src) v.src = v.dataset.src;
+      if (!reduce && !v.closest('.scene:not(.is-on)')) v.play().catch(() => {});
+    } else v.pause();
+  }), { rootMargin: '120px', threshold: .15 });
+  lazyVideos.forEach(v => vio.observe(v));
 
-  const menuBtn = $('#menu-btn'), menu = $('#mobile-menu');
-  const menuOpen = () => menuBtn.getAttribute('aria-expanded') === 'true';
-  function setMenu(open) {
-    menuBtn.setAttribute('aria-expanded', String(open));
-    menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    menu.hidden = !open;
-    document.body.style.overflow = open ? 'hidden' : '';
-  }
-  menuBtn.addEventListener('click', () => setMenu(!menuOpen()));
+  /* ---------- nav menu ---------- */
+  const menuBtn = $('#menu-btn'), menu = $('#menu');
+  const setMenu = open => { menuBtn.setAttribute('aria-expanded', String(open)); menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu'); menu.hidden = !open; };
+  menuBtn.addEventListener('click', () => setMenu(menu.hidden));
   $$('a', menu).forEach(a => a.addEventListener('click', () => setMenu(false)));
-  addEventListener('keydown', e => { if (e.key === 'Escape' && menuOpen()) setMenu(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 
-  /* ---------- reveal (only things below the fold start hidden) ---------- */
-  const revealTargets = $$('.sec-head, .project, .offer, .includes, .estimator, .about > *, .faq-list details, .work-foot, .play-head, .contact-inner > *');
-  if (!reduce && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(en => { if (en.isIntersecting) { en.target.classList.remove('is-pre'); io.unobserve(en.target); } });
-    }, { rootMargin: '0px 0px -8% 0px' });
-    revealTargets.forEach((el, i) => {
-      el.classList.add('rv');
-      if (el.getBoundingClientRect().top > innerHeight) {
-        el.classList.add('is-pre');
-        el.style.transitionDelay = (i % 4) * 70 + 'ms';
-        io.observe(el);
-      }
-    });
+  /* ---------- now playing → mini player ---------- */
+  const np = $('#np'), npTitle = $('#np-title'), mini = $('#mini'), mv = $('#mini-video'), mTitle = $('#mini-title'), mProg = $('#mini-progress');
+  let filmIdx = 0;
+  function loadFilm(i, play) {
+    filmIdx = (i + FILMS.length) % FILMS.length;
+    const f = FILMS[filmIdx];
+    npTitle.textContent = mTitle.textContent = f.title;
+    if (play) { mv.src = f.src; mini.hidden = false; mv.play().catch(() => {}); }
+  }
+  $('#np-play').addEventListener('click', () => {
+    if (mini.hidden || !mv.src) loadFilm(filmIdx, true);
+    else if (mv.paused) mv.play().catch(() => {}); else mv.pause();
+  });
+  $('#np-next').addEventListener('click', () => loadFilm(filmIdx + 1, !mini.hidden));
+  $('#np-prev').addEventListener('click', () => loadFilm(filmIdx - 1, !mini.hidden));
+  mv.addEventListener('play', () => { np.classList.add('is-playing'); $('#np-play').setAttribute('aria-label', 'Pause'); });
+  mv.addEventListener('pause', () => { np.classList.remove('is-playing'); $('#np-play').setAttribute('aria-label', 'Play'); });
+  mv.addEventListener('ended', () => loadFilm(filmIdx + 1, true));
+  mv.addEventListener('timeupdate', () => { mProg.style.width = (mv.currentTime / (mv.duration || 1) * 100) + '%'; });
+  mv.addEventListener('click', () => { const f = FILMS[filmIdx]; mv.pause(); openPlayer(f.key, mv.currentTime); });
+  $('#mini-close').addEventListener('click', () => { mv.pause(); mini.hidden = true; });
+
+  /* ---------- big player ---------- */
+  const dlg = $('#player'), pv = $('#player-video'), pt = $('#player-title');
+  function openPlayer(key, at = 0) {
+    const f = FILMS.find(x => x.key === key); if (!f) return;
+    pt.textContent = f.title; pv.src = f.src;
+    pv.addEventListener('loadedmetadata', () => { if (at) pv.currentTime = at; }, { once: true });
+    dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
+    pv.play().catch(() => {});
+  }
+  const closePlayer = () => { pv.pause(); if (dlg.open) dlg.close(); };
+  $$('[data-play]').forEach(el => el.addEventListener('click', () => openPlayer(el.dataset.play)));
+  $('#player-close').addEventListener('click', closePlayer);
+  dlg.addEventListener('click', e => { if (e.target === dlg) closePlayer(); });
+  dlg.addEventListener('close', () => pv.pause());
+
+  /* ---------- hero: render-progress card ---------- */
+  const render = $('.render');
+  if (render) {
+    const pct = $('.render-pct', render), state = $('.render-state', render);
+    let p = reduce ? 100 : 0;
+    const tickR = () => {
+      p = p >= 100 ? 0 : Math.min(100, p + 1 + Math.random() * 4);
+      render.style.setProperty('--p', p + '%');
+      const done = p >= 100;
+      render.classList.toggle('is-done', done);
+      pct.textContent = done ? '✓' : Math.floor(p) + '%';
+      state.textContent = done ? 'Ready to launch' : 'Exporting';
+      setTimeout(tickR, done ? 2600 : 160);
+    };
+    reduce ? (render.style.setProperty('--p', '100%'), pct.textContent = '✓', state.textContent = 'Ready to launch', render.classList.add('is-done')) : tickR();
   }
 
-  /* ---------- statement: words sharpen as you scroll ---------- */
-  const st = $('#statement');
-  if (st) {
-    const wrapWords = node => {
-      [...node.childNodes].forEach(n => {
-        if (n.nodeType === 3) {
-          const frag = document.createDocumentFragment();
-          n.textContent.split(/(\s+)/).forEach(part => {
-            if (!part) return;
-            if (/^\s+$/.test(part)) frag.appendChild(document.createTextNode(part));
-            else { const s = document.createElement('span'); s.className = 'w'; s.textContent = part; frag.appendChild(s); }
-          });
-          n.replaceWith(frag);
-        } else if (n.nodeType === 1) wrapWords(n);
+  /* ---------- hero: objects drop when touched ---------- */
+  const stage = $('#stage'), hint = $('#hero-hint');
+  if (stage && !reduce) {
+    const ready = () => window.Matter ? initPhysics() : setTimeout(ready, 60);
+    addEventListener('load', ready);
+  } else if (hint) hint.hidden = true;
+
+  function initPhysics() {
+    const { Engine, Bodies, Body, Composite, Runner, Mouse, MouseConstraint, Events } = Matter;
+    const engine = Engine.create({ gravity: { y: 1.15 } });
+    const world = engine.world;
+    const runner = Runner.create();
+    const items = $$('.obj', stage).filter(el => el.offsetParent !== null);
+    let W = stage.clientWidth, H = stage.clientHeight, walls = [], running = false;
+
+    function buildWalls() {
+      Composite.remove(world, walls);
+      const t = 300;
+      walls = [
+        Bodies.rectangle(W / 2, H + t / 2, W * 3, t, { isStatic: true, friction: .8 }),
+        Bodies.rectangle(-t / 2, H / 2 - H, t, H * 4, { isStatic: true }),
+        Bodies.rectangle(W + t / 2, H / 2 - H, t, H * 4, { isStatic: true }),
+      ];
+      Composite.add(world, walls);
+    }
+    buildWalls();
+
+    const sr = stage.getBoundingClientRect();
+    const bodies = items.map(el => {
+      const r = el.getBoundingClientRect();
+      const w = el.offsetWidth, h = el.offsetHeight;
+      const cx = r.left - sr.left + r.width / 2, cy = r.top - sr.top + r.height / 2;
+      const rot = parseFloat(getComputedStyle(el).getPropertyValue('--r')) * Math.PI / 180 || 0;
+      const isRound = el.querySelector('.sticker');
+      const opts = { restitution: .25, friction: .5, frictionAir: .015, density: .002, angle: rot };
+      const b = isRound ? Bodies.circle(cx, cy, w / 2, opts) : Bodies.rectangle(cx, cy, w * .86, h * .86, { ...opts, chamfer: { radius: Math.min(w, h) * .2 } });
+      Body.setStatic(b, true); // pin after creation so Matter remembers the real mass
+      b.plugin = { el, w, h };
+      el.classList.add('is-live');
+      place(b);
+      return b;
+    });
+    Composite.add(world, bodies);
+
+    function place(b) {
+      const { el, w, h } = b.plugin;
+      el.style.transform = `translate(${(b.position.x - w / 2).toFixed(1)}px,${(b.position.y - h / 2).toFixed(1)}px) rotate(${b.angle.toFixed(4)}rad)`;
+    }
+    function drop(b, kick = 1) {
+      if (!b.isStatic) return;
+      Body.setStatic(b, false);
+      Body.setVelocity(b, { x: (Math.random() - .5) * 3 * kick, y: -2 * kick });
+      Body.setAngularVelocity(b, (Math.random() - .5) * .08 * kick);
+      b.plugin.el.classList.add('is-fallen');
+      hint.classList.add('is-gone');
+      start();
+    }
+    items.forEach((el, i) => {
+      if (fine) el.addEventListener('pointerenter', () => drop(bodies[i]));
+      el.addEventListener('click', () => { const b = bodies[i]; if (b.isStatic) drop(b, 1.4); else Body.setVelocity(b, { x: (Math.random() - .5) * 8, y: -12 }); });
+    });
+
+    if (fine) {
+      const mouse = Mouse.create(stage);
+      ['mousewheel', 'DOMMouseScroll', 'wheel'].forEach(ev => stage.removeEventListener(ev, mouse.mousewheel));
+      const mc = MouseConstraint.create(engine, { mouse, constraint: { stiffness: .2, damping: .1, render: { visible: false } } });
+      Composite.add(world, mc);
+      Events.on(mc, 'startdrag', e => { if (e.body.plugin && e.body.plugin.el) e.body.plugin.el.classList.add('is-held'); });
+      Events.on(mc, 'enddrag', e => { if (e.body.plugin && e.body.plugin.el) e.body.plugin.el.classList.remove('is-held'); });
+    } else {
+      // touch: a hint shake on a random object until the first tap
+      let hinted = 0;
+      const shake = () => {
+        if (hint.classList.contains('is-gone') || hinted > 6) return;
+        const live = items.filter((el, i) => bodies[i].isStatic);
+        const el = live[Math.floor(Math.random() * live.length)];
+        if (el) { el.classList.add('is-shaking'); setTimeout(() => el.classList.remove('is-shaking'), 700); }
+        hinted++; setTimeout(shake, 3200);
+      };
+      setTimeout(shake, 3000);
+    }
+
+    function loop() {
+      if (!running) return;
+      bodies.forEach(b => {
+        if (b.isStatic) return;
+        place(b);
+        if (b.position.y > H + 400 || b.position.x < -400 || b.position.x > W + 400) { Body.setPosition(b, { x: W / 2, y: -100 }); Body.setVelocity(b, { x: 0, y: 0 }); }
       });
-    };
-    wrapWords(st);
-    const words = $$('.w', st);
+      requestAnimationFrame(loop);
+    }
+    function start() { if (running) return; running = true; Runner.run(runner, engine); loop(); }
+    function stop() { running = false; Runner.stop(runner); }
+    new IntersectionObserver(([e]) => { if (!e.isIntersecting) stop(); else if (bodies.some(b => !b.isStatic)) start(); }).observe(stage);
+    new ResizeObserver(() => {
+      const nw = stage.clientWidth, nh = stage.clientHeight;
+      if (Math.abs(nw - W) < 2 && Math.abs(nh - H) < 2) return;
+      W = nw; H = nh; buildWalls();
+    }).observe(stage);
+  }
+
+  /* ---------- statement: words sharpen with scroll ---------- */
+  const bi = $('#blur-in');
+  if (bi) {
+    const split = node => [...node.childNodes].forEach(n => {
+      if (n.nodeType !== 3) return;
+      const frag = document.createDocumentFragment();
+      n.textContent.split(/(\s+)/).forEach(part => {
+        if (!part) return;
+        if (/^\s+$/.test(part)) frag.appendChild(document.createTextNode(part));
+        else { const s = document.createElement('span'); s.className = 'w'; s.textContent = part; frag.appendChild(s); }
+      });
+      n.replaceWith(frag);
+    });
+    split(bi);
+    const words = $$('.w', bi);
     if (!reduce) {
       const upd = () => {
-        const r = st.getBoundingClientRect();
-        const p = Math.min(1, Math.max(0, (innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.35)));
-        const lit = p * words.length * 1.15;
+        const r = bi.getBoundingClientRect();
+        const p = clamp((innerHeight * .9 - r.top) / (r.height + innerHeight * .45), 0, 1);
+        const lit = p * words.length * 1.2;
         words.forEach((w, i) => {
-          const k = Math.min(1, Math.max(0, lit - i));
-          w.style.setProperty('--o', (0.16 + k * 0.84).toFixed(3));
-          w.style.setProperty('--b', ((1 - k) * 3).toFixed(2) + 'px');
+          const k = clamp(lit - i, 0, 1);
+          w.style.setProperty('--o', (.12 + k * .88).toFixed(3));
+          w.style.setProperty('--b', ((1 - k) * 8).toFixed(1) + 'px');
         });
       };
       addEventListener('scroll', upd, { passive: true }); addEventListener('resize', upd); upd();
     }
   }
 
-  /* ---------- work: lazy hover previews ---------- */
-  $$('.project').forEach(card => {
-    const v = $('video', card);
-    const load = () => { if (!v.src) { v.src = v.dataset.src; } };
-    if (fine) {
-      card.addEventListener('mouseenter', () => { load(); v.play().catch(() => {}); });
-      card.addEventListener('mouseleave', () => { v.pause(); });
-    }
-  });
-  if (!fine && 'IntersectionObserver' in window && !reduce) {
-    const vio = new IntersectionObserver(es => es.forEach(en => {
-      const v = $('video', en.target);
-      if (en.isIntersecting) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); } else v.pause();
-    }), { threshold: 0.6 });
-    $$('.project').forEach(c => vio.observe(c));
-  }
-
-  /* ---------- player ---------- */
-  const dlg = $('#player'), pv = $('#player-video'), pt = $('#player-title');
-  function openPlayer(key) {
-    const v = VIDEOS[key]; if (!v) return;
-    pt.textContent = v.title;
-    pv.src = v.src;
-    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
-    pv.play().catch(() => {});
-  }
-  function closePlayer() { pv.pause(); pv.removeAttribute('src'); pv.load(); if (dlg.open) dlg.close(); }
-  $$('[data-play]').forEach(el => {
-    el.addEventListener('click', () => openPlayer(el.dataset.play));
-    if (el.getAttribute('role') === 'button') el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(el.dataset.play); } });
-  });
-  $('#player-close').addEventListener('click', closePlayer);
-  dlg.addEventListener('close', () => { pv.pause(); });
-  dlg.addEventListener('click', e => { if (e.target === dlg) closePlayer(); });
-
-  /* ---------- services: auto-cycling list ---------- */
-  const svcWrap = $('.svc'), svcItems = $$('.svc-item'), svcVideo = $('#svc-video'), svcStage = $('.svc-stage'), svcCap = $('#svc-caption');
-  let svcIdx = 0, svcTimer = null;
-  const SVC_MS = 6000;
-  function setSvc(i, user) {
-    svcIdx = (i + svcItems.length) % svcItems.length;
-    svcItems.forEach((it, k) => {
-      const on = k === svcIdx;
-      it.classList.toggle('is-active', on);
-      $('.svc-btn', it).setAttribute('aria-expanded', String(on));
-      const bar = $('.svc-bar i', it); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+  /* ---------- reveal (only what starts below the fold) ---------- */
+  if (!reduce) {
+    const rio = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.remove('pre'); rio.unobserve(en.target); } }), { rootMargin: '0px 0px -10% 0px' });
+    $$('.ep, .clients, .tabs-card, .center-title, .left-title, .rates li, .est, .faq-list details, .dcard, .cta-copy, .foot-card').forEach(el => {
+      el.classList.add('rv');
+      if (el.getBoundingClientRect().top > innerHeight) { el.classList.add('pre'); rio.observe(el); }
     });
-    const m = PREVIEWS[svcItems[svcIdx].dataset.media];
-    svcStage.classList.add('is-swapping');
-    setTimeout(() => {
-      svcVideo.poster = m.poster; svcVideo.src = m.src; svcCap.textContent = m.cap;
-      svcVideo.play().catch(() => {});
-      svcStage.classList.remove('is-swapping');
-    }, 220);
-    schedule(user);
   }
-  function schedule(user) {
-    clearTimeout(svcTimer);
-    if (reduce) return;
-    svcTimer = setTimeout(() => { if (svcVisible && !svcWrap.classList.contains('is-paused')) setSvc(svcIdx + 1); else schedule(); }, user ? SVC_MS * 1.5 : SVC_MS);
-    svcWrap.style.setProperty('--dur', (user ? SVC_MS * 1.5 : SVC_MS) + 'ms');
-  }
-  let svcVisible = false;
-  new IntersectionObserver(([e]) => {
-    svcVisible = e.isIntersecting;
-    if (svcVisible) { svcVideo.play().catch(() => {}); } else svcVideo.pause();
-  }, { threshold: 0.3 }).observe(svcWrap);
-  svcItems.forEach((it, k) => $('.svc-btn', it).addEventListener('click', () => setSvc(k, true)));
-  svcWrap.addEventListener('mouseenter', () => svcWrap.classList.add('is-paused'));
-  svcWrap.addEventListener('mouseleave', () => svcWrap.classList.remove('is-paused'));
-  if (reduce) svcItems.forEach(it => $('.svc-bar', it).hidden = true);
-  schedule();
 
-  /* ---------- process: rocket travels the timeline ---------- */
-  const track = $('#track'), steps = $$('.step');
-  const updTrack = () => {
-    const r = track.getBoundingClientRect();
-    const p = reduce ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.75 - r.top) / (r.height * 0.9)));
-    track.style.setProperty('--p', p.toFixed(4));
-    steps.forEach((s, i) => s.classList.toggle('is-lit', p >= i / steps.length + 0.02 || reduce));
-  };
-  addEventListener('scroll', updTrack, { passive: true }); addEventListener('resize', updTrack); updTrack();
+  /* ---------- services: tabs + animated scenes ---------- */
+  const tabs = $$('.tab'), scenes = $$('.scene'), tabList = $('#tabs');
+  const TAB_MS = 7000;
+  let tabIdx = 0, tabTimer = 0, tabsVisible = false, sceneTimers = [];
+  function setTab(i, user) {
+    tabIdx = (i + tabs.length) % tabs.length;
+    tabs.forEach((t, k) => {
+      const on = k === tabIdx;
+      t.classList.toggle('is-on', on);
+      $('.tab-btn', t).setAttribute('aria-expanded', String(on));
+      const bar = $('.tab-bar i', t); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    });
+    scenes.forEach((s, k) => {
+      const on = k === tabIdx;
+      s.classList.toggle('is-on', on);
+      $$('video', s).forEach(v => { if (on) { if (!v.src) v.src = v.dataset.src; v.play().catch(() => {}); } else v.pause(); });
+    });
+    runScene(tabIdx);
+    clearTimeout(tabTimer);
+    const dur = user ? TAB_MS * 1.6 : TAB_MS;
+    tabList.style.setProperty('--dur', dur + 'ms');
+    if (!reduce) tabTimer = setTimeout(function next() {
+      if (tabsVisible && !tabList.classList.contains('is-paused')) setTab(tabIdx + 1); else tabTimer = setTimeout(next, 800);
+    }, dur);
+  }
+  tabs.forEach((t, k) => $('.tab-btn', t).addEventListener('click', () => setTab(k, true)));
+  const card = $('.tabs-card');
+  card.addEventListener('mouseenter', () => tabList.classList.add('is-paused'));
+  card.addEventListener('mouseleave', () => tabList.classList.remove('is-paused'));
+  new IntersectionObserver(([e]) => {
+    const was = tabsVisible; tabsVisible = e.isIntersecting;
+    if (tabsVisible && !was) setTab(tabIdx);
+  }, { threshold: .35 }).observe(card);
+
+  function runScene(i) {
+    sceneTimers.forEach(clearTimeout); sceneTimers = [];
+    const s = scenes[i];
+    if (s.classList.contains('scene-launch')) {
+      $$('[data-to]', s).forEach(b => {
+        const to = +b.dataset.to, t0 = performance.now(), d = reduce ? 0 : 2400;
+        const fmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 1 : 2).replace(/\.?0+$/, '') + 'k' : String(n);
+        (function step(now) { const k = d ? clamp((now - t0) / d, 0, 1) : 1; b.textContent = fmt(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1 && s.classList.contains('is-on')) requestAnimationFrame(step); })(t0);
+      });
+    }
+    if (s.classList.contains('scene-convert')) {
+      let r = 0; s.dataset.r = 0;
+      const cycle = () => { r = (r + 1) % 3; s.dataset.r = r; sceneTimers.push(setTimeout(cycle, 2000)); };
+      if (!reduce) sceneTimers.push(setTimeout(cycle, 1800));
+    }
+    if (s.classList.contains('scene-trust')) {
+      const ws = $$('.iv-caption span', s); ws.forEach(w => w.classList.remove('on'));
+      ws.forEach((w, k) => sceneTimers.push(setTimeout(() => w.classList.add('on'), reduce ? 0 : 900 + k * 320)));
+    }
+  }
+  const ivw = $('.iv-wave');
+  if (ivw) for (let i = 0; i < 40; i++) { const b = document.createElement('i'); b.style.setProperty('--d', (.4 + Math.random() * .7).toFixed(2) + 's'); b.style.height = (15 + Math.random() * 30) + '%'; ivw.appendChild(b); }
+
+  /* ---------- process: scroll scrubs the editor playhead ---------- */
+  const proc = $('#process'), editor = $('#editor'), tc = $('#ed-tc'), phases = $$('#phases li'), ruler = $$('.ed-ruler span'), clips = $$('.ed-tracks .clip');
+  const wave = $('#wave');
+  if (wave) for (let i = 0; i < 120; i++) { const b = document.createElement('i'); const v = Math.abs(Math.sin(i * .37) * Math.cos(i * .11)) * .8 + Math.random() * .2; b.style.height = (12 + v * 88) + '%'; wave.appendChild(b); }
+  function updProc() {
+    const r = proc.getBoundingClientRect();
+    const scrub = getComputedStyle($('.process-sticky')).position === 'sticky';
+    let p;
+    if (reduce) p = 1;
+    else if (scrub) p = clamp(-r.top / (r.height - innerHeight), 0, 1);
+    else { const er = editor.getBoundingClientRect(); p = clamp((innerHeight * .85 - er.top) / (innerHeight * .7), 0, 1); }
+    editor.style.setProperty('--p', p.toFixed(4));
+    const frames = Math.round(p * 45 * 24);
+    const ff = n => String(n).padStart(2, '0');
+    tc.textContent = `00:00:${ff(Math.floor(frames / 24))}:${ff(frames % 24)}`;
+    const ph = Math.min(3, Math.floor(p * 4 - 1e-6 < 0 ? 0 : p * 4 * .999));
+    phases.forEach((li, k) => li.classList.toggle('is-on', k === ph || !scrub));
+    ruler.forEach((s, k) => s.classList.toggle('on', k === ph));
+    clips.forEach(c => { const l = parseFloat(c.style.left) / 100, w = parseFloat(c.style.width) / 100; c.classList.toggle('is-hit', p >= l && p <= l + w); });
+  }
+  addEventListener('scroll', updProc, { passive: true }); addEventListener('resize', updProc); updProc();
+
+  /* ---------- deliverables: drag to scroll ---------- */
+  const strip = $('#strip');
+  if (strip && fine) {
+    let down = false, sx = 0, sl = 0, moved = false;
+    strip.addEventListener('pointerdown', e => { down = true; moved = false; sx = e.clientX; sl = strip.scrollLeft; strip.setPointerCapture(e.pointerId); });
+    strip.addEventListener('pointermove', e => { if (!down) return; const dx = e.clientX - sx; if (Math.abs(dx) > 4) { moved = true; strip.classList.add('is-drag'); } strip.scrollLeft = sl - dx; });
+    const up = () => { down = false; strip.classList.remove('is-drag'); };
+    strip.addEventListener('pointerup', up); strip.addEventListener('pointercancel', up);
+  }
 
   /* ---------- estimator ---------- */
-  const state = { type: 'launch', level: 'standard', speed: 'normal' };
-  const out = $('#est-value'), brk = $('#est-break');
-  const fmt = n => '$' + n.toLocaleString('en-US');
+  const est = { type: 'launch', level: 'standard', speed: 'normal' }, out = $('#est-val');
+  const money = n => '$' + n.toLocaleString('en-US');
   function updEst() {
-    const b = PRICES.type[state.type], l = PRICES.level[state.level], s = PRICES.speed[state.speed];
-    const total = b + l + s;
+    const t = PRICES.type[est.type] + PRICES.level[est.level] + PRICES.speed[est.speed];
     out.classList.add('is-changing');
-    setTimeout(() => {
-      out.textContent = `${fmt(total)} – ${fmt(Math.round(total * 1.5))}`;
-      brk.innerHTML = `<div><dt>Base</dt><dd>${fmt(b)}</dd></div><div><dt>Production</dt><dd>+${fmt(l)}</dd></div><div><dt>Speed</dt><dd>+${fmt(s)}</dd></div>`;
-      out.classList.remove('is-changing');
-    }, 140);
+    setTimeout(() => { out.textContent = `${money(t)} – ${money(Math.round(t * 1.5))}`; out.classList.remove('is-changing'); }, 120);
   }
-  function pick(group, value) {
-    state[group] = value;
-    $$(`.seg[data-group="${group}"] button`).forEach(b => {
-      const on = b.dataset.value === value;
-      b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on));
-    });
+  $$('.seg').forEach(g => $$('button', g).forEach(b => b.addEventListener('click', () => {
+    est[g.dataset.group] = b.dataset.value;
+    $$('button', g).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
     updEst();
-  }
-  $$('.seg').forEach(g => $$('button', g).forEach(b => b.addEventListener('click', () => pick(g.dataset.group, b.dataset.value))));
-  $$('[data-pick]').forEach(b => b.addEventListener('click', () => {
-    pick('type', b.dataset.pick);
-    $('#estimate').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
-  }));
-  Object.keys(state).forEach(k => pick(k, state[k]));
+  })));
+  $$('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.classList.contains('on'))));
 
-  /* ---------- contact: "Launch" stretches as you arrive ---------- */
-  const arcText = $('#arc-text'), arcWrap = $('.arc-wrap');
-  if (arcText) {
-    let lastN = -1;
-    const updArc = () => {
-      const r = arcWrap.getBoundingClientRect();
-      const p = reduce ? 1 : Math.min(1, Math.max(0, (innerHeight - r.top) / (innerHeight * 0.9)));
-      const n = 1 + Math.round(p * 6);
-      if (n !== lastN) { arcText.textContent = 'L' + 'a'.repeat(n) + 'unch.'; lastN = n; }
+  /* ---------- CTA ring: turns with scroll ---------- */
+  const ring = $('#ring'), ringText = $('#ring-text');
+  if (ring) {
+    // fit the stretched word to the full circle
+    // stretch the word until it closes the circle
+    const fit = () => {
+      const full = 2 * Math.PI * 150 - 14;
+      let n = 3; ringText.textContent = 'L' + 'a'.repeat(n) + 'unch';
+      try { while (ringText.getComputedTextLength() < full && n < 80) { n++; ringText.textContent = 'L' + 'a'.repeat(n) + 'unch'; } if (ringText.getComputedTextLength() > full) ringText.textContent = 'L' + 'a'.repeat(n - 1) + 'unch'; } catch (e) {}
     };
-    addEventListener('scroll', updArc, { passive: true }); updArc();
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(fit);
+    if (!reduce) {
+      let rot = 0, target = 0, last = scrollY, rafOn = false;
+      const spin = () => { rot += (target - rot) * .08; ring.style.transform = `rotate(${rot.toFixed(2)}deg)`; if (Math.abs(target - rot) > .05) requestAnimationFrame(spin); else rafOn = false; };
+      addEventListener('scroll', () => { target += (scrollY - last) * .15; last = scrollY; if (!rafOn) { rafOn = true; requestAnimationFrame(spin); } }, { passive: true });
+    }
   }
 
   /* ---------- copy email ---------- */
-  const copyBtn = $('#copy-email');
-  copyBtn.addEventListener('click', () => {
-    const email = 'hello@thelaunchstudio.org';
-    const done = ok => { copyBtn.textContent = ok ? 'Copied' : 'Select & copy'; setTimeout(() => copyBtn.textContent = 'Copy email', 1800); };
-    try {
-      navigator.clipboard.writeText(email).then(() => done(true), () => { selectEmail(); done(false); });
-    } catch (e) { selectEmail(); done(false); }
+  const copy = $('#copy');
+  copy.addEventListener('click', () => {
+    const email = $('#email').textContent.trim();
+    const done = msg => { copy.textContent = msg; setTimeout(() => copy.textContent = 'Copy', 1600); };
+    const selectIt = () => { const r = document.createRange(); r.selectNodeContents($('#email')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    try { navigator.clipboard.writeText(email).then(() => done('Copied'), () => { selectIt(); done('Press Ctrl+C'); }); }
+    catch (e) { selectIt(); done('Press Ctrl+C'); }
   });
-  function selectEmail() { const r = document.createRange(); r.selectNodeContents($('.email')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
-
-  /* ---------- physics pit ---------- */
-  const pit = $('#pit');
-  if (pit && window.Matter && !reduce) {
-    let started = false;
-    new IntersectionObserver(([e], obs) => { if (e.isIntersecting && !started) { started = true; obs.disconnect(); startPit(); } }, { threshold: 0.25 }).observe(pit);
-  }
-
-  function startPit() {
-    const { Engine, Bodies, Body, Composite, Mouse, MouseConstraint, Events, Runner } = Matter;
-    const chips = $$('.chip', pit);
-    // measure natural sizes before going absolute
-    const sizes = chips.map(c => { const r = c.getBoundingClientRect(); return { w: r.width, h: r.height }; });
-    pit.classList.add('is-live');
-
-    const engine = Engine.create({ gravity: { y: 1.1 } });
-    const world = engine.world;
-    let W = pit.clientWidth, H = pit.clientHeight;
-    const T = 200;
-    let walls = [];
-    function buildWalls() {
-      Composite.remove(world, walls);
-      walls = [
-        Bodies.rectangle(W / 2, H + T / 2, W * 3, T, { isStatic: true }),
-        Bodies.rectangle(-T / 2, H / 2 - 400, T, H * 3, { isStatic: true }),
-        Bodies.rectangle(W + T / 2, H / 2 - 400, T, H * 3, { isStatic: true }),
-      ];
-      Composite.add(world, walls);
-    }
-    buildWalls();
-
-    const bodies = chips.map((c, i) => {
-      const { w, h } = sizes[i];
-      const isDisc = c.classList.contains('chip-disc');
-      const x = 60 + Math.random() * Math.max(10, W - 120);
-      const y = -120 - i * 70;
-      const opts = { restitution: 0.35, friction: 0.4, frictionAir: 0.012, density: 0.0018, angle: (Math.random() - 0.5) * 0.8 };
-      const b = isDisc ? Bodies.circle(x, y, w / 2, opts)
-        : Bodies.rectangle(x, y, w, h, { ...opts, chamfer: { radius: c.classList.contains('chip-square') ? 20 : Math.min(h / 2 - 0.5, 999) } });
-      b.plugin = { el: c, w, h };
-      return b;
-    });
-    // drop in a stagger
-    bodies.forEach((b, i) => setTimeout(() => Composite.add(world, b), i * 90));
-
-    if (fine) {
-      const mouse = Mouse.create(pit);
-      mouse.pixelRatio = 1;
-      // keep page scroll working
-      mouse.element.removeEventListener('wheel', mouse.mousewheel);
-      mouse.element.removeEventListener('mousewheel', mouse.mousewheel);
-      mouse.element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
-      const mc = MouseConstraint.create(engine, { mouse, constraint: { stiffness: 0.18, damping: 0.1, render: { visible: false } } });
-      Composite.add(world, mc);
-      // give a nudge when the cursor brushes a resting chip
-      let lastHit = 0;
-      Events.on(engine, 'beforeUpdate', () => {
-        if (mc.body || performance.now() - lastHit < 120) return;
-        const p = mouse.position;
-        for (const b of bodies) {
-          if (Matter.Bounds.contains(b.bounds, p) && Matter.Vertices.contains(b.vertices, p) && b.speed < 0.6) {
-            Body.applyForce(b, p, { x: (Math.random() - 0.5) * 0.02 * b.mass, y: -0.035 * b.mass });
-            lastHit = performance.now(); break;
-          }
-        }
-      });
-    } else {
-      // touch: tap a chip to toss it, scroll still works everywhere
-      pit.addEventListener('click', e => {
-        const r = pit.getBoundingClientRect();
-        const p = { x: e.clientX - r.left, y: e.clientY - r.top };
-        const hit = bodies.find(b => Matter.Vertices.contains(b.vertices, p));
-        (hit ? [hit] : bodies).forEach(b => Body.applyForce(b, b.position, { x: (Math.random() - 0.5) * 0.03 * b.mass, y: -0.06 * b.mass }));
-      });
-    }
-
-    const runner = Runner.create();
-    let running = true;
-    Runner.run(runner, engine);
-
-    function render() {
-      for (const b of bodies) {
-        const { el, w, h } = b.plugin;
-        el.style.transform = `translate(${(b.position.x - w / 2).toFixed(1)}px, ${(b.position.y - h / 2).toFixed(1)}px) rotate(${b.angle.toFixed(4)}rad)`;
-        // rescue anything that escaped
-        if (b.position.y > H + 300 || b.position.x < -300 || b.position.x > W + 300) {
-          Body.setPosition(b, { x: W / 2, y: -100 }); Body.setVelocity(b, { x: 0, y: 0 });
-        }
-      }
-      if (running) requestAnimationFrame(render);
-    }
-    render();
-
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !running) { running = true; Runner.run(runner, engine); render(); }
-      else if (!e.isIntersecting && running) { running = false; Runner.stop(runner); }
-    }).observe(pit);
-
-    new ResizeObserver(() => {
-      const nw = pit.clientWidth, nh = pit.clientHeight;
-      if (Math.abs(nw - W) < 2 && Math.abs(nh - H) < 2) return;
-      W = nw; H = nh; buildWalls();
-      bodies.forEach(b => { if (b.position.x > W - 20) Body.setPosition(b, { x: W - 60, y: b.position.y - 50 }); });
-    }).observe(pit);
-  }
 })();
