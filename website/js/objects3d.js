@@ -33,12 +33,12 @@ async function start() {
   const pmrem = new THREE.PMREMGenerator(renderer);
   const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-  const C = { paper: 0xf4f3ee, ink: 0x161512, acid: 0xdfff19 };
+  const C = { paper: 0xf7f7f7, ink: 0x111111, acid: 0xdfff19 };
   const M = {
     ceramic: new THREE.MeshPhysicalMaterial({ color: C.paper, roughness: .35, clearcoat: 1, clearcoatRoughness: .15 }),
     ink: new THREE.MeshPhysicalMaterial({ color: C.ink, roughness: .3, metalness: .1, clearcoat: 1, clearcoatRoughness: .1 }),
     chrome: new THREE.MeshStandardMaterial({ color: 0xe2e0d8, roughness: .14, metalness: 1 }),
-    acid: new THREE.MeshPhysicalMaterial({ color: C.acid, roughness: .3, clearcoat: 1 }),
+    accent: new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .25, clearcoat: 1 }),
   };
 
   function makeScene(aspect, camZ = 7) {
@@ -83,7 +83,7 @@ async function start() {
       const r0 = body[body.length - 1][0], nose = [];
       for (let i = 0; i <= 20; i++) { const t = i / 20; nose.push([r0 * Math.cos(t * Math.PI / 2) ** .9 + .0001, .95 + Math.sin(t * Math.PI / 2) * 1.05]); }
       g.add(lathe(nose, M.ink));
-      const band = new THREE.Mesh(new THREE.CylinderGeometry(r0 + .012, r0 + .012, .09, 64, 1, true), M.acid); band.position.y = .92; g.add(band);
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(r0 + .012, r0 + .012, .09, 64, 1, true), M.ink); band.position.y = .92; g.add(band);
       g.add(lathe([[.001, -1.25], [.58, -1.25], [.6, -1.32], [.5, -1.38], [.001, -1.38]], M.ink));
       g.add(lathe([[.22, -1.36], [.3, -1.52], [.4, -1.72], [.36, -1.73], [.26, -1.55], [.18, -1.38]], M.chrome));
       const port = new THREE.Group();
@@ -96,10 +96,10 @@ async function start() {
       const fg = new THREE.ExtrudeGeometry(fs, { depth: .06, bevelEnabled: true, bevelThickness: .025, bevelSize: .025, bevelSegments: 3, curveSegments: 20 });
       fg.translate(0, 0, -.03);
       for (let i = 0; i < 3; i++) {
-        const f = new THREE.Mesh(fg, i === 0 ? M.acid : M.ink), a = i / 3 * Math.PI * 2 + Math.PI / 2;
+        const f = new THREE.Mesh(fg, M.ink), a = i / 3 * Math.PI * 2 + Math.PI / 2;
         f.position.set(Math.cos(a) * .5, -.78, Math.sin(a) * .5); f.rotation.y = -a; g.add(f);
       }
-      const flameMat = new THREE.MeshBasicMaterial({ color: C.acid, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false });
+      const flameMat = new THREE.MeshBasicMaterial({ color: 0xbdbdbd, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false });
       const flame = new THREE.Mesh(new THREE.ConeGeometry(.24, 1, 32, 1, true), flameMat);
       flame.rotation.x = Math.PI; flame.position.y = -2.25; g.add(flame);
       const core = new THREE.Mesh(new THREE.ConeGeometry(.12, .6, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
@@ -124,15 +124,15 @@ async function start() {
       const { scene, camera } = makeScene(1, 9.2);
       const g = new THREE.Group();
       const slateTex = canvasTex(512, 380, (x, w, h) => {
-        x.fillStyle = '#161512'; x.fillRect(0, 0, w, h);
-        x.strokeStyle = 'rgba(244,243,238,.55)'; x.lineWidth = 3;
+        x.fillStyle = '#111111'; x.fillRect(0, 0, w, h);
+        x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 3;
         [[0, 120, w, 120], [0, 250, w, 250], [w / 2, 120, w / 2, 250]].forEach(([a, b, c, d]) => { x.beginPath(); x.moveTo(a, b); x.lineTo(c, d); x.stroke(); });
-        x.fillStyle = '#f4f3ee'; x.font = '600 58px Geist, Arial, sans-serif'; x.fillText('LAUNCH STUDIO', 28, 86);
-        x.font = '500 30px Geist, Arial, sans-serif'; x.fillStyle = 'rgba(244,243,238,.6)';
+        x.fillStyle = '#ffffff'; x.font = '600 58px Geist, Arial, sans-serif'; x.fillText('LAUNCH STUDIO', 28, 86);
+        x.font = '500 30px Geist, Arial, sans-serif'; x.fillStyle = 'rgba(255,255,255,.6)';
         x.fillText('SCENE', 28, 160); x.fillText('TAKE', w / 2 + 24, 160); x.fillText('ROLL', 28, 292);
-        x.fillStyle = '#f4f3ee'; x.font = '600 66px Geist, Arial, sans-serif';
+        x.fillStyle = '#ffffff'; x.font = '600 66px Geist, Arial, sans-serif';
         x.fillText('01', 28, 228); x.fillText('03', w / 2 + 24, 228);
-        x.fillStyle = '#dfff19'; x.font = '600 50px Geist, Arial, sans-serif'; x.fillText('LAUNCH DAY', 28, 352);
+        x.fillStyle = '#ffffff'; x.font = '600 50px Geist, Arial, sans-serif'; x.fillText('LAUNCH DAY', 28, 352);
       });
       const board = slab(2.6, 1.9, .14, .1, [M.ink, new THREE.MeshPhysicalMaterial({ map: slateTex, roughness: .5, clearcoat: .6 })], .03);
       // put the label on the front cap only
@@ -140,7 +140,7 @@ async function start() {
       fixFrontUV(board.geometry, 2.6 + .06, 1.9 + .06);
       board.position.y = -.35; g.add(board);
       const stripeTex = canvasTex(512, 64, (x, w, h) => {
-        x.fillStyle = '#f4f3ee'; x.fillRect(0, 0, w, h); x.fillStyle = '#161512';
+        x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); x.fillStyle = '#111111';
         for (let i = -2; i < 10; i++) { x.beginPath(); x.moveTo(i * 64, h); x.lineTo(i * 64 + 32, h); x.lineTo(i * 64 + 64, 0); x.lineTo(i * 64 + 32, 0); x.fill(); }
       });
       const stripeMat = new THREE.MeshPhysicalMaterial({ map: stripeTex, roughness: .4, clearcoat: .8 });
@@ -169,7 +169,7 @@ async function start() {
     key() {
       const { scene, camera } = makeScene(1, 7);
       const g = new THREE.Group();
-      const baseM = new THREE.MeshPhysicalMaterial({ color: 0xd9d6cc, roughness: .5, clearcoat: .4 });
+      const baseM = new THREE.MeshPhysicalMaterial({ color: 0xd4d4d4, roughness: .5, clearcoat: .4 });
       const base = slab(2, 2, .5, .32, baseM, .08); g.add(base);
       const cap = new THREE.Group();
       const top = slab(1.7, 1.7, .5, .3, M.ceramic, .12); cap.add(top);
@@ -195,7 +195,7 @@ async function start() {
     clock() {
       const { scene, camera } = makeScene(1.5, 6.3);
       const g = new THREE.Group();
-      const shell = slab(3.4, 1.7, .7, .3, new THREE.MeshPhysicalMaterial({ color: 0x2a2824, roughness: .35, metalness: .2, clearcoat: 1, clearcoatRoughness: .1 }), .1);
+      const shell = slab(3.4, 1.7, .7, .3, new THREE.MeshPhysicalMaterial({ color: 0x1c1c1c, roughness: .35, metalness: .2, clearcoat: 1, clearcoatRoughness: .1 }), .1);
       g.add(shell);
       let label = '';
       const screenTex = canvasTex(640, 300, () => {});
@@ -203,8 +203,9 @@ async function start() {
         const { ctx: x, w, h } = screenTex.userData;
         x.fillStyle = '#0d0d0b'; x.fillRect(0, 0, w, h);
         x.font = '500 170px "Geist Mono", ui-monospace, monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
-        x.fillStyle = 'rgba(223,255,25,.07)'; x.fillText(text ? text.replace(/[0-9A-Z]/g, '8') : '8888', w / 2, h / 2 + 6);
-        x.shadowColor = 'rgba(223,255,25,.9)'; x.shadowBlur = 24; x.fillStyle = '#e9ff5a'; x.fillText(text, w / 2, h / 2 + 6);
+        const live = text === 'LIVE';
+        x.fillStyle = 'rgba(255,255,255,.06)'; x.fillText(text ? text.replace(/[0-9A-Z]/g, '8') : '8888', w / 2, h / 2 + 6);
+        x.shadowColor = live ? 'rgba(223,255,25,.9)' : 'rgba(255,255,255,.75)'; x.shadowBlur = 22; x.fillStyle = live ? '#e9ff5a' : '#ffffff'; x.fillText(text, w / 2, h / 2 + 6);
         x.shadowBlur = 0;
         screenTex.needsUpdate = true;
       };

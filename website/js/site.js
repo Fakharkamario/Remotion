@@ -128,7 +128,7 @@
       const opts = { restitution: .25, friction: .5, frictionAir: .015, density: .002, angle: rot };
       const b = isRound ? Bodies.circle(cx, cy, w / 2, opts) : Bodies.rectangle(cx, cy, w * .86, h * .86, { ...opts, chamfer: { radius: Math.min(w, h) * .2 } });
       Body.setStatic(b, true); // pin after creation so Matter remembers the real mass
-      b.plugin = { el, w, h };
+      b.plugin = { el, w, h, home: { x: cx, y: cy, a: rot } };
       el.classList.add('is-live');
       place(b);
       return b;
@@ -146,8 +146,29 @@
       Body.setAngularVelocity(b, (Math.random() - .5) * .08 * kick);
       b.plugin.el.classList.add('is-fallen');
       hint.classList.add('is-gone');
+      resetBtn.hidden = false;
       start();
     }
+    const resetBtn = $('#reset');
+    resetBtn.addEventListener('click', () => {
+      resetBtn.hidden = true;
+      const moving = bodies.filter(b => !b.isStatic).map(b => {
+        Body.setStatic(b, true);
+        return { b, x0: b.position.x, y0: b.position.y, a0: b.angle };
+      });
+      const t0 = performance.now(), d = 900;
+      (function home(now) {
+        const k = clamp((now - t0) / d, 0, 1), e = 1 - Math.pow(1 - k, 4);
+        moving.forEach(({ b, x0, y0, a0 }) => {
+          const hm = b.plugin.home;
+          Body.setPosition(b, { x: x0 + (hm.x - x0) * e, y: y0 + (hm.y - y0) * e });
+          Body.setAngle(b, a0 + (hm.a - a0) * e);
+          place(b);
+        });
+        if (k < 1) requestAnimationFrame(home);
+        else { moving.forEach(({ b }) => b.plugin.el.classList.remove('is-fallen')); hint.classList.remove('is-gone'); }
+      })(t0);
+    });
     items.forEach((el, i) => {
       if (fine) el.addEventListener('pointerenter', () => drop(bodies[i]));
       el.addEventListener('click', () => { const b = bodies[i]; if (b.isStatic) drop(b, 1.4); else Body.setVelocity(b, { x: (Math.random() - .5) * 8, y: -12 }); });
@@ -188,6 +209,17 @@
     new ResizeObserver(() => {
       const nw = stage.clientWidth, nh = stage.clientHeight;
       if (Math.abs(nw - W) < 2 && Math.abs(nh - H) < 2) return;
+      // re-home everything on a real resize
+      const sr2 = stage.getBoundingClientRect();
+      bodies.forEach(b => {
+        const el = b.plugin.el;
+        el.classList.remove('is-live'); el.style.transform = '';
+        const r = el.getBoundingClientRect();
+        b.plugin.home = { x: r.left - sr2.left + r.width / 2, y: r.top - sr2.top + r.height / 2, a: b.plugin.home.a };
+        el.classList.add('is-live');
+        if (b.isStatic) { Body.setPosition(b, b.plugin.home); Body.setAngle(b, b.plugin.home.a); }
+        place(b);
+      });
       W = nw; H = nh; buildWalls();
     }).observe(stage);
   }
@@ -309,6 +341,16 @@
     clips.forEach(c => { const l = parseFloat(c.style.left) / 100, w = parseFloat(c.style.width) / 100; c.classList.toggle('is-hit', p >= l && p <= l + w); });
   }
   addEventListener('scroll', updProc, { passive: true }); addEventListener('resize', updProc); updProc();
+  phases.forEach((li, k) => {
+    const go = () => {
+      if (getComputedStyle($('.process-sticky')).position !== 'sticky') return;
+      const top = proc.getBoundingClientRect().top + scrollY;
+      scrollTo({ top: top + (k + .5) / 4 * (proc.offsetHeight - innerHeight), behavior: reduce ? 'auto' : 'smooth' });
+    };
+    li.setAttribute('role', 'button'); li.tabIndex = 0;
+    li.addEventListener('click', go);
+    li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
 
   /* ---------- deliverables: drag to scroll ---------- */
   const strip = $('#strip');
@@ -334,6 +376,11 @@
     updEst();
   })));
   $$('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.classList.contains('on'))));
+  $$('.rates button').forEach(b => b.addEventListener('click', () => {
+    est.type = b.dataset.value;
+    $$('.rates button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
+    updEst();
+  }));
 
   /* ---------- CTA ring: turns with scroll ---------- */
   const ring = $('#ring'), ringText = $('#ring-text');
@@ -348,10 +395,67 @@
     (document.fonts ? document.fonts.ready : Promise.resolve()).then(fit);
     if (!reduce) {
       let rot = 0, target = 0, last = scrollY, rafOn = false;
-      const spin = () => { rot += (target - rot) * .08; ring.style.transform = `rotate(${rot.toFixed(2)}deg)`; if (Math.abs(target - rot) > .05) requestAnimationFrame(spin); else rafOn = false; };
-      addEventListener('scroll', () => { target += (scrollY - last) * .15; last = scrollY; if (!rafOn) { rafOn = true; requestAnimationFrame(spin); } }, { passive: true });
+      const spin = () => { rot += (target - rot) * .06; ring.style.transform = `rotate(${rot.toFixed(2)}deg)`; if (Math.abs(target - rot) > .05) requestAnimationFrame(spin); else rafOn = false; };
+      const kick = deg => { target += deg; if (!rafOn) { rafOn = true; requestAnimationFrame(spin); } };
+      addEventListener('scroll', () => { kick((scrollY - last) * .15); last = scrollY; }, { passive: true });
+      const wrap = $('#ring-wrap');
+      $('#launch').addEventListener('click', () => {
+        if (wrap.classList.contains('is-launching')) return;
+        wrap.classList.add('is-launching'); kick(720);
+        setTimeout(() => wrap.classList.remove('is-launching'), 1750);
+      });
     }
   }
+
+  /* ---------- cursor label: says what a click will do ---------- */
+  if (fine) {
+    const pill = $('#cursor-pill');
+    let x = 0, y = 0, px = 0, py = 0, on = false, raf = 0;
+    const follow = () => {
+      px += (x - px) * .25; py += (y - py) * .25;
+      pill.style.translate = `${(px + 16).toFixed(1)}px ${(py + 18).toFixed(1)}px`;
+      raf = (on || Math.abs(x - px) > .5) ? requestAnimationFrame(follow) : 0;
+    };
+    addEventListener('pointermove', e => {
+      x = e.clientX; y = e.clientY;
+      const t = e.target.closest && e.target.closest('[data-cursor]');
+      const label = t ? (t.classList.contains('is-fallen') ? 'Throw' : t.dataset.cursor) : '';
+      if (label) { if (pill.textContent !== label) pill.textContent = label; if (!on) { px = x; py = y; } }
+      on = !!label; pill.classList.toggle('on', on);
+      pill.classList.toggle('inv', !!(t && t.closest('.editor, .ep-media')));
+      if (!raf) raf = requestAnimationFrame(follow);
+    }, { passive: true });
+    document.addEventListener('pointerleave', () => { on = false; pill.classList.remove('on'); });
+  }
+
+  /* ---------- work: move across a film to scrub it ---------- */
+  if (fine) $$('.ep-media').forEach(m => {
+    const v = $('video', m), bar = $('.scrub i', m), tc = $('.scrub-tc', m);
+    let pending = null, busy = false;
+    const seek = () => {
+      if (pending == null || busy || !v.duration) return;
+      busy = true; v.currentTime = pending * v.duration; pending = null;
+    };
+    v.addEventListener('seeked', () => { busy = false; seek(); });
+    m.addEventListener('pointerenter', () => { if (!v.src) v.src = v.dataset.src; m.classList.add('is-scrubbing'); v.pause(); });
+    m.addEventListener('pointermove', e => {
+      const r = m.getBoundingClientRect(), k = clamp((e.clientX - r.left) / r.width, 0, 1);
+      bar.style.width = (k * 100).toFixed(2) + '%';
+      const t = k * (v.duration || 8);
+      tc.textContent = `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+      pending = k; seek();
+    });
+    m.addEventListener('pointerleave', () => { m.classList.remove('is-scrubbing'); if (!reduce) v.play().catch(() => {}); });
+  });
+
+  /* ---------- magnetic primary buttons ---------- */
+  if (fine && !reduce) $$('.btn-dark').forEach(b => {
+    b.addEventListener('pointermove', e => {
+      const r = b.getBoundingClientRect();
+      b.style.translate = `${((e.clientX - r.left - r.width / 2) * .18).toFixed(1)}px ${((e.clientY - r.top - r.height / 2) * .3).toFixed(1)}px`;
+    });
+    b.addEventListener('pointerleave', () => { b.style.translate = ''; });
+  });
 
   /* ---------- copy email ---------- */
   const copy = $('#copy');

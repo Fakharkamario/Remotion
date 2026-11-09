@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Launch Studio makes launch films, product demos and motion for product teams. Scripted, animated and scored in-house.">
-<meta name="theme-color" content="#f4f3ee">
+<meta name="theme-color" content="#fafafa">
 <link rel="icon" href="assets/img/mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,21 +55,21 @@
 <section class="hero" id="hero" aria-labelledby="hero-title">
   <div class="stage" id="stage">
 
-    <div class="obj" data-kind="rocket" style="--x:16%;--y:24%;--w:clamp(120px,15vw,220px);--r:-14deg">
-      <div class="obj-in"><img src="assets/img/obj-rocket.png" alt="" draggable="false"><canvas></canvas></div>
+    <div class="obj" data-cursor="Grab" data-kind="rocket" style="--x:16%;--y:24%;--w:clamp(120px,15vw,220px);--r:-14deg">
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-rocket.png" alt="" draggable="false"><canvas></canvas></div>
     </div>
-    <div class="obj" data-kind="clap" style="--x:50%;--y:18%;--w:clamp(110px,12vw,180px);--r:6deg">
-      <div class="obj-in"><img src="assets/img/obj-clap.png" alt="" draggable="false"><canvas></canvas></div>
+    <div class="obj" data-cursor="Grab" data-kind="clap" style="--x:50%;--y:18%;--w:clamp(110px,12vw,180px);--r:6deg">
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clap.png" alt="" draggable="false"><canvas></canvas></div>
     </div>
-    <div class="obj obj-sm-hide" data-kind="key" style="--x:84%;--y:27%;--w:clamp(90px,9vw,140px);--r:10deg">
-      <div class="obj-in"><img src="assets/img/obj-key.png" alt="" draggable="false"><canvas></canvas></div>
+    <div class="obj obj-sm-hide" data-cursor="Grab" data-kind="key" style="--x:84%;--y:27%;--w:clamp(90px,9vw,140px);--r:10deg">
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-key.png" alt="" draggable="false"><canvas></canvas></div>
     </div>
-    <div class="obj obj-clock" data-kind="clock" style="--x:78%;--y:73%;--w:clamp(150px,17vw,250px);--r:-8deg">
-      <div class="obj-in"><img src="assets/img/obj-clock.png" alt="" draggable="false"><canvas></canvas></div>
+    <div class="obj obj-clock" data-cursor="Grab" data-kind="clock" style="--x:78%;--y:73%;--w:clamp(150px,17vw,250px);--r:-8deg">
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clock.png" alt="" draggable="false"><canvas></canvas></div>
     </div>
 
-    <div class="obj obj-ui obj-notif" style="--x:20%;--y:75%;--w:clamp(230px,22vw,300px);--r:0deg">
-      <div class="obj-in">
+    <div class="obj obj-ui obj-notif" data-cursor="Grab" style="--x:20%;--y:75%;--w:clamp(230px,22vw,300px);--r:0deg">
+      <div class="obj-in" data-cursor="Grab">
         <div class="notif">
           <div class="notif-card">
             <span class="avatar" aria-hidden="true">M</span>
@@ -81,8 +81,8 @@
       </div>
     </div>
 
-    <div class="obj obj-ui obj-sm-hide" style="--x:14%;--y:50%;--w:clamp(200px,17vw,240px);--r:-4deg">
-      <div class="obj-in">
+    <div class="obj obj-ui obj-sm-hide" data-cursor="Grab" style="--x:14%;--y:50%;--w:clamp(200px,17vw,240px);--r:-4deg">
+      <div class="obj-in" data-cursor="Grab">
         <div class="render">
           <div class="render-top"><span class="file-ico" aria-hidden="true"></span><b>launch_film_final.mp4</b></div>
           <span class="render-bar"><i></i></span>
@@ -91,8 +91,8 @@
       </div>
     </div>
 
-    <div class="obj obj-ui obj-sm-hide" style="--x:87%;--y:50%;--w:clamp(78px,7vw,104px);--r:12deg">
-      <div class="obj-in"><div class="sticker"><span class="mark" aria-hidden="true"></span></div></div>
+    <div class="obj obj-ui obj-sm-hide" data-cursor="Grab" style="--x:87%;--y:50%;--w:clamp(78px,7vw,104px);--r:12deg">
+      <div class="obj-in" data-cursor="Grab"><div class="sticker"><span class="mark" aria-hidden="true"></span></div></div>
     </div>
 
     <div class="hero-copy">
@@ -102,6 +102,7 @@
     </div>
   </div>
   <p class="hero-hint" id="hero-hint">Touch an object</p>
+  <button type="button" class="reset" id="reset" hidden>Put everything back</button>
 </section>
 
 <!-- ============ STATEMENT ============ -->
@@ -114,8 +115,9 @@
   <h2 class="sr-only" id="work-title">Selected work</h2>
 
   <article class="ep">
-    <button class="ep-media" type="button" data-play="dig-ai" aria-label="Watch the DIG AI launch film">
+    <button class="ep-media" type="button" data-cursor="Play" data-play="dig-ai" aria-label="Watch the DIG AI launch film">
       <video data-src="assets/video/dig-ai-preview.mp4" poster="assets/img/dig-ai-poster.jpg" muted loop playsinline preload="none"></video>
+      <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
     <div class="ep-text">
@@ -127,8 +129,9 @@
   </article>
 
   <article class="ep ep-flip">
-    <button class="ep-media" type="button" data-play="latentgraph" aria-label="Watch the LatentGraph launch film">
+    <button class="ep-media" type="button" data-cursor="Play" data-play="latentgraph" aria-label="Watch the LatentGraph launch film">
       <video data-src="assets/video/latentgraph-preview.mp4" poster="assets/img/latentgraph-poster.jpg" muted loop playsinline preload="none"></video>
+      <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
     <div class="ep-text">
@@ -140,8 +143,9 @@
   </article>
 
   <article class="ep">
-    <button class="ep-media" type="button" data-play="island" aria-label="Watch the Island feature film">
+    <button class="ep-media" type="button" data-cursor="Play" data-play="island" aria-label="Watch the Island feature film">
       <video data-src="assets/video/island-preview.mp4" poster="assets/img/island-poster.jpg" muted loop playsinline preload="none"></video>
+      <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
     <div class="ep-text">
@@ -284,8 +288,8 @@
 
 <!-- ============ DELIVERABLES strip ============ -->
 <section class="deliver" aria-labelledby="deliver-title">
-  <div class="wrap"><h2 class="left-title" id="deliver-title">More than a finished video.<br>Every project ships with</h2></div>
-  <div class="strip" id="strip" tabindex="0" aria-label="Deliverables, scroll sideways">
+  <div class="wrap"><h2 class="left-title" id="deliver-title">More than a finished video.</h2></div>
+  <div class="strip" id="strip" tabindex="0" data-cursor="Drag" aria-label="Deliverables, scroll sideways">
     <figure class="dcard">
       <div class="dv dv-film"><span class="dv-play"></span><span class="dv-prog"><i></i></span><span class="dv-time">0:45</span></div>
       <figcaption><em>Core film</em> built around your product, audience and message.</figcaption>
@@ -315,33 +319,28 @@
   <div class="split">
     <div class="split-l">
       <h2 class="left-title" id="pricing-title">Starting rates,<br>out in the open.</h2>
-      <p class="muted">Final pricing is confirmed once the brief, creative direction and timeline are agreed.</p>
-    </div>
-    <ul class="rates">
-      <li><div><b>Social package</b><span>Short social-first edits in every format</span></div><em>from $750</em></li>
-      <li><div><b>Feature video</b><span>One feature, explained clearly</span></div><em>from $1,500</em></li>
-      <li><div><b>Launch film</b><span>The hero video for launch day</span></div><em>from $2,500</em></li>
-      <li><div><b>Brand film</b><span>The story behind the product</span></div><em>from $3,500</em></li>
-    </ul>
-  </div>
-
-  <div class="est" id="estimate">
-    <div class="est-l">
-      <p class="est-title">Estimate your project</p>
-      <div class="seg" data-group="type" role="group" aria-label="Project type">
-        <button type="button" data-value="social">Social</button><button type="button" data-value="feature">Feature</button><button type="button" data-value="launch" class="on">Launch film</button><button type="button" data-value="brand">Brand film</button>
-      </div>
-      <div class="seg" data-group="level" role="group" aria-label="Production level">
-        <button type="button" data-value="standard" class="on">Standard</button><button type="button" data-value="premium">Premium</button><button type="button" data-value="cinematic">Cinematic</button>
-      </div>
-      <div class="seg" data-group="speed" role="group" aria-label="Turnaround">
-        <button type="button" data-value="normal" class="on">2–3 weeks</button><button type="button" data-value="fast">1–2 weeks</button><button type="button" data-value="rush">Under 7 days</button>
+      <p class="muted">Pick a project, a level and a timeline. Final pricing is confirmed once the brief is agreed.</p>
+      <div class="est-sum" id="estimate" aria-live="polite">
+        <span class="label">Ballpark range</span>
+        <p class="est-val" id="est-val">$2,500 – $3,750</p>
+        <a class="btn btn-dark" href="#contact">Discuss the brief</a>
       </div>
     </div>
-    <div class="est-r" aria-live="polite">
-      <span class="label">Ballpark range</span>
-      <p class="est-val" id="est-val">$2,500 – $3,750</p>
-      <a class="btn btn-dark" href="#contact">Discuss the brief</a>
+    <div class="split-r">
+      <ul class="rates" role="radiogroup" aria-label="Project type">
+        <li><button type="button" role="radio" aria-checked="false" data-value="social"><span class="rate-name"><b>Social package</b><span>Short social-first edits in every format</span></span><em>from $750</em></button></li>
+        <li><button type="button" role="radio" aria-checked="false" data-value="feature"><span class="rate-name"><b>Feature video</b><span>One feature, explained clearly</span></span><em>from $1,500</em></button></li>
+        <li><button type="button" role="radio" aria-checked="true" data-value="launch"><span class="rate-name"><b>Launch film</b><span>The hero video for launch day</span></span><em>from $2,500</em></button></li>
+        <li><button type="button" role="radio" aria-checked="false" data-value="brand"><span class="rate-name"><b>Brand film</b><span>The story behind the product</span></span><em>from $3,500</em></button></li>
+      </ul>
+      <div class="est-opts">
+        <div class="seg" data-group="level" role="group" aria-label="Production level">
+          <button type="button" data-value="standard" class="on">Standard</button><button type="button" data-value="premium">Premium</button><button type="button" data-value="cinematic">Cinematic</button>
+        </div>
+        <div class="seg" data-group="speed" role="group" aria-label="Turnaround">
+          <button type="button" data-value="normal" class="on">2–3 weeks</button><button type="button" data-value="fast">1–2 weeks</button><button type="button" data-value="rush">Under 7 days</button>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -366,12 +365,12 @@
       <a class="btn btn-dark" href="mailto:hello@thelaunchstudio.org">Start a project</a>
       <p class="cta-mail"><span id="email">hello@thelaunchstudio.org</span> <button type="button" class="link" id="copy">Copy</button></p>
     </div>
-    <div class="ring-wrap" aria-hidden="true">
-      <svg class="ring" id="ring" viewBox="0 0 400 400">
+    <div class="ring-wrap" id="ring-wrap">
+      <svg class="ring" id="ring" viewBox="0 0 400 400" aria-hidden="true">
         <defs><path id="circle" d="M200,200 m-150,0 a150,150 0 1,1 300,0 a150,150 0 1,1 -300,0"/></defs>
         <text><textPath href="#circle" id="ring-text">Laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaunch</textPath></text>
       </svg>
-      <img class="ring-img" src="assets/img/obj-rocket.png" alt="">
+      <button type="button" class="ring-btn" id="launch" data-cursor="Launch" aria-label="Launch the rocket"><img class="ring-img" src="assets/img/obj-rocket.png" alt=""></button>
     </div>
   </div>
 
@@ -394,6 +393,8 @@
   <div class="player-head"><p id="player-title">Film</p><button type="button" class="player-x" id="player-close" aria-label="Close video">×</button></div>
   <video id="player-video" controls playsinline preload="none"></video>
 </dialog>
+
+<div class="cursor-pill" id="cursor-pill" aria-hidden="true"></div>
 
 <script src="vendor/matter.min.js" defer></script>
 <script src="js/site.js" defer></script>
