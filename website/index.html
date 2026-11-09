@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Launch Studio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Launch Studio makes launch videos, product demos and motion for product teams. Scripted, animated and scored in-house.">
+<meta name="theme-color" content="#f4f3ee">
+<link rel="icon" href="assets/img/mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <div class="nav-pill">
+    <a class="brand" href="#top" aria-label="Launch Studio home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-word">Launch<i>Studio</i></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#process">Process</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-ink nav-cta" href="#contact">Start a project <span class="arr" aria-hidden="true">↗</span></a>
+    <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"><span></span><span></span></button>
+  </div>
+</header>
+<div class="mobile-menu" id="mobile-menu" hidden>
+  <a href="#work">Work</a><a href="#services">Services</a><a href="#process">Process</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
+</div>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="hero wrap" aria-labelledby="hero-title">
+  <canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas>
+  <div class="hero-fallback" aria-hidden="true"></div>
+
+  <div class="hero-top">
+    <span class="tag"><b class="dot"></b> Independent launch studio</span>
+  </div>
+
+  <h1 class="hero-title" id="hero-title">
+    <span class="line"><span>We make</span></span>
+    <span class="line"><span>products</span></span>
+    <span class="line"><span><em>impossible</em> to</span></span>
+    <span class="line"><span>ignore.</span></span>
+  </h1>
+
+  <div class="hero-bottom">
+    <div class="hero-copy">
+      <p class="lede">Launch videos, product demos and motion for teams shipping something new. Scripted, storyboarded, animated and scored in-house, by the same senior people from first call to final export.</p>
+      <div class="cta-row">
+        <a class="btn btn-acid btn-lg" href="#contact">Start a project <span class="arr" aria-hidden="true">↗</span></a>
+        <button class="btn btn-ghost btn-lg" type="button" data-play="reel"><span class="play-ico" aria-hidden="true"></span> Watch the reel</button>
+      </div>
+    </div>
+
+    <button class="reel-card" type="button" data-play="reel" aria-label="Play the showreel">
+      <video src="assets/video/reel-loop.mp4" poster="assets/img/reel-poster.jpg" autoplay muted loop playsinline preload="metadata"></video>
+      <span class="reel-label mono"><b class="rec"></b> Reel 2026</span>
+      <span class="reel-play"><span class="play-ico" aria-hidden="true"></span></span>
+    </button>
+  </div>
+
+  <dl class="hero-stats">
+    <div><dt>Videos shipped</dt><dd data-count="200">200+</dd></div>
+    <div><dt>Markets reached</dt><dd data-count="25">25+</dd></div>
+    <div><dt>Fastest turnaround</dt><dd>24h</dd></div>
+    <div><dt>Typical film</dt><dd>2–3 wks</dd></div>
+  </dl>
+</section>
+
+<!-- ============ CLIENTS ============ -->
+<section class="clients" aria-label="Clients">
+  <div class="wrap clients-head">
+    <p class="mono muted">Trusted by teams that move fast</p>
+  </div>
+  <div class="marquee" id="marquee">
+    <div class="marquee-track">
+      <div class="marquee-set">
+        <span class="logo logo-img" style="--src:url(../assets/logos/island.png);--ar:3.89" role="img" aria-label="Island"></span>
+        <span class="logo logo-word">LatentGraph</span>
+        <span class="logo logo-img" style="--src:url(../assets/logos/willow.png);--ar:4.44" role="img" aria-label="Willow"></span>
+        <span class="logo logo-word logo-serif">Blonde Waterfall</span>
+        <span class="logo logo-img logo-tall" style="--src:url(../assets/logos/g.png);--ar:.67" role="img" aria-label="G"></span>
+        <span class="logo logo-img" style="--src:url(../assets/logos/shapes.png);--ar:4.33" role="img" aria-label="Shapes"></span>
+        <span class="logo logo-word">ands.</span>
+        <span class="logo logo-img" style="--src:url(../assets/logos/mars.png);--ar:4.1" role="img" aria-label="Mars"></span>
+        <span class="logo logo-word logo-round">Pointy</span>
+        <span class="logo logo-word logo-serif">onubello</span>
+        <span class="logo logo-word">DIG AI</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STATEMENT ============ -->
+<section class="statement wrap" aria-label="Our approach">
+  <p class="statement-text" id="statement">Your product is complicated. Your story shouldn't be. Nobody reads the feature list. They watch the forty-five seconds that make it obvious. <em>We make those forty-five seconds.</em></p>
+</section>
+
+<!-- ============ WORK ============ -->
+<section class="work band-ink" id="work" aria-labelledby="work-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Selected work</p>
+      <h2 id="work-title">Recent launches,<br><em>made to move.</em></h2>
+      <p class="sec-sub">Three from a wider mix of launch films, product stories and feature videos. Hover to preview. Click to watch with sound.</p>
+    </div>
+
+    <div class="work-grid">
+      <article class="project project-xl" data-play="dig-ai" tabindex="0" role="button" aria-label="Watch DIG AI launch video">
+        <div class="project-media">
+          <video data-src="assets/video/dig-ai-preview.mp4" poster="assets/img/dig-ai-poster.jpg" muted loop playsinline preload="none"></video>
+          <span class="project-pill"><span class="play-ico" aria-hidden="true"></span> Watch film</span>
+          <span class="project-time mono">0:35</span>
+        </div>
+        <div class="project-meta">
+          <h3>DIG AI</h3>
+          <p>Product launch · Motion · Sound</p>
+          <span class="mono">2026</span>
+        </div>
+      </article>
+
+      <article class="project" data-play="latentgraph" tabindex="0" role="button" aria-label="Watch LatentGraph launch video">
+        <div class="project-media">
+          <video data-src="assets/video/latentgraph-preview.mp4" poster="assets/img/latentgraph-poster.jpg" muted loop playsinline preload="none"></video>
+          <span class="project-pill"><span class="play-ico" aria-hidden="true"></span> Watch film</span>
+          <span class="project-time mono">1:36</span>
+        </div>
+        <div class="project-meta">
+          <h3>LatentGraph</h3>
+          <p>Launch · Motion · Direction</p>
+          <span class="mono">2026</span>
+        </div>
+      </article>
+
+      <article class="project" data-play="island" tabindex="0" role="button" aria-label="Watch Island feature video">
+        <div class="project-media">
+          <video data-src="assets/video/island-preview.mp4" poster="assets/img/island-poster.jpg" muted loop playsinline preload="none"></video>
+          <span class="project-pill"><span class="play-ico" aria-hidden="true"></span> Watch film</span>
+          <span class="project-time mono">1:00</span>
+        </div>
+        <div class="project-meta">
+          <h3>Island</h3>
+          <p>Campaign · Motion · Features</p>
+          <span class="mono">2026</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="work-foot">
+      <p>There's more where that came from.</p>
+      <a class="btn btn-paper" href="https://vimeo.com/thelaunchstudio?fl=pp&amp;fe=sh" target="_blank" rel="noopener noreferrer">Full portfolio on Vimeo <span class="arr" aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAYGROUND (physics) ============ -->
+<section class="playground wrap" aria-labelledby="play-title">
+  <div class="play-head">
+    <h2 id="play-title">Everything a launch needs.<br><em>One studio.</em></h2>
+    <p class="sec-sub">Strategy, script, edit, motion and sound under one roof, so nothing gets lost between handoffs. <span class="hint mono">Grab one. Throw it.</span></p>
+  </div>
+  <div class="pit" id="pit" aria-label="What we make">
+    <span class="chip chip-acid">Launch films</span>
+    <span class="chip">Product demos</span>
+    <span class="chip chip-ink">Feature videos</span>
+    <span class="chip">UI animation</span>
+    <span class="chip chip-outline">Scripts</span>
+    <span class="chip">Storyboards</span>
+    <span class="chip chip-ink">Sound design</span>
+    <span class="chip chip-outline">Social cutdowns</span>
+    <span class="chip">Paid ad edits</span>
+    <span class="chip chip-acid">Motion systems</span>
+    <span class="chip chip-outline">Brand films</span>
+    <span class="chip">Customer stories</span>
+    <span class="chip chip-ink">9:16 · 1:1 · 16:9</span>
+    <span class="chip">Explainers</span>
+    <span class="chip chip-disc chip-acid" aria-label="Launch Studio"><span class="brand-mark" aria-hidden="true"></span></span>
+    <span class="chip chip-disc chip-ink mono">24h</span>
+    <span class="chip chip-square chip-outline" aria-hidden="true">↗</span>
+  </div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="services wrap" id="services" aria-labelledby="services-title">
+  <div class="sec-head">
+    <p class="eyebrow">Services</p>
+    <h2 id="services-title">Four jobs a video can do.<br><em>We do all four.</em></h2>
+  </div>
+  <div class="svc">
+    <ol class="svc-list" id="svc-list">
+      <li class="svc-item is-active" data-media="dig-ai">
+        <button type="button" class="svc-btn" aria-expanded="true"><span class="svc-name">Launch</span><span class="svc-num mono">Launch films · Feature drops</span></button>
+        <div class="svc-body"><p>Make a new product or feature feel clear, credible and worth stopping the scroll for, on the one day it matters most.</p></div>
+        <span class="svc-bar"><i></i></span>
+      </li>
+      <li class="svc-item" data-media="latentgraph">
+        <button type="button" class="svc-btn" aria-expanded="false"><span class="svc-name">Explain</span><span class="svc-num mono">Demos · Explainers</span></button>
+        <div class="svc-body"><p>Turn complex workflows, interfaces and technical ideas into a story people understand the first time they see it.</p></div>
+        <span class="svc-bar"><i></i></span>
+      </li>
+      <li class="svc-item" data-media="island">
+        <button type="button" class="svc-btn" aria-expanded="false"><span class="svc-name">Convert</span><span class="svc-num mono">Ads · Social cuts</span></button>
+        <div class="svc-body"><p>Product films, paid edits and social cutdowns built to move an audience toward the button you care about.</p></div>
+        <span class="svc-bar"><i></i></span>
+      </li>
+      <li class="svc-item" data-media="reel">
+        <button type="button" class="svc-btn" aria-expanded="false"><span class="svc-name">Build trust</span><span class="svc-num mono">Customer stories · Brand</span></button>
+        <div class="svc-body"><p>Customer stories and brand films that put the proof behind your product where nobody can miss it.</p></div>
+        <span class="svc-bar"><i></i></span>
+      </li>
+    </ol>
+    <div class="svc-stage" aria-hidden="true">
+      <video id="svc-video" src="assets/video/dig-ai-preview.mp4" poster="assets/img/dig-ai-poster.jpg" muted loop playsinline autoplay preload="none"></video>
+      <span class="svc-caption mono" id="svc-caption">DIG AI / launch</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROCESS ============ -->
+<section class="process band-paper2" id="process" aria-labelledby="process-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">How a launch actually runs</p>
+      <h2 id="process-title">Brief to launch day.<br><em>No mystery handoffs.</em></h2>
+    </div>
+    <div class="track" id="track">
+      <div class="track-line"><i id="track-fill"></i><span class="track-rocket brand-mark" id="track-rocket" aria-hidden="true"></span></div>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n mono">01 / 04</span>
+          <h3>Discover</h3>
+          <p>One kickoff call and your assets. We learn how the product works, who it's for and what makes it different, then come back with a creative direction and a plan.</p>
+          <span class="step-t mono">Days 1–3</span>
+        </li>
+        <li class="step">
+          <span class="step-n mono">02 / 04</span>
+          <h3>Shape</h3>
+          <p>Script first. Your approval second. Storyboard and visual direction third. Nothing gets animated until the story holds up on paper.</p>
+          <span class="step-t mono">Week 1</span>
+        </li>
+        <li class="step">
+          <span class="step-n mono">03 / 04</span>
+          <h3>Make</h3>
+          <p>Edit, motion, sound and product UI come together in one controlled production, with focused feedback rounds instead of endless threads.</p>
+          <span class="step-t mono">Week 2</span>
+        </li>
+        <li class="step">
+          <span class="step-n mono">04 / 04</span>
+          <h3>Polish &amp; ship</h3>
+          <p>We refine every frame, cut the versions you need and hand over a launch-ready package for your site, socials, ads and deck.</p>
+          <span class="step-t mono">Week 3 · Launch</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="pricing wrap" id="pricing" aria-labelledby="pricing-title">
+  <div class="sec-head">
+    <p class="eyebrow">Offers</p>
+    <h2 id="pricing-title">Launching a feature? Telling the whole story?<br><em>There's a video for that.</em></h2>
+  </div>
+
+  <div class="offers">
+    <article class="offer">
+      <header><p class="mono muted">Feeds &amp; paid</p><h3>Social package</h3></header>
+      <p class="price"><small>from</small> $750</p>
+      <ul>
+        <li>Short, social-first edits</li>
+        <li>Vertical, square and wide formats</li>
+        <li>Captions, music and sound</li>
+        <li>Ready for launch posts and ads</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" type="button" data-pick="social">I need this <span class="arr" aria-hidden="true">→</span></button>
+    </article>
+    <article class="offer">
+      <header><p class="mono muted">One feature, crystal clear</p><h3>Feature video</h3></header>
+      <p class="price"><small>from</small> $1,500</p>
+      <ul>
+        <li>Concept and script</li>
+        <li>Product UI animation</li>
+        <li>Sound design and mix</li>
+        <li>Cutdowns for socials</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" type="button" data-pick="feature">I need this <span class="arr" aria-hidden="true">→</span></button>
+    </article>
+    <article class="offer offer-hero">
+      <span class="offer-flag mono">Flagship</span>
+      <header><p class="mono">The launch-day hero</p><h3>Launch film</h3></header>
+      <p class="price"><small>from</small> $2,500</p>
+      <ul>
+        <li>Positioning, script and storyboard</li>
+        <li>Custom motion system for your brand</li>
+        <li>Original sound design</li>
+        <li>Full cutdown pack for every channel</li>
+      </ul>
+      <button class="btn btn-acid btn-block" type="button" data-pick="launch">I need this <span class="arr" aria-hidden="true">→</span></button>
+    </article>
+    <article class="offer">
+      <header><p class="mono muted">The story behind the product</p><h3>Brand film</h3></header>
+      <p class="price"><small>from</small> $3,500</p>
+      <ul>
+        <li>Narrative and creative direction</li>
+        <li>Cinematic edit and grade</li>
+        <li>Score and sound design</li>
+        <li>Web, social and presentation exports</li>
+      </ul>
+      <button class="btn btn-ghost btn-block" type="button" data-pick="brand">I need this <span class="arr" aria-hidden="true">→</span></button>
+    </article>
+  </div>
+
+  <div class="includes">
+    <p class="mono">Every project ships with</p>
+    <ul>
+      <li><b>Core film</b> built around your product, audience and message</li>
+      <li><b>Cutdowns</b> for social, paid, launch posts and product pages</li>
+      <li><b>Motion language</b> you can reuse across future releases</li>
+      <li><b>Launch-ready files</b> for web, social and your deck</li>
+    </ul>
+  </div>
+
+  <!-- Estimator -->
+  <div class="estimator" id="estimate">
+    <div class="est-controls">
+      <h3>Know the range. <em>Then make it real.</em></h3>
+      <fieldset class="seg" data-group="type">
+        <legend class="mono">Project type</legend>
+        <button type="button" data-value="social">Social package</button>
+        <button type="button" data-value="feature">Feature video</button>
+        <button type="button" data-value="launch" class="is-on">Launch film</button>
+        <button type="button" data-value="brand">Brand film</button>
+      </fieldset>
+      <fieldset class="seg" data-group="level">
+        <legend class="mono">Production level</legend>
+        <button type="button" data-value="standard" class="is-on">Standard</button>
+        <button type="button" data-value="premium">Premium</button>
+        <button type="button" data-value="cinematic">Cinematic</button>
+      </fieldset>
+      <fieldset class="seg" data-group="speed">
+        <legend class="mono">Turnaround</legend>
+        <button type="button" data-value="normal" class="is-on">2–3 weeks</button>
+        <button type="button" data-value="fast">1–2 weeks</button>
+        <button type="button" data-value="rush">Under 7 days</button>
+      </fieldset>
+    </div>
+    <aside class="est-out" aria-live="polite">
+      <p class="mono">Ballpark range</p>
+      <p class="est-value" id="est-value">$2,500 – $3,750</p>
+      <dl class="est-break" id="est-break">
+        <div><dt>Base</dt><dd>$2,500</dd></div>
+        <div><dt>Production</dt><dd>+$0</dd></div>
+        <div><dt>Speed</dt><dd>+$0</dd></div>
+      </dl>
+      <p class="est-note">Starting price. Your final quote is confirmed once the brief, creative direction and timeline are agreed.</p>
+      <a class="btn btn-acid btn-block" href="#contact">Discuss the brief <span class="arr" aria-hidden="true">↗</span></a>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="about wrap" aria-labelledby="about-title">
+  <h2 id="about-title">Small by design.<br><em>Senior by default.</em></h2>
+  <div class="about-copy">
+    <p class="big">Launch Studio is an independent creative studio helping ambitious product teams explain, launch and sell through high-end video.</p>
+    <p class="muted">The people shaping the strategy are the same people shaping the final frame. Fewer layers. Better decisions. More care in the work.</p>
+    <p class="mono muted">Remote / Worldwide · Based in Pakistan</p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq wrap" id="faq" aria-labelledby="faq-title">
+  <h2 id="faq-title">Before we<br><em>press export.</em></h2>
+  <div class="faq-list">
+    <details open><summary>How long does a video take?<span class="pm" aria-hidden="true"></span></summary><p>Most focused product films take around 2–3 weeks from kickoff to final delivery. Faster timelines can be scoped when you need them, and our fastest turnaround so far is 24 hours.</p></details>
+    <details><summary>Do you handle the script and concept?<span class="pm" aria-hidden="true"></span></summary><p>Yes. We can take the project from positioning, concept and script through storyboard, edit, motion, sound and final delivery.</p></details>
+    <details><summary>What do you need from us?<span class="pm" aria-hidden="true"></span></summary><p>Usually the product, your brand assets, access to the relevant screens and a clear goal. We help structure everything else.</p></details>
+    <details><summary>Can you make multiple versions?<span class="pm" aria-hidden="true"></span></summary><p>Yes. Cutdowns, social versions, alternate aspect ratios and additional exports can all be part of the scope.</p></details>
+    <details><summary>How does pricing work?<span class="pm" aria-hidden="true"></span></summary><p>The estimator above shows transparent starting rates for common scopes. Your final price is confirmed after we agree on the brief, creative direction and timeline. No surprises after that.</p></details>
+    <details><summary>Where are you based?<span class="pm" aria-hidden="true"></span></summary><p>We're a remote studio based in Pakistan, working with product teams worldwide across 25+ markets.</p></details>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="contact band-ink" id="contact" aria-labelledby="contact-title">
+  <div class="arc-wrap" aria-hidden="true">
+    <svg class="arc" id="arc" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid meet">
+      <defs><path id="arc-path" d="M 40 380 Q 600 -60 1160 380"/></defs>
+      <text><textPath href="#arc-path" startOffset="50%" text-anchor="middle" id="arc-text">Launch.</textPath></text>
+    </svg>
+  </div>
+  <div class="wrap contact-inner">
+    <p class="eyebrow">Have a brief?</p>
+    <h2 id="contact-title">Let's make something <em>worth watching.</em></h2>
+    <div class="email-row">
+      <a class="email" href="mailto:hello@thelaunchstudio.org">hello@thelaunchstudio.org</a>
+      <button class="btn btn-paper" type="button" id="copy-email">Copy email</button>
+    </div>
+    <p class="muted contact-note">Tell us what you're building and when it ships. We'll come back with a direction and a range.</p>
+    <ul class="socials">
+      <li><a href="https://www.linkedin.com/in/fakhar-kamario-0619522a9" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a></li>
+      <li><a href="https://x.com/fakharkamario" target="_blank" rel="noopener noreferrer">X ↗</a></li>
+      <li><a href="https://www.instagram.com/fakhar.kamario" target="_blank" rel="noopener noreferrer">Instagram ↗</a></li>
+      <li><a href="https://www.facebook.com/share/18apBfPCtT/" target="_blank" rel="noopener noreferrer">Facebook ↗</a></li>
+      <li><a href="https://vimeo.com/thelaunchstudio?fl=pp&amp;fe=sh" target="_blank" rel="noopener noreferrer">Vimeo ↗</a></li>
+    </ul>
+    <footer class="foot mono">
+      <span>Launch Studio</span><span>Video / Motion / Story</span><span>© 2026</span>
+    </footer>
+  </div>
+</section>
+</main>
+
+<!-- ============ VIDEO PLAYER ============ -->
+<dialog class="player" id="player" aria-label="Video player">
+  <div class="player-inner">
+    <div class="player-head">
+      <p class="mono" id="player-title">Reel</p>
+      <button type="button" class="player-close" id="player-close" aria-label="Close video">×</button>
+    </div>
+    <video id="player-video" controls playsinline preload="none"></video>
+  </div>
+</dialog>
+
+<script src="vendor/matter.min.js"></script>
+<script type="module" src="js/hero3d.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>
