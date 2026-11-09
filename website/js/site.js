@@ -8,16 +8,21 @@
 
   /* ---------- content config (edit here) ---------- */
   const FILMS = [
-    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=6' },
-    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=6' },
-    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=6' },
-    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=6' },
+    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=7' },
+    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=7' },
+    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=7' },
+    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=7' },
   ];
-  // Paste your calendar link here (Cal.com, Calendly, Google Calendar booking page...).
-  // While it's empty, "Book a call" opens an email with the visitor's preferred time.
-  const BOOKING_URL = '';
-  const CONTACT_EMAIL = 'hello@thelaunchstudio.org';
-  const CALL_TIMES = ['10:00', '11:30', '14:00', '16:30']; // shown in the visitor's own time zone
+  // Calendly event the booking card hands off to, and the schedule it mirrors.
+  // Keep HOST_DAYS / HOST_TIMES in step with the event's availability in Calendly.
+  const CALENDLY = {
+    url: 'https://calendly.com/fakharkamario/30min',
+    offset: '+05:00',                 // host time zone (Asia/Karachi, no daylight saving)
+    days: [1, 2, 3, 4, 5, 6],         // Mon–Sat (0 = Sun)
+    times: ['21:00', '21:30', '22:00', '22:30', '23:00', '23:30'],
+    daysAhead: 55,                    // how far ahead Calendly takes bookings
+    minNoticeMin: 60,                 // hide slots starting sooner than this
+  };
 
   /* ---------- lazy videos: load + play only while on screen ---------- */
   const lazyVideos = $$('video[data-src]');
@@ -376,64 +381,110 @@
     strip.addEventListener('pointerup', up); strip.addEventListener('pointercancel', up);
   }
 
-  /* ---------- book a call: every [data-book] goes to the calendar ---------- */
-  if (BOOKING_URL) $$('[data-book]').forEach(a => { a.href = BOOKING_URL; a.target = '_blank'; a.rel = 'noopener noreferrer'; });
-
+  /* ---------- book a call: our calendar, handed off to Calendly ---------- */
   const cal = $('#cal');
   if (cal) {
-    const grid = $('#cal-grid'), monthEl = $('#cal-month'), times = $('#cal-times'), slots = $('#cal-slots'), dayLabel = $('#cal-day-label'), bookBtn = $('#cal-book');
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const maxMonths = 2;
-    let view = new Date(today.getFullYear(), today.getMonth(), 1), picked = null, pickedTime = null;
+    const grid = $('#cal-grid'), monthEl = $('#cal-month'), times = $('#cal-times'), slotsEl = $('#cal-slots'), dayLabel = $('#cal-day-label');
+    const step1 = $('#cal-step-1'), step2 = $('#cal-step-2'), whenEl = $('#cal-when'), bookBtn = $('#cal-book');
+    const pad = n => String(n).padStart(2, '0');
+    const localKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
     const fmtMonth = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
     const fmtDay = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    try { $('#cal-tz').textContent = 'Times in your time zone (' + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ') + ')'; } catch (e) {}
+    const fmtTime = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+    let tzName = '';
+    try { tzName = Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' '); } catch (e) {}
+    if (tzName) $('#cal-tz').textContent = 'Times in your time zone (' + tzName + ')';
+
+    // every host slot for the coming weeks, as real instants, grouped by the visitor's local day
+    const byDay = new Map();
+    const now = Date.now(), hostShift = 5 * 60; // minutes; matches CALENDLY.offset
+    for (let i = -1; i <= CALENDLY.daysAhead; i++) {
+      const hostNow = new Date(now + hostShift * 60000);
+      const hd = new Date(Date.UTC(hostNow.getUTCFullYear(), hostNow.getUTCMonth(), hostNow.getUTCDate() + i));
+      if (!CALENDLY.days.includes(hd.getUTCDay())) continue;
+      const hostDate = `${hd.getUTCFullYear()}-${pad(hd.getUTCMonth() + 1)}-${pad(hd.getUTCDate())}`;
+      CALENDLY.times.forEach(t => {
+        const at = new Date(`${hostDate}T${t}:00${CALENDLY.offset}`);
+        if (at.getTime() < now + CALENDLY.minNoticeMin * 60000) return;
+        const k = localKey(at);
+        if (!byDay.has(k)) byDay.set(k, []);
+        byDay.get(k).push({ at, hostDate, hostTime: t });
+      });
+    }
+    byDay.forEach(list => list.sort((a, b) => a.at - b.at));
+    const keys = [...byDay.keys()].sort();
+    const first = keys.length ? new Date(keys[0] + 'T00:00') : new Date();
+    const last = keys.length ? new Date(keys[keys.length - 1] + 'T00:00') : new Date();
+    let view = new Date(first.getFullYear(), first.getMonth(), 1), pickedKey = null, slot = null;
 
     function draw() {
       monthEl.textContent = fmtMonth.format(view);
       grid.innerHTML = '';
-      const lead = (view.getDay() + 6) % 7, days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+      const lead = (view.getDay() + 6) % 7, n = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
       for (let i = 0; i < lead; i++) grid.appendChild(document.createElement('span'));
-      for (let d = 1; d <= days; d++) {
-        const date = new Date(view.getFullYear(), view.getMonth(), d), dow = date.getDay();
+      const todayKey = localKey(new Date());
+      for (let d = 1; d <= n; d++) {
+        const date = new Date(view.getFullYear(), view.getMonth(), d), k = localKey(date);
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'cal-day'; b.textContent = d; b.setAttribute('role', 'gridcell');
-        b.disabled = date <= today || dow === 0 || dow === 6;
-        if (+date === +today) b.classList.add('is-today');
-        b.setAttribute('aria-selected', String(!!picked && +picked === +date));
-        b.setAttribute('aria-label', fmtDay.format(date) + (b.disabled ? ', unavailable' : ''));
-        b.addEventListener('click', () => pickDay(date));
+        b.disabled = !byDay.has(k);
+        if (k === todayKey) b.classList.add('is-today');
+        b.setAttribute('aria-selected', String(k === pickedKey));
+        b.setAttribute('aria-label', fmtDay.format(date) + (b.disabled ? ', no times' : ''));
+        b.addEventListener('click', () => pickDay(k));
         grid.appendChild(b);
       }
-      $('#cal-prev').disabled = view.getFullYear() === today.getFullYear() && view.getMonth() === today.getMonth();
-      $('#cal-next').disabled = (view.getFullYear() - today.getFullYear()) * 12 + view.getMonth() - today.getMonth() >= maxMonths;
+      $('#cal-prev').disabled = view <= new Date(first.getFullYear(), first.getMonth(), 1);
+      $('#cal-next').disabled = view >= new Date(last.getFullYear(), last.getMonth(), 1);
     }
-    function pickDay(date) {
-      picked = date; pickedTime = null;
+    function pickDay(k) {
+      pickedKey = k; slot = null;
       draw();
-      dayLabel.textContent = fmtDay.format(date);
-      slots.innerHTML = '';
-      CALL_TIMES.forEach(t => {
+      dayLabel.textContent = fmtDay.format(new Date(k + 'T00:00'));
+      slotsEl.innerHTML = '';
+      byDay.get(k).forEach(s => {
         const b = document.createElement('button');
-        b.type = 'button'; b.className = 'cal-slot'; b.textContent = t; b.setAttribute('aria-pressed', 'false');
-        b.addEventListener('click', () => { pickedTime = t; $$('.cal-slot', slots).forEach(x => x.setAttribute('aria-pressed', String(x === b))); updBtn(); });
-        slots.appendChild(b);
+        b.type = 'button'; b.className = 'cal-slot'; b.textContent = fmtTime.format(s.at); b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', () => pickTime(s));
+        slotsEl.appendChild(b);
       });
       times.hidden = false;
-      updBtn();
+      updLink();
     }
-    function updBtn() {
-      const when = picked ? fmtDay.format(picked) + (pickedTime ? ' at ' + pickedTime : '') : '';
-      bookBtn.textContent = pickedTime ? 'Book ' + when : 'Book a call';
-      if (BOOKING_URL) { bookBtn.href = BOOKING_URL; return; }
-      const subject = 'Book a call with Launch Studio';
-      const body = (when ? 'Preferred time: ' + when + ' (' + (Intl.DateTimeFormat().resolvedOptions().timeZone || 'my time zone') + ')\n\n' : '') + 'What we are launching:\n\nLaunch date:\n';
-      bookBtn.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-      bookBtn.removeAttribute('target');
+    function pickTime(s) {
+      slot = s;
+      whenEl.textContent = fmtDay.format(s.at) + ' at ' + fmtTime.format(s.at);
+      step1.hidden = true; step2.hidden = false;
+      updLink();
+      setTimeout(() => $('#bk-name').focus({ preventScroll: true }), 50);
     }
+    $('#cal-back').addEventListener('click', () => { step2.hidden = true; step1.hidden = false; slot = null; pickDay(pickedKey); });
+
+    // Calendly link: chosen slot + whatever the visitor typed
+    function updLink() {
+      let url = CALENDLY.url;
+      const q = new URLSearchParams();
+      if (slot) {
+        url += `/${slot.hostDate}T${slot.hostTime}:00${CALENDLY.offset}`;
+        q.set('month', slot.hostDate.slice(0, 7)); q.set('date', slot.hostDate);
+      } else if (pickedKey) {
+        const s0 = byDay.get(pickedKey)[0];
+        q.set('month', s0.hostDate.slice(0, 7)); q.set('date', s0.hostDate);
+      }
+      const v = id => $(id).value.trim();
+      if (v('#bk-name')) q.set('name', v('#bk-name'));
+      if (v('#bk-email')) q.set('email', v('#bk-email'));
+      if (v('#bk-phone')) q.set('location', v('#bk-phone'));
+      if (v('#bk-notes')) q.set('a1', v('#bk-notes'));
+      const qs = q.toString();
+      bookBtn.href = url + (qs ? '?' + qs : '');
+      bookBtn.textContent = slot ? 'Continue to Calendly' : 'Open Calendly';
+    }
+    step2.addEventListener('input', updLink);
+    step2.addEventListener('submit', e => { e.preventDefault(); bookBtn.click(); });
     $('#cal-prev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); draw(); });
     $('#cal-next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); draw(); });
-    draw(); updBtn();
+    draw(); updLink();
   }
 
   /* ---------- CTA ring: turns with scroll ---------- */

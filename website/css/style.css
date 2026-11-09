@@ -365,6 +365,10 @@ h1,h2,h3{font-weight:500;letter-spacing:-.05em;line-height:1.02;text-wrap:balanc
 .book-points{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--ink)}
 .book-points li{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
 .cal{background:var(--card);border-radius:20px;padding:clamp(18px,2.6vw,30px);box-shadow:0 1px 0 rgba(0,0,0,.03);display:grid;gap:14px}
+.cal-host{display:flex;gap:12px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.cal-host b{display:block;font-weight:500;letter-spacing:-.02em}
+.cal-host span:not(.avatar):not(.mark){color:var(--muted);font-size:.88rem}
+.cal-step{display:grid;gap:14px}
 .cal-head{display:flex;justify-content:space-between;align-items:center}
 .cal-month{font-weight:500;font-size:1.15rem;letter-spacing:-.03em}
 .cal-nav{display:flex;gap:4px}
@@ -381,14 +385,26 @@ h1,h2,h3{font-weight:500;letter-spacing:-.05em;line-height:1.02;text-wrap:balanc
 .cal-day[aria-selected="true"]{background:var(--ink-2);color:var(--card);transform:scale(1.04)}
 .cal-times{display:grid;gap:10px;padding-top:6px;border-top:1px solid var(--line);animation:mini-in .4s var(--ease)}
 .cal-times-label{font-size:.92rem;color:var(--muted);padding-top:8px}
-.cal-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cal-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .cal-slot{padding:10px 0;border-radius:9px;border:1px solid var(--line);font-size:.9rem;font-variant-numeric:tabular-nums;transition:background-color .2s,color .2s,border-color .2s}
 .cal-slot:hover{border-color:var(--ink)}
 .cal-slot[aria-pressed="true"]{background:var(--ink-2);border-color:var(--ink-2);color:var(--card)}
+.cal-form{animation:mini-in .4s var(--ease)}
+.cal-back{display:inline-flex;align-items:center;gap:6px;justify-self:start;font-weight:500;font-size:1.05rem;letter-spacing:-.02em;padding:6px 10px 6px 4px;border-radius:8px;transition:background-color .2s}
+.cal-back:hover{background:var(--band)}
+.cal-back svg{width:15px;height:15px}
+.cal-form-note{color:var(--muted);font-size:.88rem}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:grid;gap:6px;font-size:.85rem;color:var(--muted)}
+.field input,.field textarea{font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%;min-width:0;resize:vertical;transition:border-color .2s,background-color .2s}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--ink);background:var(--card)}
+.field input::placeholder,.field textarea::placeholder{color:var(--faint)}
+@media (max-width:520px){.field-row{grid-template-columns:1fr}}
 .cal-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:6px}
 .cal-tz{font-size:.82rem;color:var(--faint)}
 #cal-book{min-width:0;white-space:normal;text-align:center}
-@media (max-width:860px){.book{grid-template-columns:1fr}.cal-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.book{grid-template-columns:1fr}}
+@media (max-width:420px){.cal-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------- faq ---------- */
 .faq{padding-block:clamp(40px,5vw,72px) clamp(90px,11vw,150px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px clamp(32px,6vw,96px)}
