@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@1,400;1,500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=5">
+<link rel="stylesheet" href="css/style.css?v=6">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -31,17 +31,17 @@
       <button type="button" class="np-btn" id="np-next" aria-label="Next film"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12 3v10M3 3l7 5-7 5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></button>
     </div>
 
-    <a class="btn btn-dark nav-cta" href="#contact">Start a project</a>
+    <a class="btn btn-dark nav-cta" href="#book" data-book>Book a call</a>
     <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span></button>
   </div>
   <nav class="menu" id="menu" hidden aria-label="Primary">
-    <a href="#work">Work</a><a href="#services">Services</a><a href="#process">Process</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
+    <a href="#work">Work</a><a href="#services">Services</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#book" data-book>Book a call</a>
   </nav>
 </header>
 
 <!-- mini player (opened from "Now playing") -->
 <aside class="mini" id="mini" hidden aria-label="Mini player">
-  <video id="mini-video" playsinline controls preload="metadata" poster="assets/img/reel-poster.jpg?v=5"></video>
+  <video id="mini-video" playsinline controls preload="metadata" poster="assets/img/reel-poster.jpg?v=6"></video>
   <div class="mini-bar">
     <span id="mini-title">Reel 2026</span>
     <span class="mini-actions">
@@ -58,16 +58,16 @@
   <div class="stage" id="stage">
 
     <div class="obj" data-cursor="Grab" data-kind="rocket" style="--x:16%;--y:24%;--w:clamp(120px,15vw,220px);--r:-14deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-rocket.png?v=5" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-rocket.png?v=6" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj" data-cursor="Grab" data-kind="clap" style="--x:50%;--y:18%;--w:clamp(110px,12vw,180px);--r:6deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clap.png?v=5" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clap.png?v=6" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj obj-sm-hide" data-cursor="Grab" data-kind="key" style="--x:84%;--y:27%;--w:clamp(90px,9vw,140px);--r:10deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-key.png?v=5" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-key.png?v=6" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj obj-clock" data-cursor="Grab" data-kind="clock" style="--x:78%;--y:73%;--w:clamp(150px,17vw,250px);--r:-8deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clock.png?v=5" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clock.png?v=6" alt="" draggable="false"><canvas></canvas></div>
     </div>
 
     <div class="obj obj-ui obj-notif" data-cursor="Grab" style="--x:20%;--y:75%;--w:clamp(230px,22vw,300px);--r:0deg">
@@ -100,6 +100,7 @@
     <div class="hero-copy">
       <h1 id="hero-title">Make your launch<br>impossible to ignore.</h1>
       <p>Launch films, product demos and motion for teams shipping something new.</p>
+      <a class="btn btn-dark hero-cta" href="#book" data-book>Book a call</a>
       <a class="down" href="#statement" aria-label="Scroll to content"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
@@ -110,7 +111,7 @@
 <!-- ============ SHOWREEL: silent loop, grows as you scroll ============ -->
 <section class="reel" id="reel" aria-label="Showreel">
   <div class="reel-frame" id="reel-frame">
-    <video data-src="assets/video/reel-loop.mp4?v=5" poster="assets/img/reel-poster.jpg?v=5" muted loop playsinline autoplay preload="none" aria-hidden="true" tabindex="-1" disablepictureinpicture></video>
+    <video data-src="assets/video/reel-loop.mp4?v=6" poster="assets/img/reel-poster.jpg?v=6" muted loop playsinline autoplay preload="none" aria-hidden="true" tabindex="-1" disablepictureinpicture></video>
   </div>
 </section>
 
@@ -125,7 +126,7 @@
 
   <article class="ep">
     <button class="ep-media" type="button" data-cursor="Play" data-play="dig-ai" aria-label="Watch the DIG AI launch film">
-      <video data-src="assets/video/dig-ai-preview.mp4?v=5" poster="assets/img/dig-ai-poster.jpg?v=5" muted loop playsinline preload="none"></video>
+      <video data-src="assets/video/dig-ai-preview.mp4?v=6" poster="assets/img/dig-ai-poster.jpg?v=6" muted loop playsinline preload="none"></video>
       <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
@@ -133,13 +134,13 @@
       <p class="label">Product launch, 2026</p>
       <h3>DIG AI</h3>
       <p>Over half of social content is video. A one-minute launch film for an AI that tells brands what people are really saying about them.</p>
-      <img class="ep-obj" src="assets/img/obj-rocket.png?v=5" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-rocket.png?v=6" alt="" loading="lazy">
     </div>
   </article>
 
   <article class="ep ep-flip">
     <button class="ep-media" type="button" data-cursor="Play" data-play="latentgraph" aria-label="Watch the LatentGraph launch film">
-      <video data-src="assets/video/latentgraph-preview.mp4?v=5" poster="assets/img/latentgraph-poster.jpg?v=5" muted loop playsinline preload="none"></video>
+      <video data-src="assets/video/latentgraph-preview.mp4?v=6" poster="assets/img/latentgraph-poster.jpg?v=6" muted loop playsinline preload="none"></video>
       <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
@@ -147,13 +148,13 @@
       <p class="label">Launch film, 2026</p>
       <h3>LatentGraph</h3>
       <p>The engineering brain, explained. Architecture, intent and design decisions mapped out in 96 seconds.</p>
-      <img class="ep-obj" src="assets/img/obj-key.png?v=5" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-key.png?v=6" alt="" loading="lazy">
     </div>
   </article>
 
   <article class="ep">
     <button class="ep-media" type="button" data-cursor="Play" data-play="island" aria-label="Watch the Island feature film">
-      <video data-src="assets/video/island-preview.mp4?v=5" poster="assets/img/island-poster.jpg?v=5" muted loop playsinline preload="none"></video>
+      <video data-src="assets/video/island-preview.mp4?v=6" poster="assets/img/island-poster.jpg?v=6" muted loop playsinline preload="none"></video>
       <span class="scrub" aria-hidden="true"><i></i></span><span class="scrub-tc" aria-hidden="true">0:00</span>
       <span class="pill-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>Watch film</span>
     </button>
@@ -161,7 +162,7 @@
       <p class="label">Feature film, 2026</p>
       <h3>Island</h3>
       <p>The control plane for the agentic enterprise. Agents doing real work across a company's tools, shown on the company's terms.</p>
-      <img class="ep-obj" src="assets/img/obj-clap.png?v=5" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-clap.png?v=6" alt="" loading="lazy">
     </div>
   </article>
 
@@ -193,22 +194,22 @@
         <li class="tab is-on">
           <span class="tab-bar"><i></i></span>
           <button type="button" class="tab-btn" aria-expanded="true">Launch</button>
-          <div class="tab-body"><div><p>A launch film that makes a new product or feature feel clear, credible and worth stopping the scroll for, on the one day it matters most.</p><a class="link" href="#pricing">From $2,500 →</a></div></div>
+          <div class="tab-body"><div><p>A launch film that makes a new product or feature feel clear, credible and worth stopping the scroll for, on the one day it matters most.</p><a class="link" href="#book" data-book>Book a call →</a></div></div>
         </li>
         <li class="tab">
           <span class="tab-bar"><i></i></span>
           <button type="button" class="tab-btn" aria-expanded="false">Explain</button>
-          <div class="tab-body"><div><p>Product demos and explainers that turn complex workflows and interfaces into something people understand the first time.</p><a class="link" href="#pricing">From $1,500 →</a></div></div>
+          <div class="tab-body"><div><p>Product demos and explainers that turn complex workflows and interfaces into something people understand the first time.</p><a class="link" href="#book" data-book>Book a call →</a></div></div>
         </li>
         <li class="tab">
           <span class="tab-bar"><i></i></span>
           <button type="button" class="tab-btn" aria-expanded="false">Convert</button>
-          <div class="tab-body"><div><p>Paid edits and social cutdowns in every format, built to move an audience toward the button you care about.</p><a class="link" href="#pricing">From $750 →</a></div></div>
+          <div class="tab-body"><div><p>Paid edits and social cutdowns in every format, built to move an audience toward the button you care about.</p><a class="link" href="#book" data-book>Book a call →</a></div></div>
         </li>
         <li class="tab">
           <span class="tab-bar"><i></i></span>
           <button type="button" class="tab-btn" aria-expanded="false">Build trust</button>
-          <div class="tab-body"><div><p>Customer stories and brand films that put the proof behind your product where nobody can miss it.</p><a class="link" href="#pricing">From $3,500 →</a></div></div>
+          <div class="tab-body"><div><p>Customer stories and brand films that put the proof behind your product where nobody can miss it.</p><a class="link" href="#book" data-book>Book a call →</a></div></div>
         </li>
       </ol>
 
@@ -218,7 +219,7 @@
           <div class="post">
             <div class="post-head"><span class="avatar avatar-ink"><span class="mark"></span></span><div><b>Your product</b><small>Just now</small></div></div>
             <p>Introducing the new version. Watch the film.</p>
-            <div class="post-media"><video data-src="assets/video/reel-preview.mp4?v=5" muted loop playsinline preload="none"></video></div>
+            <div class="post-media"><video data-src="assets/video/reel-preview.mp4?v=6" muted loop playsinline preload="none"></video></div>
             <div class="post-stats"><span><svg viewBox="0 0 16 16"><path d="M8 13.5S2 10 2 6a3 3 0 0 1 6-1 3 3 0 0 1 6 1c0 4-6 7.5-6 7.5z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><b data-to="1284">0</b></span><span><svg viewBox="0 0 16 16"><path d="M3 6h8l-2-2M13 10H5l2 2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><b data-to="312">0</b></span><span><svg viewBox="0 0 16 16"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg><b data-to="48200">0</b></span></div>
           </div>
         </div>
@@ -241,7 +242,7 @@
         <!-- 3 Convert: aspect ratios -->
         <div class="scene scene-convert">
           <div class="frame">
-            <video data-src="assets/video/dig-ai-preview.mp4?v=5" muted loop playsinline preload="none"></video>
+            <video data-src="assets/video/dig-ai-preview.mp4?v=6" muted loop playsinline preload="none"></video>
             <span class="frame-cta">Try it free</span>
           </div>
           <div class="ratios"><span>16:9</span><span>1:1</span><span>9:16</span></div>
@@ -323,33 +324,35 @@
   </div>
 </section>
 
-<!-- ============ PRICING ============ -->
-<section class="pricing wrap" id="pricing" aria-labelledby="pricing-title">
-  <div class="split">
-    <div class="split-l">
-      <h2 class="left-title" id="pricing-title">Starting rates,<br>out in the open.</h2>
-      <p class="muted">Pick a project, a level and a timeline. Final pricing is confirmed once the brief is agreed.</p>
-      <div class="est-sum" id="estimate" aria-live="polite">
-        <span class="label">Ballpark range</span>
-        <p class="est-val" id="est-val">$2,500 – $3,750</p>
-        <a class="btn btn-dark" href="#contact">Discuss the brief</a>
+<!-- ============ BOOK A CALL ============ -->
+<section class="book wrap" id="book" aria-labelledby="book-title">
+  <div class="book-l">
+    <h2 class="left-title" id="book-title">Book a call.</h2>
+    <p class="book-sub">Twenty minutes, no deck needed. Tell us what you're launching and when.</p>
+    <ul class="book-points">
+      <li><span class="label">First</span>You walk us through the product and the launch date.</li>
+      <li><span class="label">Then</span>We come back with a creative direction and a timeline.</li>
+      <li><span class="label">After</span>If it's a fit, we start with the script.</li>
+    </ul>
+  </div>
+
+  <div class="cal" id="cal">
+    <div class="cal-head">
+      <p class="cal-month" id="cal-month">November 2026</p>
+      <div class="cal-nav">
+        <button type="button" id="cal-prev" aria-label="Previous month"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" id="cal-next" aria-label="Next month"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
-    <div class="split-r">
-      <ul class="rates" role="radiogroup" aria-label="Project type">
-        <li><button type="button" role="radio" aria-checked="false" data-value="social"><span class="rate-name"><b>Social package</b><span>Short social-first edits in every format</span></span><em>from $750</em></button></li>
-        <li><button type="button" role="radio" aria-checked="false" data-value="feature"><span class="rate-name"><b>Feature video</b><span>One feature, explained clearly</span></span><em>from $1,500</em></button></li>
-        <li><button type="button" role="radio" aria-checked="true" data-value="launch"><span class="rate-name"><b>Launch film</b><span>The hero video for launch day</span></span><em>from $2,500</em></button></li>
-        <li><button type="button" role="radio" aria-checked="false" data-value="brand"><span class="rate-name"><b>Brand film</b><span>The story behind the product</span></span><em>from $3,500</em></button></li>
-      </ul>
-      <div class="est-opts">
-        <div class="seg" data-group="level" role="group" aria-label="Production level">
-          <button type="button" data-value="standard" class="on">Standard</button><button type="button" data-value="premium">Premium</button><button type="button" data-value="cinematic">Cinematic</button>
-        </div>
-        <div class="seg" data-group="speed" role="group" aria-label="Turnaround">
-          <button type="button" data-value="normal" class="on">2–3 weeks</button><button type="button" data-value="fast">1–2 weeks</button><button type="button" data-value="rush">Under 7 days</button>
-        </div>
-      </div>
+    <div class="cal-dow" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+    <div class="cal-grid" id="cal-grid" role="grid" aria-label="Choose a day"></div>
+    <div class="cal-times" id="cal-times" hidden>
+      <p class="cal-times-label" id="cal-day-label">Pick a time</p>
+      <div class="cal-slots" id="cal-slots" role="group" aria-label="Choose a time"></div>
+    </div>
+    <div class="cal-foot">
+      <p class="cal-tz" id="cal-tz">Times in your time zone</p>
+      <a class="btn btn-dark" id="cal-book" href="#book" target="_blank" rel="noopener noreferrer">Book a call</a>
     </div>
   </div>
 </section>
@@ -371,7 +374,7 @@
   <div class="wrap cta-inner">
     <div class="cta-copy">
       <h2 id="cta-title">Good products deserve<br>good stories.</h2>
-      <a class="btn btn-dark" href="mailto:hello@thelaunchstudio.org">Start a project</a>
+      <a class="btn btn-dark" href="#book" data-book>Book a call</a>
       <p class="cta-mail"><span id="email">hello@thelaunchstudio.org</span> <button type="button" class="link" id="copy">Copy</button></p>
     </div>
     <div class="ring-wrap" id="ring-wrap">
@@ -379,7 +382,7 @@
         <defs><path id="circle" d="M200,200 m-150,0 a150,150 0 1,1 300,0 a150,150 0 1,1 -300,0"/></defs>
         <text><textPath href="#circle" id="ring-text">Laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaunch</textPath></text>
       </svg>
-      <button type="button" class="ring-btn" id="launch" data-cursor="Launch" aria-label="Launch the rocket"><img class="ring-img" src="assets/img/obj-rocket.png?v=5" alt=""></button>
+      <button type="button" class="ring-btn" id="launch" data-cursor="Launch" aria-label="Launch the rocket"><img class="ring-img" src="assets/img/obj-rocket.png?v=6" alt=""></button>
     </div>
   </div>
 
@@ -387,7 +390,7 @@
     <div class="foot-card">
       <a class="brand brand-lg" href="#top"><span class="mark" aria-hidden="true"></span><span>Launch Studio</span></a>
       <div class="foot-cols">
-        <div><p>Studio</p><a href="#work">Work</a><a href="#services">Services</a><a href="#process">Process</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a></div>
+        <div><p>Studio</p><a href="#work">Work</a><a href="#services">Services</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#book" data-book>Book a call</a></div>
         <div><p>Follow</p><a href="https://vimeo.com/thelaunchstudio?fl=pp&amp;fe=sh" target="_blank" rel="noopener noreferrer">Vimeo</a><a href="https://www.linkedin.com/in/fakhar-kamario-0619522a9" target="_blank" rel="noopener noreferrer">LinkedIn</a><a href="https://x.com/fakharkamario" target="_blank" rel="noopener noreferrer">X</a><a href="https://www.instagram.com/fakhar.kamario" target="_blank" rel="noopener noreferrer">Instagram</a><a href="https://www.facebook.com/share/18apBfPCtT/" target="_blank" rel="noopener noreferrer">Facebook</a></div>
         <div><p>Contact</p><a href="mailto:hello@thelaunchstudio.org">hello@thelaunchstudio.org</a><span>Remote, worldwide</span><span>Based in Pakistan</span></div>
       </div>
@@ -406,7 +409,7 @@
 <div class="cursor-pill" id="cursor-pill" aria-hidden="true"></div>
 
 <script src="vendor/matter.min.js" defer></script>
-<script src="js/site.js?v=5" defer></script>
-<script type="module" src="js/objects3d.js?v=5"></script>
+<script src="js/site.js?v=6" defer></script>
+<script type="module" src="js/objects3d.js?v=6"></script>
 </body>
 </html>

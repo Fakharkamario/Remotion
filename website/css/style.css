@@ -114,6 +114,7 @@ h1,h2,h3{font-weight:500;letter-spacing:-.05em;line-height:1.02;text-wrap:balanc
 .hero-copy{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92%,640px);text-align:center;display:grid;justify-items:center;gap:16px;z-index:1}
 .hero-copy h1{font-size:clamp(2.1rem,4.4vw,3.6rem)}
 .hero-copy p{color:var(--muted);max-width:40ch}
+.hero-cta{margin-top:6px}
 .down{display:grid;place-items:center;width:40px;height:40px;margin-top:6px;border-radius:50%;transition:background-color .2s}
 .down:hover{background:var(--band)}
 .down svg{width:16px;height:16px;animation:nudge 2s var(--ease) infinite}
@@ -357,31 +358,37 @@ h1,h2,h3{font-weight:500;letter-spacing:-.05em;line-height:1.02;text-wrap:balanc
 .dv-files i::after{content:"";position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
 @keyframes file-in{0%{opacity:0;transform:translateY(10px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
 
-/* ---------- pricing ---------- */
-.pricing{padding-block:clamp(70px,9vw,130px)}
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:32px clamp(32px,6vw,96px)}
-.split-l{display:grid;gap:18px;align-content:start}
-.split-l .muted{max-width:36ch}
-.split-r{display:grid;gap:22px;align-content:start}
-.rates{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
-.rates li{border-bottom:1px solid var(--line);padding:4px 0}
-.rates button{width:calc(100% + 24px);margin-inline:-12px;display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:16px 12px;border-radius:10px;text-align:left;transition:background-color .25s,color .25s}
-.rates button:hover{background:var(--band)}
-.rates button[aria-checked="true"]{background:var(--ink-2);color:var(--card)}
-.rate-name{display:grid;gap:2px;min-width:0}
-.rates b{font-weight:500;font-size:1.2rem;letter-spacing:-.03em}
-.rate-name span{color:var(--muted);font-size:.95rem;transition:color .25s}
-.rates button[aria-checked="true"] .rate-name span{color:rgba(255,255,255,.6)}
-.rates em{font-style:normal;font-size:1.2rem;font-weight:500;letter-spacing:-.03em;white-space:nowrap;font-variant-numeric:tabular-nums}
-.est-opts{display:grid;gap:10px}
-.seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--band);border-radius:10px;padding:4px;justify-self:start;max-width:100%}
-.seg button{padding:8px 14px;border-radius:7px;font-size:.9rem;color:var(--muted);transition:background-color .2s,color .2s}
-.seg button:hover{color:var(--ink)}
-.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.est-sum{display:grid;gap:10px;justify-items:start;margin-top:clamp(12px,3vw,36px)}
-.est-val{font-size:clamp(2rem,3.6vw,2.9rem);font-weight:500;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:10px;transition:opacity .15s}
-.est-val.is-changing{opacity:.25}
-@media (max-width:860px){.split{grid-template-columns:1fr}.est-sum{order:3}.split-l{display:contents}.split-l .left-title{order:1}.split-l>.muted{order:2}.split-r{order:2}}
+/* ---------- book a call ---------- */
+.book{padding-block:clamp(80px,10vw,140px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:40px clamp(32px,6vw,96px);align-items:start}
+.book-l{display:grid;gap:20px;align-content:start}
+.book-sub{color:var(--muted);font-size:1.12rem;max-width:34ch}
+.book-points{list-style:none;margin:16px 0 0;padding:0;border-top:1px solid var(--ink)}
+.book-points li{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:baseline;padding:16px 0;border-bottom:1px solid var(--line)}
+.cal{background:var(--card);border-radius:20px;padding:clamp(18px,2.6vw,30px);box-shadow:0 1px 0 rgba(0,0,0,.03);display:grid;gap:14px}
+.cal-head{display:flex;justify-content:space-between;align-items:center}
+.cal-month{font-weight:500;font-size:1.15rem;letter-spacing:-.03em}
+.cal-nav{display:flex;gap:4px}
+.cal-nav button{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;transition:background-color .2s}
+.cal-nav button:hover:not(:disabled){background:var(--band)}
+.cal-nav button:disabled{opacity:.25;cursor:default}
+.cal-nav svg{width:15px;height:15px}
+.cal-dow,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.cal-dow span{font-size:.75rem;color:var(--faint);padding-bottom:4px}
+.cal-day{height:clamp(38px,4.4vw,46px);border-radius:10px;font-size:.92rem;font-variant-numeric:tabular-nums;display:grid;place-items:center;position:relative;transition:background-color .2s,color .2s,transform .2s}
+.cal-day:not(:disabled):hover{background:var(--band)}
+.cal-day:disabled{color:var(--faint);opacity:.55;cursor:default}
+.cal-day.is-today::after{content:"";position:absolute;bottom:18%;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor}
+.cal-day[aria-selected="true"]{background:var(--ink-2);color:var(--card);transform:scale(1.04)}
+.cal-times{display:grid;gap:10px;padding-top:6px;border-top:1px solid var(--line);animation:mini-in .4s var(--ease)}
+.cal-times-label{font-size:.92rem;color:var(--muted);padding-top:8px}
+.cal-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.cal-slot{padding:10px 0;border-radius:9px;border:1px solid var(--line);font-size:.9rem;font-variant-numeric:tabular-nums;transition:background-color .2s,color .2s,border-color .2s}
+.cal-slot:hover{border-color:var(--ink)}
+.cal-slot[aria-pressed="true"]{background:var(--ink-2);border-color:var(--ink-2);color:var(--card)}
+.cal-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding-top:6px}
+.cal-tz{font-size:.82rem;color:var(--faint)}
+#cal-book{min-width:0;white-space:normal;text-align:center}
+@media (max-width:860px){.book{grid-template-columns:1fr}.cal-slots{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ---------- faq ---------- */
 .faq{padding-block:clamp(40px,5vw,72px) clamp(90px,11vw,150px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:24px clamp(32px,6vw,96px)}

@@ -8,16 +8,16 @@
 
   /* ---------- content config (edit here) ---------- */
   const FILMS = [
-    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=5' },
-    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=5' },
-    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=5' },
-    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=5' },
+    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=6' },
+    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=6' },
+    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=6' },
+    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=6' },
   ];
-  const PRICES = {
-    type:  { social: 750, feature: 1500, launch: 2500, brand: 3500 },
-    level: { standard: 0, premium: 750, cinematic: 1500 },
-    speed: { normal: 0, fast: 500, rush: 1000 },
-  };
+  // Paste your calendar link here (Cal.com, Calendly, Google Calendar booking page...).
+  // While it's empty, "Book a call" opens an email with the visitor's preferred time.
+  const BOOKING_URL = '';
+  const CONTACT_EMAIL = 'hello@thelaunchstudio.org';
+  const CALL_TIMES = ['10:00', '11:30', '14:00', '16:30']; // shown in the visitor's own time zone
 
   /* ---------- lazy videos: load + play only while on screen ---------- */
   const lazyVideos = $$('video[data-src]');
@@ -271,7 +271,7 @@
   /* ---------- reveal (only what starts below the fold) ---------- */
   if (!reduce) {
     const rio = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.remove('pre'); rio.unobserve(en.target); } }), { rootMargin: '0px 0px -10% 0px' });
-    $$('.ep, .clients, .tabs-card, .center-title, .left-title, .rates li, .est, .faq-list details, .dcard, .cta-copy, .foot-card').forEach(el => {
+    $$('.ep, .clients, .tabs-card, .center-title, .left-title, .book-points li, .cal, .faq-list details, .dcard, .cta-copy, .foot-card').forEach(el => {
       el.classList.add('rv');
       if (el.getBoundingClientRect().top > innerHeight) { el.classList.add('pre'); rio.observe(el); }
     });
@@ -376,25 +376,65 @@
     strip.addEventListener('pointerup', up); strip.addEventListener('pointercancel', up);
   }
 
-  /* ---------- estimator ---------- */
-  const est = { type: 'launch', level: 'standard', speed: 'normal' }, out = $('#est-val');
-  const money = n => '$' + n.toLocaleString('en-US');
-  function updEst() {
-    const t = PRICES.type[est.type] + PRICES.level[est.level] + PRICES.speed[est.speed];
-    out.classList.add('is-changing');
-    setTimeout(() => { out.textContent = `${money(t)} – ${money(Math.round(t * 1.5))}`; out.classList.remove('is-changing'); }, 120);
+  /* ---------- book a call: every [data-book] goes to the calendar ---------- */
+  if (BOOKING_URL) $$('[data-book]').forEach(a => { a.href = BOOKING_URL; a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+
+  const cal = $('#cal');
+  if (cal) {
+    const grid = $('#cal-grid'), monthEl = $('#cal-month'), times = $('#cal-times'), slots = $('#cal-slots'), dayLabel = $('#cal-day-label'), bookBtn = $('#cal-book');
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const maxMonths = 2;
+    let view = new Date(today.getFullYear(), today.getMonth(), 1), picked = null, pickedTime = null;
+    const fmtMonth = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+    const fmtDay = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    try { $('#cal-tz').textContent = 'Times in your time zone (' + Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, ' ') + ')'; } catch (e) {}
+
+    function draw() {
+      monthEl.textContent = fmtMonth.format(view);
+      grid.innerHTML = '';
+      const lead = (view.getDay() + 6) % 7, days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+      for (let i = 0; i < lead; i++) grid.appendChild(document.createElement('span'));
+      for (let d = 1; d <= days; d++) {
+        const date = new Date(view.getFullYear(), view.getMonth(), d), dow = date.getDay();
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'cal-day'; b.textContent = d; b.setAttribute('role', 'gridcell');
+        b.disabled = date <= today || dow === 0 || dow === 6;
+        if (+date === +today) b.classList.add('is-today');
+        b.setAttribute('aria-selected', String(!!picked && +picked === +date));
+        b.setAttribute('aria-label', fmtDay.format(date) + (b.disabled ? ', unavailable' : ''));
+        b.addEventListener('click', () => pickDay(date));
+        grid.appendChild(b);
+      }
+      $('#cal-prev').disabled = view.getFullYear() === today.getFullYear() && view.getMonth() === today.getMonth();
+      $('#cal-next').disabled = (view.getFullYear() - today.getFullYear()) * 12 + view.getMonth() - today.getMonth() >= maxMonths;
+    }
+    function pickDay(date) {
+      picked = date; pickedTime = null;
+      draw();
+      dayLabel.textContent = fmtDay.format(date);
+      slots.innerHTML = '';
+      CALL_TIMES.forEach(t => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'cal-slot'; b.textContent = t; b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', () => { pickedTime = t; $$('.cal-slot', slots).forEach(x => x.setAttribute('aria-pressed', String(x === b))); updBtn(); });
+        slots.appendChild(b);
+      });
+      times.hidden = false;
+      updBtn();
+    }
+    function updBtn() {
+      const when = picked ? fmtDay.format(picked) + (pickedTime ? ' at ' + pickedTime : '') : '';
+      bookBtn.textContent = pickedTime ? 'Book ' + when : 'Book a call';
+      if (BOOKING_URL) { bookBtn.href = BOOKING_URL; return; }
+      const subject = 'Book a call with Launch Studio';
+      const body = (when ? 'Preferred time: ' + when + ' (' + (Intl.DateTimeFormat().resolvedOptions().timeZone || 'my time zone') + ')\n\n' : '') + 'What we are launching:\n\nLaunch date:\n';
+      bookBtn.href = 'mailto:' + CONTACT_EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      bookBtn.removeAttribute('target');
+    }
+    $('#cal-prev').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); draw(); });
+    $('#cal-next').addEventListener('click', () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); draw(); });
+    draw(); updBtn();
   }
-  $$('.seg').forEach(g => $$('button', g).forEach(b => b.addEventListener('click', () => {
-    est[g.dataset.group] = b.dataset.value;
-    $$('button', g).forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
-    updEst();
-  })));
-  $$('.seg button').forEach(b => b.setAttribute('aria-pressed', String(b.classList.contains('on'))));
-  $$('.rates button').forEach(b => b.addEventListener('click', () => {
-    est.type = b.dataset.value;
-    $$('.rates button').forEach(x => x.setAttribute('aria-checked', String(x === b)));
-    updEst();
-  }));
 
   /* ---------- CTA ring: turns with scroll ---------- */
   const ring = $('#ring'), ringText = $('#ring-text');

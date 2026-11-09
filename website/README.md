@@ -26,7 +26,7 @@ Then open http://localhost:8000. A local server is needed because the 3D hero us
 
 ## Common edits
 
-- **Pricing:** `PRICES` at the top of `js/site.js` (same numbers as the old site). The "from" prices in the rates list are in `index.html`.
+- **Calendar link:** paste your Cal.com / Calendly link into `BOOKING_URL` at the top of `js/site.js`. Every "Book a call" button then opens it. Until then, the buttons scroll to the booking section, whose button opens an email with the visitor's chosen day and time. The suggested call times are `CALL_TIMES` in the same file.
 - **Videos:** `FILMS` at the top of `js/site.js` (also feeds the Now Playing widget).
 - **3D prop stills:** after changing a prop in `js/objects3d.js`, open the page with `?posters` and call `__posters()` in the console to get fresh PNGs.
 - **Social links and email:** contact section at the bottom of `index.html`.
