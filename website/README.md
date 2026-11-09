@@ -26,11 +26,11 @@ Then open http://localhost:8000. A local server is needed because the 3D hero us
 
 ## Common edits
 
-- **Pricing:** `PRICES` at the top of `js/site.js` (same numbers as the old site). The "from" prices on the four offer cards are in `index.html`.
+- **Pricing:** `PRICES` at the top of `js/site.js` (same numbers as the old site). The "from" prices in the rates list are in `index.html`.
 - **Videos:** `FILMS` at the top of `js/site.js` (also feeds the Now Playing widget).
 - **3D prop stills:** after changing a prop in `js/objects3d.js`, open the page with `?posters` and call `__posters()` in the console to get fresh PNGs.
 - **Social links and email:** contact section at the bottom of `index.html`.
 - **Brand colours and fonts:** `:root` in `css/style.css`.
-- **Client logos:** add a PNG with transparency to `assets/logos/` and a `<span class="logo logo-img">` in the marquee (`--ar` is width ÷ height).
+- **Client logos:** add a PNG with transparency to `assets/logos/` and a `<span class="logo">` in the clients row (`--ar` is width ÷ height).
 
 Reduced-motion users get still props, no physics and no auto-cycling.
