@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@1,400;1,500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=3">
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
@@ -56,16 +56,16 @@
   <div class="stage" id="stage">
 
     <div class="obj" data-cursor="Grab" data-kind="rocket" style="--x:16%;--y:24%;--w:clamp(120px,15vw,220px);--r:-14deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-rocket.png" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-rocket.png?v=3" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj" data-cursor="Grab" data-kind="clap" style="--x:50%;--y:18%;--w:clamp(110px,12vw,180px);--r:6deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clap.png" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clap.png?v=3" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj obj-sm-hide" data-cursor="Grab" data-kind="key" style="--x:84%;--y:27%;--w:clamp(90px,9vw,140px);--r:10deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-key.png" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-key.png?v=3" alt="" draggable="false"><canvas></canvas></div>
     </div>
     <div class="obj obj-clock" data-cursor="Grab" data-kind="clock" style="--x:78%;--y:73%;--w:clamp(150px,17vw,250px);--r:-8deg">
-      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clock.png" alt="" draggable="false"><canvas></canvas></div>
+      <div class="obj-in" data-cursor="Grab"><img src="assets/img/obj-clock.png?v=3" alt="" draggable="false"><canvas></canvas></div>
     </div>
 
     <div class="obj obj-ui obj-notif" data-cursor="Grab" style="--x:20%;--y:75%;--w:clamp(230px,22vw,300px);--r:0deg">
@@ -124,7 +124,7 @@
       <p class="label">Launch film, 2026</p>
       <h3>DIG AI</h3>
       <p>Bring any coding agent and watch it build. A 35-second launch film that turns a terminal into a story.</p>
-      <img class="ep-obj" src="assets/img/obj-rocket.png" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-rocket.png?v=3" alt="" loading="lazy">
     </div>
   </article>
 
@@ -138,7 +138,7 @@
       <p class="label">Launch film, 2026</p>
       <h3>LatentGraph</h3>
       <p>The engineering brain, explained. Architecture, intent and design decisions mapped out in 96 seconds.</p>
-      <img class="ep-obj" src="assets/img/obj-key.png" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-key.png?v=3" alt="" loading="lazy">
     </div>
   </article>
 
@@ -152,7 +152,7 @@
       <p class="label">Feature campaign, 2026</p>
       <h3>Island</h3>
       <p>Over half of social content is video. A one-minute campaign showing a better way to keep up with it.</p>
-      <img class="ep-obj" src="assets/img/obj-clap.png" alt="" loading="lazy">
+      <img class="ep-obj" src="assets/img/obj-clap.png?v=3" alt="" loading="lazy">
     </div>
   </article>
 
@@ -370,7 +370,7 @@
         <defs><path id="circle" d="M200,200 m-150,0 a150,150 0 1,1 300,0 a150,150 0 1,1 -300,0"/></defs>
         <text><textPath href="#circle" id="ring-text">Laaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaunch</textPath></text>
       </svg>
-      <button type="button" class="ring-btn" id="launch" data-cursor="Launch" aria-label="Launch the rocket"><img class="ring-img" src="assets/img/obj-rocket.png" alt=""></button>
+      <button type="button" class="ring-btn" id="launch" data-cursor="Launch" aria-label="Launch the rocket"><img class="ring-img" src="assets/img/obj-rocket.png?v=3" alt=""></button>
     </div>
   </div>
 
@@ -397,7 +397,7 @@
 <div class="cursor-pill" id="cursor-pill" aria-hidden="true"></div>
 
 <script src="vendor/matter.min.js" defer></script>
-<script src="js/site.js" defer></script>
-<script type="module" src="js/objects3d.js"></script>
+<script src="js/site.js?v=3" defer></script>
+<script type="module" src="js/objects3d.js?v=3"></script>
 </body>
 </html>
