@@ -8,10 +8,10 @@
 
   /* ---------- content config (edit here) ---------- */
   const FILMS = [
-    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=4' },
-    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=4' },
-    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=4' },
-    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=4' },
+    { key: 'reel',        title: 'Reel 2026',   src: 'assets/video/reel.mp4?v=5' },
+    { key: 'dig-ai',      title: 'DIG AI',      src: 'assets/video/dig-ai.mp4?v=5' },
+    { key: 'latentgraph', title: 'LatentGraph', src: 'assets/video/latentgraph.mp4?v=5' },
+    { key: 'island',      title: 'Island',      src: 'assets/video/island.mp4?v=5' },
   ];
   const PRICES = {
     type:  { social: 750, feature: 1500, launch: 2500, brand: 3500 },
@@ -225,6 +225,17 @@
       });
       W = nw; H = nh; buildWalls();
     }).observe(stage);
+  }
+
+  /* ---------- showreel: grows to full width as it enters ---------- */
+  const reelFrame = $('#reel-frame');
+  if (reelFrame && !reduce) {
+    const updReel = () => {
+      const r = reelFrame.parentElement.getBoundingClientRect();
+      const k = clamp((innerHeight - r.top) / (innerHeight * .85), 0, 1);
+      reelFrame.style.setProperty('--s', (.78 + .22 * (1 - Math.pow(1 - k, 2))).toFixed(4));
+    };
+    addEventListener('scroll', updReel, { passive: true }); addEventListener('resize', updReel); updReel();
   }
 
   /* ---------- statement: words sharpen with scroll ---------- */

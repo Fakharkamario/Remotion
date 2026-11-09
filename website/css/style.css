@@ -150,6 +150,12 @@ h1,h2,h3{font-weight:500;letter-spacing:-.05em;line-height:1.02;text-wrap:balanc
   .obj-clock{--x:76%!important;--y:69%!important;--w:150px!important}
 }
 
+/* ---------- showreel ---------- */
+.reel{padding:clamp(20px,4vw,60px) var(--gr) clamp(60px,8vw,110px) var(--gl)}
+.reel-frame{max-width:1280px;margin-inline:auto;aspect-ratio:16/9;border-radius:clamp(12px,1.6vw,22px);overflow:hidden;background:var(--dark);transform:scale(var(--s,1));transform-origin:50% 0;will-change:transform}
+.reel-frame video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.reel-frame video::-webkit-media-controls{display:none!important}
+
 /* ---------- statement ---------- */
 .statement{padding-block:clamp(110px,16vw,220px);padding-left:var(--gl);padding-right:var(--gr)}
 .blur-in{max-width:22ch;margin-inline:auto;text-align:center;font-size:clamp(1.9rem,4.4vw,3.75rem);font-weight:500;letter-spacing:-.05em;line-height:1.1;text-wrap:balance}
