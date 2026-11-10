@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>app launch promo</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "Inter"; src: url("assets/fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fff; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #fbfbfc; font-family: "Inter", system-ui, sans-serif; color: #1b1c20; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; white-space: nowrap; }
+
+      /* backdrop: white wall with soft window light */
+      #bg { position: absolute; inset: 0; overflow: hidden; background: linear-gradient(100deg, #ececee 0%, #f8f8f9 9%, #ffffff 30%, #ffffff 70%, #f4f4f6 100%); }
+      .band { position: absolute; left: -400px; width: 2800px; background: rgba(40, 50, 70, .058); filter: blur(46px); transform-origin: 50% 50%; }
+      .b1 { top: 150px; height: 120px; } .b2 { top: 470px; height: 190px; } .b3 { top: 860px; height: 110px; }
+
+      .scene { position: absolute; inset: 0; display: none; }
+      .cam { position: absolute; inset: 0; transform-origin: 960px 540px; }
+      .abs { position: absolute; }
+      .line { position: absolute; left: 0; width: 1920px; text-align: center; font-weight: 500; letter-spacing: -0.045em; line-height: 1.12; color: #1b1c20; }
+      .w { display: inline-block; will-change: transform, opacity, filter; }
+      .bl { color: #1a84f5; }
+
+      /* glass */
+      .glass { background: linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(246, 249, 253, .9)); border: 1.5px solid #fff; box-shadow: 0 30px 70px rgba(30, 70, 140, .13), 0 4px 14px rgba(30, 70, 140, .06), inset 0 -2px 6px rgba(120, 160, 220, .12); }
+      .blue { background: linear-gradient(160deg, #6ec4ff 0%, #2590f8 42%, #0c66e4 100%); box-shadow: 0 26px 70px rgba(24, 124, 245, .42), 0 6px 18px rgba(24, 124, 245, .3), inset 0 3px 6px rgba(255, 255, 255, .55), inset 0 -8px 18px rgba(4, 60, 170, .45); }
+
+      /* S1 */
+      #icon { left: 850px; top: 270px; width: 220px; height: 220px; border-radius: 54px; transform-origin: 50% 50%; }
+      #icon svg { position: absolute; left: 45px; top: 45px; width: 130px; height: 130px; }
+      .ring { position: absolute; left: 850px; top: 270px; width: 220px; height: 220px; border-radius: 54px; border: 3px solid #3d9bfa; }
+      .chip { position: absolute; display: flex; align-items: center; gap: 12px; height: 72px; padding: 0 28px 0 20px; border-radius: 36px; font: 550 30px "Inter", sans-serif; letter-spacing: -0.02em; color: #24262c; white-space: nowrap; }
+      .chip svg { width: 34px; height: 34px; }
+
+      /* S2 */
+      #vcard { left: 420px; top: 236px; width: 1080px; height: 560px; border-radius: 40px; overflow: hidden; background: linear-gradient(155deg, #eef6ff 0%, #d5e9ff 55%, #b8daff 100%); border: 2px solid #fff; box-shadow: 0 40px 90px rgba(30, 90, 190, .16), 0 6px 18px rgba(30, 90, 190, .07); }
+      #vcard .glow { position: absolute; border-radius: 50%; filter: blur(50px); }
+      #shim { position: absolute; top: -100px; width: 220px; height: 800px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .85), rgba(255, 255, 255, 0)); transform: rotate(18deg); }
+      .hd { position: absolute; width: 18px; height: 18px; border-radius: 5px; background: #fff; border: 3px solid #2b90f7; }
+      .mini { position: absolute; border-radius: 26px; padding: 22px; }
+      #tl { left: 420px; top: 836px; width: 1080px; height: 124px; border-radius: 34px; }
+      #play { position: absolute; left: 24px; top: 26px; width: 72px; height: 72px; border-radius: 36px; }
+      #play svg { position: absolute; left: 25px; top: 21px; width: 28px; height: 30px; }
+      .trk { position: absolute; left: 128px; height: 20px; border-radius: 10px; transform-origin: 0 50%; }
+      .kf { position: absolute; width: 14px; height: 14px; border-radius: 3px; background: #fff; border: 2.5px solid #2b90f7; }
+      #head { position: absolute; top: 12px; left: 0; width: 4px; height: 100px; border-radius: 2px; background: #1a84f5; box-shadow: 0 0 14px rgba(26, 132, 245, .7); }
+      #head::before { content: ""; position: absolute; left: -9px; top: -8px; width: 22px; height: 22px; border-radius: 11px; background: #1a84f5; }
+
+      #phw { left: 810px; top: 206px; width: 300px; height: 620px; perspective: 1600px; transform-origin: 50% 50%; }
+      #ph { position: absolute; inset: 0; border-radius: 56px; background: #101218; padding: 9px; box-shadow: 0 50px 100px rgba(20, 50, 110, .3), 0 10px 26px rgba(20, 50, 110, .18), inset 0 0 0 2px #2c3040; }
+      #scr { position: relative; width: 100%; height: 100%; border-radius: 47px; overflow: hidden; background: #f5f8fc; }
+      #isl { position: absolute; left: 99px; top: 11px; width: 84px; height: 25px; border-radius: 13px; background: #101218; z-index: 5; }
+      #splash { position: absolute; inset: 0; z-index: 3; background: linear-gradient(160deg, #6ec4ff 0%, #2590f8 42%, #0c66e4 100%); }
+      #splash svg { position: absolute; left: 91px; top: 251px; width: 100px; height: 100px; }
+      .ui { position: absolute; left: 16px; width: 250px; }
+      .ucard { background: #fff; border-radius: 22px; box-shadow: 0 6px 18px rgba(30, 70, 140, .08); }
+      .row { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; }
+      .row i { width: 34px; height: 34px; border-radius: 11px; flex: none; }
+      .row b { display: block; font: 600 14px "Inter", sans-serif; letter-spacing: -0.01em; color: #1b1c20; }
+      .row span { display: block; font: 450 11px "Inter", sans-serif; color: #8a90a0; margin-top: 2px; }
+      .row em { margin-left: auto; width: 22px; height: 22px; border-radius: 11px; border: 2px solid #d5dbe6; }
+      #toast { position: absolute; left: 30px; top: 46px; width: 222px; height: 46px; border-radius: 23px; z-index: 4; display: flex; align-items: center; justify-content: center; gap: 8px; font: 600 15px "Inter", sans-serif; color: #fff; background: #1a84f5; box-shadow: 0 10px 24px rgba(26, 132, 245, .45); }
+      .t2 { position: absolute; left: 960px; top: 372px; font-weight: 500; font-size: 92px; letter-spacing: -0.045em; line-height: 1.1; white-space: nowrap; }
+      .call { position: absolute; display: flex; align-items: center; gap: 12px; height: 68px; padding: 0 26px 0 22px; border-radius: 34px; font: 550 28px "Inter", sans-serif; letter-spacing: -0.02em; white-space: nowrap; }
+      .call i { width: 14px; height: 14px; border-radius: 7px; background: #1a84f5; box-shadow: 0 0 0 6px rgba(26, 132, 245, .18); }
+      .wire { position: absolute; height: 3px; border-radius: 2px; background: linear-gradient(90deg, rgba(26, 132, 245, .15), #1a84f5); transform-origin: 0 50%; }
+      #rev { left: 964px; top: 640px; width: 600px; height: 176px; border-radius: 36px; transform-origin: 20% 50%; }
+      #rev .av { position: absolute; left: 30px; top: 30px; width: 64px; height: 64px; border-radius: 32px; background: linear-gradient(160deg, #ffd9a8, #ff9f7a); }
+      #stars { position: absolute; left: 114px; top: 34px; display: flex; gap: 8px; }
+      #stars svg { width: 46px; height: 46px; }
+      #rev p { position: absolute; left: 30px; top: 110px; font: 500 30px "Inter", sans-serif; letter-spacing: -0.02em; color: #3a3d46; }
+      #rev q { position: absolute; right: 32px; top: 40px; font: 600 34px "Inter", sans-serif; letter-spacing: -0.03em; color: #1b1c20; quotes: none; }
+      #halo { left: 400px; top: 140px; width: 800px; height: 800px; border-radius: 50%; background: radial-gradient(circle, rgba(60, 155, 255, .55), rgba(60, 155, 255, 0) 65%); }
+
+      /* S3 */
+      #sw { top: 430px; font-size: 176px; transform-origin: 960px 100px; }
+      #l3 { top: 396px; font-size: 88px; }
+      #dlw { left: 740px; top: 628px; width: 440px; height: 124px; transform-origin: 50% 50%; }
+      .hal { position: absolute; border-radius: 999px; border: 2px solid rgba(255, 255, 255, .9); background: linear-gradient(120deg, rgba(110, 196, 255, .34), rgba(37, 144, 248, .16) 50%, rgba(12, 102, 228, .3)); box-shadow: inset 0 0 30px rgba(255, 255, 255, .7), 0 20px 60px rgba(24, 124, 245, .16); }
+      #dl { position: absolute; inset: 0; border-radius: 62px; overflow: hidden; transform-origin: 50% 50%; }
+      #dlfill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .22)); }
+      .lab { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 16px; font: 600 44px "Inter", sans-serif; letter-spacing: -0.03em; color: #fff; }
+      .lab svg { width: 40px; height: 40px; }
+      #cnt { left: 230px; top: 330px; }
+      #cnt small { display: block; font: 500 34px "Inter", sans-serif; letter-spacing: -0.02em; color: #7b8190; }
+      #cnt b { display: block; font: 600 120px "Inter", sans-serif; letter-spacing: -0.05em; color: #1b1c20; font-variant-numeric: tabular-nums; line-height: 1.1; }
+      #chart { left: 210px; top: 500px; overflow: visible; }
+
+      /* S4 */
+      #ctaw { left: 520px; top: 440px; width: 880px; height: 200px; transform-origin: 50% 50%; }
+      #cta { position: absolute; inset: 0; border-radius: 100px; transform-origin: 50% 50%; }
+      #cico { position: absolute; left: 30px; top: 30px; width: 140px; height: 140px; border-radius: 70px; background: linear-gradient(180deg, #fff, #e8f2ff); box-shadow: 0 10px 24px rgba(4, 60, 170, .35), inset 0 -4px 8px rgba(120, 170, 240, .35); }
+      #cico svg { position: absolute; left: 36px; top: 38px; width: 68px; height: 68px; }
+      #ctxt { position: absolute; left: 206px; top: 0; height: 200px; display: flex; align-items: center; font: 600 72px "Inter", sans-serif; letter-spacing: -0.04em; color: #fff; white-space: nowrap; gap: .24em; }
+      #rip { position: absolute; inset: 0; border-radius: 100px; border: 4px solid #3d9bfa; }
+      #cap { top: 800px; font-size: 40px; letter-spacing: -0.025em; color: #6f7584; font-weight: 450; }
+
+      /* transitions */
+      .blob { position: absolute; left: 0; top: 0; width: 2600px; height: 2600px; display: none; will-change: transform; }
+      #blobA { border-radius: 47% 53% 58% 42% / 45% 56% 44% 55%; background: radial-gradient(circle at 32% 30%, #8ad0ff 0%, #2f95f8 42%, #0c63e2 100%); filter: blur(28px); }
+      #blobB { border-radius: 55% 45% 42% 58% / 52% 44% 56% 48%; background: rgba(214, 235, 255, .85); filter: blur(60px); }
+      #cur { position: absolute; left: 0; top: 0; width: 120px; height: 120px; transform-origin: 60px 8px; will-change: transform; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="21" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span>Aa</span><span style="font-weight:500">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.mp3" data-start="0" data-duration="21" data-track-index="30" data-volume="1"></audio>
+      <audio id="music" src="assets/music.mp3" data-start="0" data-duration="21" data-track-index="31" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
