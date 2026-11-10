@@ -127,30 +127,83 @@
     // ---------------------------------------------------------------- shots' content
     const S = {};
 
-    // hook ----------------------------------------------------------
+    // hook: the references' opener ------------------------------------
+    //  0.00  tight punch on the face
+    //  0.08  the hero panel drops in from the top (wavy bottom edge, glowing outline), the take settles below it
+    //  0.18  white line writes on letter by letter with a sideways smear, then the huge condensed gradient line
+    //  0.6+  the panel stays alive: score counts up, stat rows tick in, an alert banner slides in
+    //  4.05  light burn into the next shot
+    const INTRO = { drop: 0.08, l1: 0.2, l1step: 0.032, l2gap: 0.06, l2step: 0.07, burn: 4.02 };
     S.hook = (() => {
-      const root = el("div", "hook", ui);
-      const shade = el("div", "hookShade", root);
-      const eb = el("div", "hookEb", root, "");
-      const ebTxt = "A FEW HOURS AGO";
-      const l1 = el("div", "hookL1", root, '<span>ANTHROPIC</span> <span>DROPPED</span>');
-      const l2 = el("div", "hookL2", root, "CLAUDE");
-      const l3 = el("div", "hookL3", root, '<span>FABLE</span> <span>5.2</span>');
-      const l1w = [...l1.querySelectorAll("span")], l3w = [...l3.querySelectorAll("span")];
+      const root = el("div", "intro", ui);
+      const shade = el("div", "introShade", root);
+      // hero panel
+      const hero = el("div", "hero", root);
+      const heroIn = el("div", "heroIn", hero);
+      const card = el("div", "rcard", heroIn,
+        '<div class="rtop"><span class="rk">NEW MODEL · ANTHROPIC</span><span class="rnew">NEW</span></div>' +
+        '<div class="rname">Fable 5.2</div>' +
+        '<div class="rbot"><span class="rlbl">Intelligence index</span><span class="rscore">0</span></div><i class="rsheen"></i>');
+      const score = card.querySelector(".rscore"), sheen = card.querySelector(".rsheen");
+      const toast = el("div", "rtoast", heroIn, '<i></i>Just released · a few hours ago');
+      const rowsDef = [["Speed", "+30%", 0.95], ["Price", "−20%", 1.2], ["Deep thinking", "Always on", 1.45]];
+      const rowsWrap = el("div", "rrows", heroIn, '<div class="rh">What changed</div>');
+      const rows = rowsDef.map(([k, v, a]) => [el("div", "rrow", rowsWrap, `<span>${k}</span><b>${v}</b>`), a]);
+      const edge = el("div", "heroEdge", root, '<svg width="1080" height="160" viewBox="0 0 1080 160"><path class="g" d=""/><path class="l" d=""/></svg>');
+      const [edgeGlow, edgeLine] = edge.querySelectorAll("path");
+      // headline
+      const mk = (cls, text) => {
+        const d = el("div", cls, root);
+        return [...text].map((c) => el("span", c === " " ? "sp" : "", d, c === " " ? "&nbsp;" : c));
+      };
+      const L1 = mk("iL1", "ANTHROPIC JUST DROPPED");
+      const L2 = mk("iL2", "FABLE 5.2");
+      const l2el = root.querySelector(".iL2");
+      const HERO_H = 700;
+      const waveY = (x, t) => HERO_H - 40 + 26 * Math.sin(x / 150 + t * 1.3) + 10 * Math.sin(x / 53 - t * 2.1);
+      function letter(sp, t, a, dist, blur) {
+        const x = prog(t, a, 0.12);
+        const k = outCubic(x);
+        sp.style.opacity = clamp(x * 3, 0, 1).toFixed(3);
+        sp.style.transform = `translateX(${((1 - k) * -dist).toFixed(1)}px) scaleX(${(1 + 0.6 * (1 - k)).toFixed(3)})`;
+        sp.style.filter = x < 1 ? `blur(${(blur * (1 - k)).toFixed(1)}px)` : "none";
+      }
       return (t) => {
         const on = inShot(t, "hook");
-        show(root, on);
+        show(root, on); show(edge, on);
         if (!on) return;
-        shade.style.opacity = (0.85 * outCubic(prog(t, 0, 0.3))).toFixed(3);
-        const n = Math.floor(clamp((t - 0.05) / 0.07, 0, ebTxt.length));
-        eb.textContent = ebTxt.slice(0, n);
-        eb.style.opacity = n > 0 ? 1 : 0;
-        [1.72, 2.14].forEach((a, i) => applyPop(l1w[i], popIn(t, a, 0.2, 1.5, 0)));
-        applyPop(l2, popIn(t, 2.54, 0.2, 1.6, 0));
-        [2.96, 3.38].forEach((a, i) => applyPop(l3w[i], popIn(t, a, 0.22, 1.8, 0)));
-        // the whole block nudges up as the big line lands
-        const lift = -40 * outCubic(prog(t, 2.54, 0.3));
-        root.style.transform = `translateY(${lift.toFixed(1)}px)`;
+        // hero drops in with a little overshoot, then drifts
+        const d = outBack(prog(t, INTRO.drop, 0.34), 1.2);
+        const hy = lerp(-HERO_H - 120, 0, d);
+        let path = `M0 0 L1080 0 L1080 ${waveY(1080, t).toFixed(1)}`;
+        let line = "";
+        for (let x = 1080; x >= 0; x -= 24) {
+          const y = waveY(x, t);
+          path += ` L${x} ${y.toFixed(1)}`;
+          line += (x === 1080 ? "M" : " L") + `${x} ${(y - (HERO_H - 120)).toFixed(1)}`;
+        }
+        hero.style.clipPath = `path("${path} Z")`;
+        hero.style.transform = `translateY(${hy.toFixed(1)}px)`;
+        edge.style.transform = `translateY(${(hy + HERO_H - 120).toFixed(1)}px)`;
+        edgeGlow.setAttribute("d", line); edgeLine.setAttribute("d", line);
+        heroIn.style.transform = `scale(${(1.0 + 0.035 * prog(t, 0.4, 3.8)).toFixed(4)})`;
+        hero.style.filter = t < INTRO.drop + 0.25 ? `blur(${(8 * (1 - prog(t, INTRO.drop, 0.25))).toFixed(1)}px)` : "none";
+        // panel life
+        const sc = Math.round(65 * outCubic(prog(t, 0.55, 1.3)));
+        score.textContent = String(sc);
+        sheen.style.transform = `translateX(${lerp(-400, 1300, prog(t, 0.6, 1.1)).toFixed(0)}px) skewX(-18deg)`;
+        rows.forEach(([r, a]) => { r.style.visibility = t >= a ? "visible" : "hidden"; applyPop(r, popIn(t, a, 0.2, 0.92, 18)); });
+        toast.style.visibility = t >= 2.1 ? "visible" : "hidden";
+        const tp = popIn(t, 2.1, 0.22, 0.9, -30);
+        applyPop(toast, tp);
+        toast.firstChild.style.opacity = (0.5 + 0.5 * Math.abs(Math.sin(t * 5))).toFixed(3);
+        // headline write-on
+        L1.forEach((sp, i) => letter(sp, t, INTRO.l1 + i * INTRO.l1step, 34, 10));
+        const l2a = INTRO.l1 + L1.length * INTRO.l1step + INTRO.l2gap;
+        L2.forEach((sp, i) => letter(sp, t, l2a + i * INTRO.l2step, 90, 22));
+        // the big line's glow breathes and a light sweep crosses it once
+        l2el.style.setProperty("--sweep", `${lerp(-30, 130, prog(t, l2a + 0.7, 0.9)).toFixed(1)}%`);
+        shade.style.opacity = (outCubic(prog(t, 0.1, 0.3))).toFixed(3);
       };
     })();
 
@@ -658,6 +711,20 @@
         insetFrame.style.opacity = p.o;
         insetFrame.style.transform = `translateY(${p.y}px)`;
       }
+      if (sh.id === "hook") {
+        // tight punch on frame 0, whipping out to the take sitting under the hero panel
+        const k = outQuint(prog(t, 0.04, 0.42));
+        const z = lerp(1.55, 1.04, k) * (1 + 0.03 * prog(t, 0.5, 3.8));
+        const ty = lerp(0, 330, k);
+        tf = `translateY(${ty.toFixed(1)}px) scale(${z.toFixed(4)})`;
+        cam.style.transformOrigin = `${FACE[0]}px ${FACE[1]}px`;
+        aroll.style.filter = k < 0.98 ? `blur(${(7 * Math.sin(k * Math.PI)).toFixed(1)}px)` : "none";
+      } else aroll.style.filter = "none";
+      // light burn: the picture overexposes into the cut
+      const burnK = sh.id === "hook" ? prog(t, INTRO.burn, 4.33 - INTRO.burn) : 0;
+      L.burn.style.opacity = (burnK * burnK).toFixed(3);
+      ui.style.filter = burnK > 0.01 ? `brightness(${(1 + 1.4 * burnK * burnK).toFixed(3)})` : "none";
+      camShell.style.opacity = 1;
       cam.style.transform = tf;
       camShell.style.clipPath = clip;
       camShell.style.filter = Lk === "split" ? "drop-shadow(0 -10px 24px rgba(120,64,24,0.28))" : "none";

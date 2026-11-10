@@ -174,3 +174,43 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #f4e3d
 .mp .m1 { font-weight: 800; font-size: 44px; letter-spacing: 0.2em; }
 .mp .m2 { font-family: "Archivo"; font-weight: 900; font-size: 118px; line-height: 1.05; background: linear-gradient(180deg, #ffd1f0 0%, #ff5fb4 50%, #7a5bff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 24px rgba(255, 80, 180, 0.6)); transform-origin: 50% 60%; }
 .mp > div { transform-origin: 50% 60%; }
+
+/* ================= intro (references' opener) ================= */
+@font-face { font-family: "Anton"; src: url("fonts/anton-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: block; }
+@font-face { font-family: "Montserrat"; src: url("fonts/montserrat-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+.intro { position: absolute; inset: 0; }
+.introShade { position: absolute; left: 0; right: 0; bottom: 0; height: 980px; background: linear-gradient(180deg, rgba(24, 12, 4, 0) 0%, rgba(24, 12, 4, 0.42) 45%, rgba(24, 12, 4, 0.62) 100%); }
+.hero { position: absolute; left: 0; top: 0; width: 1080px; height: 700px; overflow: hidden;
+  background: radial-gradient(700px 420px at 85% 10%, rgba(255, 190, 140, 0.55), transparent 70%), linear-gradient(180deg, #fdf6ee 0%, #f7e7d6 100%); }
+.heroIn { position: absolute; inset: 0; transform-origin: 50% 30%; }
+.rcard { position: absolute; left: 70px; top: 70px; width: 940px; height: 262px; border-radius: 30px; overflow: hidden; color: #fff;
+  background: radial-gradient(500px 300px at 85% 0%, rgba(255, 200, 150, 0.45), transparent 70%), linear-gradient(135deg, #a9471f 0%, #d9743f 55%, #bf5a2b 100%);
+  box-shadow: 0 22px 44px rgba(150, 70, 25, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35); padding: 30px 40px; }
+.rtop { display: flex; justify-content: space-between; align-items: center; }
+.rk { font-family: "Jakarta"; font-weight: 800; font-size: 22px; letter-spacing: 0.16em; opacity: 0.85; }
+.rnew { font-family: "Jakarta"; font-weight: 800; font-size: 22px; padding: 6px 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.22); }
+.rname { font-family: "Jakarta"; font-weight: 800; font-size: 96px; letter-spacing: -0.02em; line-height: 1.05; margin-top: 8px; }
+.rbot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 2px; }
+.rlbl { font-family: "Jakarta"; font-weight: 700; font-size: 28px; opacity: 0.8; }
+.rscore { font-family: "Jakarta"; font-weight: 800; font-size: 56px; }
+.rsheen { position: absolute; top: -40px; left: 0; width: 140px; height: 360px; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent); }
+.rtoast { position: absolute; left: 70px; top: 352px; width: 940px; height: 62px; border-radius: 16px; background: #e5483a; color: #fff; display: flex; align-items: center; gap: 14px; padding: 0 24px;
+  font-family: "Jakarta"; font-weight: 800; font-size: 28px; box-shadow: 0 10px 24px rgba(229, 72, 58, 0.35); transform-origin: 50% 0; }
+.rtoast i { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+.rrows { position: absolute; left: 70px; top: 432px; width: 940px; padding: 14px 26px; border-radius: 22px; background: #fff; box-shadow: 0 12px 30px rgba(150, 80, 30, 0.12); font-family: "Jakarta"; }
+.rh { font-size: 20px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #a8998a; margin-bottom: 4px; }
+.rrow { display: flex; justify-content: space-between; align-items: center; height: 46px; font-size: 30px; font-weight: 700; color: #2b2622; border-top: 1px solid #f2ebe4; transform-origin: 0 50%; }
+.rrow b { color: #d9622f; font-weight: 800; }
+.heroEdge { position: absolute; left: 0; top: 0; width: 1080px; height: 160px; pointer-events: none; }
+.heroEdge svg { overflow: visible; }
+.heroEdge path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.heroEdge .g { stroke: #ff8a3d; stroke-width: 20; opacity: 0.75; filter: blur(9px); }
+.heroEdge .l { stroke: #ffb070; stroke-width: 7; }
+.iL1, .iL2 { position: absolute; left: 0; right: 0; display: flex; justify-content: center; white-space: nowrap; }
+.iL1 { top: 1238px; font-family: "Montserrat"; font-weight: 900; font-size: 58px; letter-spacing: 0.03em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45); }
+.iL2 { top: 1300px; font-family: "Anton"; font-size: 262px; line-height: 1; letter-spacing: 0.01em;
+  filter: drop-shadow(0 0 22px rgba(255, 120, 40, 0.75)) drop-shadow(0 8px 0 rgba(90, 30, 5, 0.35)); }
+.iL1 span, .iL2 span { display: inline-block; transform-origin: 0 60%; }
+.iL2 span { background: linear-gradient(180deg, #fff3e0 0%, #ffc27e 30%, #ff8a3d 55%, #df5520 78%, #ffae66 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.iL2 span.sp { width: 40px; }
+#burn { opacity: 0; pointer-events: none; mix-blend-mode: screen; background: radial-gradient(1100px 1300px at 50% 105%, #fffaf0 0%, #ffd29a 40%, #ff9a52 75%, rgba(255, 120, 60, 0.6) 100%); }

@@ -27,7 +27,7 @@ The table lists each beat's start time, its layout and what is on screen.
 
 | t (s) | layout | beat |
 |---|---|---|
-| 0.0 | full | hook: A FEW HOURS AGO / ANTHROPIC DROPPED / CLAUDE / FABLE 5.2 |
+| 0.0 | intro | the references' opener: tight punch on the face whips out as a hero panel drops in from the top (wavy edge, glowing orange outline). The panel is a release card whose score counts 0 → 65, stat rows and a red "just released" banner tick in. ANTHROPIC JUST DROPPED (Montserrat Black) then FABLE 5.2 (Anton, orange gradient + glow) write on letter by letter with a sideways smear; light burn into the next shot |
 | 4.3 | split | reactions pop in: "The internet is losing it" |
 | 7.1 | split | intelligence-index chart → serif quote, highlighter on "human evolution" |
 | 10.3 | full | jump zooms, "Time?" / "Money?" tags |
@@ -60,4 +60,4 @@ npx --yes hyperframes@0.8.114 render -q high -o renders/fable-reel.mp4
 ```
 
 All sound design and the music bed are synthesized in `scripts/build_audio.py`, so no samples are used. The
-fonts are Plus Jakarta Sans, Archivo, Source Serif 4 and JetBrains Mono, all from Fontsource under the OFL.
+fonts are Plus Jakarta Sans, Montserrat, Anton, Archivo, Source Serif 4 and JetBrains Mono, all from Fontsource under the OFL.

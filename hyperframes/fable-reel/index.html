@@ -14,7 +14,7 @@
     <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="57.5333" data-width="1080" data-height="1920">
       <div class="fontwarm">
         <span style="font-family:Jakarta;font-weight:600">Aa</span><span style="font-family:Jakarta;font-weight:700">Aa</span><span style="font-family:Jakarta;font-weight:800">Aa</span>
-        <span style="font-family:Archivo;font-weight:900">Aa</span><span style="font-family:Serif4;font-weight:600">Aa</span>
+        <span style="font-family:Archivo;font-weight:900">Aa</span><span style="font-family:Serif4;font-weight:600">Aa</span><span style="font-family:Anton">Aa</span><span style="font-family:Montserrat;font-weight:900">Aa</span>
       </div>
       <div id="bg" class="layer"></div>
       <div id="darkBg" class="layer"></div>
@@ -26,6 +26,7 @@
       </div>
       <div id="ui" class="layer"></div>
       <div id="cap" class="layer"></div>
+      <div id="burn" class="layer"></div>
       <div id="flash" class="layer"></div>
       <!-- b-roll: HyperFrames seeks each from its data-start; scene.js moves them into their cards -->
       <div id="brollPark" style="position:absolute;left:0;top:0;width:0;height:0;overflow:hidden">
@@ -44,7 +45,7 @@
       window.__timelines["main"] = SCENE.mount({
         bg: $("bg"), darkBg: $("darkBg"), insetFrame: $("insetFrame"),
         camShell: $("camShell"), cam: $("cam"), aroll: $("aroll"),
-        ui: $("ui"), cap: $("cap"), flash: $("flash"),
+        ui: $("ui"), cap: $("cap"), flash: $("flash"), burn: $("burn"),
         broll: { bench: $("b_bench"), pixar: $("b_pixar"), hist: $("b_hist"), future: $("b_future"), tokyoA: $("b_tokyoA"), tokyoB: $("b_tokyoB") },
       });
     </script>
