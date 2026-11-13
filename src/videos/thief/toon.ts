@@ -1282,14 +1282,14 @@ export const fxPaper = (p: Pen, gent: boolean, face: (p: Pen) => void) => {
   p.poly(rrect(44, 160, 596, 220, 4), "#3a3a44", 0);
   p.poly(rrect(44, 244, 400, 640, 4), "#dfe6ee", 6);
   const g = p.g;
-  g.save(); p.clip(rrect(44, 244, 400, 640, 4), () => { g.translate(222 - 300 * 0.62, 252 - 120 * 0.62); g.scale(0.62, 0.62); face(new Pen(g)); }); g.restore();
+  g.save(); p.clip(rrect(44, 244, 400, 640, 4), () => { g.translate(222 - 300 * 1.1, 430 - 309 * 1.1); g.scale(1.1, 1.1); face(new Pen(g)); }); g.restore();
   p.poly(rrect(44, 244, 400, 640, 4), null, 6);
   if (gent) {
     // top hat over the curls, monocle on a chain
-    p.poly([[150, 330], [296, 330], [286, 230], [160, 230]], "#1d1b22", 6);
-    p.poly(rrect(150, 300, 296, 318, 3), "#8c3b4a", 0);
-    p.poly(rrect(118, 326, 330, 344, 8), "#1d1b22", 6);
-    p.ell(244, 418, 26, 26, null, 6); p.stroke([[262, 438], [300, 520], [320, 600]], 3, "#c9a04a");
+    p.poly([[150, 290], [294, 290], [284, 178], [160, 178]], "#1d1b22", 7);
+    p.poly(rrect(152, 258, 292, 278, 3), "#8c3b4a", 0);
+    p.poly(rrect(108, 284, 336, 304, 9), "#1d1b22", 7);
+    p.ell(259, 430, 32, 32, null, 7); p.stroke([[288, 448], [330, 540], [350, 630]], 4, "#c9a04a");
   }
   for (let i = 0; i < 12; i++) p.stroke([[424, 260 + i * 30], [596, 260 + i * 30]], 6, "#7a7a84");
   for (let i = 0; i < 5; i++) p.stroke([[44, 676 + i * 30], [596, 676 + i * 30]], 6, "#7a7a84");

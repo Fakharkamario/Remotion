@@ -36,7 +36,7 @@ export const SHOTS: ShotDef[] = [
   { id: 2, a: 80, b: 178, light: "night", sunAz: 150, sunEl: 35 },       // then he robbed the whole city in one night
   { id: 3, a: 178, b: 230, light: "day", sunAz: 130 },                  // it started with a wallet
   { id: 4, a: 230, b: 288, light: "day", sunAz: 120 },                  // every morning, he lifted one
-  { id: 5, a: 288, b: 360, light: "golden", sunAz: 35, sunEl: 9 },      // every evening, he mailed it back
+  { id: 5, a: 288, b: 360, light: "golden", sunAz: 150, sunEl: 12 },      // every evening, he mailed it back
   { id: 6, a: 360, b: 512, light: "room", sunAz: 160, sunEl: 62 },      // cash, cards, photos, receipt
   { id: 7, a: 512, b: 570, light: "room", sunAz: 150, sunEl: 55 },      // all of it, untouched
   { id: 8, a: 570, b: 694, light: "room", sunAz: 150, sunEl: 55 },      // he only ever added one thing: a note
@@ -57,7 +57,7 @@ export const SHOTS: ShotDef[] = [
   { id: 23, a: 2096, b: 2125, light: "room", sunAz: 160, sunEl: 62 },   // your home address
   { id: 24, a: 2125, b: 2222, light: "room", sunAz: 160, sunEl: 62 },   // that spare key tucked inside
   { id: 25, a: 2222, b: 2294, light: "room", sunAz: 160, sunEl: 62 },   // thirty seconds in a bar of soap
-  { id: 26, a: 2294, b: 2368, light: "golden", sunAz: -30, sunEl: 8 },  // in the mail before dinner
+  { id: 26, a: 2294, b: 2368, light: "golden", sunAz: 150, sunEl: 12 },  // in the mail before dinner
   { id: 27, a: 2368, b: 2410, light: "room", sunAz: 150, sunEl: 55 },   // nothing was missing
   { id: 28, a: 2410, b: 2490, light: "day", sunAz: 130 },               // nobody ever changed their locks
   { id: 29, a: 2490, b: 2564, light: "night", sunAz: 150, sunEl: 35 },  // three hundred families robbed in one night
@@ -152,20 +152,20 @@ const S: Record<number, (f: number) => Shot> = {
   42: (f) => { const x = NAR4 + 0.1; return dolly([x + 0.2, 1.42, 3.4], [x, 1.38, 1.0], pushK(f, 266, 0.003, 0.006, 20), { fov: 36, roll: 0.035 }); },
   // 5: golden post box
   51: (f) => dolly([23.95, 1.25, 5.0], [23.65, 1.2, 1.6], pushK(f, 288, 0.0025), { fov: 38 }),
-  52: (f) => dolly([23.75, 1.08, 3.0], [23.8, 1.15, 1.6], pushK(f, 318, 0.003, 0.006, 20), { fov: 34, roll: -0.03 }),
+  52: (f) => dolly([23.7, 1.2, 3.9], [23.55, 1.12, 1.6], pushK(f, 318, 0.003, 0.006, 20), { fov: 34, roll: -0.03 }),
   // 6: desk top-down inserts: cash / cards / photos / receipt, then wide
-  61: (f) => top(DESK, -0.06, 0.02, 0.95, pushK(f, 360, 0.003)),
-  62: (f) => top(DESK, 0.16, -0.06, 0.6, pushK(f, 380, 0.004), { roll: 0.06 }),
-  63: (f) => top(DESK, -0.22, -0.1, 0.55, pushK(f, 402, 0.004), { roll: -0.05 }),
-  64: (f) => top(DESK, 0.2, 0.12, 0.55, pushK(f, 436, 0.004, 0.008, 20), { roll: 0.05 }),
-  65: (f) => top(DESK, 0.0, 0.02, 1.15, pushK(f, 474, 0.003)),
+  61: (f) => top(DESK, -0.06, 0.02, 1.45, pushK(f, 360, 0.003)),
+  62: (f) => top(DESK, 0.16, -0.06, 0.85, pushK(f, 380, 0.004), { roll: 0.06 }),
+  63: (f) => top(DESK, -0.18, 0.12, 0.8, pushK(f, 402, 0.004), { roll: -0.05 }),
+  64: (f) => top(DESK, 0.18, 0.14, 0.75, pushK(f, 436, 0.004, 0.008, 20), { roll: 0.05 }),
+  65: (f) => top(DESK, 0.0, 0.04, 1.65, pushK(f, 474, 0.003)),
   // 7: narrator behind the desk, wallet in hand
-  71: (f) => dolly([DEN[0] + 0.5, 1.45, DEN[2] + 1.2], [DEN[0], 1.3, DEN[2] - 2.1], pushK(f, 512, 0.003), { fov: 40 }),
+  71: (f) => dolly([DEN[0] + 0.4, 1.45, DEN[2] + 0.6], [DEN[0], 1.3, DEN[2] - 2.1], pushK(f, 512, 0.003), { fov: 40 }),
   72: (f) => dolly([DEN[0] + 0.25, 1.62, DEN[2] - 0.2], [DEN[0], 1.55, DEN[2] - 2.1], pushK(f, 532, 0.003, 0.006, 20), { fov: 36, roll: 0.03 }),
   // 8: the note: holds it up, then top-down it slides into the wallet
   81: (f) => dolly([DEN[0] - 0.4, 1.5, DEN[2] + 0.6], [DEN[0], 1.45, DEN[2] - 2.1], pushK(f, 570, 0.0025), { fov: 38, roll: -0.02 }),
-  82: (f) => dolly([DEN[0] - 0.15, 1.62, DEN[2] - 0.6], [DEN[0], 1.6, DEN[2] - 2.1], pushK(f, 598, 0.003, 0.007, 22), { fov: 34, roll: 0.04 }),
-  83: (f) => top(DESK, 0.0, 0.05, 0.62, pushK(f, 634, 0.004)),
+  82: (f) => dolly([DEN[0] - 0.15, 1.6, DEN[2] + 0.3], [DEN[0], 1.6, DEN[2] - 2.1], pushK(f, 598, 0.003, 0.007, 22), { fov: 34, roll: 0.04 }),
+  83: (f) => top(DESK, 0.04, 0.1, 0.95, pushK(f, 634, 0.004)),
   // 9: owner at his door reads the note; over-shoulder insert of the note
   91: (f) => dolly([DOOR[0] + 1.3, 1.55, 3.1], [DOOR[0] + 0.85, 1.5, 0.75], pushK(f, 694, 0.0035), { fov: 36 }),
   92: (f) => dolly([DOOR[0] + 1.0, 1.55, 2.4], [DOOR[0] + 0.85, 1.45, 0.75], pushK(f, 724, 0.003), { fov: 34, roll: 0.03 }),
@@ -178,14 +178,14 @@ const S: Record<number, (f: number) => Shot> = {
   121: (f) => dolly([0.35, 1.58, 11.0], [0.2, 1.6, 13.0], pushK(f, 948, 0.003), { fov: 34 }),
   122: (f) => dolly([1.9, 1.5, 10.8], [1.7, 1.55, 13.4], pushK(f, 998, 0.003, 0.006, 20), { fov: 34, roll: -0.04 }),
   // 13: the parade of wallets, tracking along the pavement
-  131: (f) => { const x = PARADE_X(f) + 6; return dolly([x + 0.6, 1.05, 5.2], [x, 0.95, 1.0], pushK(f, 1055, 0.002), { fov: 44 }); },
-  132: (f) => { const x = PARADE_X(f) + 4.2; return dolly([x + 0.2, 0.8, 2.9], [x, 0.78, 1.0], pushK(f, 1112, 0.003), { fov: 40, roll: 0.03 }); },
+  131: (f) => { const x = PARADE_X(f) + 2.6; return dolly([x + 0.6, 1.15, 7.8], [x, 0.95, 1.0], pushK(f, 1055, 0.002), { fov: 46 }); },
+  132: (f) => { const x = PARADE_X(f) + 2.2; return dolly([x + 0.2, 0.85, 3.9], [x, 0.8, 1.0], pushK(f, 1112, 0.003), { fov: 42, roll: 0.03 }); },
   133: (f) => dolly([PARADE_X(1190) + 6.3, 1.5, 3.0], [PARADE_X(1190) + 6.1, 1.45, 0.9], pushK(f, 1176, 0.003, 0.006, 20), { fov: 36 }),
   // 14: dinner party
   141: (f) => dolly([DTABLE[0] + 0.4, 1.6, DTABLE[2] + 3.6], [DTABLE[0], 1.25, DTABLE[2] - 0.6], pushK(f, 1228, 0.0025), { fov: 40 }),
   142: (f) => dolly([DTABLE[0] + 0.2, 1.55, DTABLE[2] + 1.4], [DTABLE[0], 1.52, DTABLE[2] - 0.95], pushK(f, 1268, 0.003, 0.006, 20), { fov: 36, roll: 0.03 }),
   // 15: the wallet pile grows
-  151: (f) => dolly([PILE[0] - 0.4, 1.4, PILE[2] + 3.6], [PILE[0] - 0.5, 0.9, PILE[2] - 0.3], pushK(f, 1330, 0.003), { fov: 40 }),
+  151: (f) => dolly([PILE[0] - 0.7, 1.4, PILE[2] + 3.6], [PILE[0] - 0.75, 0.95, PILE[2] - 0.3], pushK(f, 1330, 0.003), { fov: 40 }),
   152: (f) => dolly([PILE[0] + 1.8, 0.6, PILE[2] + 2.6], [PILE[0] - 0.3, 0.8, PILE[2] - 0.3], pushK(f, 1378, 0.003), { fov: 42, roll: -0.04 }),
   153: (f) => dolly([PILE[0] - 0.9, 1.05, PILE[2] + 3.5], [PILE[0], 1.35, PILE[2] - 0.3], pushK(f, 1415, 0.0025, 0.006, 25), { fov: 46, roll: 0.03 }),
   // 16: Sunday night; clones at every door; all at once
@@ -194,36 +194,36 @@ const S: Record<number, (f: number) => Shot> = {
   163: (f) => dolly([46.5, 2.2, 6.8], [40, 1.2, 0.2], pushK(f, 1576, 0.003, 0.007, 20), { fov: 40, roll: -0.04 }),
   // 17: the intact window, then the intact door with an officer
   171: (f) => dolly([WIN[0] + 0.5, 1.6, 1.5], [WIN[0], 1.5, -0.45], pushK(f, 1612, 0.004), { fov: 34 }),
-  172: (f) => dolly([DOOR[0] + 0.8, 1.35, 3.6], [DOOR[0] + 0.3, 1.2, -0.3], pushK(f, 1652, 0.003), { fov: 38, roll: 0.03 }),
+  172: (f) => dolly([DOOR[0] + 1.0, 1.35, 3.8], [DOOR[0] + 0.5, 1.2, -0.3], pushK(f, 1652, 0.003), { fov: 38, roll: 0.03 }),
   // 18: the lock: key in, turn, the door swings open
   181: (f) => dolly([LOCK[0] + 0.42, 1.12, 0.32], [LOCK[0], 1.02, LOCK[2]], pushK(f, 1694, 0.003), { fov: 32 }),
-  182: (f) => dolly([DOOR[0] + 1.1, 1.3, 2.6], [DOOR[0], 1.2, -0.5], pushK(f, 1728, 0.003), { fov: 38 }),
+  182: (f) => dolly([DOOR[0] + 1.9, 1.45, 4.4], [DOOR[0] - 0.1, 1.3, -0.5], pushK(f, 1728, 0.003), { fov: 42 }),
   183: (f) => dolly([LOCK[0] + 0.24, 1.06, 0.06], [LOCK[0], 1.02, LOCK[2]], pushK(f, 1750, 0.004), { fov: 30, roll: 0.04 }),
   // 19: dark kitchen, the note on the table
   191: (f) => dolly([KTABLE[0] + 2.0, 1.75, KTABLE[2] + 3.1], [KTABLE[0], 0.85, KTABLE[2]], pushK(f, 1795, 0.002), { fov: 40 }),
   192: (f) => dolly([KTABLE[0] + 0.9, 1.35, KTABLE[2] + 1.6], [KTABLE[0], 0.8, KTABLE[2]], pushK(f, 1800, 0.002), { fov: 38, roll: 0.03 }),
-  193: (f) => top(KTABLE, 0.0, 0.02, 0.55, pushK(f, 1842, 0.004, 0.007, 20), { roll: 0.04 }),
+  193: (f) => top(KTABLE, 0.04, 0.06, 0.75, pushK(f, 1842, 0.004, 0.007, 20), { roll: 0.04 }),
   // 20: the homeowner reads it
   201: (f) => dolly([KTABLE[0] + 0.3, 1.58, KTABLE[2] + 1.6], [KTABLE[0], 1.55, KTABLE[2] - 0.75], pushK(f, 1898, 0.004, 0.007, 20), { fov: 36, roll: -0.03 }),
   // 21: never wanted the money
   211: (f) => dolly([DEN[0] - 0.3, 1.55, DEN[2] - 0.1], [DEN[0], 1.45, DEN[2] - 2.1], pushK(f, 1952, 0.003), { fov: 38, roll: 0.03 }),
   // 22: two things
   221: (f) => dolly([DEN[0] + 0.35, 1.58, DEN[2] - 0.4], [DEN[0] + 0.1, 1.55, DEN[2] - 2.1], pushK(f, 2002, 0.0035), { fov: 36 }),
-  222: (f) => top(DESK, 0.0, 0.03, 0.62, pushK(f, 2044, 0.003)),
+  222: (f) => top(DESK, 0.0, 0.04, 0.95, pushK(f, 2044, 0.003)),
   // 23: the ID card
-  231: (f) => top(DESK, -0.12, -0.1, 0.5, pushK(f, 2096, 0.006), { roll: 0.05 }),
+  231: (f) => top(DESK, -0.06, -0.06, 0.75, pushK(f, 2096, 0.006), { roll: 0.05 }),
   // 24: the spare key
-  241: (f) => top(DESK, 0.1, 0.04, 0.55, pushK(f, 2125, 0.003)),
-  242: (f) => top(DESK, 0.2, 0.1, 0.4, pushK(f, 2176, 0.004, 0.008, 20), { roll: -0.06 }),
+  241: (f) => top(DESK, 0.08, 0.02, 0.9, pushK(f, 2125, 0.003)),
+  242: (f) => top(DESK, 0.2, 0.1, 0.6, pushK(f, 2176, 0.004, 0.008, 20), { roll: -0.06 }),
   // 25: soap
-  251: (f) => top(DESK, -0.5, 0.1, 0.62, pushK(f, 2222, 0.003), { roll: 0.03 }),
+  251: (f) => top(DESK, -0.4, 0.04, 0.95, pushK(f, 2222, 0.003), { roll: 0.03 }),
   // 26: golden post box again (reverse angle, sun behind)
   261: (f) => dolly([22.6, 0.9, 4.4], [23.8, 1.25, 1.5], pushK(f, 2294, 0.0025), { fov: 40, roll: 0.03 }),
   // 27: nothing missing
   271: (f) => dolly([KTABLE[0] - 0.3, 1.6, KTABLE[2] + 1.5], [KTABLE[0], 1.5, KTABLE[2] - 0.75], pushK(f, 2368, 0.004), { fov: 36 }),
   // 28: owner locks his door; pull back to the narrator across the street
   281: (f) => dolly([DOOR[0] + 0.3, 1.45, 2.4], [DOOR[0] + 0.6, 1.3, 0.3], pushK(f, 2410, 0.003), { fov: 38 }),
-  282: (f) => dolly([DOOR[0] - 3.5, 1.6, 15.6], [DOOR[0] - 0.5, 1.4, 4.0], pushK(f, 2456, 0.002), { fov: 44, roll: 0.02 }),
+  282: (f) => dolly([DOOR[0] - 3.5, 1.6, 15.6], [DOOR[0] + 0.2, 1.3, 2.0], pushK(f, 2456, 0.002), { fov: 44, roll: 0.02 }),
   // 29: night aerial: the whole street, the narrator strolling away
   291: (f) => dolly([10, 21, 22], [34, 0.5, 7], pushK(f, 2490, 0.002), { fov: 46, roll: -0.03 }),
   // 30: thank-you letters
@@ -249,7 +249,7 @@ const CAMS: Record<number, Key[]> = {
   15: [{ f: 1330, s: S[151] }, { f: 1378, cut: true, s: S[152] }, { f: 1415, cut: true, s: S[153] }],
   16: [{ f: 1464, s: S[161] }, { f: 1520, cut: true, s: S[162] }, { f: 1576, cut: true, s: S[163] }],
   17: [{ f: 1612, s: S[171] }, { f: 1652, cut: true, s: S[172] }],
-  18: [{ f: 1694, s: S[181] }, { f: 1728, cut: true, s: S[182] }, { f: 1750, cut: true, s: S[183] }],
+  18: [{ f: 1694, s: S[181] }, { f: 1728, cut: true, s: S[182] }],
   19: [{ f: 1795, s: S[191] }, { f: 1800, dur: 40, s: S[192] }, { f: 1842, cut: true, s: S[193] }],
   20: [{ f: 1898, s: S[201] }],
   21: [{ f: 1952, s: S[211] }],
@@ -322,7 +322,6 @@ export const DOF: Dof[] = [
   { f: 1652, cInf: 10, focus: () => [DOOR[0] + 0.3, 1.3, -0.3] },
   { f: 1694, cInf: 15, focus: () => [LOCK[0], LOCK[1], LOCK[2] + 0.05] },
   { f: 1728, cInf: 10, focus: () => [DOOR[0], 1.2, -0.4] },
-  { f: 1750, cInf: 16, focus: () => [LOCK[0], LOCK[1], LOCK[2] + 0.05] },
   { f: 1795, cInf: 8, focus: () => [KTABLE[0], KTABLE[1], KTABLE[2]] },
   { f: 1842, cInf: 13, focus: () => [KTABLE[0], KTABLE[1], KTABLE[2]] },
   { f: 1898, cInf: 13, focus: eyes([KTABLE[0], 0, KTABLE[2] - 0.75], 1.55) },
@@ -332,7 +331,7 @@ export const DOF: Dof[] = [
   { f: 2294, cInf: 10, focus: eyes([23.4, 0, 1.5], 1.45) },
   { f: 2368, cInf: 13, focus: eyes([KTABLE[0], 0, KTABLE[2] - 0.75], 1.55) },
   { f: 2410, cInf: 11, focus: eyes([DOOR[0] + 0.6, 0, 0.3], 1.5) },
-  { f: 2456, cInf: 5, focus: eyes([DOOR[0] - 0.4, 0, 4.0], 1.5) },
+  { f: 2456, cInf: 3, focus: eyes([DOOR[0] - 0.4, 0, 4.0], 1.5) },
   { f: 2490, cInf: 0 },
   { f: 2564, cInf: 12, focus: eyes([DEN[0], 0, DEN[2] - 2.1], 1.5) },
   { f: 2600, dur: 40, cInf: 7, focus: eyes([DEN[0], 0, DEN[2] - 2.1], 1.5) },

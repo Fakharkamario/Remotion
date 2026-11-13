@@ -373,8 +373,8 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       const ex: Expr = f < 704 ? "neutral" : f < 736 ? "shock" : "worried";
       stand(out, cam, t, OWNER, [DOOR[0] + 0.85, 0.12, 0.75], { expr: ex, pose: "hold", item: "note", look: f < 724 ? 0 : -1 }, 1, [704 / FPS, 736 / FPS]);
       if (f >= 724) {
-        const k = q(clamp01((f - 726) / 32), 30), p = before(0.62);
-        card(out, `noteBig${k}`, 600, 520, (pp) => fxNoteBig(pp, k, 1), [p[0] + 0.02, p[1] - 0.04, p[2]], 0.36, 0.31, { rot: 0.05 });
+        const k = q(clamp01((f - 726) / 32), 30), p = before(0.95);
+        card(out, `noteBig${k}`, 600, 520, (pp) => fxNoteBig(pp, k, 1), [p[0] + 0.03, p[1] - 0.1, p[2]], 0.3, 0.26, { rot: 0.05 });
       }
       break;
     }
@@ -415,7 +415,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
     case 13: {
       if (f < 1176) {
         for (let i = 0; i < 7; i++) {
-          const x = PARADE_X(f) + i * 1.7 - 1.5 + 0.4 * hh(i, 3), z = i % 2 ? 1.25 : 0.75;
+          const x = PARADE_X(f) + i * 0.95 - 0.5 + 0.25 * hh(i, 3), z = i % 2 ? 1.3 : 0.7;
           walk(out, cam, t, folk(i + 1), x, 0.12, z, 1, 1.0, { expr: (["smile", "smile_closed", "grin", "smile"] as Expr[])[i % 4], wallet: true });
         }
         strollers(out, cam, t, -20, 40, 4, 40);
@@ -437,8 +437,8 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
     }
     case 15: {
       let n = 100; for (const [f0, k] of PILE_N) if (f >= f0) n = k;
-      if (n < 300) stand(out, cam, t, NAR, [PILE[0] - 1.45, 0, PILE[2] + 0.35], { expr: n === 100 ? "content" : "grin", pose: n === 100 ? "pockets" : "point", poseK: n === 100 ? 1 : ramp(f, 1380, 1390), look: 1 });
-      else stand(out, cam, t, NAR, [PILE[0] - 0.05, 0.88, PILE[2] + 0.05], { expr: "laugh", pose: "cheer", poseK: ramp(f, 1415, 1424), tilt: q(3 * Math.sin(t * 10), 4) });
+      if (n < 300) stand(out, cam, t, NAR, [PILE[0] - 1.05, 0, PILE[2] + 0.45], { expr: n === 100 ? "content" : "grin", pose: n === 100 ? "pockets" : "point", poseK: n === 100 ? 1 : ramp(f, 1380, 1390), look: 1 });
+      else stand(out, cam, t, NAR, [PILE[0] - 0.05, 0.62, PILE[2] + 0.1], { expr: "laugh", pose: "cheer", poseK: ramp(f, 1415, 1424), tilt: q(3 * Math.sin(t * 10), 4) });
       break;
     }
     case 16: {
@@ -463,7 +463,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
       if (f < 1652) {
         const u = clamp01((f - 1624) / 22);
         if (u > 0 && u < 1) card(out, "glint", 400, 400, fxGlint, [WIN[0] - 0.55 + 1.1 * u, WIN[1], WIN[2] + 0.06], 0.5, 1.2, { soft: true, euler: [0, 0, 0] });
-      } else stand(out, cam, t, COPS[0], [DOOR[0] + 1.05, 0.12, 0.5], { expr: f < 1672 ? "squint" : "think", pose: "holdUp", item: "glass", look: -1 });
+      } else stand(out, cam, t, COPS[0], [DOOR[0] + 0.95, 0.12, 0.55], { expr: f < 1672 ? "squint" : "think", pose: "holdUp", item: "glass", look: -1 });
       break;
     }
     case 18: {
@@ -525,7 +525,7 @@ export const stage = (id: number, t: number, cam: CamInfo): Stage => {
     case 28: {
       const p: V3 = [DOOR[0] + 0.62, 0.12, 0.35];
       stand(out, cam, t, OWNER, p, { expr: f < 2436 ? "smile" : "content", pose: f < 2436 ? "reach" : "pockets", poseK: f < 2436 ? hold(f, 2412, 2420, 2430, 2436) : ramp(f, 2436, 2444), item: f < 2436 ? "key" : undefined, look: -1 });
-      if (f >= 2456) stand(out, cam, t, NAR, [DOOR[0] - 1.2, 0.12, 13.2], { expr: f < 2470 ? "smile" : "wink", pose: "pockets", look: 1 });
+      if (f >= 2456) stand(out, cam, t, NAR, [DOOR[0] - 3.55, 0.12, 12.9], { expr: f < 2470 ? "smile" : "wink", pose: "pockets", look: 1 });
       if (f >= 2456) strollers(out, cam, t, 20, 70, 4, 50);
       break;
     }

@@ -493,9 +493,9 @@ const roofMat = (col: string) => lam("roof" + col, () => ({ map: roofHD(col, col
 export const GLOW: { b: Batch | null; lit: number; seed: number } = { b: null, lit: 0.45, seed: 1 };
 const glowMats = [new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, 1.7, 0.75) }), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.2, 1.35, 0.55) }),
   new THREE.MeshBasicMaterial({ color: new THREE.Color(0.9, 1.3, 2.4) })];
-export const house = (b: Batch, x: number, z: number, yaw: number, w: number, d: number, h: number, si: number, y = D0): boolean => {
-  const across = Math.abs(Math.sin(yaw)) > 0.5, hx = (across ? d : w) / 2 + 0.6, hz = (across ? w : d) / 2 + 0.6;
-  if (inTheWay(x - hx, x + hx, y, y + h + d * 0.42 + 1.2, z - hz, z + hz)) return false;
+export const house = (b: Batch, x: number, z: number, yaw: number, w: number, d: number, h: number, si: number, y = D0, force = false): boolean => {
+  const across = Math.abs(Math.sin(yaw)) > 0.5, hx = (across ? d : w) / 2 + (across ? 0.1 : 0.6), hz = (across ? w : d) / 2 + (across ? 0.6 : 0.1);
+  if (!force && inTheWay(x - hx, x + hx, y, y + h + d * 0.42 + 1.2, z - hz, z + hz)) return false;
   const st = STYLES[si % STYLES.length];
   const m = new THREE.Matrix4().makeRotationY(yaw).setPosition(x, y, z);
   const front = lam(`hf${si}_${w}_${h}`, () => ({ map: facadeHD(`hf${si}_${w}_${h}`, w, h, { ...st, door: true }) }));
@@ -913,17 +913,17 @@ export const buildCity = (root: THREE.Object3D, rays: Ray[] = []): CityParts => 
       if (special) { x = DOOR[0] - 1.125 - 4.5; }
       const W2 = special ? 9 : w, C2 = special ? DOOR[0] - 1.125 : cx, H2 = special ? 8.4 : h;
       const zc = side < 0 ? -5.5 : 19.5, yaw = side < 0 ? 0 : Math.PI;
-      const ok = house(b, C2, zc, yaw, W2, 10, H2, special ? 0 : Math.floor(r() * 8));
+      const ok = house(b, C2, zc, yaw, W2, 10, H2, special ? 0 : Math.floor(r() * 8), D0, special);
       if (ok && side < 0) { const n = Math.max(1, Math.floor(W2 / 2.2)); DOORS.push(C2 - W2 / 2 + ((Math.floor(n / 2) + 0.5) * W2) / n); }
       x += W2 + (r() < 0.3 ? 2.5 + r() * 2 : 0.3);
       if (r() < 0.22) { const tx = x - 1.2, tz = side < 0 ? -1.2 : 15.2; prop(b, {}, pick(["tree_oak", "tree_fat", "tree_default"]), tx, 0.12, tz, 6 + 2 * r()); }
     }
   }
   // police station: wide brick front, steps, blue lamp
-  house(b, STATION[0], 19.5, Math.PI, 14, 10, 9.8, 7);
+  house(b, STATION[0], 19.5, Math.PI, 14, 10, 9.8, 7, D0, true);
   box(b, lam("stepsStone", () => ({ color: "#d9d2c4" })), STATION[0] - 1.6, 0.12, 14.2, STATION[0] + 1.6, 0.32, 14.9);
-  const blueLamp = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.55, 0.42), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 1.0, 3.2) }));
-  blueLamp.position.set(STATION[0], 3.25, 14.0); root.add(blueLamp);
+  const blueLamp = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.4, 0.3), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 1.0, 3.2) }));
+  blueLamp.position.set(STATION[0], 3.05, 14.25); root.add(blueLamp);
   box(b, lam("lampIron", () => ({ color: "#2f3a36" })), STATION[0] - 0.04, 2.9, 14.0, STATION[0] + 0.04, 3.0, 14.5);
   car(b, STATION[0] + 6.5, 10.6, 0, "#20232c", true);
   // parked cars along both kerbs, street lamps, trees
@@ -994,7 +994,7 @@ export const buildRooms = (root: THREE.Object3D) => {
   const rooms: [string, [number, number, number], string, string, boolean][] = [
     ["den", DEN, "#5e7a6a", "#557060", false], ["kitchen", KITCHEN, "#e2c98e", "#d8bc80", true], ["dining", DINING, "#b85a4a", "#a8503f", false],
   ];
-  const wood = lam("furnWood", () => ({ map: beam() })), dk = lam("furnDark", () => ({ color: "#5a3a26" }));
+  const wood = lam("furnWood", () => ({ map: rep(beam(), 3, 2), color: "#c4946a" })), dk = lam("furnDark", () => ({ color: "#5a3a26" }));
   const trim = lam("roomTrim", () => ({ color: "#f2e8d6" }));
   for (const [name, o, col, stripe, kitchen] of rooms) {
     const g = new THREE.Group(), b = new Batch(), [ox, , oz] = o, hw = ROOM_W / 2, hd = ROOM_D / 2;
@@ -1003,8 +1003,7 @@ export const buildRooms = (root: THREE.Object3D) => {
     b.add(quad(V(ox - hw, 0, oz - hd), V(ox + hw, 0, oz - hd), V(ox + hw, ROOM_H, oz - hd), V(ox - hw, ROOM_H, oz - hd), ROOM_W / 1.6, ROOM_H / 1.6), wallM);
     b.add(quad(V(ox - hw, 0, oz + hd + 4), V(ox - hw, 0, oz - hd), V(ox - hw, ROOM_H, oz - hd), V(ox - hw, ROOM_H, oz + hd + 4), (ROOM_D + 4) / 1.6, ROOM_H / 1.6), wallM);
     b.add(quad(V(ox + hw, 0, oz - hd), V(ox + hw, 0, oz + hd + 4), V(ox + hw, ROOM_H, oz + hd + 4), V(ox + hw, ROOM_H, oz - hd), (ROOM_D + 4) / 1.6, ROOM_H / 1.6), wallM);
-    b.add(boxGeo(V(ox - hw - 0.3, 0, oz - hd - 0.3), V(ox + hw + 0.3, ROOM_H + 0.2, oz - hd)), trim); // outer shell edge
-    // wainscot, skirting, picture rail
+        // wainscot, skirting, picture rail
     box(b, trim, ox - hw, 0, oz - hd, ox + hw, 0.14, oz - hd + 0.03);
     box(b, trim, ox - hw, 0.95, oz - hd, ox + hw, 1.0, oz - hd + 0.04);
     box(b, trim, ox - hw, 2.6, oz - hd, ox + hw, 2.65, oz - hd + 0.04);
