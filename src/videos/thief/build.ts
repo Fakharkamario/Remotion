@@ -514,7 +514,7 @@ export const house = (b: Batch, x: number, z: number, yaw: number, w: number, d:
   const cx = hw * 0.45 * (si % 2 ? 1 : -1);
   b.add(boxGeo(V(cx - 0.4, h + rh * 0.3, -hd * 0.35 - 0.4), V(cx + 0.4, h + rh + 1.1, -hd * 0.35 + 0.4), 2), lam("chim", () => ({ map: rep(brick(), 1, 1) })), m);
   houseDetail(b, m, w, d, h, rh, cx);
-  if (GLOW.b) { // night: some front windows glow (facadeHD layout: nWin per floor, sill fl * 2.8 + 0.9, 0.85 x 1.25 m)
+  if (GLOW.b && !force) { // night (not on the owner's house: its 3D window pane would z-fight the glow): some front windows glow (facadeHD layout: nWin per floor, sill fl * 2.8 + 0.9, 0.85 x 1.25 m)
     const n = Math.max(1, Math.floor(w / 2.2)), floors = Math.max(1, Math.floor(h / 2.8)), q = new THREE.PlaneGeometry(0.85, 1.25);
     for (let fl = 0; fl < floors; fl++) for (let i = 0; i < n; i++) {
       if (fl === 0 && i === Math.floor(n / 2)) continue;
