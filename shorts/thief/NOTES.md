@@ -20,3 +20,11 @@
   ~4.3 s/frame at 1080x1920 with software WebGL on 4 CPUs (~3.2 h). A 2K (1440x2560) render would take ~6 h here.
 - Test sheet of the characters: composition `ThiefChars`.
 - No on-screen captions (cartoon-3d-short rule); the reference video's word captions were not copied.
+
+## Final
+- `out/thief/gentleman_thief.mp4` (not committed, out/ is git-ignored): 1080x1920, 30 fps, 2650 frames, 88.3 s,
+  h264 crf 16 + AAC 256k, ~105 MB. Loudness -15.9 LUFS, peak -1.1 dBFS after AAC (mix lowered 1.5 dB at mux).
+- QA (scripts/short_qa.py): no black / white / frozen frames; the flagged pops are planned (prop slide-ins, the
+  newspaper poof, expression swaps). A night-window z-fight on the owner's house was found and fixed (glows skipped
+  on that house), chunks 1200-1999 re-rendered.
+- Rebuild: `scripts/render_thief.sh`, concat `out/thief/chunks/*.mp4` in order, mux `shorts/thief/audio/mix.wav`.
