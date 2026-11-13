@@ -1,0 +1,22 @@
+# Sound cues (s, frame @30)
+
+-   0.00 s (f    0): police belly laughs
+-   8.63 s (f  259): pickpocket swipe
+-  10.73 s (f  322): envelope into the post box: slide + thunk
+-  12.00 s (f  360): cash / cards / photos / crumpled receipt slides
+-  22.53 s (f  676): wallet snaps shut
+-  24.20 s (f  726): pen scratch (note)
+-  26.20 s (f  786): spinning newspaper whoosh
+-  28.17 s (f  845): poof + ding: gentleman
+-  29.07 s (f  872): laughs again
+-  34.27 s (f 1028): laughs (lost property)
+-  40.93 s (f 1228): dinner party chatter, clinks, gasp, applause
+-  44.33 s (f 1330): wallets thud onto the pile (x3, bigger each time)
+-  50.73 s (f 1522): clones pop in
+-  52.60 s (f 1578): ALL AT ONCE: a volley of lock clicks + boom
+-  56.67 s (f 1700): key in
+-  57.20 s (f 1716): click-clack
+-  57.60 s (f 1728): door creaks open
+-  74.07 s (f 2222): stopwatch ticking
+-  74.40 s (f 2232): soap squish
+-  77.27 s (f 2318): envelope into the post box: slide + thunk
