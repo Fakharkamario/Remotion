@@ -1,0 +1,97 @@
+@font-face { font-family: "Inter"; src: url("fonts/inter-latin-wght.woff2") format("woff2"); font-weight: 100 900; font-display: block; }
+:root {
+  /* palette: the reference's yellow gold, pushed a little warmer toward amber / copper */
+  --g-hi: #ffe6c0;
+  --g-1: #ffcf80;
+  --g-2: #f2ad52;
+  --g-3: #cf8030;
+  --g-4: #7c3b12;
+  --green: #5fe3a8;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: "Inter", system-ui, sans-serif; color: #fff; }
+.layer { position: absolute; inset: 0; }
+.fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+.abs { position: absolute; left: 0; top: 0; will-change: transform; }
+
+/* ---------- backgrounds ---------- */
+#bg1, #bg2 { position: absolute; inset: 0; }
+#bg1 { background:
+  radial-gradient(ellipse 760px 600px at 50% 50%, rgba(150, 96, 30, 0.16) 0%, rgba(90, 58, 18, 0.08) 45%, rgba(0,0,0,0) 80%),
+  radial-gradient(ellipse 1300px 900px at 50% 50%, #0d0a07 0%, #060505 60%, #020202 100%); }
+#bg2 { background:
+  radial-gradient(ellipse 1500px 1100px at 100% 100%, rgb(104, 68, 30) 0%, rgb(64, 42, 17) 25%, rgb(33, 22, 8) 50%, rgb(12, 8, 3) 75%, rgba(0,0,0,0) 100%),
+  #000; }
+.grid { position: absolute; inset: 0; }
+
+/* ---------- orb ---------- */
+.orb { position: absolute; left: 0; top: 0; width: 200px; height: 200px; margin: -100px 0 0 -100px; will-change: transform; }
+.orb .glow { position: absolute; left: -200px; top: -200px; width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 184, 70, 0.26) 0%, rgba(240, 156, 46, 0.12) 24%, rgba(200, 120, 36, 0.04) 44%, rgba(0,0,0,0) 66%); }
+.orb .halo { position: absolute; left: -45px; top: -45px; width: 290px; height: 290px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 190, 90, 0.07) 55%, rgba(255, 190, 90, 0.035) 68%, rgba(0,0,0,0) 72%); }
+.orb svg { position: absolute; left: -50px; top: -50px; width: 300px; height: 300px; overflow: visible; }
+.orb .ball { position: absolute; inset: 0; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 53% 57%, #fff1c0 0%, #f8d374 11%, #e9b146 28%, #d7992f 52%, #be8124 76%, #8f5c17 100%);
+  box-shadow: 0 0 22px rgba(255, 186, 76, 0.38), 0 0 60px rgba(240, 150, 50, 0.16); }
+.orb .refl { position: absolute; inset: -6%; border-radius: 50%;
+  background:
+    radial-gradient(ellipse 17% 30% at 22% 54%, rgba(40, 16, 0, 0.95) 0%, rgba(52, 22, 0, 0.70) 45%, rgba(60,26,0,0) 90%),
+    radial-gradient(ellipse 12% 18% at 38% 34%, rgba(60, 26, 0, 0.75) 0%, rgba(60,26,0,0) 88%),
+    radial-gradient(ellipse 18% 12% at 70% 30%, rgba(110, 62, 8, 0.45) 0%, rgba(110,62,8,0) 85%),
+    radial-gradient(ellipse 25% 10% at 50% 86%, rgba(150, 96, 20, 0.45) 0%, rgba(150,96,20,0) 85%),
+    radial-gradient(ellipse 13% 14% at 55% 55%, rgba(255, 246, 210, 0.85) 0%, rgba(255,240,200,0) 90%);
+  filter: blur(6px); }
+.orb .hl { position: absolute; inset: 0; border-radius: 50%;
+  background:
+    radial-gradient(ellipse 32% 9% at 50% 13%, rgba(255, 242, 196, 0.75) 0%, rgba(255, 236, 190, 0.35) 60%, rgba(255,236,190,0) 100%),
+    radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 74%, rgba(110, 66, 10, 0.35) 92%, rgba(255, 226, 150, 0.0) 100%);
+  box-shadow: inset 0 0 0 2px rgba(255, 228, 160, 0.55), inset 0 0 0 4px rgba(120, 76, 14, 0.25); }
+
+/* ---------- scene 1 cards ---------- */
+.card { position: absolute; left: 0; top: 0; border-radius: 18px; padding: 20px 24px; color: #fff; overflow: hidden; will-change: transform, opacity;
+  background: linear-gradient(150deg, rgba(64, 62, 58, 0.97) 0%, rgba(38, 37, 35, 0.97) 42%, rgba(22, 22, 22, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.0) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.04) 100%); }
+.lbl { font-size: 13px; letter-spacing: 0.13em; color: rgba(255, 255, 255, 0.56); font-weight: 500; display: flex; align-items: center; gap: 9px; text-transform: uppercase; white-space: nowrap; }
+.lbl i { width: 6px; height: 6px; border-radius: 50%; background: var(--g-1); display: inline-block; }
+.val { font-weight: 600; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sub { font-size: 13px; color: rgba(255, 255, 255, 0.30); white-space: nowrap; }
+.chip { font-size: 11px; letter-spacing: 0.08em; padding: 4px 9px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14); color: rgba(255,255,255,0.55); font-weight: 600; }
+.chip.on { background: linear-gradient(180deg, var(--g-1), var(--g-2)); color: #2a1606; border-color: transparent; }
+.chip.green { color: var(--green); background: rgba(70, 200, 140, 0.14); border-color: rgba(70,200,140,0.25); }
+.pos { color: var(--green); }
+
+/* ---------- scene 2 type ---------- */
+.big { position: absolute; left: 0; top: 0; white-space: pre; line-height: 1; will-change: transform; }
+#meet { font-weight: 600; letter-spacing: -0.005em;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f2ef 38%, #b9b6b1 78%, #8f8b86 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#mentor { font-weight: 500; letter-spacing: -0.005em; }
+#mentor span { display: inline-block; white-space: pre;
+  background: linear-gradient(180deg, var(--g-hi) 0%, var(--g-1) 30%, var(--g-2) 66%, var(--g-3) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#glyphs { position: absolute; left: 0; top: 0; }
+#glyphs b { position: absolute; font: 700 36px/1 "Inter", monospace; color: var(--g-1); transform: translate(-50%, -50%); }
+
+/* ---------- scene 3 ---------- */
+#personal { font-weight: 500; letter-spacing: -0.01em; color: #fff; }
+#pill { position: absolute; left: 0; top: 0; width: 286px; height: 58px; padding: 0 22px 0 14px; border-radius: 999px; display: flex; align-items: center; gap: 14px; white-space: nowrap; overflow: hidden;
+  background: linear-gradient(180deg, rgba(52, 40, 24, 0.96), rgba(26, 20, 12, 0.96));
+  border: 1.5px solid rgba(240, 175, 90, 0.5); box-shadow: inset 0 1px 0 rgba(255,220,170,0.12); font-size: 24px; font-weight: 500; color: rgba(255,255,255,0.92); }
+#pill .ico { width: 34px; height: 34px; background: rgba(255, 200, 120, 0.14); border-radius: 50%; display: grid; place-items: center; flex: none; }
+#card3 { position: absolute; left: 0; top: 0; width: 596px; height: 636px; border-radius: 34px; transform-origin: 0 0; overflow: hidden; will-change: transform;
+  background: linear-gradient(160deg, rgba(48, 46, 43, 0.92) 0%, rgba(26, 25, 24, 0.94) 38%, rgba(14, 14, 14, 0.96) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.16); box-shadow: inset 0 2px 0 rgba(255,255,255,0.10); }
+#card3 .shine { position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(170deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 30%), radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 170, 80, 0.10), rgba(0,0,0,0) 70%); }
+#card3 .sheen { position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(100deg, #9a6424 0%, #f2bd62 22%, #fff3d2 50%, #f7cc78 70%, #d99a44 86%, #9c6226 100%); }
+#card3 .name { position: absolute; left: 50%; top: 272px; transform: translate(-50%, -50%); font-size: 46px; font-weight: 400; color: rgba(255,255,255,0.34); padding: 4px 18px; border-radius: 22px; background: rgba(255,255,255,0.035); white-space: nowrap; }
+#card3 .input { position: absolute; left: 28px; right: 28px; top: 510px; height: 92px; border-radius: 46px; background: rgba(255,255,255,0.045); }
+#card3 .send { position: absolute; right: 22px; top: 50%; width: 64px; height: 64px; margin-top: -32px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 45% 35%, var(--g-hi), var(--g-1) 40%, var(--g-2) 75%, var(--g-3)); box-shadow: 0 0 18px rgba(255,170,80,0.35); }
+#ondemand { font-weight: 500; letter-spacing: -0.005em; }
+#ondemand .on { background: linear-gradient(180deg, #ffffff 0%, #eeebe7 45%, #b4b0aa 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#ondemand .dm { background: linear-gradient(180deg, var(--g-hi) 0%, var(--g-1) 35%, var(--g-2) 75%, var(--g-3) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
