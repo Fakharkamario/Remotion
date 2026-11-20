@@ -53,148 +53,6 @@ export const cached = (key: string, w: number, h: number, draw: (g: G, W: number
   return t;
 };
 
-/** UI layer printed on a glass card: transparent so the 3D glass body (thickness, reflections) shows through.
- *  `border` = a state colour (red = closed, orange = lit) drawn as a thin inset line with a soft inner bloom. */
-export const glass = (g: G, W: number, H: number, o: { lit?: string; border?: string; fill?: number } = {}) => {
-  const r = Math.min(W, H) * 0.1;
-  g.clearRect(0, 0, W, H);
-  g.save();
-  rr(g, 0, 0, W, H, r);
-  g.clip();
-  const sh = g.createLinearGradient(0, 0, W * 0.4, H);
-  sh.addColorStop(0, "rgba(255,255,255,0.05)");
-  sh.addColorStop(0.45, "rgba(255,255,255,0.012)");
-  sh.addColorStop(1, "rgba(255,255,255,0)");
-  g.fillStyle = sh;
-  g.fillRect(0, 0, W, H);
-  if (o.lit) {
-    const lg = g.createRadialGradient(W * 0.5, -H * 0.45, 0, W * 0.5, -H * 0.45, H * 1.3);
-    lg.addColorStop(0, o.lit);
-    lg.addColorStop(1, "rgba(0,0,0,0)");
-    g.fillStyle = lg;
-    g.fillRect(0, 0, W, H);
-  }
-  const inset = Math.max(3, W / 160);
-  if (o.border) {
-    g.shadowColor = o.border;
-    g.shadowBlur = W / 30;
-    g.lineWidth = Math.max(2, W / 260);
-    g.strokeStyle = o.border;
-    rr(g, inset, inset, W - inset * 2, H - inset * 2, r * 0.9);
-    g.stroke();
-    g.shadowBlur = 0;
-  } else {
-    g.lineWidth = Math.max(1.5, W / 420);
-    g.strokeStyle = "rgba(239,244,250,0.07)";
-    rr(g, inset, inset, W - inset * 2, H - inset * 2, r * 0.9);
-    g.stroke();
-  }
-  g.restore();
-};
-
-export const chip = (g: G, label: string, x: number, y: number, px: number, style: "closed" | "open" | "ghost", align: "left" | "right" = "left") => {
-  g.font = `600 ${px}px ${FB}`;
-  g.letterSpacing = `${px * 0.14}px`;
-  const tw = g.measureText(label).width;
-  g.letterSpacing = "0px";
-  const dot = style === "closed" ? px * 1.0 : 0;
-  const w = tw + px * 1.6 + dot, h = px * 1.9;
-  const x0 = align === "right" ? x - w : x;
-  rr(g, x0, y - h / 2, w, h, h / 2);
-  if (style === "open") {
-    g.fillStyle = C.perps;
-    g.fill();
-  } else {
-    g.fillStyle = style === "closed" ? "rgba(255,117,106,0.12)" : "rgba(239,244,250,0.05)";
-    g.fill();
-    g.lineWidth = Math.max(1.5, px / 10);
-    g.strokeStyle = style === "closed" ? "rgba(255,117,106,0.55)" : "rgba(239,244,250,0.22)";
-    g.stroke();
-  }
-  if (dot) {
-    g.beginPath();
-    g.arc(x0 + px * 0.85, y, px * 0.26, 0, Math.PI * 2);
-    g.fillStyle = C.error;
-    g.fill();
-  }
-  text(g, label, x0 + px * 0.8 + dot, y + px * 0.36, px, "s", style === "open" ? "#0b0d10" : style === "closed" ? "#FFB1AA" : C.t2, "left", px * 0.14);
-};
-
-const spark = (g: G, x: number, y: number, w: number, h: number, seed: number, up: boolean) => {
-  const r = rng(seed);
-  let v = 0.5;
-  const pts: number[] = [];
-  for (let i = 0; i < 24; i++) {
-    v += (r() - 0.5) * 0.22 + (up ? 0.018 : -0.018);
-    v = Math.min(0.95, Math.max(0.05, v));
-    pts.push(v);
-  }
-  const col = up ? C.success : C.error;
-  const grad = g.createLinearGradient(0, y, 0, y + h);
-  grad.addColorStop(0, up ? "rgba(54,196,110,0.28)" : "rgba(255,117,106,0.28)");
-  grad.addColorStop(1, "rgba(0,0,0,0)");
-  g.beginPath();
-  pts.forEach((p, i) => {
-    const px = x + (i / (pts.length - 1)) * w, py = y + (1 - p) * h;
-    if (i) g.lineTo(px, py);
-    else g.moveTo(px, py);
-  });
-  g.lineTo(x + w, y + h);
-  g.lineTo(x, y + h);
-  g.closePath();
-  g.fillStyle = grad;
-  g.fill();
-  g.beginPath();
-  pts.forEach((p, i) => {
-    const px = x + (i / (pts.length - 1)) * w, py = y + (1 - p) * h;
-    if (i) g.lineTo(px, py);
-    else g.moveTo(px, py);
-  });
-  g.lineWidth = h * 0.05;
-  g.strokeStyle = col;
-  g.stroke();
-};
-
-export type Ticker = { sym: string; kind: string; px: string; chg: string; up: boolean; seed: number };
-export const CARD_W = 1.5, CARD_H = 0.86;
-
-export const tickerTex = (t: Ticker) =>
-  cached(`tk-${t.sym}-${t.px}-${t.chg}`, CARD_W, CARD_H, (g, W, H) => {
-    glass(g, W, H);
-    const p = W * 0.075;
-    text(g, t.sym, p, H * 0.22, H * 0.105, "s", C.t2, "left", H * 0.01);
-    text(g, t.kind, W - p, H * 0.22, H * 0.085, "s", C.t3, "right", H * 0.012);
-    text(g, t.px, p, H * 0.53, H * 0.23, "s", C.text);
-    text(g, t.chg, p, H * 0.8, H * 0.11, "s", t.up ? C.success : C.error);
-    spark(g, W * 0.5, H * 0.6, W * 0.42, H * 0.25, t.seed, t.up);
-  });
-
-export const closedTex = (name: string, sub: string) =>
-  cached(`cl-${name}`, CARD_W, CARD_H, (g, W, H) => {
-    glass(g, W, H, { border: "rgba(255,117,106,0.75)" });
-    const p = W * 0.075;
-    text(g, name, p, H * 0.3, H * 0.15, "s", C.text);
-    text(g, sub, p, H * 0.47, H * 0.095, "b", C.t3);
-    chip(g, "CLOSED", p, H * 0.74, H * 0.085, "closed");
-  });
-
-export const clockTex = () =>
-  cached("clock", 2.3, 1.36, (g, W, H) => {
-    glass(g, W, H);
-    text(g, "SATURDAY", W / 2, H * 0.22, H * 0.075, "s", C.t3, "center", H * 0.03);
-    text(g, "02:14", W / 2, H * 0.72, H * 0.5, "d", C.text, "center", H * 0.01);
-    text(g, "AM  ·  NEW YORK", W / 2, H * 0.88, H * 0.065, "s", C.t3, "center", H * 0.025);
-  });
-
-export const DAY_W = 0.92, DAY_H = 1.3;
-export const dayTex = (label: string, lit: boolean, note?: string) =>
-  cached(`day-${label}-${lit}`, DAY_W, DAY_H, (g, W, H) => {
-    glass(g, W, H, lit ? { lit: "rgba(246,160,58,0.85)", border: "rgba(246,160,58,0.85)" } : {});
-    text(g, label, W * 0.12, H * 0.22, H * 0.17, "d", C.text, "left", H * 0.004);
-    if (note && lit) text(g, note, W * 0.12, H * 0.34, H * 0.055, "s", C.text, "left", H * 0.004);
-    chip(g, "OPEN", W * 0.12, H * 0.86, H * 0.05, lit ? "open" : "ghost");
-  });
-
 export const dialFaceTex = () =>
   cached("dialface", 2.4, 2.4, (g, W, H) => {
     g.clearRect(0, 0, W, H);
@@ -215,19 +73,8 @@ export const dialFaceTex = () =>
       g.strokeStyle = big ? "rgba(239,244,250,0.6)" : "rgba(239,244,250,0.25)";
       g.stroke();
     }
-    text(g, "24H", cx, cy - H * 0.02, H * 0.09, "s", C.t3, "center", H * 0.006);
-    text(g, "ALWAYS OPEN", cx, cy + H * 0.08, H * 0.045, "s", C.t2, "center", H * 0.008);
-  });
-
-/** soft rounded glow, used additively behind cards */
-export const glowTex = (rgb: string) =>
-  cached(`glow-${rgb}`, 2, 2, (g, W, H) => {
-    const gr = g.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W / 2);
-    gr.addColorStop(0, `rgba(${rgb},0.9)`);
-    gr.addColorStop(0.35, `rgba(${rgb},0.35)`);
-    gr.addColorStop(1, `rgba(${rgb},0)`);
-    g.fillStyle = gr;
-    g.fillRect(0, 0, W, H);
+    text(g, "24h", cx, cy - H * 0.01, H * 0.1, "s", C.text, "center");
+    text(g, "Always open", cx, cy + H * 0.085, H * 0.05, "b", C.t2, "center");
   });
 
 // ---------------- live trading screens (redrawn every frame) ----------------
@@ -340,54 +187,58 @@ const icoEyeOff = (g: G, cx: number, cy: number, r: number, col: string) => {
   g.stroke();
 };
 /** state "closed": red-tinted matte card like the reference's "HIDDEN" cards. state "open": neutral with a green footer. */
-export const softCard = (title: [string, string], footer: string, state: "closed" | "open", glyph?: string) =>
-  cached(`soft-${title.join("|")}-${state}`, SOFT_W, SOFT_H, (g, W, H) => {
+type SoftState = "closed" | "open" | "lit" | "plain";
+const SOFT: Record<SoftState, { top: string; bot: string; tile: string; ink: string; foot0: string; foot1: string; col: string; edge: string; sub: string }> = {
+  closed: { top: "rgba(70,30,32,0.92)", bot: "rgba(48,18,20,0.92)", tile: "rgba(255,92,80,0.16)", ink: "#FF8A7E", foot0: "rgba(255,92,80,0.10)", foot1: "rgba(255,92,80,0.03)", col: "#FF6F63", edge: "rgba(255,120,110,0.16)", sub: "rgba(239,244,250,0.82)" },
+  open: { top: "rgba(38,40,46,0.92)", bot: "rgba(24,26,30,0.92)", tile: "rgba(239,244,250,0.08)", ink: C.text, foot0: "rgba(54,196,110,0.07)", foot1: "rgba(54,196,110,0.02)", col: C.success, edge: "rgba(239,244,250,0.08)", sub: C.text },
+  lit: { top: "rgba(78,48,20,0.94)", bot: "rgba(44,26,12,0.94)", tile: "rgba(236,139,27,0.2)", ink: "#F6A03A", foot0: "rgba(236,139,27,0.16)", foot1: "rgba(236,139,27,0.05)", col: "#F6A03A", edge: "rgba(246,160,58,0.22)", sub: "rgba(239,244,250,0.85)" },
+  plain: { top: "rgba(34,36,41,0.92)", bot: "rgba(22,24,28,0.92)", tile: "rgba(239,244,250,0.06)", ink: C.t2, foot0: "rgba(239,244,250,0.05)", foot1: "rgba(239,244,250,0.02)", col: C.t2, edge: "rgba(239,244,250,0.07)", sub: C.t2 },
+};
+/** reference-style matte card: inner panel with an icon tile + two-line label, and a tinted state footer */
+export const softCard = (title: [string, string], footer: string, state: SoftState, glyph?: string) =>
+  cached(`soft-${title.join("|")}-${footer}-${state}-${glyph ?? ""}`, SOFT_W, SOFT_H, (g, W, H) => {
+    const P = SOFT[state];
     const r = W * 0.085;
     g.clearRect(0, 0, W, H);
     g.save();
     rr(g, 0, 0, W, H, r);
     g.clip();
-    const red = state === "closed";
     const bg = g.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, red ? "rgba(70,30,32,0.92)" : "rgba(38,40,46,0.92)");
-    bg.addColorStop(1, red ? "rgba(48,18,20,0.92)" : "rgba(24,26,30,0.92)");
+    bg.addColorStop(0, P.top);
+    bg.addColorStop(1, P.bot);
     g.fillStyle = bg;
     g.fillRect(0, 0, W, H);
-    // inner panel
     const p = W * 0.06, ph = H * 0.5;
     rr(g, p, p, W - p * 2, ph, r * 0.7);
-    g.fillStyle = red ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.05)";
+    g.fillStyle = "rgba(255,255,255,0.045)";
     g.fill();
-    // icon tile
     const ts = ph * 0.56, tx = p * 2.1, ty = p + (ph - ts) / 2;
     rr(g, tx, ty, ts, ts, ts * 0.26);
-    g.fillStyle = red ? "rgba(255,92,80,0.16)" : "rgba(239,244,250,0.08)";
+    g.fillStyle = P.tile;
     g.fill();
-    if (glyph) text(g, glyph, tx + ts / 2, ty + ts * 0.68, ts * 0.5, "s", red ? "#FF8A7E" : C.text, "center");
-    else icoClock(g, tx + ts / 2, ty + ts / 2, ts * 0.3, red ? "#FF8A7E" : C.text);
+    if (glyph) text(g, glyph, tx + ts / 2, ty + ts * 0.68, ts * 0.5, "s", P.ink, "center");
+    else icoClock(g, tx + ts / 2, ty + ts / 2, ts * 0.3, P.ink);
     const lx = tx + ts + p * 0.9;
     text(g, title[0], lx, p + ph * 0.44, ph * 0.2, "b", C.text);
-    text(g, title[1], lx, p + ph * 0.76, ph * 0.2, "b", red ? "rgba(239,244,250,0.82)" : C.text);
-    // footer
+    text(g, title[1], lx, p + ph * 0.76, ph * 0.2, "b", P.sub);
     const fy = p + ph + H * 0.07, fh = H - fy - p;
     const fg = g.createLinearGradient(0, fy, 0, H);
-    fg.addColorStop(0, red ? "rgba(255,92,80,0.10)" : "rgba(54,196,110,0.07)");
-    fg.addColorStop(1, red ? "rgba(255,92,80,0.03)" : "rgba(54,196,110,0.02)");
+    fg.addColorStop(0, P.foot0);
+    fg.addColorStop(1, P.foot1);
     rr(g, p, fy, W - p * 2, fh, r * 0.7);
     g.fillStyle = fg;
     g.fill();
-    const col = red ? "#FF6F63" : C.success;
     g.font = `600 ${fh * 0.3}px ${FB}`;
     g.letterSpacing = `${fh * 0.035}px`;
     const tw = g.measureText(footer).width;
     g.letterSpacing = "0px";
     const ic = fh * 0.15, total = tw + ic * 3.4, x0 = W / 2 - total / 2;
-    if (red) icoEyeOff(g, x0 + ic, fy + fh / 2, ic, col);
-    else { g.beginPath(); g.arc(x0 + ic, fy + fh / 2, ic * 0.55, 0, Math.PI * 2); g.fillStyle = col; g.fill(); }
-    text(g, footer, x0 + ic * 3.4, fy + fh / 2 + fh * 0.11, fh * 0.3, "s", col, "left", fh * 0.035);
+    if (state === "closed") icoEyeOff(g, x0 + ic, fy + fh / 2, ic, P.col);
+    else { g.beginPath(); g.arc(x0 + ic, fy + fh / 2, ic * 0.55, 0, Math.PI * 2); g.fillStyle = P.col; g.fill(); }
+    text(g, footer, x0 + ic * 3.4, fy + fh / 2 + fh * 0.11, fh * 0.3, "s", P.col, "left", fh * 0.035);
     g.restore();
     g.lineWidth = Math.max(1.5, W / 500);
-    g.strokeStyle = red ? "rgba(255,120,110,0.16)" : "rgba(239,244,250,0.08)";
+    g.strokeStyle = P.edge;
     rr(g, 1, 1, W - 2, H - 2, r);
     g.stroke();
   });

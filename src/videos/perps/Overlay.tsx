@@ -101,12 +101,36 @@ const Grain: React.FC<{ f: number }> = ({ f }) => {
 
 const Vignette = () => <AbsoluteFill style={{ background: "radial-gradient(ellipse 80% 80% at 50% 48%, transparent 45%, rgba(0,0,0,0.78) 100%)" }} />;
 
+/** whole-frame colour wash per section, like the reference grade (crimson problem section, warm gold product section) */
+const Wash: React.FC<{ kind: "amber" | "crimson" | "warm" }> = ({ kind }) => {
+  if (kind === "crimson")
+    return (
+      <>
+        <Light blend="normal" bg="linear-gradient(0deg, rgba(92,16,18,0.55) 0%, rgba(60,10,12,0.28) 38%, rgba(0,0,0,0) 75%)" />
+        <Light bg="radial-gradient(ellipse 60% 55% at 12% 105%, rgba(190,40,36,0.45), transparent 70%)" />
+      </>
+    );
+  if (kind === "amber")
+    return (
+      <>
+        <Light blend="normal" bg="linear-gradient(0deg, rgba(60,34,10,0.45) 0%, rgba(40,22,6,0.18) 40%, rgba(0,0,0,0) 70%)" />
+        <Light bg="radial-gradient(ellipse 55% 70% at 0% 70%, rgba(200,110,30,0.32), transparent 70%)" />
+      </>
+    );
+  return (
+    <>
+      <Light blend="normal" bg="linear-gradient(0deg, rgba(64,36,8,0.5) 0%, rgba(40,22,5,0.2) 40%, rgba(0,0,0,0) 72%)" />
+      <Light bg="radial-gradient(ellipse 55% 50% at 85% 0%, rgba(200,115,30,0.22), transparent 70%)" />
+    </>
+  );
+};
+
 const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
   switch (id) {
     case "1A":
       return (
         <>
-          <Light bg="linear-gradient(90deg, rgba(236,139,27,0.22) 0%, rgba(236,139,27,0.06) 18%, transparent 34%)" />
+          <Wash kind="amber" />
           <AbsoluteFill style={{ padding: "0 0 0 150px", justifyContent: "center" }}>
             <Words t={t} start={5} out={[38, 48]} lines={[{ segs: [{ t: "Markets don't" }], size: 50, color: C.t2 }, { segs: [{ t: "sleep.", c: C.perps }], size: 112, weight: 600 }]} />
           </AbsoluteFill>
@@ -116,8 +140,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const g = t > 12 && t < 19 && t % 2 === 0;
       return (
         <>
-          <Light blend="normal" bg="linear-gradient(0deg, rgba(92,16,18,0.55) 0%, rgba(60,10,12,0.28) 38%, rgba(0,0,0,0) 75%)" />
-          <Light bg="radial-gradient(ellipse 60% 55% at 12% 105%, rgba(190,40,36,0.45), transparent 70%)" />
+          <Wash kind="crimson" />
           <Streaks t={t} tint="255,140,130" opacity={0.6} />
           <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
             <div style={{ transform: g ? "translateX(6px)" : undefined, textShadow: g ? "-6px 0 rgba(255,117,106,0.8), 6px 0 rgba(31,177,255,0.5)" : undefined }}>
@@ -131,7 +154,8 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const slam = easeOut(span(t, 0, 7));
       return (
         <>
-          <Streaks t={t + 40} opacity={0.7} />
+          <Wash kind="crimson" />
+          <Streaks t={t + 40} tint="255,140,130" opacity={0.5} />
           <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
             <div style={{ fontFamily: FD, fontWeight: 900, fontSize: 250, lineHeight: 0.84, textAlign: "center", color: C.text, transform: `scale(${mix(1.006, 1.035, t / 36)})` }}>
               <div style={{ opacity: slam, transform: `scale(${mix(1.25, 1, slam)})`, filter: `blur(${(1 - slam) * 18}px)` }}>MARKET</div>
@@ -154,6 +178,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       );
       return (
         <>
+          <Wash kind="crimson" />
           {txt("polygon(0 0, 100% 0, 100% 48%, 0 64%)", -split * 120, -split * 160)}
           {txt("polygon(0 64%, 100% 48%, 100% 100%, 0 100%)", split * 120, split * 220)}
           <div style={{ position: "absolute", left: -900, top: 470, width: 3700, height: 150, transform: `rotate(-8deg) translateX(${mix(-1700, 1500, pass)}px)`, mixBlendMode: "screen", filter: "blur(10px)",
@@ -167,6 +192,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
     case "2A":
       return (
         <>
+          <Wash kind="warm" />
           <Louvre t={t} opacity={easeOut(span(t, 0, 18))} />
           <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 150 }}>
             <div style={{ fontFamily: FB, fontWeight: 600, fontSize: 26, letterSpacing: "0.42em", color: C.t2, opacity: easeOut(span(t, 16, 28)), filter: `blur(${(1 - easeOut(span(t, 16, 28))) * 10}px)`, display: "flex", alignItems: "center", gap: 18 }}>
@@ -184,6 +210,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       );
       return (
         <>
+          <Wash kind="warm" />
           <Louvre t={t + 40} opacity={0.6} />
           <AbsoluteFill style={{ alignItems: "center", paddingTop: 455 }}>
             <div style={{ fontFamily: FD, fontWeight: 900, fontSize: 148, lineHeight: 0.86, textAlign: "center", color: C.text }}>
@@ -198,15 +225,15 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
     case "2C": {
       const slam = easeOut(span(t, 0, 8));
       const n = Math.round(mix(1, 365, ease(span(t, 8, 40))));
-      const done = t >= 40;
       return (
         <>
-          <Comet t={f} opacity={0.7} />
-          <div style={{ position: "absolute", left: 130, top: 250, fontFamily: FD, fontWeight: 900, color: C.text }}>
-            <div style={{ fontSize: 360, lineHeight: 0.82, opacity: slam, transform: `scale(${mix(1.22, 1, slam)})`, transformOrigin: "left center", filter: `blur(${(1 - slam) * 16}px)` }}>24/7</div>
+          <Wash kind="warm" />
+          <Comet t={f} opacity={0.6} />
+          <div style={{ position: "absolute", left: 130, top: 280, fontFamily: FD, fontWeight: 900, color: C.text }}>
+            <div style={{ fontSize: 310, lineHeight: 0.82, opacity: slam, transform: `scale(${mix(1.22, 1, slam)})`, transformOrigin: "left center", filter: `blur(${(1 - slam) * 16}px)` }}>24/7</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 26, marginTop: 34, opacity: easeOut(span(t, 6, 14)) }}>
-              <span style={{ fontSize: 150, lineHeight: 0.85, color: C.perps, fontVariantNumeric: "tabular-nums", textShadow: done ? "0 0 40px rgba(236,139,27,0.55)" : undefined }}>{String(n).padStart(3, "0")}</span>
-              <span style={{ fontFamily: FB, fontWeight: 600, fontSize: 28, letterSpacing: "0.3em", color: C.t2 }}>DAYS A YEAR</span>
+              <span style={{ fontSize: 130, lineHeight: 0.85, color: C.perps, fontVariantNumeric: "tabular-nums" }}>{String(n).padStart(3, "0")}</span>
+              <span style={{ fontFamily: FB, fontWeight: 400, fontSize: 40, color: C.t2 }}>days a year</span>
             </div>
           </div>
         </>
@@ -215,8 +242,9 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
     case "2D":
       return (
         <>
-          <Comet t={f} opacity={0.75} />
-          <AbsoluteFill style={{ padding: "140px 0 0 130px" }}>
+          <Wash kind="warm" />
+          <Comet t={f} opacity={0.6} />
+          <AbsoluteFill style={{ padding: "120px 0 0 130px" }}>
             <Words t={t} start={2} lines={[{ segs: [{ t: "Weekends" }], size: 50, color: C.t2 }, { segs: [{ t: "included.", c: C.perps }], size: 112, weight: 600 }]} />
           </AbsoluteFill>
         </>
