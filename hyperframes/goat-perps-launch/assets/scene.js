@@ -155,7 +155,11 @@
     };
 
     function render(fr) {
-      const f = clamp(fr, 0, FRAMES - 1), shot = WORLD.shotAt(Math.round(f)), t = f - S[shot][0];
+      // seek times arrive as e.g. 7.7333 s = frame 231.999: snap near-whole frames so the 3D layer and the copy
+      // always agree on which shot a cut frame belongs to (sub-frame motion-blur samples stay fractional)
+      let f = clamp(fr, 0, FRAMES - 1);
+      if (Math.abs(f - Math.round(f)) < 0.02) f = Math.round(f);
+      const shot = WORLD.shotAt(f), t = f - S[shot][0];
       WORLD.render(f);
 
       // washes + light shapes
