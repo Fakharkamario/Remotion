@@ -10,6 +10,7 @@
   const ease = (x) => { const t = clamp(x, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   const easeOut = (x) => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
   const easeIn = (x) => Math.pow(clamp(x, 0, 1), 3);
+  const expoOut = (x) => { const t = clamp(x, 0, 1); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
   const S = WORLD.SHOTS;
 
   // ---------------- pixel-dissolve copy (the reference's "Rules running in the background" build) ----------------
@@ -103,18 +104,14 @@
       <div id="whipA" class="layer">
         <div id="t1" class="copy" style="left:110px;top:50%;transform:translateY(-50%)"></div>
         <div id="t2" class="copy" style="left:50%;top:50%;transform:translate(-50%,-52%)"></div>
-        <div id="closed" class="punch"><div class="m">MARKET</div><div class="c"></div></div>
-        <div id="split" class="layer"><div class="half a"><div class="punch2"><div>MARKET</div><div>CLOSED?</div></div></div><div class="half b"><div class="punch2"><div>MARKET</div><div>CLOSED?</div></div></div></div>
-        <div id="streak" class="streak"></div><div id="slash" class="slash"></div>
+        <div id="closed" class="punch"><div class="chrome">MARKET</div><div class="chrome">CLOSED?</div></div>
         <div id="intro" class="intro"><span></span>INTRODUCING</div>
         <div id="lockup" class="lockup"><div class="ln"><div>GOAT FUNDED</div></div><div class="ln"><div>PERPS</div></div><p>Trade perps with our simulated capital</p></div>
       </div>
       <div id="whipB" class="layer">
-        <div id="h247" class="h247"><div class="big">24/7</div><div class="row"><b>001</b><span>days a year</span></div></div>
+        <div id="h247" class="h247"><div class="big chrome">24/7</div><div class="row"><b>001</b><span>days a year</span></div></div>
       </div>
       <div id="t3" class="copy" style="left:90px;top:80px"></div>
-      <div id="shade" class="layer"></div>
-      <div id="flash" class="layer"></div>
       <div id="vig" class="layer"></div>
       <div id="grain" class="layer"></div>`;
     const $ = (s) => stage.querySelector(s);
@@ -126,10 +123,10 @@
     const T3 = new Dissolve($("#t3"), [{ segs: [{ t: "Weekends" }], size: 50, color: C.t2 }, { segs: [{ t: "included.", c: C.perps }], size: 112, weight: 600 }], { tint: "#F6A03A" });
 
     const wash = $("#wash"), comet = $(".comet"), louvre = $(".louvre"), streaks = $(".streaks");
-    const closed = $("#closed"), closedC = $("#closed .c"), closedM = $("#closed .m"), split = $("#split"), halfA = $("#split .a"), halfB = $("#split .b");
-    const streak = $("#streak"), slash = $("#slash"), intro = $("#intro"), lockup = $("#lockup"), lns = [...lockup.querySelectorAll(".ln > div")], sub = $("#lockup p");
+    const closed = $("#closed");
+    const intro = $("#intro"), lockup = $("#lockup"), lns = [...lockup.querySelectorAll(".ln > div")], sub = $("#lockup p");
     const h247 = $("#h247"), big = $("#h247 .big"), row = $("#h247 .row"), n365 = $("#h247 b");
-    const whipA = $("#whipA"), whipB = $("#whipB"), shade = $("#shade"), flash = $("#flash"), grain = $("#grain");
+    const grain = $("#grain");
 
     const WASH = {
       amber: "linear-gradient(0deg, rgba(60,34,10,0.45) 0%, rgba(40,22,6,0.18) 40%, rgba(0,0,0,0) 70%), radial-gradient(ellipse 55% 70% at 0% 70%, rgba(200,110,30,0.32), transparent 70%)",
@@ -145,7 +142,17 @@
     });
 
     const show = (el, on) => { el.style.display = on ? "" : "none"; };
-    const flashAt = (f, at, up, down) => (f < at ? easeIn(span(f, at - up, at)) : 1 - easeOut(span(f, at, at + down)));
+
+    // the reference's impact type ("NOT ANYMORE"): cuts in oversized, sheared and motion-blurred, snaps to size in
+    // ~6 frames, then keeps shrinking slowly and dims toward the next cut
+    const punch = (el, t, len, base) => {
+      const k = expoOut(span(t, 0, 7));
+      const sc = mix(1.85, 1, k) * mix(1, 0.9, span(t, 7, len));
+      const sk = mix(-14, 0, k), bl = (1 - k) * 16, dim = mix(1, 0.62, span(t, len - 14, len));
+      el.style.transform = `${base} scale(${sc.toFixed(4)}) skewX(${sk.toFixed(2)}deg)`;
+      el.style.filter = `blur(${bl.toFixed(1)}px) brightness(${dim.toFixed(3)})`;
+      el.style.opacity = t < 0 ? 0 : 1;
+    };
 
     function render(fr) {
       const f = clamp(fr, 0, FRAMES - 1), shot = WORLD.shotAt(Math.round(f)), t = f - S[shot][0];
@@ -153,39 +160,25 @@
 
       // washes + light shapes
       wash.style.background = shot === "1A" ? WASH.amber : shot[0] === "1" ? WASH.crimson : WASH.warm;
-      comet.style.opacity = shot === "1D" ? easeIn(span(t, 6, 22)) * 0.85 : shot === "2C" || shot === "2D" ? 0.5 : 0;
+      comet.style.opacity = shot === "2C" || shot === "2D" ? 0.45 : 0;
       comet.style.transform = `rotate(-5deg) translateX(${(Math.sin(f * 0.02) * 50).toFixed(1)}px)`;
       louvre.style.opacity = shot === "2A" ? easeOut(span(t, 0, 18)) * 0.75 : shot === "2B" ? 0.45 : 0;
       louvre.style.backgroundPosition = `${(f * 3).toFixed(1)}px 0`;
       streaks.style.opacity = shot === "1B" || shot === "1C" ? 0.55 : 0;
-      [...streaks.children].forEach((s, i) => { s.style.left = `${300 + i * 620 + (f - 52) * (1.6 + i * 0.5)}px`; });
+      [...streaks.children].forEach((s, i) => { s.style.left = `${300 + i * 620 + (f - 60) * (0.9 + i * 0.3)}px`; });
 
       // copy
       show($("#t1"), shot === "1A");
-      if (shot === "1A") T1.draw(easeOut(span(t, 5, 22)), span(t, 22, 30), span(t, 38, 47), f);
+      if (shot === "1A") T1.draw(easeOut(span(t, 8, 26)), span(t, 26, 34), 0, f);
       show($("#t2"), shot === "1B");
-      if (shot === "1B") T2.draw(easeOut(span(t, 3, 20)), span(t, 20, 28), 0, f);
+      if (shot === "1B") T2.draw(easeOut(span(t, 12, 30)), span(t, 30, 38), 0, f);
       show($("#t3"), shot === "2D");
       if (shot === "2D") T3.draw(easeOut(span(t, 4, 21)), span(t, 21, 29), 0, f);
 
       show(closed, shot === "1C");
-      if (shot === "1C") {
-        const slam = easeOut(span(t, 0, 6));
-        closedM.style.opacity = slam; closedM.style.filter = `blur(${((1 - slam) * 14).toFixed(1)}px)`;
-        closedC.innerHTML = scramble("CLOSED?", t, 6, 2.6);
-        closed.style.transform = `translate(-50%,-50%) scale(${mix(1.0, 1.03, t / 36).toFixed(4)})`;
-      }
-      show(split, shot === "1D"); show(streak, shot === "1D"); show(slash, shot === "1D");
-      if (shot === "1D") {
-        const pass = ease(span(t, 0, 7)), sp = easeIn(span(t, 5, 20));
-        halfA.style.transform = `translate(${(-sp * 120).toFixed(1)}px, ${(-sp * 160).toFixed(1)}px) rotate(${(-sp * 3).toFixed(2)}deg)`;
-        halfB.style.transform = `translate(${(sp * 120).toFixed(1)}px, ${(sp * 220).toFixed(1)}px) rotate(${(sp * 4).toFixed(2)}deg)`;
-        halfA.style.opacity = halfB.style.opacity = 1 - sp;
-        streak.style.transform = `rotate(-8deg) translateX(${mix(-1700, 1500, pass).toFixed(1)}px)`;
-        slash.style.opacity = (t > 3 ? 1 : 0) * (1 - span(t, 6, 18));
-      }
+      if (shot === "1C") punch(closed, t, 38, "translate(-50%,-50%)");
       show(intro, shot === "2A");
-      if (shot === "2A") { const k = easeOut(span(t, 16, 28)); intro.style.opacity = k; intro.style.filter = `blur(${((1 - k) * 10).toFixed(1)}px)`; }
+      if (shot === "2A") { const k = easeOut(span(t, 14, 30)); intro.style.opacity = k; intro.style.filter = `blur(${((1 - k) * 8).toFixed(1)}px)`; }
       show(lockup, shot === "2B");
       if (shot === "2B") {
         [easeOut(span(t, 6, 18)), easeOut(span(t, 10, 22))].forEach((k, i) => { lns[i].style.transform = `translateY(${((1 - k) * 105).toFixed(1)}%)`; lns[i].style.filter = `blur(${((1 - k) * 6).toFixed(1)}px)`; });
@@ -193,22 +186,10 @@
       }
       show(h247, shot === "2C");
       if (shot === "2C") {
-        const k = easeOut(span(t, 4, 14));
-        big.style.opacity = k; big.style.filter = `blur(${((1 - k) * 12).toFixed(1)}px)`;
+        punch(big, t, 52, "");
         row.style.opacity = easeOut(span(t, 8, 16));
         n365.textContent = String(Math.round(mix(1, 365, ease(span(t, 8, 40))))).padStart(3, "0");
       }
-      // whip pan: the copy rides the same pan as the 3D camera
-      whipA.style.transform = `translateX(${(-2600 * easeIn(span(f, 225, 232))).toFixed(1)}px)`;
-      whipB.style.transform = `translateX(${(2600 * (1 - easeOut(span(f, 232, 241)))).toFixed(1)}px)`;
-      // the near-card wipes darken the frame as they cross the lens
-      const w1 = shot === "1B" ? Math.sin(Math.PI * span(t, 30, 40)) : 0, w2 = shot === "2C" ? Math.sin(Math.PI * span(t, 42, 52)) : 0;
-      shade.style.opacity = (Math.max(w1, w2) * 0.35).toFixed(3);
-
-      // flashes: screen light into 1B, the strike into 2A, soft pops on the hand-offs into 2D
-      const fl = Math.max(flashAt(f, S["1B"][0], 10, 10) * 0.9, flashAt(f, S["2A"][0], 14, 14));
-      flash.style.opacity = fl.toFixed(3);
-      flash.style.background = f < 100 ? "rgb(255,236,210)" : "rgb(255,196,130)";
       grain.style.backgroundImage = tiles[Math.round(f) % tiles.length];
     }
 

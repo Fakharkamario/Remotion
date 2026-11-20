@@ -16,57 +16,48 @@
   const lerp3 = (a, b, k) => [mix(a[0], b[0], k), mix(a[1], b[1], k), mix(a[2], b[2], k)];
 
   // ---------------- shot table (global frames, 30 fps) ----------------
-  const SHOTS = { "1A": [0, 52], "1B": [52, 92], "1C": [92, 128], "1D": [128, 150], "2A": [150, 190], "2B": [190, 232], "2C": [232, 284], "2D": [284, 330] };
+  // hard cuts between shots, as in the reference (no flashes, no wipes)
+  const SHOTS = { "1A": [0, 60], "1B": [60, 112], "1C": [112, 150], "2A": [150, 190], "2B": [190, 232], "2C": [232, 284], "2D": [284, 330] };
   const shotAt = (f) => { for (const k in SHOTS) if (f >= SHOTS[k][0] && f < SHOTS[k][1]) return k; return "2D"; };
 
-  // whip pan between the lockup and 24/7 (yaw offset of the look target, in metres at the subject)
-  const WHIP_OUT = (f) => 3.2 * easeIn(span(f, 225, 232));
-  const WHIP_IN = (f) => -3.2 * (1 - easeOut(span(f, 232, 241)));
+  const expoOut = (x) => { const t = clamp(x, 0, 1); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
+  // carousel position for the weekend row: glides one card to the left in ~9 frames, then holds
+  const ROW = (t) => glide(span(t, 12, 21), 0.35) + glide(span(t, 30, 39), 0.35);
 
   // ---------------- camera per shot: pos, look, fov, blur at infinity (px), focus (m) ----------------
+  // camera per shot. The reference's camera barely moves inside a shot: a slow constant push or drift.
   const RIG = {
     "1A": (t) => {
-      const push = glide(span(t, 0, 40), 0.3), dive = easeIn(span(t, 34, 52));
-      let pos = lerp3([-0.32, 1.52, 2.0], [-0.2, 1.47, 1.6], push);
-      pos = lerp3(pos, [0.0, 1.4, -0.6], dive);
-      const look = lerp3([0.12, 1.3, -1.0], [0, 1.4, -1.0], dive);
-      const head = Math.hypot(pos[0] - 0.36, pos[1] - 1.32, pos[2]);
-      return { pos, look, fov: 34, cInf: mix(14, 5, dive), focus: mix(head, 1.0, dive) };
+      const k = span(t, 0, 60);
+      const pos = lerp3([-0.34, 1.53, 2.05], [-0.22, 1.48, 1.72], k);
+      return { pos, look: [0.1, 1.31, -1.0], fov: 34, cInf: 14, focus: Math.hypot(pos[0] - 0.36, pos[1] - 1.32, pos[2]) };
     },
-    // a steady truck right-to-left through the field, as in the reference's red section
     "1B": (t) => {
-      const k = glide(span(t, 0, 40), 0.12);
-      const pos = [mix(2.1, -0.15, k), mix(0.08, -0.04, k), mix(4.5, 4.05, k)];
-      return { pos, look: [pos[0] - 0.35, pos[1] - 0.05, 0], fov: 36, cInf: 22, focus: Math.hypot(pos[0] - 1.7, pos[2]) };
+      const k = span(t, 0, 52);
+      const pos = lerp3([0.25, 0.02, 4.7], [0.1, -0.02, 4.45], k);
+      return { pos, look: [0.05, -0.04, 0], fov: 36, cInf: 20, focus: Math.hypot(pos[0] - 1.7, pos[2]) };
     },
     "1C": (t) => {
-      const k = span(t, 0, 36);
-      const pos = [mix(-0.15, -0.75, k), -0.04, mix(4.05, 3.85, k)];
-      return { pos, look: [pos[0] - 0.35, -0.08, 0], fov: 36, cInf: 34, focus: 1.1 };
-    },
-    "1D": (t) => {
-      const sh = t > 6 && t < 14 ? Math.sin(t * 9) * 0.015 : 0;
-      const pos = [mix(-0.75, -0.95, span(t, 0, 22)) + sh, -0.04 + sh, 3.85];
-      return { pos, look: [pos[0] - 0.35, -0.08, 0], fov: 36, cInf: 34, focus: 1.1 };
+      const k = span(t, 0, 38);
+      return { pos: lerp3([0.1, -0.02, 4.45], [0.0, -0.04, 4.3], k), look: [0.0, -0.06, 0], fov: 36, cInf: 34, focus: 1.1 };
     },
     "2A": (t) => {
-      const k = glide(span(t, 0, 40), 0.3);
-      return { pos: lerp3([0, 0.35, 4.3], [0, 0.05, 3.5], k), look: [0, 0.06, 0], fov: 34, cInf: 16 };
+      const k = span(t, 0, 40);
+      return { pos: lerp3([0, 0.12, 3.75], [0, 0.07, 3.5], k), look: [0, 0.07, 0], fov: 34, cInf: 16 };
     },
-    "2B": (t, f) => {
-      const k = glide(span(t, 0, 36), 0.3);
-      return { pos: lerp3([0, 0.05, 3.5], [0, 0.05, 3.15], k), look: [WHIP_OUT(f), 0.05, 0], fov: 34, cInf: 16 };
+    "2B": (t) => {
+      const k = span(t, 0, 42);
+      return { pos: lerp3([0, 0.05, 3.3], [0, 0.05, 3.15], k), look: [0, 0.05, 0], fov: 34, cInf: 16 };
     },
-    "2C": (t, f) => {
-      const k = glide(span(t, 0, 52), 0.2);
-      const pos = lerp3([0.55, 0.12, 4.4], [0.05, 0.02, 3.95], k);
-      return { pos, look: [0.6 + WHIP_IN(f), 0, 0], fov: 34, cInf: 18, focus: Math.hypot(pos[0] - 1.75, pos[2]) };
+    "2C": (t) => {
+      const k = span(t, 0, 52);
+      const pos = lerp3([0.3, 0.06, 4.15], [0.12, 0.03, 4.0], k);
+      return { pos, look: [0.6, 0, 0], fov: 34, cInf: 18, focus: Math.hypot(pos[0] - 1.75, pos[2]) };
     },
-    // the camera tracks along the week, landing on Saturday and Sunday as they light up
     "2D": (t) => {
-      const k = glide(span(t, 0, 46), 0.2);
-      const pos = [mix(-1.5, 1.15, k), mix(0.24, 0.16, k), mix(4.15, 3.95, k)];
-      return { pos, look: [pos[0] + 0.1, 0.05, 0], fov: 36, cInf: 18, focus: pos[2] };
+      const k = span(t, 0, 46);
+      const pos = lerp3([0.12, 0.42, 4.05], [0.05, 0.38, 3.9], k);
+      return { pos, look: [0.15, -0.1, 0], fov: 36, cInf: 20, focus: pos[2] };
     },
   };
 
@@ -170,8 +161,8 @@
       float z0 = zAt(vUv), r0 = abs(cocAt(z0));
       float R = maxCoC*spread;
       vec3 acc = col0; float ws = 1.;
-      for (int i = 0; i < 56; i++) {
-        float fi = float(i); float rr = sqrt((fi + 0.5)/56.)*R; float a = fi*2.39996323 + rot;
+      for (int i = 0; i < 36; i++) {
+        float fi = float(i); float rr = sqrt((fi + 0.5)/36.)*R; float a = fi*2.39996323 + rot;
         vec2 suv = vUv + vec2(cos(a), sin(a))*rr/res;
         float zs = zAt(suv); float cs = abs(cocAt(zs))*spread;
         float rs = zs > z0 ? min(cs, r0*spread) : cs;     // background never bleeds over a nearer pixel
@@ -260,7 +251,7 @@
     ];
     G.fieldCards = FIELD.map(([front, glyph, back, p, ry]) => {
       const c = makeCard([softCard(front, "LIVE", "open", glyph), softCard(back, "CLOSED", "closed")]);
-      c.position.set(...p); c.rotation.y = ry; c.userData.base = p; G.field.add(c); return c;
+      c.position.set(...p); c.rotation.y = ry; c.userData.base = p; c.userData.ry0 = ry; G.field.add(c); return c;
     });
     // the wipe: a card passing right in front of the lens carries us from 1B into 1C
     G.wipe = makeCard([softCard(["Crypto", "exchanges"], "CLOSED", "closed")]);
@@ -338,24 +329,29 @@
     G.amb.visible = G.key.visible = G.fill.visible = shot !== "1A";
 
     G.room.visible = shot === "1A";
-    G.field.visible = shot === "1B" || shot === "1C" || shot === "1D";
-    G.wipe.visible = shot === "1B" && t >= 30;
+    G.field.visible = shot === "1B" || shot === "1C";
+    G.wipe.visible = false;
     G.shield.visible = shot === "2A" || shot === "2B";
     G.bokeh.visible = shot === "2A" || shot === "2B" || shot === "2C";
     G.dial.visible = shot === "2C";
-    G.wipe2.visible = shot === "2C" && t >= 42;
+    G.wipe2.visible = false;
     G.week.visible = shot === "2D";
 
     if (G.room.visible) G.screens.forEach((s, i) => s.draw(f + i * 17));
     if (G.field.visible) {
-      const ft = shot === "1B" ? t : 60;
+      // the reference's opening of the red section: a tight cluster of cards bursts outward from the centre,
+      // decelerating hard (expo out over ~12 frames), then the cards only drift
+      const ft = shot === "1B" ? t : 52 + t;
+      const burst = expoOut(span(ft, 0, 14));
       G.fieldCards.forEach((c, i) => {
-        // cards close one after another, from the right of frame to the left as the camera trucks past
         const order = [0, 2, 4, 6, 1, 5, 3][i];
-        const k = easeOut(span(ft, 4 + order * 3.2, 10 + order * 3.2));
-        c.userData.set(k, shot === "1B" ? 1 : 0.8);
-        const b = c.userData.base;
-        c.position.set(b[0], b[1] + Math.sin((f + i * 13) * 0.045) * 0.022, b[2]);
+        const k = easeOut(span(ft, 16 + order * 3, 22 + order * 3));
+        c.userData.set(k, shot === "1B" ? 1 : 0.75);
+        const b = c.userData.base, a = (i / 7) * Math.PI * 2;
+        const from = [Math.cos(a) * 0.35, Math.sin(a) * 0.22, -7.5];
+        const drift = ft * 0.0022;
+        c.position.set(mix(from[0], b[0], burst) + (i % 2 ? drift : -drift), mix(from[1], b[1], burst) + Math.sin((f + i * 13) * 0.04) * 0.018, mix(from[2], b[2], burst));
+        c.rotation.y = mix(0, c.userData.ry0, burst);
       });
     }
     if (G.wipe.visible) {
@@ -368,8 +364,8 @@
     if (G.shield.visible) {
       let y, s = 1, ry = 0;
       if (shot === "2A") {
-        const k = easeOut(span(t, 0, 30));
-        y = mix(-0.5, 0.1, k); ry = mix(0.32, 0, ease(span(t, 0, 36)));
+        const k = easeOut(span(t, 0, 40));
+        y = mix(-0.12, 0.1, k); ry = mix(0.12, 0, k);
         G.chrome.uniforms.sweep.value = mix(-2.2, 2.4, ease(span(t, 6, 36)));
         G.chrome.uniforms.glow.value = 0.25 * k;
       } else {
@@ -397,14 +393,18 @@
       G.wipe2.position.set(cp.x + mix(1.7, -1.9, k), cp.y - 0.05, cp.z - 0.95);
       G.wipe2.userData.set(1, 0.95);
     }
-    if (G.week.visible) G.weekCards.forEach((c, i) => {
-      const inK = easeOut(span(t, i * 3, i * 3 + 16));
-      const lit = i === 0 ? 0 : easeOut(span(t, 14 + (i - 1) * 10, 20 + (i - 1) * 10));
-      const b = c.userData.base;
-      c.position.set(b[0], b[1] + mix(-0.35, 0, inK) + Math.sin((t + i * 9) * 0.05) * 0.02, b[2]);
-      c.rotation.set(mix(0.35, 0, inK), c.userData.ry, 0);
-      c.userData.set(lit, 1);
-    });
+    if (G.week.visible) {
+      // the reference's card row: one card centred, bright and in focus; the others sit dim to the sides,
+      // angled toward the centre. The row glides one step left to bring the next card in.
+      const act = ROW(t);
+      G.weekCards.forEach((c, i) => {
+        const d = i - act, ad = Math.abs(d);
+        c.position.set(d * 1.42, -0.2, -Math.min(ad, 1.2) * 0.35);
+        c.rotation.set(0, -clamp(d, -1, 1) * 0.28, 0);
+        const lit = i === 0 ? 0 : clamp((act - (i - 1) - 0.55) / 0.35, 0, 1);
+        c.userData.set(lit, mix(1, 0.42, clamp(ad, 0, 1)));
+      });
+    }
     const dc = shot === "1A" ? [0, 1.4, 0] : [0, 0, -1];
     const arr = G.dustGeo.attributes.position.array;
     G.dustBase.forEach(([x, y, z, ph], i) => {
