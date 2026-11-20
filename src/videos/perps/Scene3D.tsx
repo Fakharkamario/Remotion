@@ -13,7 +13,7 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import { LensBlur } from "../molasses/lensblur";
 import { Brand, ease, easeIn, easeOut, mix, span } from "./brand";
 import { shotAt, local, ShotId } from "./timeline";
-import { CARD_H, CARD_W, DAY_H, DAY_W, Screen, Ticker, cached, closedTex, dayTex, dialFaceTex, tickerTex } from "./tex";
+import { CARD_H, CARD_W, DAY_H, DAY_W, SOFT_H, SOFT_W, softCard, Screen, Ticker, cached, closedTex, dayTex, dialFaceTex, tickerTex } from "./tex";
 
 type V3 = [number, number, number];
 type Rig = { pos: V3; look: V3; fov: number; cInf: number; focus?: number };
@@ -33,7 +33,7 @@ const RIG: Record<ShotId, (t: number) => Rig> = {
   },
   "1B": (t) => {
     const k = ease(span(t, 0, 40));
-    return { pos: lerp3([-0.2, 0.1, 4.6], [0.25, -0.05, 3.9], k), look: [0.3, 0, 0], fov: 36, cInf: 46, focus: mix(4.6, 3.75, k) };
+    return { pos: lerp3([-0.25, 0.08, 6.1], [0.2, -0.04, 5.5], k), look: [0.15, 0, 0], fov: 36, cInf: 40, focus: mix(6.0, 5.4, k) };
   },
   "1C": (t) => {
     const k = ease(span(t, 0, 36));
@@ -138,8 +138,12 @@ const rbox = (w: number, h: number, d: number) => {
 };
 
 /** a thick glossy glass card: real geometry (edge glints from the environment) + a printed UI layer on each face */
-const GlassCard: React.FC<{ w: number; h: number; front: THREE.Texture; back?: THREE.Texture; dim?: number; depth?: number }> = ({ w, h, front, back, dim = 1, depth = 0.045 }) => {
-  const body = useMemo(glassBody, []);
+const GlassCard: React.FC<{ w: number; h: number; front: THREE.Texture; back?: THREE.Texture; dim?: number; depth?: number; matte?: boolean }> = ({ w, h, front, back, dim = 1, depth = 0.045, matte }) => {
+  const body = useMemo(() => {
+    const m = glassBody();
+    if (matte) { m.color = new THREE.Color("#141518"); m.roughness = 0.55; m.clearcoat = 0.35; m.clearcoatRoughness = 0.3; m.envMapIntensity = 0.6; }
+    return m;
+  }, [matte]);
   const ui = (map: THREE.Texture, flip: boolean) => (
     <mesh position={[0, 0, (flip ? -1 : 1) * (depth / 2 + 0.0015)]} rotation={[0, flip ? Math.PI : 0, 0]}>
       <planeGeometry args={[w, h]} />
@@ -262,6 +266,27 @@ const FIELD: FieldCard[] = [
   { t: { sym: "GBP/JPY", kind: "FOREX", px: "193.44", chg: "+0.27%", up: true, seed: 55 }, closed: ["GBP/JPY", "FX · weekend"], p: [3.1, -0.2, -2.4], r: [0, -0.5, 0] },
   { t: { sym: "US30", kind: "INDEX", px: "43,870", chg: "+0.35%", up: true, seed: 89 }, closed: ["DOW 30", "Opens Monday"], p: [-0.3, -1.45, -2.2], r: [-0.1, 0.1, 0] },
 ];
+
+
+// reference-style: three matte cards with lots of air, flipping from LIVE to CLOSED
+const CALM: { front: [string, string]; fg: string; glyph: string; back: [string, string]; p: V3; r: V3 }[] = [
+  { front: ["BTC-PERP", "97,412.5"], fg: "LIVE", glyph: "₿", back: ["Stock", "markets"], p: [-2.05, 0.5, 0.15], r: [0.04, 0.3, -0.02] },
+  { front: ["EUR/USD", "1.0842"], fg: "LIVE", glyph: "€", back: ["Forex", "desks"], p: [2.0, -0.55, -0.1], r: [-0.03, -0.3, 0.02] },
+  { front: ["NAS100", "21,034"], fg: "LIVE", glyph: "N", back: ["Index", "futures"], p: [1.15, 1.2, -2.4], r: [0.05, -0.25, 0] },
+];
+const CalmField: React.FC<{ t: number; flipFrom: number; dim?: number }> = ({ t, flipFrom, dim = 1 }) => (
+  <group>
+    {CALM.map((c, i) => {
+      const k = ease(span(t, flipFrom + i * 5, flipFrom + i * 5 + 13));
+      const bob = Math.sin((t + i * 13) * 0.045) * 0.025;
+      return (
+        <group key={i} position={[c.p[0], c.p[1] + bob, c.p[2]]} rotation={[c.r[0], c.r[1] + k * Math.PI, c.r[2]]}>
+          <GlassCard w={SOFT_W} h={SOFT_H} depth={0.035} matte dim={dim} front={softCard(c.front, c.fg, "open", c.glyph)} back={softCard(c.back, "CLOSED", "closed")} />
+        </group>
+      );
+    })}
+  </group>
+);
 
 const CardField: React.FC<{ t: number; flipFrom: number; dim?: number }> = ({ t, flipFrom, dim = 1 }) => (
   <group>
@@ -413,6 +438,15 @@ const COINS: { sym: string; p: V3; spin: number; tilt: V3 }[] = [
   { sym: "€", p: [1.05, 0.95, -0.9], spin: -0.012, tilt: [-0.25, -0.2, 0.2] },
   { sym: "₿", p: [2.5, 0.85, 2.55], spin: 0.008, tilt: [0.2, 0.5, 0.3] }, // foreground, out of focus
 ]
+const SHARDS: { p: V3; s: V3; r: V3; spd: number }[] = [
+  { p: [-1.35, 0.55, -0.6], s: [1, 1.6, 0.8], r: [0.4, 0.2, 0.3], spd: 0.01 },
+  { p: [1.45, -0.35, -0.4], s: [1.2, 0.9, 1], r: [0.1, 0.7, 0.2], spd: -0.012 },
+  { p: [1.1, 0.85, -1.3], s: [0.7, 1.1, 0.7], r: [0.6, 0.1, 0.9], spd: 0.008 },
+  { p: [-1.05, -0.75, 0.2], s: [0.8, 0.7, 0.9], r: [0.2, 0.5, 0.1], spd: 0.014 },
+  { p: [-2.4, -0.2, -2.0], s: [1.4, 1.2, 1.1], r: [0.3, 0.3, 0.6], spd: -0.006 },
+  { p: [1.25, 0.45, 1.75], s: [1.1, 1.5, 1], r: [0.5, 0.8, 0.2], spd: 0.009 }, // foreground, out of focus
+  { p: [-0.95, 0.95, 1.6], s: [0.9, 0.8, 0.9], r: [0.9, 0.2, 0.5], spd: -0.01 }, // foreground, out of focus
+];
 const Shards: React.FC<{ t: number; rise: number }> = ({ t, rise }) => {
   const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ color: "#14161b", metalness: 0.35, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05, flatShading: true, envMapIntensity: 1.6 }), []);
   const geos = useMemo(() => SHARDS.map((_, i) => {
@@ -484,7 +518,7 @@ export const Scene3D: React.FC<{ brand: Brand }> = ({ brand }) => {
 
   let content: React.ReactNode = null;
   if (shot === "1A") content = (<><Trader /><Room f={f} /><Dust f={f} color="#ffcf9a" center={[0, 1.4, 0]} spread={[5, 2.5, 4]} /></>);
-  else if (shot === "1B") content = (<><CardField t={t} flipFrom={4} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dots p={[2.8, -1.2, -2.5]} s={1.2} o={0.25} /><Dust f={f} color="#c8d6e8" center={[0, 0, 0]} /></>);
+  else if (shot === "1B") content = (<><CalmField t={t} flipFrom={2} /><Dust f={f} color="#ffb0a0" count={40} center={[0, 0, 0]} /></>);
   else if (shot === "1C" || shot === "1D") content = (<><CardField t={60} flipFrom={0} dim={0.75} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dust f={f} color="#c8d6e8" center={[0, 0, 1]} /></>);
   else if (shot === "2A" || shot === "2B") content = (<><Shield brand={brand} t={t} shot={shot} /><Shards t={f} rise={shot === "2A" ? easeOut(span(t, 0, 34)) : 1} /><BokehCards t={f} tint={0.4} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
   else if (shot === "2C") content = (<><Dial t={t} />{COINS.map((c, i) => <Coin key={i} {...c} t={f} />)}<BokehCards t={f} tint={0.5} /><Dots p={[-1.2, -1.3, -2]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);

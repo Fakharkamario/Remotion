@@ -116,8 +116,9 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const g = t > 12 && t < 19 && t % 2 === 0;
       return (
         <>
-          <Light bg="linear-gradient(180deg, rgba(149,167,197,0.12) 0%, transparent 30%)" />
-          <Streaks t={t} />
+          <Light blend="normal" bg="linear-gradient(0deg, rgba(92,16,18,0.55) 0%, rgba(60,10,12,0.28) 38%, rgba(0,0,0,0) 75%)" />
+          <Light bg="radial-gradient(ellipse 60% 55% at 12% 105%, rgba(190,40,36,0.45), transparent 70%)" />
+          <Streaks t={t} tint="255,140,130" opacity={0.6} />
           <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
             <div style={{ transform: g ? "translateX(6px)" : undefined, textShadow: g ? "-6px 0 rgba(255,117,106,0.8), 6px 0 rgba(31,177,255,0.5)" : undefined }}>
               <Words t={t} start={3} align="center" out={[33, 40]} lines={[{ segs: [{ t: "Why should" }], size: 50, color: C.t2 }, { segs: [{ t: "your" }, { t: "trading?", c: C.perps }], size: 104, weight: 600 }]} />

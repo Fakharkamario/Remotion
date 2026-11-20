@@ -305,3 +305,89 @@ export class Screen {
     this.tex.needsUpdate = true;
   }
 }
+
+// ---------------- reference-style soft cards (matte, icon tile, tinted state footer) ----------------
+export const SOFT_W = 1.25, SOFT_H = 0.98;
+const icoClock = (g: G, cx: number, cy: number, r: number, col: string) => {
+  g.strokeStyle = col;
+  g.lineWidth = r * 0.16;
+  g.lineCap = "round";
+  g.beginPath();
+  g.arc(cx, cy + r * 0.08, r * 0.78, 0, Math.PI * 2);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(cx, cy + r * 0.08);
+  g.lineTo(cx, cy - r * 0.38);
+  g.moveTo(cx, cy + r * 0.08);
+  g.lineTo(cx + r * 0.32, cy + r * 0.3);
+  g.moveTo(cx - r * 0.28, cy - r * 0.88);
+  g.lineTo(cx + r * 0.28, cy - r * 0.88);
+  g.stroke();
+};
+const icoEyeOff = (g: G, cx: number, cy: number, r: number, col: string) => {
+  g.strokeStyle = col;
+  g.fillStyle = col;
+  g.lineWidth = r * 0.2;
+  g.beginPath();
+  g.ellipse(cx, cy, r, r * 0.58, 0, 0, Math.PI * 2);
+  g.stroke();
+  g.beginPath();
+  g.arc(cx, cy, r * 0.26, 0, Math.PI * 2);
+  g.fill();
+  g.beginPath();
+  g.moveTo(cx - r * 0.95, cy - r * 0.7);
+  g.lineTo(cx + r * 0.95, cy + r * 0.7);
+  g.stroke();
+};
+/** state "closed": red-tinted matte card like the reference's "HIDDEN" cards. state "open": neutral with a green footer. */
+export const softCard = (title: [string, string], footer: string, state: "closed" | "open", glyph?: string) =>
+  cached(`soft-${title.join("|")}-${state}`, SOFT_W, SOFT_H, (g, W, H) => {
+    const r = W * 0.085;
+    g.clearRect(0, 0, W, H);
+    g.save();
+    rr(g, 0, 0, W, H, r);
+    g.clip();
+    const red = state === "closed";
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, red ? "rgba(70,30,32,0.92)" : "rgba(38,40,46,0.92)");
+    bg.addColorStop(1, red ? "rgba(48,18,20,0.92)" : "rgba(24,26,30,0.92)");
+    g.fillStyle = bg;
+    g.fillRect(0, 0, W, H);
+    // inner panel
+    const p = W * 0.06, ph = H * 0.5;
+    rr(g, p, p, W - p * 2, ph, r * 0.7);
+    g.fillStyle = red ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.05)";
+    g.fill();
+    // icon tile
+    const ts = ph * 0.56, tx = p * 2.1, ty = p + (ph - ts) / 2;
+    rr(g, tx, ty, ts, ts, ts * 0.26);
+    g.fillStyle = red ? "rgba(255,92,80,0.16)" : "rgba(239,244,250,0.08)";
+    g.fill();
+    if (glyph) text(g, glyph, tx + ts / 2, ty + ts * 0.68, ts * 0.5, "s", red ? "#FF8A7E" : C.text, "center");
+    else icoClock(g, tx + ts / 2, ty + ts / 2, ts * 0.3, red ? "#FF8A7E" : C.text);
+    const lx = tx + ts + p * 0.9;
+    text(g, title[0], lx, p + ph * 0.44, ph * 0.2, "b", C.text);
+    text(g, title[1], lx, p + ph * 0.76, ph * 0.2, "b", red ? "rgba(239,244,250,0.82)" : C.text);
+    // footer
+    const fy = p + ph + H * 0.07, fh = H - fy - p;
+    const fg = g.createLinearGradient(0, fy, 0, H);
+    fg.addColorStop(0, red ? "rgba(255,92,80,0.10)" : "rgba(54,196,110,0.07)");
+    fg.addColorStop(1, red ? "rgba(255,92,80,0.03)" : "rgba(54,196,110,0.02)");
+    rr(g, p, fy, W - p * 2, fh, r * 0.7);
+    g.fillStyle = fg;
+    g.fill();
+    const col = red ? "#FF6F63" : C.success;
+    g.font = `600 ${fh * 0.3}px ${FB}`;
+    g.letterSpacing = `${fh * 0.035}px`;
+    const tw = g.measureText(footer).width;
+    g.letterSpacing = "0px";
+    const ic = fh * 0.15, total = tw + ic * 3.4, x0 = W / 2 - total / 2;
+    if (red) icoEyeOff(g, x0 + ic, fy + fh / 2, ic, col);
+    else { g.beginPath(); g.arc(x0 + ic, fy + fh / 2, ic * 0.55, 0, Math.PI * 2); g.fillStyle = col; g.fill(); }
+    text(g, footer, x0 + ic * 3.4, fy + fh / 2 + fh * 0.11, fh * 0.3, "s", col, "left", fh * 0.035);
+    g.restore();
+    g.lineWidth = Math.max(1.5, W / 500);
+    g.strokeStyle = red ? "rgba(255,120,110,0.16)" : "rgba(239,244,250,0.08)";
+    rr(g, 1, 1, W - 2, H - 2, r);
+    g.stroke();
+  });
