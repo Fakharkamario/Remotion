@@ -271,6 +271,11 @@ const CardField: React.FC<{ t: number; flipFrom: number; dim?: number }> = ({ t,
       return (
         <group key={i} position={[c.p[0], c.p[1] + bob, c.p[2]]} rotation={[c.r[0], c.r[1] + k * Math.PI, c.r[2]]}>
           <GlassCard w={CARD_W} h={CARD_H} front={tickerTex(c.t)} back={closedTex(c.closed[0], c.closed[1])} dim={dim} />
+          {k > 0.5 && (
+            <group position={[-(CARD_W / 2 - 0.2), CARD_H / 2 - 0.06, -0.075]} rotation={[0, Math.PI, 0]} scale={mix(0.6, 1, easeOut(span(t, flipFrom + i * 3 + 6, flipFrom + i * 3 + 12)))}>
+              <Padlock shut={easeIn(span(t, flipFrom + i * 3 + 10, flipFrom + i * 3 + 14))} scale={1.15} />
+            </group>
+          )}
         </group>
       );
     })}
@@ -341,6 +346,91 @@ const Dial: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
+// ---------------- 3D props: padlocks, coins, stone shards ----------------
+const metal = () => new THREE.MeshPhysicalMaterial({ color: "#c9ced6", metalness: 0.62, roughness: 0.26, clearcoat: 0.8, clearcoatRoughness: 0.08, envMapIntensity: 1.8 });
+const darkMetal = () => new THREE.MeshPhysicalMaterial({ color: "#a3a9b2", metalness: 0.7, roughness: 0.3, clearcoat: 0.6, envMapIntensity: 1.8 });
+
+/** chrome padlock; `shut` 0 = shackle up and swung open, 1 = snapped shut */
+const Padlock: React.FC<{ shut: number; scale?: number }> = ({ shut, scale = 1 }) => {
+  const m = useMemo(metal, []);
+  const lift = mix(0.075, 0, shut), swing = mix(0.75, 0, shut);
+  return (
+    <group scale={scale}>
+      <mesh material={m} geometry={rbox(0.2, 0.16, 0.075)} />
+      <mesh position={[0, 0.005, 0.039]}><circleGeometry args={[0.018, 24]} /><meshBasicMaterial color="#0a0b0d" /></mesh>
+      <mesh position={[0, -0.022, 0.039]}><planeGeometry args={[0.012, 0.034]} /><meshBasicMaterial color="#0a0b0d" /></mesh>
+      <group position={[-0.062, 0.08 + lift, 0]} rotation={[0, swing, 0]}>
+        <group position={[0.062, 0, 0]}>
+          <mesh material={m} position={[0, 0.05, 0]}><torusGeometry args={[0.062, 0.015, 16, 40, Math.PI]} /></mesh>
+          <mesh material={m} position={[-0.062, 0.02, 0]}><cylinderGeometry args={[0.015, 0.015, 0.06, 16]} /></mesh>
+          <mesh material={m} position={[0.062, 0.02, 0]}><cylinderGeometry args={[0.015, 0.015, 0.06, 16]} /></mesh>
+        </group>
+      </group>
+    </group>
+  );
+};
+
+const coinFace = (sym: string) =>
+  cached(`coin-${sym}`, 1.2, 1.2, (g, W, H) => {
+    const cx = W / 2, cy = H / 2;
+    const bg = g.createRadialGradient(cx * 0.7, cy * 0.6, 0, cx, cy, W * 0.6);
+    bg.addColorStop(0, "#d3d8df");
+    bg.addColorStop(1, "#6f747d");
+    g.fillStyle = bg;
+    g.fillRect(0, 0, W, H);
+    g.lineWidth = W * 0.025;
+    g.strokeStyle = "#c9ced6";
+    g.beginPath();
+    g.arc(cx, cy, W * 0.4, 0, Math.PI * 2);
+    g.stroke();
+    g.font = `900 ${H * 0.5}px "MD Nichrome", Impact, sans-serif`;
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillStyle = "#1a1c21";
+    g.fillText(sym, cx + W * 0.012, cy + H * 0.045);
+    g.fillStyle = "#eef1f5";
+    g.fillText(sym, cx, cy + H * 0.03);
+  });
+const Coin: React.FC<{ sym: string; p: V3; t: number; spin: number; tilt: V3 }> = ({ sym, p, t, spin, tilt }) => {
+  const side = useMemo(darkMetal, []);
+  const face = useMemo(() => {
+    const m = darkMetal();
+    m.map = coinFace(sym);
+    m.color = new THREE.Color("#ffffff");
+    m.metalness = 0.45;
+    return m;
+  }, [sym]);
+  return (
+    <group position={[p[0], p[1] + Math.sin(t * 0.05 + p[0]) * 0.04, p[2]]} rotation={[tilt[0] + Math.sin(t * spin * 2) * 0.2, tilt[1] + Math.sin(t * spin * 3) * 0.45, tilt[2] + t * spin * 0.5]}>
+      <mesh rotation={[Math.PI / 2, 0, 0]} material={[side, face, face]}><cylinderGeometry args={[0.3, 0.3, 0.055, 72]} /></mesh>
+    </group>
+  );
+};
+const COINS: { sym: string; p: V3; spin: number; tilt: V3 }[] = [
+  { sym: "₿", p: [0.45, -0.62, 1.25], spin: 0.012, tilt: [0.2, -0.3, 0.12] },
+  { sym: "Ξ", p: [2.95, 0.62, 0.7], spin: -0.01, tilt: [-0.15, 0.35, -0.15] },
+  { sym: "$", p: [2.75, -0.95, -0.5], spin: 0.009, tilt: [0.3, 0.2, 0.1] },
+  { sym: "€", p: [1.05, 0.95, -0.9], spin: -0.012, tilt: [-0.25, -0.2, 0.2] },
+  { sym: "₿", p: [2.5, 0.85, 2.55], spin: 0.008, tilt: [0.2, 0.5, 0.3] }, // foreground, out of focus
+]
+const Shards: React.FC<{ t: number; rise: number }> = ({ t, rise }) => {
+  const mat = useMemo(() => new THREE.MeshPhysicalMaterial({ color: "#14161b", metalness: 0.35, roughness: 0.14, clearcoat: 1, clearcoatRoughness: 0.05, flatShading: true, envMapIntensity: 1.6 }), []);
+  const geos = useMemo(() => SHARDS.map((_, i) => {
+    const g = new THREE.IcosahedronGeometry(0.16, 0);
+    const pos = g.attributes.position as THREE.BufferAttribute;
+    for (let k = 0; k < pos.count; k++) pos.setXYZ(k, pos.getX(k) * (0.75 + ((k * 7 + i * 3) % 5) * 0.12), pos.getY(k) * (0.8 + ((k * 3 + i) % 4) * 0.13), pos.getZ(k));
+    g.computeVertexNormals();
+    return g;
+  }), []);
+  return (
+    <group>
+      {SHARDS.map((d, i) => (
+        <mesh key={i} geometry={geos[i]} material={mat} scale={d.s} position={[d.p[0], d.p[1] + mix(-0.6, 0, rise) * (i % 2 ? 1 : 0.6) + Math.sin(t * 0.04 + i) * 0.05, d.p[2]]} rotation={[d.r[0] + t * d.spd, d.r[1] + t * d.spd * 1.3, d.r[2]]} />
+      ))}
+    </group>
+  );
+};
+
 const DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const DayRow: React.FC<{ t: number }> = ({ t }) => (
   <group>
@@ -352,6 +442,11 @@ const DayRow: React.FC<{ t: number }> = ({ t }) => (
       return (
         <group key={d} position={[x, mix(-0.9, -0.36, inK), -0.05 * x * x]} rotation={[mix(0.6, 0, inK), -x * 0.09, 0]}>
           <GlassCard w={DAY_W} h={DAY_H} front={dayTex(d, litK > 0.5, i === 5 ? "02:14 · LIVE" : undefined)} depth={0.05} />
+          {wk && litK > 0.01 && (
+            <group position={[DAY_W / 2 - 0.16, DAY_H / 2 - 0.05, 0.09]} rotation={[0, -0.25, 0.08]} scale={easeOut(litK) * 1.1}>
+              <Padlock shut={1 - ease(span(t, 26 + (i - 5) * 5, 34 + (i - 5) * 5))} />
+            </group>
+          )}
         </group>
       );
     })}
@@ -391,12 +486,14 @@ export const Scene3D: React.FC<{ brand: Brand }> = ({ brand }) => {
   if (shot === "1A") content = (<><Trader /><Room f={f} /><Dust f={f} color="#ffcf9a" center={[0, 1.4, 0]} spread={[5, 2.5, 4]} /></>);
   else if (shot === "1B") content = (<><CardField t={t} flipFrom={4} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dots p={[2.8, -1.2, -2.5]} s={1.2} o={0.25} /><Dust f={f} color="#c8d6e8" center={[0, 0, 0]} /></>);
   else if (shot === "1C" || shot === "1D") content = (<><CardField t={60} flipFrom={0} dim={0.75} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dust f={f} color="#c8d6e8" center={[0, 0, 1]} /></>);
-  else if (shot === "2A" || shot === "2B") content = (<><Shield brand={brand} t={t} shot={shot} /><BokehCards t={f} tint={0.4} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
-  else if (shot === "2C") content = (<><Dial t={t} /><BokehCards t={f} tint={0.5} /><Dots p={[-1.2, -1.3, -2]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
+  else if (shot === "2A" || shot === "2B") content = (<><Shield brand={brand} t={t} shot={shot} /><Shards t={f} rise={shot === "2A" ? easeOut(span(t, 0, 34)) : 1} /><BokehCards t={f} tint={0.4} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
+  else if (shot === "2C") content = (<><Dial t={t} />{COINS.map((c, i) => <Coin key={i} {...c} t={f} />)}<BokehCards t={f} tint={0.5} /><Dots p={[-1.2, -1.3, -2]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
   else content = (<><DayRow t={t} /><Dots p={[3.2, 1.0, -2.5]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
 
+  const key = envKind === "cold" ? "#c9d6ea" : "#ffe2bf";
   return (
     <>
+      {shot !== "1A" && (<><ambientLight intensity={0.35} /><directionalLight position={[-2.5, 3, 4]} intensity={2.2} color={key} /><directionalLight position={[3, -1, 2]} intensity={0.6} color={envKind === "cold" ? "#ff8a7a" : "#EC8B1B"} /></>)}
       {content}
       <EffectComposer multisampling={4} frameBufferType={THREE.HalfFloatType}>
         <primitive object={fx.lens.pre} dispose={null} />
