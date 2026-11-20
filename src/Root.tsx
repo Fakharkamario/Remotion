@@ -2,6 +2,7 @@ import React from 'react';
 import {Composition} from 'remotion';
 import {PlanteaPromo, PROMO_DURATION} from './PlanteaPromo';
 import {BridgeShort, BRIDGE_FRAMES} from './videos/molasses/Bridge';
+import {PerpsLaunch, PERPS_FRAMES} from './videos/perps/PerpsLaunch';
 
 export const RemotionRoot: React.FC = () => {
 	return (
@@ -15,6 +16,7 @@ export const RemotionRoot: React.FC = () => {
 			height={1080}
 		/>
 		<Composition id="MolassesShort" component={BridgeShort} durationInFrames={BRIDGE_FRAMES} fps={30} width={1080} height={1920} />
+		<Composition id="PerpsLaunch" component={PerpsLaunch} durationInFrames={PERPS_FRAMES} fps={30} width={1920} height={1080} />
 		</>
 	);
 };
