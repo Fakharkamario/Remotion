@@ -8,21 +8,21 @@ import { rng } from "./tex";
 
 type Seg = { t: string; c?: string };
 
-/** words fade up from blurred to sharp, one after another (reference: "Every Trade tells a story") */
-const Words: React.FC<{ lines: Seg[][]; t: number; start?: number; stagger?: number; size: number; out?: [number, number]; align?: "left" | "center"; weight?: number }> = ({
-  lines, t, start = 0, stagger = 3.5, size, out, align = "left", weight = 400,
-}) => {
+type Line = { segs: Seg[]; size: number; weight?: number; color?: string };
+/** reference typography: a small quiet line over a larger, heavier one; words arrive one by one, sliding sideways
+ *  out of a directional blur (like the reference's "Too many traders / only learned"). */
+const Words: React.FC<{ lines: Line[]; t: number; start?: number; stagger?: number; out?: [number, number]; align?: "left" | "center" }> = ({ lines, t, start = 0, stagger = 3, out, align = "left" }) => {
   let n = 0;
   const o = out ? 1 - ease(span(t, out[0], out[1])) : 1;
-  const ob = out ? ease(span(t, out[0], out[1])) * 14 : 0;
+  const ob = out ? ease(span(t, out[0], out[1])) : 0;
   return (
-    <div style={{ fontFamily: FB, fontWeight: weight, fontSize: size, lineHeight: 1.12, color: C.text, textAlign: align, letterSpacing: "-0.01em", opacity: o, filter: `blur(${ob}px)` }}>
+    <div style={{ fontFamily: FB, textAlign: align, opacity: o, transform: `translateX(${ob * -24}px)`, filter: ob ? `blur(${ob * 10}px)` : undefined }}>
       {lines.map((line, li) => (
-        <div key={li}>
-          {line.flatMap((seg) => seg.t.split(" ").filter(Boolean).map((w) => ({ w, c: seg.c }))).map(({ w, c }, wi) => {
-            const k = easeOut(span(t, start + n * stagger, start + n++ * stagger + 14));
+        <div key={li} style={{ fontSize: line.size, fontWeight: line.weight ?? 400, lineHeight: 1.08, letterSpacing: line.size > 70 ? "-0.022em" : "-0.005em", color: line.color ?? C.text, marginTop: li ? line.size * 0.02 : 0 }}>
+          {line.segs.flatMap((seg) => seg.t.split(" ").filter(Boolean).map((w) => ({ w, c: seg.c }))).map(({ w, c }, wi) => {
+            const k = easeOut(span(t, start + n * stagger, start + n++ * stagger + 12));
             return (
-              <span key={wi} style={{ display: "inline-block", marginRight: "0.26em", color: c ?? C.text, opacity: k, filter: `blur(${(1 - k) * 16}px)`, transform: `translateY(${(1 - k) * 0.35}em)` }}>
+              <span key={wi} style={{ display: "inline-block", marginRight: "0.24em", color: c, opacity: k, filter: k < 1 ? `blur(${(1 - k) * 9}px)` : undefined, transform: `translateX(${(1 - k) * 34}px)` }}>
                 {w}
               </span>
             );
@@ -50,14 +50,24 @@ const Light: React.FC<{ bg: string; opacity?: number; blend?: React.CSSPropertie
   opacity > 0.001 ? <AbsoluteFill style={{ background: bg, opacity, mixBlendMode: blend, filter: blur ? `blur(${blur}px)` : undefined }} /> : null;
 
 /** the brand comet: a soft streak of Perps light along the top edge */
-const Comet: React.FC<{ t: number; opacity?: number; y?: number }> = ({ t, opacity = 1, y = -170 }) => (
-  <div style={{ position: "absolute", left: -400, top: y, width: 2800, height: 420, opacity, mixBlendMode: "screen", transform: `rotate(-6deg) translateX(${Math.sin(t * 0.02) * 60}px)`, filter: "blur(46px)",
-    background: "radial-gradient(ellipse 48% 44% at 66% 52%, rgba(250,170,70,0.95) 0%, rgba(236,139,27,0.75) 30%, rgba(236,139,27,0.18) 58%, transparent 74%)" }} />
+const Comet: React.FC<{ t: number; opacity?: number; y?: number }> = ({ t, opacity = 1, y = -230 }) => (
+  <div style={{ position: "absolute", left: -300, top: y, width: 2600, height: 360, opacity: opacity * 0.85, mixBlendMode: "screen", transform: `rotate(-5deg) translateX(${Math.sin(t * 0.02) * 50}px)`, filter: "blur(38px)",
+    background: "radial-gradient(ellipse 46% 40% at 64% 50%, rgba(248,165,64,0.9) 0%, rgba(236,139,27,0.55) 32%, rgba(236,139,27,0.1) 60%, transparent 74%)" }} />
+);
+
+/** thin diagonal light lines crossing the frame (reference: hairline streaks over the red section) */
+const Streaks: React.FC<{ t: number; tint?: string; opacity?: number }> = ({ t, tint = "255,255,255", opacity = 1 }) => (
+  <>
+    {[0, 1, 2].map((i) => (
+      <div key={i} style={{ position: "absolute", left: 300 + i * 620 + t * (1.2 + i * 0.4), top: -300, width: 1.5, height: 1800, transform: "rotate(48deg)", transformOrigin: "top left", opacity: opacity * [0.5, 0.28, 0.38][i], mixBlendMode: "screen",
+        background: `linear-gradient(180deg, transparent 0%, rgba(${tint},0.0) 20%, rgba(${tint},0.75) 48%, rgba(${tint},0.0) 80%, transparent)` }} />
+    ))}
+  </>
 );
 
 /** the brand louvre: diagonal slats of Perps light falling from the top */
 const Louvre: React.FC<{ t: number; opacity?: number }> = ({ t, opacity = 1 }) => (
-  <div style={{ position: "absolute", left: -300, right: -300, top: -260, height: 900, opacity, mixBlendMode: "screen", filter: "blur(34px)",
+  <div style={{ position: "absolute", left: -300, right: -300, top: -300, height: 820, opacity: opacity * 0.75, mixBlendMode: "screen", filter: "blur(26px)",
     WebkitMaskImage: "linear-gradient(180deg, #000 0%, rgba(0,0,0,0.75) 40%, transparent 88%)", maskImage: "linear-gradient(180deg, #000 0%, rgba(0,0,0,0.75) 40%, transparent 88%)",
     background: `repeating-linear-gradient(108deg, transparent 0 90px, rgba(240,148,40,0.9) 170px 270px, transparent 350px 440px)`, backgroundPosition: `${t * 3}px 0` }} />
 );
@@ -86,20 +96,19 @@ const Grain: React.FC<{ f: number }> = ({ f }) => {
       }),
     [],
   );
-  return <AbsoluteFill style={{ backgroundImage: `url(${tiles[f % tiles.length]})`, backgroundSize: "384px 384px", mixBlendMode: "overlay", opacity: 0.32, pointerEvents: "none" }} />;
+  return <AbsoluteFill style={{ backgroundImage: `url(${tiles[f % tiles.length]})`, backgroundSize: "384px 384px", mixBlendMode: "overlay", opacity: 0.17, pointerEvents: "none" }} />;
 };
 
-const Vignette = () => <AbsoluteFill style={{ background: "radial-gradient(ellipse 78% 78% at 50% 50%, transparent 52%, rgba(0,0,0,0.72) 100%)" }} />;
+const Vignette = () => <AbsoluteFill style={{ background: "radial-gradient(ellipse 80% 80% at 50% 48%, transparent 45%, rgba(0,0,0,0.78) 100%)" }} />;
 
 const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
   switch (id) {
     case "1A":
       return (
         <>
-          <Light bg="radial-gradient(ellipse 55% 75% at 0% 45%, rgba(236,139,27,0.42), transparent 70%)" />
-          <Light bg="radial-gradient(ellipse 50% 40% at 60% 0%, rgba(246,160,58,0.18), transparent 70%)" />
+          <Light bg="linear-gradient(90deg, rgba(236,139,27,0.22) 0%, rgba(236,139,27,0.06) 18%, transparent 34%)" />
           <AbsoluteFill style={{ padding: "0 0 0 150px", justifyContent: "center" }}>
-            <Words t={t} start={5} size={84} out={[38, 48]} lines={[[{ t: "Markets don't" }], [{ t: "sleep.", c: C.perps }]]} />
+            <Words t={t} start={5} out={[38, 48]} lines={[{ segs: [{ t: "Markets don't" }], size: 50, color: C.t2 }, { segs: [{ t: "sleep.", c: C.perps }], size: 112, weight: 600 }]} />
           </AbsoluteFill>
         </>
       );
@@ -107,11 +116,11 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const g = t > 12 && t < 19 && t % 2 === 0;
       return (
         <>
-          <Light bg="radial-gradient(ellipse 60% 45% at 50% 0%, rgba(149,167,197,0.22), transparent 70%)" />
-          <Light bg="radial-gradient(ellipse 45% 40% at 50% 100%, rgba(255,92,80,0.10), transparent 70%)" />
+          <Light bg="linear-gradient(180deg, rgba(149,167,197,0.12) 0%, transparent 30%)" />
+          <Streaks t={t} />
           <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
             <div style={{ transform: g ? "translateX(6px)" : undefined, textShadow: g ? "-6px 0 rgba(255,117,106,0.8), 6px 0 rgba(31,177,255,0.5)" : undefined }}>
-              <Words t={t} start={3} size={84} align="center" out={[33, 40]} lines={[[{ t: "Why should" }], [{ t: "your" }, { t: "trading?", c: C.perps }]]} />
+              <Words t={t} start={3} align="center" out={[33, 40]} lines={[{ segs: [{ t: "Why should" }], size: 50, color: C.t2 }, { segs: [{ t: "your" }, { t: "trading?", c: C.perps }], size: 104, weight: 600 }]} />
             </div>
           </AbsoluteFill>
         </>
@@ -121,7 +130,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const slam = easeOut(span(t, 0, 7));
       return (
         <>
-          <Light bg="radial-gradient(ellipse 60% 45% at 50% 0%, rgba(149,167,197,0.16), transparent 70%)" />
+          <Streaks t={t + 40} opacity={0.7} />
           <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
             <div style={{ fontFamily: FD, fontWeight: 900, fontSize: 250, lineHeight: 0.84, textAlign: "center", color: C.text, transform: `scale(${mix(1.006, 1.035, t / 36)})` }}>
               <div style={{ opacity: slam, transform: `scale(${mix(1.25, 1, slam)})`, filter: `blur(${(1 - slam) * 18}px)` }}>MARKET</div>
@@ -180,7 +189,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
               {line("GOAT FUNDED", l1)}
               {line("PERPS", l2)}
             </div>
-            <div style={{ marginTop: 34, fontFamily: FB, fontSize: 32, color: C.t2, opacity: sub, transform: `translateY(${(1 - sub) * 14}px)` }}>Trade perps with our simulated capital</div>
+            <div style={{ marginTop: 30, fontFamily: FB, fontSize: 30, color: C.t3, opacity: sub, transform: `translateY(${(1 - sub) * 14}px)` }}>Trade perps with our simulated capital</div>
           </AbsoluteFill>
         </>
       );
@@ -191,7 +200,7 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       const done = t >= 40;
       return (
         <>
-          <Comet t={f} opacity={0.8} />
+          <Comet t={f} opacity={0.7} />
           <div style={{ position: "absolute", left: 130, top: 250, fontFamily: FD, fontWeight: 900, color: C.text }}>
             <div style={{ fontSize: 360, lineHeight: 0.82, opacity: slam, transform: `scale(${mix(1.22, 1, slam)})`, transformOrigin: "left center", filter: `blur(${(1 - slam) * 16}px)` }}>24/7</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 26, marginTop: 34, opacity: easeOut(span(t, 6, 14)) }}>
@@ -206,8 +215,8 @@ const shotOverlay = (id: ShotId, t: number, f: number): React.ReactNode => {
       return (
         <>
           <Comet t={f} opacity={0.75} />
-          <AbsoluteFill style={{ padding: "150px 0 0 130px" }}>
-            <Words t={t} start={2} size={92} lines={[[{ t: "Weekends" }], [{ t: "included.", c: C.perps }]]} />
+          <AbsoluteFill style={{ padding: "140px 0 0 130px" }}>
+            <Words t={t} start={2} lines={[{ segs: [{ t: "Weekends" }], size: 50, color: C.t2 }, { segs: [{ t: "included.", c: C.perps }], size: 112, weight: 600 }]} />
           </AbsoluteFill>
         </>
       );
@@ -221,6 +230,7 @@ export const Overlay: React.FC = () => {
   return (
     <AbsoluteFill>
       {shotOverlay(id, t, f)}
+      <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25), transparent 22%, transparent 78%, rgba(0,0,0,0.35))" }} />
       <Flash f={f} at={SHOTS["1B"][0]} up={10} down={10} color="rgba(255,236,210,1)" max={0.9} />
       <Flash f={f} at={SHOTS["2A"][0]} up={14} down={14} color="rgba(255,196,130,1)" />
       <Flash f={f} at={SHOTS["2C"][0]} up={4} down={8} color="rgba(236,139,27,1)" max={0.35} />

@@ -8,10 +8,12 @@ import { useThree } from "@react-three/fiber";
 import { EffectComposer } from "@react-three/postprocessing";
 import { BlendFunction, BloomEffect } from "postprocessing";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLightUniformsLib.js";
 import { LensBlur } from "../molasses/lensblur";
 import { Brand, ease, easeIn, easeOut, mix, span } from "./brand";
 import { shotAt, local, ShotId } from "./timeline";
-import { CARD_H, CARD_W, DAY_H, DAY_W, Screen, Ticker, closedTex, clockTex, dayTex, dialFaceTex, glowTex, tickerTex } from "./tex";
+import { CARD_H, CARD_W, DAY_H, DAY_W, Screen, Ticker, cached, closedTex, dayTex, dialFaceTex, tickerTex } from "./tex";
 
 type V3 = [number, number, number];
 type Rig = { pos: V3; look: V3; fov: number; cInf: number; focus?: number };
@@ -55,22 +57,50 @@ const RIG: Record<ShotId, (t: number) => Rig> = {
   },
   "2D": (t) => {
     const k = ease(span(t, 0, 46));
-    const look: V3 = [mix(-1.4, 2.2, k), 0.02, -0.2];
-    const pos: V3 = [mix(-2.2, 1.3, k), 0.45, mix(5.0, 4.7, k)];
+    const look: V3 = [mix(-1.3, 2.25, k), -0.12, -0.2];
+    const pos: V3 = [mix(-2.0, 1.45, k), 0.4, mix(4.1, 3.8, k)];
     const fx = look[0] - pos[0], fz = look[2] - pos[2];
     return { pos, look, fov: 36, cInf: 34, focus: Math.hypot(fx, fz) };
   },
+};
+
+// ---------------- environment: studio light the glass reflects (edge glints) ----------------
+type EnvKind = "amber" | "cold" | "perps";
+const envCache = new Map<string, THREE.Texture>();
+const useEnv = (kind: EnvKind) => {
+  const { gl } = useThree();
+  let t = envCache.get(kind);
+  if (!t) {
+    const sc = new THREE.Scene();
+    sc.background = new THREE.Color(0x000000);
+    const panel = (w: number, h: number, pos: V3, col: string, k: number) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(k), side: THREE.DoubleSide }));
+      m.position.set(...pos);
+      m.lookAt(0, 0, 0);
+      sc.add(m);
+    };
+    panel(9, 0.5, [0, 3.2, 4.5], "#ffffff", 2.2); // long softbox strip above/behind camera: crisp top-edge glint
+    panel(10, 6, [0, 7, 0], "#ffffff", 0.18); // dim ceiling
+    if (kind === "amber") { panel(1.2, 5, [-5, 0.5, 2], "#ffb35c", 1.4); panel(3, 2, [0, 0.6, -6], "#c9ffe0", 0.5); }
+    if (kind === "cold") { panel(1.2, 5, [-5, 0.5, 2], "#a9bbd6", 1.0); panel(1.2, 5, [5, 0.5, 1], "#ff6a5c", 0.55); }
+    if (kind === "perps") { panel(1.4, 5, [-5, 1, 1.5], "#EC8B1B", 1.6); panel(1.2, 5, [5, 0.5, 2], "#ffffff", 0.6); }
+    const pm = new THREE.PMREMGenerator(gl);
+    t = pm.fromScene(sc, 0.03).texture;
+    pm.dispose();
+    envCache.set(kind, t);
+  }
+  return t;
 };
 
 // ---------------- materials ----------------
 const rimMaterial = (rim: THREE.Color, base: THREE.Color, power = 2.6) =>
   new THREE.ShaderMaterial({
     uniforms: { rim: { value: rim }, base: { value: base }, power: { value: power } },
-    vertexShader: `varying vec3 vN; varying vec3 vV; varying vec3 vW;
-      void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; vec4 mv = viewMatrix*w; vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
-    fragmentShader: `uniform vec3 rim; uniform vec3 base; uniform float power; varying vec3 vN; varying vec3 vV; varying vec3 vW;
+    vertexShader: `varying vec3 vN; varying vec3 vV;
+      void main(){ vec4 w = modelMatrix*vec4(position,1.); vec4 mv = viewMatrix*w; vN = normalize(normalMatrix*normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+    fragmentShader: `uniform vec3 rim; uniform vec3 base; uniform float power; varying vec3 vN; varying vec3 vV;
       void main(){ vec3 n = normalize(vN); float f = pow(1.-max(dot(n, normalize(vV)),0.), power);
-        float up = smoothstep(-0.2, 0.8, n.y)*0.6 + 0.4;  // screens sit a little above: tops catch more light
+        float up = smoothstep(-0.3, 0.9, n.y)*0.7 + 0.3;
         gl_FragColor = vec4(base + rim*f*up, 1.); }`,
   });
 
@@ -82,19 +112,15 @@ const chromeMaterial = () =>
     fragmentShader: `uniform float sweep; uniform vec3 hot; uniform float glow; varying vec3 vN; varying vec3 vW; varying vec3 vL;
       void main(){
         vec3 n = normalize(vN); vec3 v = normalize(cameraPosition - vW); vec3 r = reflect(-v, n);
-        float face = smoothstep(0.85, 0.98, n.z);                       // flat front face vs bevel/sides
-        // brushed chrome: diagonal gradient over the face (light top-left -> dark bottom-right), like the brand chrome file
+        float face = smoothstep(0.85, 0.98, n.z);
         float d = clamp(0.5 + (-vL.x*0.35 + vL.y*0.55), 0., 1.);
         vec3 faceCol = mix(vec3(0.07,0.075,0.085), vec3(0.6,0.63,0.68), smoothstep(0.1, 0.95, d));
-        // studio reflection for bevels: bright horizon band + dark floor
         float y = r.y;
         vec3 env = mix(vec3(0.03,0.035,0.04), vec3(0.95,0.97,1.0), smoothstep(-0.05, 0.35, y));
         env = env*0.75 + vec3(0.9)*exp(-pow((y-0.12)*14.,2.));
         vec3 col = mix(env, faceCol, face);
-        // orange light sweep travelling across the mark
         float s = exp(-pow((vW.x*0.9 + vW.y*0.45 - sweep)*2.4, 2.));
         col += vec3(1.05,1.03,1.0) * s * mix(0.9, 0.42, face);
-        // warm rim from the Perps light behind
         float fr = pow(1. - max(dot(n, v), 0.), 3.);
         col += hot * fr * (1.0 - face) * (0.25 + glow);
         gl_FragColor = vec4(col, 1.);
@@ -102,11 +128,60 @@ const chromeMaterial = () =>
     side: THREE.DoubleSide,
   });
 
-// ---------------- pieces ----------------
+const glassBody = () => new THREE.MeshPhysicalMaterial({ color: "#0c0e12", roughness: 0.32, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06, envMapIntensity: 1.1, reflectivity: 0.6 });
+const roundedBoxes = new Map<string, THREE.BufferGeometry>();
+const rbox = (w: number, h: number, d: number) => {
+  const k = `${w}x${h}x${d}`;
+  let g = roundedBoxes.get(k);
+  if (!g) roundedBoxes.set(k, (g = new RoundedBoxGeometry(w, h, d, 6, Math.min(w, h) * 0.09)));
+  return g;
+};
+
+/** a thick glossy glass card: real geometry (edge glints from the environment) + a printed UI layer on each face */
+const GlassCard: React.FC<{ w: number; h: number; front: THREE.Texture; back?: THREE.Texture; dim?: number; depth?: number }> = ({ w, h, front, back, dim = 1, depth = 0.045 }) => {
+  const body = useMemo(glassBody, []);
+  const ui = (map: THREE.Texture, flip: boolean) => (
+    <mesh position={[0, 0, (flip ? -1 : 1) * (depth / 2 + 0.0015)]} rotation={[0, flip ? Math.PI : 0, 0]}>
+      <planeGeometry args={[w, h]} />
+      <meshBasicMaterial map={map} transparent depthWrite={false} color={new THREE.Color(dim, dim, dim)} toneMapped={false} />
+    </mesh>
+  );
+  return (
+    <group>
+      <mesh geometry={rbox(w, h, depth)} material={body} />
+      {ui(front, false)}
+      {back && ui(back, true)}
+    </group>
+  );
+};
+
+const dotTex = () =>
+  cached("dots", 3, 2, (g, W, H) => {
+    g.clearRect(0, 0, W, H);
+    const step = W / 34;
+    for (let x = step / 2; x < W; x += step)
+      for (let y = step / 2; y < H; y += step) {
+        const dx = (x - W / 2) / (W / 2), dy = (y - H / 2) / (H / 2);
+        const a = Math.max(0, 1 - Math.hypot(dx, dy)) * 0.9;
+        if (a < 0.02) continue;
+        g.beginPath();
+        g.arc(x, y, step * 0.11, 0, Math.PI * 2);
+        g.fillStyle = `rgba(239,244,250,${a})`;
+        g.fill();
+      }
+  });
+const Dots: React.FC<{ p: V3; s?: number; o?: number; ry?: number }> = ({ p, s = 1, o = 0.35, ry = 0 }) => (
+  <mesh position={p} rotation={[0, ry, 0]} scale={s}>
+    <planeGeometry args={[3, 2]} />
+    <meshBasicMaterial map={dotTex()} transparent opacity={o} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
+  </mesh>
+);
+
+// ---------------- 1A: the trader's room ----------------
 const TRADER_X = 0.36;
 const BUST = [[0.0, 0.38], [0.34, 0.38], [0.39, 0.62], [0.42, 0.86], [0.41, 0.95], [0.34, 1.01], [0.2, 1.06], [0.075, 1.1], [0.0, 1.11]].map(([x, y]) => new THREE.Vector2(x, y));
 const Trader: React.FC = () => {
-  const mat = useMemo(() => rimMaterial(new THREE.Color(1.25, 0.82, 0.45), new THREE.Color(0.006, 0.007, 0.009), 4.2), []);
+  const mat = useMemo(() => rimMaterial(new THREE.Color(1.15, 0.92, 0.7), new THREE.Color(0.0, 0.0, 0.0), 7.0), []);
   return (
     <group position={[TRADER_X, 0, 0]}>
       <mesh material={mat} scale={[1, 1, 0.56]}><latheGeometry args={[BUST, 64]} /></mesh>
@@ -114,38 +189,47 @@ const Trader: React.FC = () => {
       <mesh material={mat} position={[0, 1.32, 0]} scale={[0.92, 1.1, 1.0]}><sphereGeometry args={[0.12, 48, 48]} /></mesh>
       <mesh material={mat} position={[0, 1.355, 0.01]} scale={[1.0, 0.78, 1.08]}><sphereGeometry args={[0.128, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} /></mesh>
       <mesh material={mat} position={[0, 1.36, -0.15]} rotation={[0.1, 0, 0]} scale={[1, 1, 1.15]}><cylinderGeometry args={[0.105, 0.11, 0.01, 32, 1, false, Math.PI * 0.5, Math.PI]} /></mesh>
-      <mesh material={mat} position={[0.112, 1.31, 0.005]} scale={[0.5, 1, 0.8]}><sphereGeometry args={[0.03, 16, 16]} /></mesh>
-      <mesh material={mat} position={[-0.112, 1.31, 0.005]} scale={[0.5, 1, 0.8]}><sphereGeometry args={[0.03, 16, 16]} /></mesh>
     </group>
   );
 };
 
-const Screens: React.FC<{ f: number }> = ({ f }) => {
+let areaInit = false;
+const SCREEN_PLACE: { p: V3; r: number }[] = [
+  { p: [0, 1.4, -1.0], r: 0 },
+  { p: [-1.5, 1.36, -0.66], r: 0.6 },
+  { p: [1.5, 1.36, -0.66], r: -0.6 },
+];
+const Room: React.FC<{ f: number }> = ({ f }) => {
+  if (!areaInit) { RectAreaLightUniformsLib.init(); areaInit = true; }
   const scr = useMemo(() => [new Screen(1.75, 1.0, 11, "BTC-PERP  ·  97,412.5"), new Screen(1.2, 0.95, 23, "ETH-PERP"), new Screen(1.2, 0.95, 37, "SOL-PERP")], []);
   scr.forEach((s, i) => s.draw(f + i * 17));
-  const lit = new THREE.Color(1.7, 1.7, 1.7);
-  const place: { p: V3; r: number }[] = [
-    { p: [0, 1.4, -1.0], r: 0 },
-    { p: [-1.5, 1.36, -0.66], r: 0.6 },
-    { p: [1.5, 1.36, -0.66], r: -0.6 },
-  ];
+  const lit = new THREE.Color(1.5, 1.5, 1.5);
+  const dark = useMemo(() => new THREE.MeshStandardMaterial({ color: "#0b0c0e", roughness: 0.55, metalness: 0.2 }), []);
+  const desk = useMemo(() => new THREE.MeshStandardMaterial({ color: "#16130f", roughness: 0.42, metalness: 0.05 }), []);
+  const mug = useMemo(() => new THREE.MeshStandardMaterial({ color: "#1c1d20", roughness: 0.3, metalness: 0.0 }), []);
   return (
     <group>
       {scr.map((s, i) => (
-        <group key={i} position={place[i].p} rotation={[0, place[i].r, 0]}>
-          <mesh position={[0, 0, -0.012]}><planeGeometry args={[s.w + 0.05, s.h + 0.05]} /><meshBasicMaterial color="#020203" /></mesh>
+        <group key={i} position={SCREEN_PLACE[i].p} rotation={[0, SCREEN_PLACE[i].r, 0]}>
+          <mesh position={[0, 0, -0.03]} material={dark}><boxGeometry args={[s.w + 0.04, s.h + 0.04, 0.04]} /></mesh>
           <mesh><planeGeometry args={[s.w, s.h]} /><meshBasicMaterial map={s.tex} color={lit} toneMapped={false} /></mesh>
+          <mesh position={[0, -s.h / 2 - 0.16, -0.06]} material={dark}><boxGeometry args={[0.06, 0.34, 0.04]} /></mesh>
+          <mesh position={[0, -s.h / 2 - 0.33, -0.02]} material={dark}><boxGeometry args={[0.36, 0.014, 0.2]} /></mesh>
+          <rectAreaLight args={["#d8efe4", 5.5, s.w, s.h]} position={[0, 0, 0.02]} rotation={[0, 0, 0]} />
         </group>
       ))}
-      {/* desk edge catching the screen light */}
-      <mesh position={[0, 0.74, -0.55]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[4.2, 1.1]} /><meshBasicMaterial color="#0b0a09" /></mesh>
-      {/* warm amber haze behind the screens */}
-      <mesh position={[-0.9, 1.75, -2.6]}><planeGeometry args={[6, 3.2]} /><meshBasicMaterial map={glowTex("236,139,27")} transparent opacity={0.2} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} /></mesh>
+      <mesh position={[0, 0.7, -0.55]} material={desk}><boxGeometry args={[4.6, 0.04, 1.3]} /></mesh>
+      <mesh position={[TRADER_X - 0.02, 0.73, -0.42]} material={dark} rotation={[0.05, 0, 0]}><boxGeometry args={[0.46, 0.018, 0.15]} /></mesh>
+      <mesh position={[TRADER_X + 0.38, 0.73, -0.36]} material={dark}><boxGeometry args={[0.07, 0.01, 0.11]} /></mesh>
+      <group position={[-0.62, 0.77, -0.42]}>
+        <mesh material={mug}><cylinderGeometry args={[0.045, 0.042, 0.11, 32]} /></mesh>
+        <mesh material={mug} position={[0.055, 0, 0]} rotation={[0, 0, Math.PI / 2]}><torusGeometry args={[0.025, 0.008, 12, 24, Math.PI]} /></mesh>
+      </group>
     </group>
   );
 };
 
-const Dust: React.FC<{ f: number; color: string; count?: number; spread?: V3; center?: V3 }> = ({ f, color, count = 140, spread = [8, 4, 6], center = [0, 0.5, -1] }) => {
+const Dust: React.FC<{ f: number; color: string; count?: number; spread?: V3; center?: V3 }> = ({ f, color, count = 90, spread = [8, 4, 6], center = [0, 0.5, -1] }) => {
   const base = useMemo(() => {
     let s = 7;
     const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
@@ -161,25 +245,10 @@ const Dust: React.FC<{ f: number; color: string; count?: number; spread?: V3; ce
   geo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
   return (
     <points geometry={geo}>
-      <pointsMaterial color={color} size={0.018} sizeAttenuation transparent opacity={0.7} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
+      <pointsMaterial color={color} size={0.012} sizeAttenuation transparent opacity={0.45} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
     </points>
   );
 };
-
-const Glow: React.FC<{ rgb: string; w: number; h: number; opacity: number; z?: number }> = ({ rgb, w, h, opacity, z = -0.03 }) =>
-  opacity > 0.001 ? (
-    <mesh position={[0, 0, z]}>
-      <planeGeometry args={[w, h]} />
-      <meshBasicMaterial map={glowTex(rgb)} transparent opacity={opacity} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
-    </mesh>
-  ) : null;
-
-const Face: React.FC<{ map: THREE.Texture; w: number; h: number; back?: boolean; dim?: number }> = ({ map, w, h, back, dim = 1 }) => (
-  <mesh rotation={[0, back ? Math.PI : 0, 0]}>
-    <planeGeometry args={[w, h]} />
-    <meshBasicMaterial map={map} alphaTest={0.5} color={new THREE.Color(dim, dim, dim)} toneMapped={false} />
-  </mesh>
-);
 
 // glass market cards that flip to CLOSED
 type FieldCard = { t: Ticker; closed: [string, string]; p: V3; r: V3 };
@@ -201,9 +270,7 @@ const CardField: React.FC<{ t: number; flipFrom: number; dim?: number }> = ({ t,
       const bob = Math.sin((t + i * 13) * 0.05) * 0.03;
       return (
         <group key={i} position={[c.p[0], c.p[1] + bob, c.p[2]]} rotation={[c.r[0], c.r[1] + k * Math.PI, c.r[2]]}>
-          <Face map={tickerTex(c.t)} w={CARD_W} h={CARD_H} dim={dim} />
-          <Face map={closedTex(c.closed[0], c.closed[1])} w={CARD_W} h={CARD_H} back dim={dim * mix(0.6, 1, k)} />
-          <Glow rgb="255,92,80" w={CARD_W * 1.9} h={CARD_H * 2.1} opacity={k * 0.32 * dim} z={0.03} />
+          <GlassCard w={CARD_W} h={CARD_H} front={tickerTex(c.t)} back={closedTex(c.closed[0], c.closed[1])} dim={dim} />
         </group>
       );
     })}
@@ -214,7 +281,7 @@ const BokehCards: React.FC<{ t: number; tint?: number }> = ({ t, tint = 0.55 }) 
   <group>
     {FIELD.map((c, i) => (
       <group key={i} position={[c.p[0] * 1.6, c.p[1] * 1.3 + Math.sin((t + i * 9) * 0.03) * 0.05, -3.5 - (i % 3) * 1.4]} rotation={[0, c.r[1] * 0.6 + t * 0.002, 0]}>
-        <Face map={tickerTex(c.t)} w={CARD_W} h={CARD_H} dim={tint} />
+        <GlassCard w={CARD_W} h={CARD_H} front={tickerTex(c.t)} dim={tint} />
       </group>
     ))}
   </group>
@@ -253,10 +320,6 @@ const Shield: React.FC<{ brand: Brand; t: number; shot: ShotId }> = ({ brand, t,
   return (
     <group position={[0, y, 0]} rotation={[0, ry, 0]} scale={sc}>
       <mesh geometry={geo} material={mat} />
-      <mesh position={[0, -0.35, -0.4]}>
-        <planeGeometry args={[3.4, 2.2]} />
-        <meshBasicMaterial map={glowTex("236,139,27")} transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
-      </mesh>
     </group>
   );
 };
@@ -264,16 +327,16 @@ const Shield: React.FC<{ brand: Brand; t: number; shot: ShotId }> = ({ brand, t,
 const Dial: React.FC<{ t: number }> = ({ t }) => {
   const p = ease(span(t, 8, 40));
   const len = Math.max(0.001, p * Math.PI * 2);
-  const ring = useMemo(() => new THREE.RingGeometry(0.98, 1.06, 160, 1, Math.PI / 2 - len, len), [len]);
-  const dot = 1.02;
+  const ring = useMemo(() => new THREE.RingGeometry(0.985, 1.035, 160, 1, Math.PI / 2 - len, len), [len]);
+  const body = useMemo(glassBody, []);
   const a = Math.PI / 2 - len;
   return (
     <group position={[1.75, 0.02, 0]} rotation={[0.08, -0.5, 0.03]} scale={0.8}>
-      <mesh><planeGeometry args={[2.4, 2.4]} /><meshBasicMaterial map={dialFaceTex()} alphaTest={0.5} toneMapped={false} /></mesh>
-      <mesh position={[0, 0, 0.01]}><ringGeometry args={[0.98, 1.06, 160]} /><meshBasicMaterial color="#1c1f25" toneMapped={false} /></mesh>
-      <mesh geometry={ring} position={[0, 0, 0.02]}><meshBasicMaterial color={new THREE.Color(2.6, 1.3, 0.3)} toneMapped={false} side={THREE.DoubleSide} /></mesh>
-      <mesh position={[Math.cos(a) * dot, Math.sin(a) * dot, 0.03]}><circleGeometry args={[0.07, 32]} /><meshBasicMaterial color={new THREE.Color(3.2, 2.2, 1.2)} toneMapped={false} /></mesh>
-      <Glow rgb="236,139,27" w={3.6} h={3.6} opacity={0.18 + p * 0.22} z={-0.05} />
+      <mesh material={body} rotation={[Math.PI / 2, 0, 0]}><cylinderGeometry args={[1.18, 1.18, 0.06, 96]} /></mesh>
+      <mesh position={[0, 0, 0.032]}><planeGeometry args={[2.4, 2.4]} /><meshBasicMaterial map={dialFaceTex()} transparent depthWrite={false} toneMapped={false} /></mesh>
+      <mesh position={[0, 0, 0.033]}><ringGeometry args={[0.985, 1.035, 160]} /><meshBasicMaterial color="#1b1e24" toneMapped={false} /></mesh>
+      <mesh geometry={ring} position={[0, 0, 0.034]}><meshBasicMaterial color={new THREE.Color(1.25, 0.66, 0.14)} toneMapped={false} /></mesh>
+      <mesh position={[Math.cos(a) * 1.01, Math.sin(a) * 1.01, 0.036]}><circleGeometry args={[0.045, 32]} /><meshBasicMaterial color={new THREE.Color(1.6, 1.25, 0.9)} toneMapped={false} /></mesh>
     </group>
   );
 };
@@ -287,9 +350,8 @@ const DayRow: React.FC<{ t: number }> = ({ t }) => (
       const litK = wk ? ease(span(t, 20 + (i - 5) * 5, 30 + (i - 5) * 5)) : 0;
       const inK = easeOut(span(t, i * 2, i * 2 + 14));
       return (
-        <group key={d} position={[x, mix(-1.15, -0.62, inK), -0.05 * x * x]} rotation={[mix(0.6, 0, inK), -x * 0.09, 0]}>
-          <Face map={dayTex(d, litK > 0.5, i === 5 ? "02:14 · LIVE" : undefined)} w={DAY_W} h={DAY_H} />
-          {wk && <Glow rgb="236,139,27" w={DAY_W * 2.6} h={DAY_H * 2.2} opacity={litK * 0.36} z={-0.04} />}
+        <group key={d} position={[x, mix(-0.9, -0.36, inK), -0.05 * x * x]} rotation={[mix(0.6, 0, inK), -x * 0.09, 0]}>
+          <GlassCard w={DAY_W} h={DAY_H} front={dayTex(d, litK > 0.5, i === 5 ? "02:14 · LIVE" : undefined)} depth={0.05} />
         </group>
       );
     })}
@@ -298,7 +360,7 @@ const DayRow: React.FC<{ t: number }> = ({ t }) => (
 
 // ---------------- bloom ----------------
 const makeBloom = () =>
-  new BloomEffect({ blendFunction: BlendFunction.ADD, intensity: 0.6, luminanceThreshold: 0.95, luminanceSmoothing: 0.25, mipmapBlur: true, levels: 6, radius: 0.72 });
+  new BloomEffect({ blendFunction: BlendFunction.ADD, intensity: 0.32, luminanceThreshold: 1.0, luminanceSmoothing: 0.15, mipmapBlur: true, levels: 5, radius: 0.45 });
 
 const fwd = new THREE.Vector3(), tgt = new THREE.Vector3();
 
@@ -322,13 +384,16 @@ export const Scene3D: React.FC<{ brand: Brand }> = ({ brand }) => {
   fx.lens.cInf = rig.cInf;
   scene.background = new THREE.Color("#040507");
 
+  const envKind: EnvKind = shot === "1A" ? "amber" : shot.startsWith("1") ? "cold" : "perps";
+  scene.environment = useEnv(envKind);
+
   let content: React.ReactNode = null;
-  if (shot === "1A") content = (<><Trader /><Screens f={f} /><Dust f={f} color="#ffb05a" center={[0, 1.4, 0]} spread={[5, 2.5, 4]} /></>);
-  else if (shot === "1B") content = (<><CardField t={t} flipFrom={4} /><Dust f={f} color="#9fb4c8" center={[0, 0, 0]} /></>);
-  else if (shot === "1C" || shot === "1D") content = (<><CardField t={60} flipFrom={0} dim={0.7} /><Dust f={f} color="#9fb4c8" center={[0, 0, 1]} /></>);
-  else if (shot === "2A" || shot === "2B") content = (<><Shield brand={brand} t={t} shot={shot} /><BokehCards t={f} tint={0.35} /><Dust f={f} color="#ffb05a" center={[0, 0, -1]} /></>);
-  else if (shot === "2C") content = (<><Dial t={t} /><BokehCards t={f} tint={0.45} /><Dust f={f} color="#ffb05a" center={[0, 0, -1]} /></>);
-  else content = (<><DayRow t={t} /><Dust f={f} color="#ffb05a" center={[0, 0, -1]} /></>);
+  if (shot === "1A") content = (<><Trader /><Room f={f} /><Dust f={f} color="#ffcf9a" center={[0, 1.4, 0]} spread={[5, 2.5, 4]} /></>);
+  else if (shot === "1B") content = (<><CardField t={t} flipFrom={4} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dots p={[2.8, -1.2, -2.5]} s={1.2} o={0.25} /><Dust f={f} color="#c8d6e8" center={[0, 0, 0]} /></>);
+  else if (shot === "1C" || shot === "1D") content = (<><CardField t={60} flipFrom={0} dim={0.75} /><Dots p={[-2.6, 1.4, -3]} s={1.4} /><Dust f={f} color="#c8d6e8" center={[0, 0, 1]} /></>);
+  else if (shot === "2A" || shot === "2B") content = (<><Shield brand={brand} t={t} shot={shot} /><BokehCards t={f} tint={0.4} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
+  else if (shot === "2C") content = (<><Dial t={t} /><BokehCards t={f} tint={0.5} /><Dots p={[-1.2, -1.3, -2]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
+  else content = (<><DayRow t={t} /><Dots p={[3.2, 1.0, -2.5]} s={1.3} o={0.3} /><Dust f={f} color="#ffcf9a" center={[0, 0, -1]} /></>);
 
   return (
     <>

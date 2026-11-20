@@ -53,37 +53,43 @@ export const cached = (key: string, w: number, h: number, draw: (g: G, W: number
   return t;
 };
 
-/** frosted dark glass card body */
+/** UI layer printed on a glass card: transparent so the 3D glass body (thickness, reflections) shows through.
+ *  `border` = a state colour (red = closed, orange = lit) drawn as a thin inset line with a soft inner bloom. */
 export const glass = (g: G, W: number, H: number, o: { lit?: string; border?: string; fill?: number } = {}) => {
   const r = Math.min(W, H) * 0.1;
   g.clearRect(0, 0, W, H);
   g.save();
-  rr(g, 2, 2, W - 4, H - 4, r);
+  rr(g, 0, 0, W, H, r);
   g.clip();
-  const k = o.fill ?? 1;
-  const bg = g.createLinearGradient(0, 0, W * 0.55, H);
-  bg.addColorStop(0, `rgb(${42 * k},${46 * k},${54 * k})`);
-  bg.addColorStop(0.5, `rgb(${23 * k},${25 * k},${30 * k})`);
-  bg.addColorStop(1, `rgb(${15 * k},${17 * k},${21 * k})`);
-  g.fillStyle = bg;
+  const sh = g.createLinearGradient(0, 0, W * 0.4, H);
+  sh.addColorStop(0, "rgba(255,255,255,0.05)");
+  sh.addColorStop(0.45, "rgba(255,255,255,0.012)");
+  sh.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = sh;
   g.fillRect(0, 0, W, H);
   if (o.lit) {
-    const lg = g.createRadialGradient(W * 0.5, -H * 0.4, 0, W * 0.5, -H * 0.4, H * 1.35);
+    const lg = g.createRadialGradient(W * 0.5, -H * 0.45, 0, W * 0.5, -H * 0.45, H * 1.3);
     lg.addColorStop(0, o.lit);
     lg.addColorStop(1, "rgba(0,0,0,0)");
     g.fillStyle = lg;
     g.fillRect(0, 0, W, H);
   }
-  const sh = g.createLinearGradient(0, 0, 0, H * 0.4);
-  sh.addColorStop(0, "rgba(255,255,255,0.10)");
-  sh.addColorStop(1, "rgba(255,255,255,0)");
-  g.fillStyle = sh;
-  g.fillRect(0, 0, W, H);
+  const inset = Math.max(3, W / 160);
+  if (o.border) {
+    g.shadowColor = o.border;
+    g.shadowBlur = W / 30;
+    g.lineWidth = Math.max(2, W / 260);
+    g.strokeStyle = o.border;
+    rr(g, inset, inset, W - inset * 2, H - inset * 2, r * 0.9);
+    g.stroke();
+    g.shadowBlur = 0;
+  } else {
+    g.lineWidth = Math.max(1.5, W / 420);
+    g.strokeStyle = "rgba(239,244,250,0.07)";
+    rr(g, inset, inset, W - inset * 2, H - inset * 2, r * 0.9);
+    g.stroke();
+  }
   g.restore();
-  g.lineWidth = Math.max(2, W / 300);
-  g.strokeStyle = o.border ?? "rgba(239,244,250,0.2)";
-  rr(g, 2, 2, W - 4, H - 4, r);
-  g.stroke();
 };
 
 export const chip = (g: G, label: string, x: number, y: number, px: number, style: "closed" | "open" | "ghost", align: "left" | "right" = "left") => {
@@ -165,7 +171,7 @@ export const tickerTex = (t: Ticker) =>
 
 export const closedTex = (name: string, sub: string) =>
   cached(`cl-${name}`, CARD_W, CARD_H, (g, W, H) => {
-    glass(g, W, H, { border: "rgba(255,117,106,0.42)", fill: 0.85 });
+    glass(g, W, H, { border: "rgba(255,117,106,0.75)" });
     const p = W * 0.075;
     text(g, name, p, H * 0.3, H * 0.15, "s", C.text);
     text(g, sub, p, H * 0.47, H * 0.095, "b", C.t3);
@@ -174,7 +180,7 @@ export const closedTex = (name: string, sub: string) =>
 
 export const clockTex = () =>
   cached("clock", 2.3, 1.36, (g, W, H) => {
-    glass(g, W, H, { border: "rgba(239,244,250,0.26)" });
+    glass(g, W, H);
     text(g, "SATURDAY", W / 2, H * 0.22, H * 0.075, "s", C.t3, "center", H * 0.03);
     text(g, "02:14", W / 2, H * 0.72, H * 0.5, "d", C.text, "center", H * 0.01);
     text(g, "AM  ·  NEW YORK", W / 2, H * 0.88, H * 0.065, "s", C.t3, "center", H * 0.025);
@@ -183,7 +189,7 @@ export const clockTex = () =>
 export const DAY_W = 0.92, DAY_H = 1.3;
 export const dayTex = (label: string, lit: boolean, note?: string) =>
   cached(`day-${label}-${lit}`, DAY_W, DAY_H, (g, W, H) => {
-    glass(g, W, H, lit ? { lit: "rgba(246,160,58,0.95)", border: "rgba(236,139,27,0.75)" } : {});
+    glass(g, W, H, lit ? { lit: "rgba(246,160,58,0.85)", border: "rgba(246,160,58,0.85)" } : {});
     text(g, label, W * 0.12, H * 0.22, H * 0.17, "d", C.text, "left", H * 0.004);
     if (note && lit) text(g, note, W * 0.12, H * 0.34, H * 0.055, "s", C.text, "left", H * 0.004);
     chip(g, "OPEN", W * 0.12, H * 0.86, H * 0.05, lit ? "open" : "ghost");
@@ -193,15 +199,10 @@ export const dialFaceTex = () =>
   cached("dialface", 2.4, 2.4, (g, W, H) => {
     g.clearRect(0, 0, W, H);
     const cx = W / 2, cy = H / 2, R = W * 0.48;
-    const bg = g.createRadialGradient(cx, cy * 0.6, 0, cx, cy, R);
-    bg.addColorStop(0, "rgba(40,44,52,1)");
-    bg.addColorStop(1, "rgba(14,16,20,1)");
     g.beginPath();
-    g.arc(cx, cy, R, 0, Math.PI * 2);
-    g.fillStyle = bg;
-    g.fill();
-    g.lineWidth = W / 300;
-    g.strokeStyle = "rgba(239,244,250,0.2)";
+    g.arc(cx, cy, R * 0.97, 0, Math.PI * 2);
+    g.lineWidth = W / 500;
+    g.strokeStyle = "rgba(239,244,250,0.08)";
     g.stroke();
     for (let i = 0; i < 24; i++) {
       const a = (i / 24) * Math.PI * 2 - Math.PI / 2;
