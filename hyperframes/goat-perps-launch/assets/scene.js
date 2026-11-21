@@ -13,119 +13,44 @@
   const expoOut = (x) => { const t = clamp(x, 0, 1); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
   const S = WORLD.SHOTS;
 
-  // ---------------- pixel-dissolve copy (the reference's "Rules running in the background" build) ----------------
-  // A block of lines is pre-rendered twice: in its final colours, and flat in a tint. The reveal sweeps left to right
-  // through a band of noisy cells: cells ahead of the band flicker in the tint, cells in the band show the tint, cells
-  // behind it show the final type. A dashed selection box hugs each line while it builds, then the tint settles out.
-  class Dissolve {
-    constructor(el, lines, opts) {
-      this.el = el; this.lines = lines; this.o = Object.assign({ align: "left", tint: C.perps, cell: 5 }, opts);
-      this.cv = document.createElement("canvas"); el.appendChild(this.cv); this.ready = false;
-    }
-    build() {
-      const pad = 40, lh = this.lines.map((l) => l.size * 1.12);
-      const ctx = document.createElement("canvas").getContext("2d");
-      const font = (l) => `${l.weight || 400} ${l.size}px ${FB}`;
-      const widths = this.lines.map((l) => { ctx.font = font(l); ctx.letterSpacing = `${l.size > 70 ? -0.022 * l.size : -0.005 * l.size}px`; return ctx.measureText(l.segs.map((s) => s.t).join("")).width; });
-      const W = Math.ceil(Math.max(...widths)) + pad * 2, H = Math.ceil(lh.reduce((a, b) => a + b, 0)) + pad * 2;
-      this.W = W; this.H = H; this.pad = pad; this.boxes = [];
-      const draw = (tint) => {
-        const c = document.createElement("canvas"); c.width = W; c.height = H;
-        const g = c.getContext("2d");
-        let y = pad;
-        this.lines.forEach((l, i) => {
-          g.font = font(l); g.letterSpacing = `${l.size > 70 ? -0.022 * l.size : -0.005 * l.size}px`; g.textBaseline = "alphabetic";
-          let x = this.o.align === "center" ? (W - widths[i]) / 2 : pad;
-          const base = y + l.size * 0.92;
-          if (!tint) this.boxes.push([x - 10, y + l.size * 0.12, widths[i] + 20, l.size * 1.0]);
-          l.segs.forEach((s) => { g.fillStyle = tint || s.c || l.color || C.text; g.fillText(s.t, x, base); x += g.measureText(s.t).width; });
-          y += lh[i];
-        });
-        return c;
-      };
-      this.F = draw(null); this.T = draw(this.o.tint);
-      this.cv.width = W; this.cv.height = H;
-      this.cv.style.width = W + "px"; this.cv.style.height = H + "px";
-      this.ready = true;
-    }
-    // p: 0..1 reveal, settle: 0..1 tint -> final colours, out: 0..1 dissolve away
-    draw(p, settle, out, frame) {
-      if (!this.ready) { if (!document.fonts || document.fonts.status !== "loaded") return; this.build(); }
-      const g = this.cv.getContext("2d"), W = this.W, H = this.H, cs = this.o.cell;
-      g.clearRect(0, 0, W, H);
-      if (p <= 0 || out >= 1) return;
-      const band = 0.18, head = p * (1 + band * 2) - band, outHead = out * (1 + band * 2) - band;
-      const r = rng(Math.floor(frame) * 7919 + 13);
-      for (let y = 0; y < H; y += cs) for (let x = 0; x < W; x += cs) {
-        const h = ((x * 73856093) ^ (y * 19349663)) >>> 0, n = (h % 1000) / 1000;
-        const u = x / W + (n - 0.5) * 0.16;           // where this cell sits along the sweep
-        let src = null, a = 1;
-        const d = head - u;
-        if (d > band) src = "F";
-        else if (d > 0) src = r() < 0.82 ? "T" : null;
-        else if (d > -band * 0.7) { if (r() < 0.12) { src = "T"; a = 0.8; } }
-        if (src && out > 0) { const e = outHead - u; if (e > band) src = null; else if (e > 0) src = r() < 0.5 ? "T" : null; }
-        if (!src) continue;
-        g.globalAlpha = a;
-        if (src === "F" && settle < 1) {
-          g.drawImage(this.T, x, y, cs, cs, x, y, cs, cs);
-          g.globalAlpha = a * settle;
-        }
-        g.drawImage(src === "F" ? this.F : this.T, x, y, cs, cs, x, y, cs, cs);
-      }
-      g.globalAlpha = 1;
-      // dashed selection box while the line builds
-      const boxA = clamp(1 - settle * 1.4, 0, 1) * (p > 0.02 ? 1 : 0) * (1 - out);
-      if (boxA > 0.01) {
-        g.save(); g.globalAlpha = boxA * 0.85; g.strokeStyle = this.o.tint; g.lineWidth = 2; g.setLineDash([3, 4]);
-        g.lineDashOffset = -frame * 2;
-        this.boxes.forEach(([bx, by, bw, bh]) => { const ww = bw * clamp(head * 1.1, 0, 1); if (ww > 4) g.strokeRect(bx, by, ww, bh); });
-        g.restore();
-      }
-    }
-  }
-
-  const GLYPHS = "#%&@$?!0123456789";
-  const scramble = (s, t, start, rate) =>
-    s.split("").map((ch, i) => {
-      const lock = start + i * rate + 6;
-      if (t < start + i * rate) return `<span style="opacity:0">${ch}</span>`;
-      if (t >= lock) return `<span>${ch}</span>`;
-      const g = GLYPHS[Math.floor(rng(i * 131 + Math.floor(t) * 7)() * GLYPHS.length)];
-      return `<span style="color:${C.perps};opacity:.92">${g}</span>`;
-    }).join("");
-
   const SCENE = {};
+  const show = (el, on) => { el.style.display = on ? "" : "none"; };
   SCENE.mount = function (stage) {
     stage.innerHTML = `
       <canvas id="gl" width="1920" height="1080"></canvas>
       <div id="wash" class="layer"></div>
       <div id="lights" class="layer"><div class="comet"></div><div class="louvre"></div><div class="streaks"><i></i><i></i><i></i></div></div>
-      <div id="whipA" class="layer">
-        <div id="t1" class="copy" style="left:110px;top:50%;transform:translateY(-50%)"></div>
-        <div id="t2" class="copy" style="left:50%;top:50%;transform:translate(-50%,-52%)"></div>
-        <div id="closed" class="punch"><div class="chrome">MARKET</div><div class="chrome">CLOSED?</div></div>
-        <div id="intro" class="intro"><span></span>INTRODUCING</div>
-        <div id="lockup" class="lockup"><div class="ln"><div>GOAT FUNDED</div></div><div class="ln"><div>PERPS</div></div><p>Trade perps with our simulated capital</p></div>
-      </div>
-      <div id="whipB" class="layer">
-        <div id="h247" class="h247"><div class="big chrome">24/7</div><div class="row"><b>001</b><span>days a year</span></div></div>
-      </div>
-      <div id="t3" class="copy" style="left:90px;top:80px"></div>
+      <div id="ghost" class="ghost">CLOSED</div>
+      <div id="dots" class="layer"><i></i><i></i><i></i></div>
+      <div id="t1" class="copy"></div>
+      <div id="t2" class="copy"></div>
+      <div id="closed" class="tumble"></div>
+      <div id="intro" class="intro"><span></span>INTRODUCING</div>
+      <div id="lockup" class="lockup"><div class="gf chrome">GOAT FUNDED</div><div id="perpsw" class="copy"></div><span class="live"><i></i>LIVE</span></div>
+      <div id="t247" class="tumble"></div>
+      <div id="counter" class="counter"><b>001</b><span>DAYS A YEAR</span></div>
+      <div id="t3" class="copy"></div>
+      <div id="wflash" class="layer"></div>
       <div id="vig" class="layer"></div>
       <div id="grain" class="layer"></div>`;
     const $ = (s) => stage.querySelector(s);
     const gl = $("#gl");
     WORLD.mount(gl);
 
-    const T1 = new Dissolve($("#t1"), [{ segs: [{ t: "Markets don’t" }], size: 50, color: C.t2 }, { segs: [{ t: "sleep.", c: C.perps }], size: 112, weight: 600 }], { tint: "#F6A03A" });
-    const T2 = new Dissolve($("#t2"), [{ segs: [{ t: "Why should" }], size: 50, color: C.t2 }, { segs: [{ t: "your " }, { t: "trading?", c: C.perps }], size: 104, weight: 600 }], { tint: "#FF6F63", align: "center" });
-    const T3 = new Dissolve($("#t3"), [{ segs: [{ t: "Weekends" }], size: 50, color: C.t2 }, { segs: [{ t: "included.", c: C.perps }], size: 112, weight: 600 }], { tint: "#F6A03A" });
+    // copy, animated as in the GOAT Trade Copier reference
+    const T1 = new TYPE.GlowText($("#t1"), [{ t: "Markets don’t ", c: "#EFF4FA" }, { t: "sleep.", c: "#F6A03A" }], { size: 84, weight: 600, mode: "writer", glow: "#EC8B1B", spark: "#FFE3BF" });
+    const T2 = new TYPE.GlowText($("#t2"), [{ t: "Why should your trading?", c: "#FF8F86" }], { size: 76, weight: 400, mode: "glow", glow: "#FF3B30", spark: "#FFE1DC" });
+    const T3 = new TYPE.GlowText($("#t3"), [{ t: "Weekends ", c: "#EFF4FA" }, { t: "included.", c: "#F6A03A" }], { size: 84, weight: 600, mode: "glow", glow: "#EC8B1B", spark: "#FFE3BF" });
+    const PW = new TYPE.GlowText($("#perpsw"), [{ t: "PERPS", c: "#EFF4FA" }], { size: 58, weight: 600, spacing: 16, mode: "writer", glow: "#EC8B1B", spark: "#FFE3BF" });
+    const TC = new TYPE.Tumble($("#closed"), [{ t: "MARKET", cls: "acc" }, { t: " ", cls: "" }, { t: "CLOSED?", cls: "chrome" }]);
+    const T247 = new TYPE.Tumble($("#t247"), [{ t: "24", cls: "acco" }, { t: "/7", cls: "chrome" }]);
+    const place = (el, gt, x, y, align) => { if (!gt.ready) return; el.style.left = `${align === "center" ? x - gt.tw / 2 : x}px`; el.style.top = `${y}px`; };
+    const ghost = $("#ghost"), dots = $("#dots"), wflash = $("#wflash");
+    [...dots.children].forEach((d, i) => { d.style.backgroundImage = `url(${TYPE.dotPatch(420, 300, "#F6A03A", 91 + i)})`; });
 
     const wash = $("#wash"), comet = $(".comet"), louvre = $(".louvre"), streaks = $(".streaks");
-    const closed = $("#closed");
-    const intro = $("#intro"), lockup = $("#lockup"), lns = [...lockup.querySelectorAll(".ln > div")], sub = $("#lockup p");
-    const h247 = $("#h247"), big = $("#h247 .big"), row = $("#h247 .row"), n365 = $("#h247 b");
+    const closed = $("#closed"), t247 = $("#t247"), counter = $("#counter"), n365 = $("#counter b"), clabel = $("#counter span");
+    const intro = $("#intro"), lockup = $("#lockup"), gf = $("#lockup .gf"), live = $("#lockup .live");
     const grain = $("#grain");
 
     const WASH = {
@@ -141,18 +66,6 @@
       g.putImageData(img, 0, 0); return `url(${c.toDataURL("image/png")})`;
     });
 
-    const show = (el, on) => { el.style.display = on ? "" : "none"; };
-
-    // the reference's impact type ("NOT ANYMORE"): cuts in oversized, sheared and motion-blurred, snaps to size in
-    // ~6 frames, then keeps shrinking slowly and dims toward the next cut
-    const punch = (el, t, len, base) => {
-      const k = expoOut(span(t, 0, 7));
-      const sc = mix(1.85, 1, k) * mix(1, 0.9, span(t, 7, len));
-      const sk = mix(-14, 0, k), bl = (1 - k) * 16, dim = mix(1, 0.62, span(t, len - 14, len));
-      el.style.transform = `${base} scale(${sc.toFixed(4)}) skewX(${sk.toFixed(2)}deg)`;
-      el.style.filter = `blur(${bl.toFixed(1)}px) brightness(${dim.toFixed(3)})`;
-      el.style.opacity = t < 0 ? 0 : 1;
-    };
 
     function render(fr) {
       // seek times arrive as e.g. 7.7333 s = frame 231.999: snap near-whole frames so the 3D layer and the copy
@@ -173,26 +86,48 @@
 
       // copy
       show($("#t1"), shot === "1A");
-      if (shot === "1A") T1.draw(easeOut(span(t, 8, 26)), span(t, 26, 34), 0, f);
+      if (shot === "1A") { T1.draw(t, 8, 30, f); place($("#t1"), T1, 150, 470); }
       show($("#t2"), shot === "1B");
-      if (shot === "1B") T2.draw(easeOut(span(t, 12, 30)), span(t, 30, 38), 0, f);
+      show(ghost, shot === "1B");
+      if (shot === "1B") {
+        T2.draw(t, 12, 20, f); place($("#t2"), T2, 960 - t * 0.6, 440, "center");
+        ghost.style.transform = `translateX(${(-80 - t * 1.1).toFixed(1)}px)`;
+      }
       show($("#t3"), shot === "2D");
-      if (shot === "2D") T3.draw(easeOut(span(t, 4, 21)), span(t, 21, 29), 0, f);
+      if (shot === "2D") { T3.draw(t, 4, 12, f); place($("#t3"), T3, 130 - t * 0.4, 130); }
 
       show(closed, shot === "1C");
-      if (shot === "1C") punch(closed, t, 38, "translate(-50%,-50%)");
+      if (shot === "1C") TC.draw(t, 38);
       show(intro, shot === "2A");
       if (shot === "2A") { const k = easeOut(span(t, 14, 30)); intro.style.opacity = k; intro.style.filter = `blur(${((1 - k) * 8).toFixed(1)}px)`; }
+      // the reference's product reveal: warm white flash, the name cuts in oversized and settles, the product
+      // word is written by a cluster of glowing pixels, then a red LIVE badge pops on
+      const fl = shot === "2A" ? Math.pow(span(t, 33, 40), 2) : shot === "2B" ? 1 - easeOut(span(t, 0, 10)) : 0;
+      wflash.style.opacity = fl.toFixed(3);
       show(lockup, shot === "2B");
       if (shot === "2B") {
-        [easeOut(span(t, 6, 18)), easeOut(span(t, 10, 22))].forEach((k, i) => { lns[i].style.transform = `translateY(${((1 - k) * 105).toFixed(1)}%)`; lns[i].style.filter = `blur(${((1 - k) * 6).toFixed(1)}px)`; });
-        const s = easeOut(span(t, 22, 34)); sub.style.opacity = s; sub.style.transform = `translateY(${((1 - s) * 14).toFixed(1)}px)`;
+        const k = expoOut(span(t, 0, 8));
+        gf.style.transform = `scale(${(mix(1.6, 1, k) * mix(1, 1.03, span(t, 8, 42))).toFixed(4)}) skewX(${mix(-10, 0, k).toFixed(2)}deg)`;
+        gf.style.filter = k < 1 ? `blur(${((1 - k) * 14).toFixed(1)}px)` : "none";
+        PW.draw(t, 10, 26, f); place($("#perpsw"), PW, 960, 640, "center");
+        const lk = span(t, 24, 29), pop = lk <= 0 ? 0 : lk < 1 ? 1.18 * easeOut(lk) : 1;
+        live.style.transform = `scale(${pop.toFixed(3)})`; live.style.opacity = lk > 0 ? 1 : 0;
       }
-      show(h247, shot === "2C");
+      // 24/7 tumbles in, then the counter ticks up every second frame, as in the reference's "8 -> 27"
+      show(t247, shot === "2C" && t < 22);
+      if (shot === "2C" && t < 22) T247.draw(t, 22);
+      show(counter, shot === "2C" && t >= 22);
+      show(dots, shot === "2C");
       if (shot === "2C") {
-        punch(big, t, 52, "");
-        row.style.opacity = easeOut(span(t, 8, 16));
-        n365.textContent = String(Math.round(mix(1, 365, ease(span(t, 8, 40))))).padStart(3, "0");
+        [...dots.children].forEach((d, i) => { d.style.transform = `translate(${[-60, 40, 10][i] + f * [0.5, -0.4, 0.3][i]}px, ${[10, -20, 30][i] - f * 0.15}px)`; });
+        if (t >= 22) {
+          const ct = t - 22, q = Math.floor(ct / 2) * 2;
+          n365.textContent = String(Math.round(mix(1, 365, easeOut(span(q, 0, 20))))).padStart(3, "0");
+          const k = expoOut(span(ct, 0, 6));
+          n365.style.transform = `scale(${(mix(1.35, 1, k) * mix(1, 1.05, span(ct, 6, 30))).toFixed(4)})`;
+          n365.style.filter = `blur(${((1 - k) * 10).toFixed(1)}px) drop-shadow(0 0 24px rgba(236,139,27,0.45))`;
+          clabel.style.opacity = easeOut(span(ct, 6, 14));
+        }
       }
       grain.style.backgroundImage = tiles[Math.round(f) % tiles.length];
     }

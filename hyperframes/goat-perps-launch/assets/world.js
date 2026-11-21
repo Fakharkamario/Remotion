@@ -51,8 +51,8 @@
     },
     "2C": (t) => {
       const k = span(t, 0, 52);
-      const pos = lerp3([0.3, 0.06, 4.15], [0.12, 0.03, 4.0], k);
-      return { pos, look: [0.6, 0, 0], fov: 34, cInf: 18, focus: Math.hypot(pos[0] - 1.75, pos[2]) };
+      const pos = lerp3([0.12, 0.05, 4.3], [0.02, 0.02, 4.0], k);
+      return { pos, look: [0, 0, 0], fov: 34, cInf: 16, focus: pos[2] + 1.6 };
     },
     "2D": (t) => {
       const k = span(t, 0, 46);
@@ -333,7 +333,7 @@
     G.wipe.visible = false;
     G.shield.visible = shot === "2A" || shot === "2B";
     G.bokeh.visible = shot === "2A" || shot === "2B" || shot === "2C";
-    G.dial.visible = shot === "2C";
+    G.dial.visible = false; // the 24/7 frame is now a counter over floating cards, as in the reference
     G.wipe2.visible = false;
     G.week.visible = shot === "2D";
 
@@ -369,15 +369,15 @@
         G.chrome.uniforms.sweep.value = mix(-2.2, 2.4, ease(span(t, 6, 36)));
         G.chrome.uniforms.glow.value = 0.25 * k;
       } else {
-        const k = ease(span(t, 0, 16));
-        y = mix(0.1, 0.5, k); s = mix(1, 0.52, k);
+        // after the flash the lockup is a new frame: the shield already sits small above the name
+        y = 0.5 + 0.02 * span(t, 0, 42); s = 0.52;
         G.chrome.uniforms.sweep.value = mix(-2.2, 2.2, ease(span(t, 14, 40)));
         G.chrome.uniforms.glow.value = 0.25;
       }
       G.shield.position.set(0, y, 0); G.shield.rotation.y = ry; G.shield.scale.setScalar(s);
     }
     if (G.bokeh.visible) G.bokeh.children.forEach((c, i) => {
-      const b = c.userData.base;
+      const b = shot === "2C" ? [[-2.55, 1.05, -1.5], [2.6, -0.95, -1.1], [2.35, 1.2, -2.7]][i] : c.userData.base;
       c.position.set(b[0], b[1] + Math.sin((f + i * 11) * 0.03) * 0.05, b[2]);
       c.rotation.y = c.userData.ry + Math.sin(f * 0.01 + i) * 0.05;
       c.userData.set(0, 0.55);
