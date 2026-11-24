@@ -88,16 +88,17 @@
       el.innerHTML = parts.map((p) => p.t.split("").map((ch) => ch === " " ? `<span class="sp"> </span>` : `<span class="${p.cls}">${ch}</span>`).join("")).join("");
       this.letters = [...el.querySelectorAll("span:not(.sp)")];
       const r = rng(4242);
-      this.rnd = this.letters.map(() => [r() < 0.5 ? -1 : 1, 90 + r() * 110, (r() - 0.5) * 50, (r() - 0.5) * 140, r()]);
+      // [delay, rotX, rotY, rotZ, dx, dy, z]
+      this.rnd = this.letters.map(() => [r() * 5, (r() < 0.5 ? -1 : 1) * (120 + r() * 160), (r() - 0.5) * 120, (r() - 0.5) * 50, (r() - 0.5) * 220, (r() - 0.5) * 260, -300 + r() * 700]);
     }
     draw(t, len) {
       this.letters.forEach((s, i) => {
-        const [sg, rx, ry, dy, z] = this.rnd[i], k = expoOut(span(t, i * 0.9, i * 0.9 + 8));
-        s.style.opacity = clamp(k * 2.2, 0, 1).toFixed(3);
-        s.style.transform = `translateY(${((1 - k) * dy).toFixed(1)}px) translateZ(${((1 - k) * (z * 260 - 60)).toFixed(1)}px) rotateX(${((1 - k) * sg * rx).toFixed(1)}deg) rotateY(${((1 - k) * ry).toFixed(1)}deg)`;
-        s.style.filter = k < 0.98 ? `blur(${((1 - k) * 7).toFixed(1)}px)` : "none";
+        const [dl, rx, ry, rz, dx, dy, z] = this.rnd[i], k = expoOut(span(t, dl, dl + 11)), u = 1 - k;
+        s.style.opacity = clamp(span(t, dl - 1, dl + 2), 0, 1).toFixed(3);
+        s.style.transform = `translate3d(${(u * dx).toFixed(1)}px, ${(u * dy).toFixed(1)}px, ${(u * z).toFixed(1)}px) rotateX(${(u * rx).toFixed(1)}deg) rotateY(${(u * ry).toFixed(1)}deg) rotateZ(${(u * rz).toFixed(1)}deg)`;
+        s.style.filter = u > 0.02 ? `blur(${(u * 12).toFixed(1)}px)` : "none";
       });
-      this.el.style.transform = `translate(-50%,-50%) scale(${mix(1, 0.95, span(t, 10, len)).toFixed(4)})`;
+      this.el.style.transform = `translate(-50%,-50%) scale(${mix(1.04, 0.97, span(t, 0, len)).toFixed(4)})`;
     }
   }
 

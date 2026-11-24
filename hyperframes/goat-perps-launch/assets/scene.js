@@ -28,8 +28,9 @@
       <div id="intro" class="intro"><span></span>INTRODUCING</div>
       <div id="lockup" class="lockup"><div class="gf chrome">GOAT FUNDED</div><div id="perpsw" class="copy"></div><span class="live"><i></i>LIVE</span></div>
       <div id="t247" class="tumble"></div>
-      <div id="counter" class="counter"><b>001</b><span>DAYS A YEAR</span></div>
+      <div id="counter" class="counter"><div class="row"><b id="num">1</b><b id="s7">/7</b></div><span>HOURS A DAY</span></div>
       <div id="t3" class="copy"></div>
+      <div id="mosaic" class="layer"></div>
       <div id="wflash" class="layer"></div>
       <div id="vig" class="layer"></div>
       <div id="grain" class="layer"></div>`;
@@ -45,11 +46,13 @@
     const TC = new TYPE.Tumble($("#closed"), [{ t: "MARKET", cls: "acc" }, { t: " ", cls: "" }, { t: "CLOSED?", cls: "chrome" }]);
     const T247 = new TYPE.Tumble($("#t247"), [{ t: "24", cls: "acco" }, { t: "/7", cls: "chrome" }]);
     const place = (el, gt, x, y, align) => { if (!gt.ready) return; el.style.left = `${align === "center" ? x - gt.tw / 2 : x}px`; el.style.top = `${y}px`; };
-    const ghost = $("#ghost"), dots = $("#dots"), wflash = $("#wflash");
+    const ghost = $("#ghost"), dots = $("#dots"), wflash = $("#wflash"), mosaic = $("#mosaic");
+    // big blocky pixel squares behind the reveal, as in the reference's "GOAT TRADE" frame
+    { const r = rng(77); let h = ""; for (let i = 0; i < 70; i++) { const x = Math.floor(r() * 30) * 64, y = Math.floor(r() * 17) * 64, a = (0.08 + r() * 0.3) * (x < 700 || x > 1250 ? 1 : 0.4); h += `<i style="left:${x}px;top:${y}px;opacity:${a.toFixed(2)}"></i>`; } mosaic.innerHTML = h; }
     [...dots.children].forEach((d, i) => { d.style.backgroundImage = `url(${TYPE.dotPatch(420, 300, "#F6A03A", 91 + i)})`; });
 
     const wash = $("#wash"), comet = $(".comet"), louvre = $(".louvre"), streaks = $(".streaks");
-    const closed = $("#closed"), t247 = $("#t247"), counter = $("#counter"), n365 = $("#counter b"), clabel = $("#counter span");
+    const closed = $("#closed"), t247 = $("#t247"), counter = $("#counter"), n365 = $("#num"), s7 = $("#s7"), crow = $("#counter .row"), clabel = $("#counter span");
     const intro = $("#intro"), lockup = $("#lockup"), gf = $("#lockup .gf"), live = $("#lockup .live");
     const grain = $("#grain");
 
@@ -102,13 +105,17 @@
       if (shot === "2A") { const k = easeOut(span(t, 14, 30)); intro.style.opacity = k; intro.style.filter = `blur(${((1 - k) * 8).toFixed(1)}px)`; }
       // the reference's product reveal: warm white flash, the name cuts in oversized and settles, the product
       // word is written by a cluster of glowing pixels, then a red LIVE badge pops on
-      const fl = shot === "2A" ? Math.pow(span(t, 33, 40), 2) : shot === "2B" ? 1 - easeOut(span(t, 0, 10)) : 0;
+      const fl = shot === "2A" ? Math.pow(span(t, 34, 40), 1.6) : shot === "2B" ? 1 - easeOut(span(t, 1, 8)) : 0;
       wflash.style.opacity = fl.toFixed(3);
+      show(mosaic, shot === "2B");
       show(lockup, shot === "2B");
       if (shot === "2B") {
         const k = expoOut(span(t, 0, 8));
-        gf.style.transform = `scale(${(mix(1.6, 1, k) * mix(1, 1.03, span(t, 8, 42))).toFixed(4)}) skewX(${mix(-10, 0, k).toFixed(2)}deg)`;
-        gf.style.filter = k < 1 ? `blur(${((1 - k) * 14).toFixed(1)}px)` : "none";
+        const kk = expoOut(span(t, 0, 11));
+        gf.style.transform = `translateX(${mix(-160, 0, kk).toFixed(1)}px) scale(${(mix(1.9, 1, kk) * mix(1, 0.97, span(t, 11, 42))).toFixed(4)}) skewX(${mix(-16, 0, kk).toFixed(2)}deg)`;
+        gf.style.filter = kk < 0.99 ? `blur(${((1 - kk) * 18).toFixed(1)}px)` : "none";
+        mosaic.style.opacity = (0.9 * (1 - span(t, 6, 30) * 0.5)).toFixed(3);
+        mosaic.style.transform = `translateX(${(-t * 1.2).toFixed(1)}px)`;
         PW.draw(t, 10, 26, f); place($("#perpsw"), PW, 960, 640, "center");
         const lk = span(t, 24, 29), pop = lk <= 0 ? 0 : lk < 1 ? 1.18 * easeOut(lk) : 1;
         live.style.transform = `scale(${pop.toFixed(3)})`; live.style.opacity = lk > 0 ? 1 : 0;
@@ -121,12 +128,17 @@
       if (shot === "2C") {
         [...dots.children].forEach((d, i) => { d.style.transform = `translate(${[-60, 40, 10][i] + f * [0.5, -0.4, 0.3][i]}px, ${[10, -20, 30][i] - f * 0.15}px)`; });
         if (t >= 22) {
-          const ct = t - 22, q = Math.floor(ct / 2) * 2;
-          n365.textContent = String(Math.round(mix(1, 365, easeOut(span(q, 0, 20))))).padStart(3, "0");
+          const ct = t - 22, h = Math.min(24, 1 + Math.floor(ct / 1.2));
+          const seven = span(ct, 26, 30);
+          n365.textContent = String(h);
+          s7.style.display = seven > 0 ? "" : "none";
+          s7.style.opacity = seven.toFixed(3);
+          s7.style.transform = `translateX(${((1 - expoOut(seven)) * 50).toFixed(1)}px)`;
           const k = expoOut(span(ct, 0, 6));
-          n365.style.transform = `scale(${(mix(1.35, 1, k) * mix(1, 1.05, span(ct, 6, 30))).toFixed(4)})`;
-          n365.style.filter = `blur(${((1 - k) * 10).toFixed(1)}px) drop-shadow(0 0 24px rgba(236,139,27,0.45))`;
-          clabel.style.opacity = easeOut(span(ct, 6, 14));
+          crow.style.transform = `scale(${(mix(1.25, 1, k) * mix(1, 0.96, span(ct, 6, 30))).toFixed(4)})`;
+          crow.style.filter = `blur(${((1 - k) * 10).toFixed(1)}px) drop-shadow(0 0 30px rgba(246,160,58,0.35))`;
+          clabel.textContent = ct < 26 ? "HOURS A DAY" : "365 DAYS A YEAR";
+          clabel.style.opacity = easeOut(span(ct, 4, 10));
         }
       }
       grain.style.backgroundImage = tiles[Math.round(f) % tiles.length];

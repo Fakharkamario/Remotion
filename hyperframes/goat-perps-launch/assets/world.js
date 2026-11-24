@@ -35,7 +35,7 @@
     "1B": (t) => {
       const k = span(t, 0, 52);
       const pos = lerp3([0.25, 0.02, 4.7], [0.1, -0.02, 4.45], k);
-      return { pos, look: [0.05, -0.04, 0], fov: 36, cInf: 20, focus: Math.hypot(pos[0] - 1.7, pos[2]) };
+      return { pos, look: [0.05, -0.04, 0], fov: 36, cInf: 30, focus: Math.hypot(pos[0] - 1.7, pos[2]) };
     },
     "1C": (t) => {
       const k = span(t, 0, 38);
@@ -346,7 +346,7 @@
       G.fieldCards.forEach((c, i) => {
         const order = [0, 2, 4, 6, 1, 5, 3][i];
         const k = easeOut(span(ft, 16 + order * 3, 22 + order * 3));
-        c.userData.set(k, shot === "1B" ? 1 : 0.75);
+        c.userData.set(k, shot === "1B" ? 0.62 : 0.6); // kept dim so the glowing line owns the frame, as in the reference
         const b = c.userData.base, a = (i / 7) * Math.PI * 2;
         const from = [Math.cos(a) * 0.35, Math.sin(a) * 0.22, -7.5];
         const drift = ft * 0.0022;
