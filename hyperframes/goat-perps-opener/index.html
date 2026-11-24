@@ -17,35 +17,37 @@
       #world { transform-origin: 60% 46%; }
       /* the room: warm amber key light washing the left wall, dark everywhere else */
       #wall { background:
-        radial-gradient(ellipse 34% 90% at 20% 50%, rgba(128,84,30,0.72) 0%, rgba(84,54,18,0.5) 45%, rgba(22,14,6,0) 85%),
-        linear-gradient(90deg, rgba(60,40,14,0.35) 0%, rgba(90,60,20,0.32) 30%, rgba(0,0,0,0) 55%),
-        linear-gradient(180deg, #0c0906 0%, #080604 60%, #040302 100%); }
+        radial-gradient(ellipse 30% 55% at 34% 40%, rgba(46,30,9,1) 0%, rgba(34,22,7,0.85) 45%, rgba(0,0,0,0) 100%),
+        radial-gradient(ellipse 26% 50% at 12% 46%, rgba(40,27,9,0.8) 0%, rgba(0,0,0,0) 100%),
+        linear-gradient(90deg, #100b04 0%, #1b1207 22%, #241709 36%, #130d05 60%, #070504 100%); }
       #cam1, #cam2 { transform-origin: 62% 45%; }
       /* the screen sits behind the subject's focus plane: soft, glowing, with glass on top */
       .mon { position: absolute; left: 708px; top: 150px; width: 1110px; height: 682px; background: #020303; border: 7px solid #08090a; border-radius: 6px;
         box-shadow: 0 0 160px 30px rgba(50,190,130,0.11), 0 0 2px rgba(255,255,255,0.08); transform: perspective(2200px) rotateY(-5deg); transform-origin: 20% 50%; }
       .mon canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-      #chart { filter: blur(2.4px) saturate(1.15) brightness(1.05); }
-      #bloom { mix-blend-mode: screen; filter: blur(14px); opacity: 0.85; }
+      #chart { filter: blur(1.7px) saturate(1.0) brightness(0.95) sepia(0.06); }
+      #bloom { mix-blend-mode: screen; filter: blur(14px); opacity: 0.6; }
       .mon .glass { position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.025) 100%); }
       .far { position: absolute; left: 1880px; top: 120px; width: 160px; height: 620px; filter: blur(5px) brightness(0.75); }
       .far canvas { width: 100%; height: 100%; }
       /* light from the screen spilling into the room around the subject */
-      #spill { background: radial-gradient(ellipse 36% 44% at 66% 46%, rgba(60,180,120,0.10), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
+      #spill { background: radial-gradient(ellipse 36% 44% at 66% 46%, rgba(50,140,100,0.06), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
       /* the photo graded into the scene, then relit: shadow side, warm key rim, screen light wrapping the edges */
       .person { position: absolute; left: 470px; top: 150px; width: 1220px; }
       .person img { position: absolute; left: 0; top: 0; width: 100%; display: block; }
-      .person img.base { position: relative; filter: brightness(0.66) contrast(1.32) saturate(0.85) sepia(0.2) blur(0.6px); }
+      .person img.base { position: relative; filter: brightness(0.62) contrast(1.18) saturate(0.78) sepia(0.25) blur(0.6px); }
       .person img.shade { opacity: 0.9; }
       .person img.rimw { mix-blend-mode: screen; opacity: 0.85; filter: blur(1px); }
       .person img.rims { mix-blend-mode: screen; opacity: 0.22; filter: blur(4px); }
       /* a little atmosphere between the lens and the subject */
-      #haze { background: radial-gradient(ellipse 60% 50% at 24% 46%, rgba(160,110,50,0.10), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
+      #haze { background: radial-gradient(ellipse 60% 50% at 30% 44%, rgba(120,80,30,0.06), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
       /* copy: warm white with a soft bloom, as in the reference */
-      .copy { position: absolute; left: 152px; top: 318px; color: #F4EDE2; white-space: nowrap; text-shadow: 0 0 22px rgba(255,226,186,0.28); }
+      .copy { position: absolute; left: 152px; top: 322px; color: #FFFAF4; white-space: nowrap; text-shadow: 0 0 18px rgba(255,236,206,0.22); }
       .copy span { display: inline-block; }
       .copy .l1 { font-weight: 400; font-size: 76px; line-height: 1.12; letter-spacing: -0.012em; }
-      .copy .l2 { font-weight: 400; font-size: 100px; line-height: 1.12; letter-spacing: -0.012em; color: #F6A03A; margin-top: 2px; text-shadow: 0 0 30px rgba(246,160,58,0.5), 0 0 8px rgba(246,160,58,0.35); }
+      .copy .l2 { font-weight: 400; font-size: 100px; line-height: 1.12; letter-spacing: -0.012em; margin-top: 2px; }
+      .copy .l2 span { background: linear-gradient(180deg, #EAC25C 0%, #F6D888 40%, #FFEBA8 76%, #F2D488 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+        text-shadow: none; filter: drop-shadow(0 0 16px rgba(240,214,140,0.38)); }
       #dark { background: #000; opacity: 0; }
       #vig { background: radial-gradient(ellipse 78% 82% at 52% 48%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.72) 100%); }
       #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.16; }

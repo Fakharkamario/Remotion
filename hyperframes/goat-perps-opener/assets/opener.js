@@ -24,12 +24,12 @@
     const N = 32, r = rng(11), noise = Array.from({ length: N + 4 }, () => r()), wick = Array.from({ length: N + 4 }, () => r());
     // the path: a short top on the left, a sell-off into a base, then a steady climb
     // visible left of the head: the top and the sell-off; the base sits just right of his neck; the climb prints on the right
-    const path = (u) => u < 0.08 ? 0.66 + 1.2 * u : u < 0.62 ? 0.76 - 1.0 * (u - 0.08) : 0.22 + 1.75 * (u - 0.62);
+    const path = (u) => u < 0.1 ? 0.62 + 2.4 * u : u < 0.62 ? 0.86 - 1.36 * (u - 0.1) : 0.15 + 2.0 * (u - 0.62);
     const ohlc = (i) => {
-      const o = path(i / N) + (noise[i] - 0.5) * 0.05, c = path((i + 1) / N) + (noise[i + 1] - 0.5) * 0.05;
+      const o = path(i / N) + (noise[i] - 0.5) * 0.09, c = path((i + 1) / N) + (noise[i + 1] - 0.5) * 0.09;
       return [o, c, Math.max(o, c) + 0.012 + wick[i] * 0.03, Math.min(o, c) - 0.012 - wick[i + 1] * 0.03];
     };
-    const top = 70, cw = W * 0.79, ch = H - top - 36, yOf = (q) => top + ch * 0.02 + (1 - q) * ch * 0.8, bw = cw / N;
+    const top = 70, cw = W * 0.79, ch = H - top - 36, yOf = (q) => top + ch * 0.0 + (1 - q) * ch * 0.92, bw = cw / N;
     const txt = (s, x, y, px, col, w, al) => { g.font = `${w || 400} ${px}px ${FB}`; g.fillStyle = col; g.textAlign = al || "left"; g.fillText(s, x, y); };
     return function draw(frame) {
       g.fillStyle = "#030506"; g.fillRect(0, 0, W, H);
@@ -66,7 +66,7 @@
       const bx = cw + 18, bwid = W - bx - 18, rows = 22, rh = (H - 120) / rows, rb = rng(5 + Math.floor(frame / 2));
       for (let i = 0; i < rows; i++) {
         const ask = i < 11, y = 112 + rh * i, d = 0.35 + rb() * 0.65;
-        g.fillStyle = ask ? "rgba(255,70,70,0.28)" : "rgba(50,210,120,0.28)"; g.fillRect(bx + bwid * (1 - d), y + rh * 0.1, bwid * d, rh * 0.62);
+        g.fillStyle = ask ? "rgba(225,50,50,0.62)" : "rgba(40,190,105,0.62)"; g.fillRect(bx + bwid * (1 - d * 0.75), y + rh * 0.06, bwid * d * 0.75, rh * 0.78);
         g.fillStyle = ask ? "rgba(255,120,120,0.95)" : "rgba(90,240,160,0.95)"; g.fillRect(bx + 8, y + rh * 0.28, bwid * 0.26, rh * 0.26);
         g.fillStyle = "rgba(230,235,240,0.55)"; g.fillRect(bx + bwid * 0.58, y + rh * 0.28, bwid * 0.24, rh * 0.26);
       }
@@ -108,7 +108,7 @@
     const vbs = $("#vbs"), world = $("#world"), cam1 = $("#cam1"), cam2 = $("#cam2"), mon = $("#mon"), spill = $("#spill"), rims = $(".rims");
     const words = [...stage.querySelectorAll("#copy span")], copy = $("#copy"), dark = $("#dark"), grain = $("#grain");
     // first visible frame and resolve length of each word, from the reference ("Every" 9, "Trade" 14, "tells" 19 ...)
-    const WT = [[9, 10], [14, 10], [20, 12]];
+    const WT = [[9, 10], [14, 10], [22, 13]];
 
     const tiles = Array.from({ length: 8 }, (_, k) => {
       const c = document.createElement("canvas"); c.width = c.height = 320;
@@ -125,20 +125,23 @@
       // screen bloom: the chart downsampled and blurred, added back over itself
       bctx.clearRect(0, 0, 350, 215); bctx.filter = "blur(5px)"; bctx.drawImage(chart, 0, 0, 350, 215); bctx.filter = "none";
 
-      // camera: crane up (hard ease-out), then a slow push-in and a slight continuing tilt; near layers move more
-      const lift = 700 * crane(f), k = f / (FRAMES - 1);
-      cam1.style.transform = `translate(${(-26 * k).toFixed(2)}px, ${(lift - 24 * k).toFixed(1)}px) scale(${mix(1.0, 1.075, k).toFixed(4)})`;
-      cam2.style.transform = `translate(${(-10 * k).toFixed(2)}px, ${(lift * 0.62 - 10 * k).toFixed(1)}px) scale(${mix(1.0, 1.03, k).toFixed(4)})`;
-      const sb = 0.14 * 700 * (crane(f - 0.5) - crane(f + 0.5));
+      // camera, measured on the reference: one long exponential settle (half-life ~6 frames: 190 px left at
+      // frame 9, 93 at 15, 48 at 20, 13 at 30), then completely still from frame ~40. The copy rides with it.
+      const settle = (x) => { const e0 = Math.exp(-0.118 * 44); return Math.max(0, (Math.exp(-0.118 * x) - e0) / (1 - e0)); };
+      const lift = 560 * settle(f);
+      cam1.style.transform = `translateY(${lift.toFixed(2)}px)`;
+      cam2.style.transform = `translateY(${(lift * 0.86).toFixed(2)}px)`;
+      copy.style.transform = `translateY(${(lift * 1.0).toFixed(2)}px)`;
+      const sb = 0.16 * 560 * (settle(f - 0.5) - settle(f + 0.5));
       vbs.setAttribute("stdDeviation", `0 ${sb.toFixed(2)}`);
       world.style.filter = sb > 0.4 ? "url(#vblur)" : "none";
 
       // copy: soft and dim, resolving to sharp; the block rides the camera's slow tilt
-      copy.style.transform = `translateY(${mix(14, -16, k).toFixed(2)}px)`;
       words.forEach((w, i) => {
         const [s, d] = WT[i], e = easeOut(span(f, s, s + d), 2.2);
-        w.style.opacity = (f < s ? 0 : 0.2 + 0.8 * e).toFixed(3);
-        w.style.filter = e < 0.995 ? `blur(${((1 - e) * 15).toFixed(2)}px)` : "none";
+        w.style.opacity = (f < s ? 0 : 0.25 + 0.75 * e).toFixed(3);
+        const gl = i === 2 ? ` drop-shadow(0 0 ${(16 * e).toFixed(1)}px rgba(240,214,140,${(0.38 * e).toFixed(3)}))` : "";
+        w.style.filter = (e < 0.995 ? `blur(${((1 - e) * 13).toFixed(2)}px)` : "") + gl || "none";
       });
 
       // end: the screen dies first, then the room; the copy dims last
