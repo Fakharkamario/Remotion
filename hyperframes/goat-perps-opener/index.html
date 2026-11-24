@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps opener</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/opener.js"></script>
+    <style>
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: "Altform", sans-serif; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      #world { transform-origin: 62% 46%; }
+      /* warm amber room light pooling on the left wall, as in the reference */
+      #wall { background:
+        radial-gradient(ellipse 34% 90% at 20% 50%, rgba(128,84,30,0.7) 0%, rgba(84,54,18,0.5) 45%, rgba(22,14,6,0) 85%),
+        linear-gradient(90deg, rgba(60,40,14,0.35) 0%, rgba(90,60,20,0.32) 30%, rgba(0,0,0,0) 55%),
+        radial-gradient(ellipse 40% 50% at 52% 40%, rgba(60,40,18,0.35), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #0d0906 0%, #090705 60%, #050403 100%); }
+      .mon { position: absolute; left: 706px; top: 150px; width: 1100px; height: 690px; background: #020303; border: 6px solid #0a0b0c; border-radius: 6px;
+        box-shadow: 0 0 120px 20px rgba(60,200,140,0.10), 0 0 40px rgba(0,0,0,0.9) inset; transform-origin: 30% 50%; }
+      .mon canvas { width: 100%; height: 100%; display: block; filter: saturate(1.15) drop-shadow(0 0 6px rgba(80,240,150,0.35)); }
+      .far { position: absolute; left: 1880px; top: 150px; width: 150px; height: 560px; transform-origin: 0 50%; filter: blur(3px) brightness(0.8); }
+      .far canvas { width: 100%; height: 100%; }
+      /* light from the screen falling on the room around the trader */
+      #spill { background: radial-gradient(ellipse 34% 40% at 66% 46%, rgba(70,170,120,0.10), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
+      /* the photo, graded into the render: crushed, warm, a little soft, lit from above-left by the amber key */
+      .person { position: absolute; left: 395px; top: 118px; width: 1360px; }
+      .person img { width: 100%; display: block;
+        filter: brightness(0.6) contrast(1.34) saturate(0.85) sepia(0.2) blur(0.9px); }
+      .person::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 40%, rgba(4,3,2,0.45) 66%, rgba(4,3,2,0.8) 100%);
+        -webkit-mask-image: url(assets/trader.png); mask-image: url(assets/trader.png); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; }
+      #key { background: radial-gradient(ellipse 30% 34% at 44% 22%, rgba(230,150,70,0.16), rgba(0,0,0,0) 70%); mix-blend-mode: screen; }
+      .copy { position: absolute; left: 152px; top: 318px; color: #EFF4FA; white-space: nowrap; }
+      .copy span { display: inline-block; }
+      .copy .l1 { font-weight: 400; font-size: 76px; line-height: 1.12; letter-spacing: -0.01em; }
+      .copy .l2 { font-weight: 400; font-size: 100px; line-height: 1.12; letter-spacing: -0.01em; color: #F6A03A; margin-top: 2px; }
+      #dark { background: #000; opacity: 0; }
+      #vig { background: radial-gradient(ellipse 78% 82% at 52% 48%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.72) 100%); }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.16; }
+      .bar { position: absolute; left: 0; right: 0; height: 62px; background: #000; }
+      .bar.top { top: 0; } .bar.bot { bottom: 0; height: 58px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="2.266667" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:Altform;font-weight:400">Aa</span><span style="font-family:Altform;font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
