@@ -248,6 +248,7 @@ const JOBS = [
   {name: 'ribbon', s: 'ribbon', w: 960, h: 900, u: {BG: [.96, .93, .89], A: [.62, .82, .84], B: [.07, .27, .35]}},
   {name: 'ribbon-coral', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .92], A: [1., .93, .95], B: [1., .70, .78]}},
   {name: 'ribbon-sky', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .92], A: [.66, .84, .86], B: [.08, .28, .36]}},
+  {name: 'ribbon-sage', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .92], A: [.80, .88, .80], B: [.30, .44, .40]}},
   {name: 'twist', s: 'twist', w: 800, h: 900, u: {BG: [.90, .91, .90], A: [.38, .64, .68]}},
   {name: 'caustic', s: 'caustic', w: 800, h: 800},
   {name: 'sand', s: 'sand', w: 800, h: 900},
