@@ -38,9 +38,9 @@ void main(){
  // sea
  if(y>hz){
   float d=(y-hz)/(.50-hz);
-  vec3 sea=mix(vec3(.16,.45,.52),vec3(.22,.60,.62),d);
+  vec3 sea=mix(vec3(.38,.62,.64),vec3(.20,.52,.56),pow(d,.6));
   float w=fbm(vec2(uv.x*6.,y*90.))*.5+fbm(vec2(uv.x*40.,y*260.))*.5;
-  sea+=(w-.5)*.10; sea+=smoothstep(.72,.9,w)*.18*(1.-d);
+  sea+=(w-.5)*.07; sea+=smoothstep(.70,.88,w)*.16*d; sea=mix(sea,vec3(.72,.84,.82),(1.-smoothstep(0.,.35,d))*.45);
   c=sea;
  }
  // shore: wet sand + foam line
@@ -76,29 +76,46 @@ void main(){
  gl_FragColor=vec4(grade(c,fc),1.);
 }`;
 
-// Layered sculptural ribbons (the "curled leaf" equivalent). Colors via uniforms.
+// Raymarched folded sheets (the "curled leaves" equivalent). Colors via uniforms.
 S.ribbon = `
 uniform vec3 BG, A, B;
+float wall(vec3 p, float c, float k, float ph, float amp, float top, float tk, float tq){
+ float z=c+amp*sin(k*p.x+ph)+.12*sin(2.3*k*p.x+ph*1.7);
+ float h=top+.28*sin(tk*p.x+tq);
+ float d=abs(p.z-z)-.012;
+ float cap=p.y-h;
+ return max(d*.6,cap);
+}
+vec2 map(vec3 p){
+ float d=1e9, id=0.;
+ for(int i=0;i<5;i++){float fi=float(i);
+  float w=wall(p,-.55+fi*.42,1.6+fi*.35,fi*1.9,.32,.22-fi*.30,2.1+fi*.4,fi*2.6);
+  if(w<d){d=w;id=fi;}}
+ return vec2(d,id);
+}
+vec3 nrm(vec3 p){vec2 e=vec2(.0015,0);return normalize(vec3(map(p+e.xyy).x-map(p-e.xyy).x,map(p+e.yxy).x-map(p-e.yxy).x,map(p+e.yyx).x-map(p-e.yyx).x));}
 void main(){
- vec2 fc=gl_FragCoord.xy; vec2 uv=fc/R;
- vec3 c=BG*(1.-.06*uv.y);
- for(int i=0;i<6;i++){
-  float fi=float(i);
-  float base=.95-fi*.13;
-  float edge=base+.16*sin(uv.x*(2.4+fi*.55)+fi*1.9)+.06*sin(uv.x*7.+fi*3.);
-  float d=edge-uv.y; // >0 below the edge
-  if(d>0.){
-   float rim=exp(-d*55.);
-   float body=smoothstep(0.,.35,d);
-   vec3 col=mix(A,B,clamp(body+fi*.08,0.,1.));
-   float stri=.5+.5*sin((uv.x*90.+d*140.)+fi*7.);
-   col*=.9+.1*stri*(1.-rim);
-   col=mix(col,vec3(1.)*.96,rim*.75);
-   col*=1.-.25*smoothstep(.0,.04,d)*exp(-d*8.); // occlusion below rim
-   c=col;
-  }
+ vec2 fc=gl_FragCoord.xy; vec2 uv=(fc-.5*R)/R.y;
+ vec3 ro=vec3(.25,1.25,3.3), ta=vec3(.1,-.15,0.);
+ vec3 f=normalize(ta-ro), r=normalize(cross(f,vec3(0,1,0))), u=cross(r,f);
+ vec3 rd=normalize(f*1.9+uv.x*r+uv.y*u);
+ vec3 col=mix(BG,BG*.93,clamp(.5-uv.y,0.,1.));
+ float t=0.; vec2 h=vec2(0);
+ for(int i=0;i<260;i++){h=map(ro+rd*t); if(h.x<.0008||t>9.)break; t+=h.x;}
+ if(t<9.){
+  vec3 p=ro+rd*t, n=nrm(p); if(dot(n,rd)>0.)n=-n;
+  vec3 L=normalize(vec3(-.6,.9,.5));
+  float dif=max(dot(n,L),0.), bk=max(dot(n,-L),0.);
+  float ao=clamp(map(p+n*.08).x/.08,0.,1.)*.5+.5;
+  float top=.22-h.y*.30+.28*sin((2.1+h.y*.4)*p.x+h.y*2.6);
+  float edge=smoothstep(.06,0.,top-p.y);
+  float vein=.5+.5*sin(p.y*70.+p.x*9.);
+  vec3 base=mix(B,A,clamp(.25+.55*dif+.35*edge,0.,1.));
+  col=base*(.45+.7*dif+.15*bk)*ao*(.96+.05*vein);
+  col+=edge*.22*(1.-dif*.4);
+  col+=pow(max(dot(reflect(rd,n),L),0.),24.)*.15;
  }
- gl_FragColor=vec4(grade(c,fc),1.);
+ gl_FragColor=vec4(grade(col,fc),1.);
 }`;
 
 // Pool caustics
@@ -228,9 +245,9 @@ void main(){
 
 const JOBS = [
   {name: 'hero', s: 'hero', w: 720, h: 892},
-  {name: 'ribbon', s: 'ribbon', w: 960, h: 900, u: {BG: [.95, .93, .89], A: [.42, .66, .70], B: [.10, .30, .38]}},
-  {name: 'ribbon-coral', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .91], A: [.98, .70, .74], B: [.93, .48, .58]}},
-  {name: 'ribbon-sky', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .91], A: [.55, .76, .78], B: [.18, .38, .45]}},
+  {name: 'ribbon', s: 'ribbon', w: 960, h: 900, u: {BG: [.96, .93, .89], A: [.62, .82, .84], B: [.07, .27, .35]}},
+  {name: 'ribbon-coral', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .92], A: [1., .93, .95], B: [1., .70, .78]}},
+  {name: 'ribbon-sky', s: 'ribbon', w: 960, h: 900, u: {BG: [.50, .66, .92], A: [.66, .84, .86], B: [.08, .28, .36]}},
   {name: 'twist', s: 'twist', w: 800, h: 900, u: {BG: [.90, .91, .90], A: [.38, .64, .68]}},
   {name: 'caustic', s: 'caustic', w: 800, h: 800},
   {name: 'sand', s: 'sand', w: 800, h: 900},
@@ -283,7 +300,7 @@ const ring = await page.evaluate(() => {
     const band = Math.exp(-Math.pow((r - 1) / .2, 2));
     const n = fb(xx / 38, y / 38);
     const a = Math.max(0, Math.min(1, (n - .42) * 3.2)) * band;
-    const i = (y * w + xx) * 4; img.data[i] = 244; img.data[i + 1] = 190; img.data[i + 2] = 178; img.data[i + 3] = a * 150;
+    const i = (y * w + xx) * 4; img.data[i] = 240; img.data[i + 1] = 188; img.data[i + 2] = 206; img.data[i + 3] = a * 150;
   }
   x.putImageData(img, 0, 0); return c.toDataURL('image/png');
 });

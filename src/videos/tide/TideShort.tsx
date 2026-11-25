@@ -27,7 +27,6 @@ const img = (n: string) => staticFile(`tide/${n}.jpg`);
 
 // ---------- helpers ----------
 const OUT = Easing.out(Easing.cubic);
-const INOUT = Easing.inOut(Easing.cubic);
 const kf = (t: number, f: number[], v: number[], easing = OUT) =>
 	interpolate(t, f, v, {easing, extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
 
@@ -138,11 +137,12 @@ const Poster: React.FC<{t: number}> = ({t}) => {
 	const labels = [lbl(0, 102, 112, 65), lbl(1, 33, 68, 94), lbl(2, 268, 85, 126), lbl(3, 353, 85, 154)];
 	const labelText = ['find', 'your', 'own', 'tide'];
 
+	const SF = [4, 6, 10, 12, 14, 16];
 	const sw = [
-		{f: [4, 6, 10, 16], x: [376, 376, 405, 435], y: [555, 538, 552, 566]},
-		{f: [4, 6, 10, 16], x: [500, 500, 490, 479], y: [519, 540, 553, 566]},
-		{f: [4, 6, 10, 16], x: [424, 424, 474, 523], y: [511, 556, 561, 566]},
-		{f: [4, 6, 10, 16], x: [521, 540, 553, 567], y: [455, 455, 510, 566]},
+		{x: [376, 376, 408, 421, 421, 435], y: [555, 538, 528, 539, 573, 566]},
+		{x: [500, 500, 491, 475, 491, 479], y: [519, 540, 581, 581, 573, 566]},
+		{x: [424, 424, 496, 541, 539, 523], y: [511, 556, 632, 624, 573, 566]},
+		{x: [521, 540, 581, 581, 581, 567], y: [455, 455, 533, 581, 573, 566]},
 	];
 
 	return (
@@ -216,7 +216,8 @@ const Poster: React.FC<{t: number}> = ({t}) => {
 										top: 35,
 										width: 243,
 										fontFamily: FONT,
-										fontSize: 15.5,
+										fontSize: 15,
+										fontWeight: 300,
 										lineHeight: '22.4px',
 										color: 'rgba(255,255,255,0.93)',
 										textAlign: 'justify',
@@ -235,9 +236,9 @@ const Poster: React.FC<{t: number}> = ({t}) => {
 
 					{/* swatches + label */}
 					{sw.map((p, i) => (
-						<div key={i} style={{position: 'absolute', left: kf(t, p.f, p.x), top: kf(t, p.f, p.y), width: 33, height: 33, background: SWATCH[i]}} />
+						<div key={i} style={{position: 'absolute', left: kf(t, SF, p.x), top: kf(t, SF, p.y), width: 33, height: 33, background: SWATCH[i]}} />
 					))}
-					<Mono x={kf(t, [4, 6, 16], [422, 441, 613])} y={574}>colors&gt;/</Mono>
+					<Mono x={kf(t, [4, 6, 10], [422, 441, 613])} y={574}>colors&gt;/</Mono>
 				</>
 			) : null}
 
@@ -278,12 +279,13 @@ const Poster: React.FC<{t: number}> = ({t}) => {
 };
 
 // ---------- scene 2: the strip ----------
+const QF = [40, 42, 46, 56, 60, 64, 66];
 const QUOTES = [
-	{text: 'Listening to the waves helps me focus.', f: [40, 42, 46, 56, 60, 64], x: [300, 288, 296, 53, 24, -4], y: [40, 17, 75, 109, 109, 109], smear: 62},
-	{text: 'Sometimes, all you need is the sound of water.', f: [40, 42, 46, 56, 60, 64], x: [920, 900, 887, 955, 987, 1103], y: [5, 56, 111, 145, 145, 145], smear: 62},
-	{text: 'The smell of salt makes me feel at home.', f: [40, 42, 46, 56, 60, 64], x: [145, 178, 199, 57, 29, -40], y: [522, 538, 560, 584, 584, 584], smear: 62},
-	{text: 'Breathe in with the tide, breathe out with the waves.', f: [40, 42, 46, 56, 60, 64], x: [591, 596, 611, 778, 815, 948], y: [561, 574, 593, 616, 616, 616], smear: 58},
-	{text: 'Sea air can lift my mood and energy.', f: [40, 42, 46, 56, 60, 64], x: [852, 838, 832, 924, 945, 1038], y: [496, 514, 537, 561, 561, 561], smear: 58},
+	{text: 'Listening to the waves helps me focus.', x: [300, 288, 296, 53, 24, -4, -200], y: [40, 17, 75, 109, 109, 109, 109], sf: [60, 62], sv: [0, 1]},
+	{text: 'Sometimes, all you need is the sound of water.', x: [920, 900, 887, 955, 987, 1103, 1240], y: [5, 56, 111, 145, 145, 145, 145], sf: [99, 100], sv: [0, 0]},
+	{text: 'The smell of salt makes me feel at home.', x: [145, 178, 199, 57, 29, -40, -230], y: [522, 538, 560, 584, 584, 584, 584], sf: [60, 62, 64], sv: [0, 0.6, 1]},
+	{text: 'Breathe in with the tide, breathe out with the waves.', x: [591, 596, 611, 778, 815, 948, 1080], y: [561, 574, 593, 616, 616, 616, 616], sf: [58, 60, 62], sv: [0, 0.6, 1]},
+	{text: 'Sea air can lift my mood and energy.', x: [852, 838, 832, 924, 945, 1038, 1150], y: [496, 514, 537, 561, 561, 561, 561], sf: [58, 60, 64, 66], sv: [0, 0.6, 0.7, 1]},
 ];
 
 type Rect = {f: number[]; x: number[]; y: number[]; w: number[]; h: number[]};
@@ -336,7 +338,7 @@ const Tile: React.FC<{src: string; x: number; y: number; w: number; h: number; s
 
 const Strip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 	// tiles converge into the selection and slide under it
-	const conv = kf(t, [62, 64, 66, 68, 70], [0, 0.1, 0.37, 0.45, 1], Easing.linear);
+	const shift = kf(t, [62, 64, 66], [0, 48, 175], Easing.linear);
 	const c = rectAt(CENTER, t);
 	const showBox = frame >= 60 && frame < 76;
 	const bx = {x: kf(frame, BOX.f, BOX.x, Easing.linear), y: kf(frame, BOX.f, BOX.y, Easing.linear), w: kf(frame, BOX.f, BOX.w, Easing.linear), h: kf(frame, BOX.f, BOX.h, Easing.linear)};
@@ -348,30 +350,36 @@ const Strip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 
 	return (
 		<>
-			{t < 70
+			{t < 68
 				? STRIP.map((s, i) => {
 						if (t < s.r.f[0]) return null;
 						const r = rectAt(s.r, t);
-						const cx = r.x + r.w / 2;
-						return <Tile key={i} src={s.src} x={r.x + (640 - cx) * conv} y={r.y} w={r.w} h={r.h} />;
+						const left = r.x + r.w / 2 < 640;
+						return <Tile key={i} src={s.src} x={r.x + (left ? shift : -shift)} y={r.y} w={r.w} h={r.h} />;
 					})
 				: null}
+			{t === 68 ? (
+				<>
+					<Tile src="caustic" x={294} y={268} w={132} h={184} />
+					<Tile src="twist" x={794} y={268} w={140} h={184} style={{filter: 'hue-rotate(25deg) saturate(1.2)'}} />
+				</>
+			) : null}
 			{t >= 42 && frame < 62 ? <Tile src="ribbon" {...c} /> : null}
 
 			{QUOTES.map((q, i) => {
-				if (t < 40 || t >= 66) return null;
+				if (t < 40 || t >= 68) return null;
 				const p = kf(t, [40, 42, 46], [0.25, 0.7, 1], Easing.linear);
 				const reveal = Math.floor(q.text.length * p);
 				const txt = scr(q.text, reveal, Math.min(q.text.length - reveal, Math.ceil(q.text.length * 0.25)), i * 31 + t);
-				const sm = kf(t, [q.smear, q.smear + 2, q.smear + 4], [0, 0.6, 1], Easing.linear);
+				const sm = kf(t, q.sf, q.sv, Easing.linear);
 				const vis = t < 42 && i === 0 ? 0 : 1;
 				return (
 					<div
 						key={i}
 						style={{
 							position: 'absolute',
-							left: kf(t, q.f, q.x, Easing.linear),
-							top: kf(t, q.f, q.y, Easing.linear) - 9,
+							left: kf(t, QF, q.x, Easing.linear),
+							top: kf(t, QF, q.y, Easing.linear) - 9,
 							fontFamily: FONT,
 							fontStyle: 'italic',
 							fontSize: 14,
@@ -380,8 +388,9 @@ const Strip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 							color: t < 42 ? '#666' : INK,
 							opacity: vis,
 							fontWeight: 400 + sm * 500,
-							letterSpacing: `${-0.01 - sm * 0.13}em`,
+							letterSpacing: `${-0.01 - (sm > 0.65 ? 0.08 + (sm - 0.65) * 0.25 : sm * 0.12)}em`,
 							transform: `scaleX(${1 - sm * 0.12})`,
+							textShadow: sm > 0.65 ? '1px 0 0 #111, 2px 0 0 #111, -1px 0 0 #111, 0 0.5px 0 #111' : undefined,
 							transformOrigin: 'left center',
 							filter: sm > 0.7 ? 'blur(0.4px)' : undefined,
 						}}
@@ -393,7 +402,7 @@ const Strip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 
 			{showBox ? (
 				<div style={{position: 'absolute', left: bx.x, top: bx.y, width: bx.w, height: bx.h, overflow: 'hidden', border: '1.5px solid #5B8DEF', boxSizing: 'border-box'}}>
-					<Img src={img('ribbon-coral')} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover'}} />
+					<Img src={img('ribbon-coral')} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'saturate(1.9) brightness(1.12) contrast(1.05)'}} />
 					<Img src={img('ribbon-sky')} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: toSky}} />
 					<div style={{position: 'absolute', inset: 0, background: '#7EA5EC', opacity: blueVeil}} />
 					<div style={{position: 'absolute', inset: 0, background: '#EEF2F8', opacity: whiten}} />
@@ -406,47 +415,44 @@ const Strip: React.FC<{t: number; frame: number}> = ({t, frame}) => {
 };
 
 // ---------- scene 3: the collage ----------
-type CT = {src: string; x: number; y: number; w: number; h: number; ry: number; rx: number; z: number};
-// final (settled) layout in stage pixels
+// Each tile's box [x0, y0, x1, y1] at frames 80, 84, 88, 96, 104 — measured from the reference,
+// where the tiles trade places (the twist sinks, the light-rays tile rises) as the stack settles.
+const CF = [80, 84, 88, 96, 104];
+type CT = {src: string; z: number; ry: number; rx: number; k: [number, number, number, number][]; fade?: number};
 const COLLAGE: CT[] = [
-	{src: 'sunset', x: 560, y: -60, w: 230, h: 200, ry: 6, rx: 3, z: 0},
-	{src: 'ribbon', x: 453, y: 0, w: 320, h: 267, ry: -5, rx: 2, z: 1},
-	{src: 'rays', x: 288, y: 8, w: 315, h: 259, ry: 7, rx: -3, z: 3},
-	{src: 'drops', x: 773, y: 80, w: 182, h: 293, ry: -8, rx: 2, z: 2},
-	{src: 'sand', x: 470, y: 330, w: 210, h: 240, ry: 4, rx: 2, z: 2},
-	{src: 'shore', x: 227, y: 200, w: 346, h: 373, ry: 8, rx: -2, z: 4},
-	{src: 'foam', x: 733, y: 293, w: 259, h: 267, ry: -6, rx: 3, z: 5},
-	{src: 'caustic', x: 699, y: 520, w: 141, h: 173, ry: -4, rx: -3, z: 6},
-	{src: 'twist', x: 413, y: 400, w: 286, h: 330, ry: 3, rx: -2, z: 7},
+	{src: 'ribbon', z: 0, ry: -6, rx: 3, k: [[464, 368, 784, 704], [336, 336, 688, 720], [192, 192, 608, 576], [304, -140, 640, 192], [448, -60, 752, 208]]},
+	{src: 'sunset', z: 1, ry: 8, rx: 2, k: [[816, 230, 976, 448], [880, 300, 1000, 520], [900, 400, 1010, 620], [900, 420, 1000, 620], [900, 420, 1000, 620]], fade: 88},
+	{src: 'rays', z: 1, ry: 7, rx: -3, k: [[640, 400, 816, 656], [560, 432, 816, 704], [384, 384, 656, 720], [218, 144, 576, 432], [240, 16, 592, 288]]},
+	{src: 'drops', z: 2, ry: -8, rx: 2, k: [[346, 304, 576, 528], [256, 192, 544, 480], [336, 16, 608, 208], [656, -60, 816, 272], [742, 64, 944, 416]]},
+	{src: 'foam', z: 3, ry: -6, rx: 3, k: [[346, 134, 560, 320], [384, 32, 576, 288], [608, 0, 720, 272], [736, 160, 960, 544], [736, 288, 992, 640]]},
+	{src: 'shore', z: 4, ry: 9, rx: -2, k: [[672, 384, 960, 624], [576, 416, 960, 704], [608, 432, 864, 720], [352, 336, 736, 720], [240, 224, 592, 592]]},
+	{src: 'caustic', z: 5, ry: -5, rx: -3, k: [[528, 58, 656, 256], [592, 16, 752, 256], [720, 112, 928, 320], [816, 416, 960, 624], [704, 544, 864, 720]]},
+	{src: 'twist', z: 6, ry: 4, rx: -2, k: [[624, 58, 880, 368], [688, 96, 992, 512], [688, 272, 1024, 608], [560, 400, 832, 720], [432, 400, 720, 740]]},
 ];
 
 const Collage: React.FC<{t: number}> = ({t}) => {
-	const g = kf(t, [72, 74, 76, 78, 80, 86, 92, 104, 121], [0.0, 0.06, 0.32, 0.78, 0.92, 1.22, 1.28, 1.1, 1.06]);
-	const spread = kf(t, [78, 108], [0, 1], INOUT);
-	const drift = kf(t, [76, 84, 121], [40, 20, 0]);
+	// burst: the frame-80 cluster grows out of the selection's centre
+	const g = kf(t, [72, 74, 76, 78, 80], [0, 0.06, 0.32, 0.78, 1]);
+	const ox = kf(t, [74, 80], [643, 661], Easing.linear), oy = kf(t, [74, 80], [366, 381], Easing.linear);
+	const settle = kf(t, [104, 121], [0, 1]);
 	return (
-		<div style={{position: 'absolute', inset: 0, perspective: 1400, transform: `translateY(${drift}px)`}}>
-			<div style={{position: 'absolute', inset: 0, transformOrigin: '640px 360px', transform: `scale(${g})`}}>
+		<div style={{position: 'absolute', inset: 0, perspective: 1400}}>
+			<div style={{position: 'absolute', inset: 0, transformOrigin: '661px 381px', transform: `translate(${ox - 661}px, ${oy - 381}px) scale(${g})`}}>
 				{[...COLLAGE].sort((a, b) => a.z - b.z).map((c, i) => {
-					const cx = c.x + c.w / 2, cy = c.y + c.h / 2;
-					// compact: pulled toward the centre, a little smaller, more tilted
-					const k = 0.62 + 0.38 * spread;
-					const kx = 0.8 + 0.2 * spread;
-					const ncx = 610 + (cx - 610) * kx + (1 - spread) * 30;
-					const ncy = 360 + (cy - 360) * k;
-					const sc = 0.88 + 0.12 * spread;
+					const at = (j: number) => kf(t, CF, c.k.map((b) => b[j]), Easing.linear);
+					const x0 = at(0), y0 = at(1) - settle * 6, x1 = at(2), y1 = at(3) - settle * 6;
+					if (c.fade && t >= c.fade + 2) return null;
 					return (
 						<div
 							key={i}
 							style={{
 								position: 'absolute',
-								left: ncx - c.w / 2,
-								top: ncy - c.h / 2,
-								width: c.w,
-								height: c.h,
+								left: x0,
+								top: y0,
+								width: x1 - x0,
+								height: y1 - y0,
 								overflow: 'hidden',
-								transform: `scale(${sc}) rotateY(${c.ry * (2.2 - 0.8 * spread)}deg) rotateX(${c.rx * 1.5}deg)`,
-								boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+								transform: `rotateY(${c.ry}deg) rotateX(${c.rx}deg)`,
 							}}
 						>
 							<Img src={img(c.src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
