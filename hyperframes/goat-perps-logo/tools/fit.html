@@ -1,0 +1,102 @@
+<!doctype html><html><body style="margin:0;background:#000">
+<canvas id="c" width="480" height="270"></canvas>
+<script src="three.min.js"></script>
+<script src="shieldD.js"></script>
+<script>
+// Pose solver: renders the extruded GOAT shield's silhouette at 480x270 and fits position + rotation per frame
+// so it overlaps the reference logo's silhouette (IoU plus a bounding-box term).
+const W = 480, H = 270;
+function shapes() {
+  const tok = D.match(/[MCLHVZ]|-?\d*\.?\d+(?:e-?\d+)?/gi), sp = new THREE.ShapePath();
+  let i = 0, cx = 0, cy = 0, cmd = "";
+  const n = () => parseFloat(tok[i++]);
+  while (i < tok.length) {
+    if (/[A-Za-z]/.test(tok[i])) cmd = tok[i++];
+    if (cmd === "M") { cx = n(); cy = n(); sp.moveTo(cx, cy); cmd = "L"; }
+    else if (cmd === "L") { cx = n(); cy = n(); sp.lineTo(cx, cy); }
+    else if (cmd === "H") { cx = n(); sp.lineTo(cx, cy); }
+    else if (cmd === "V") { cy = n(); sp.lineTo(cx, cy); }
+    else if (cmd === "C") { const a = n(), b = n(), c = n(), d = n(); cx = n(); cy = n(); sp.bezierCurveTo(a, b, c, d, cx, cy); }
+    else if (cmd === "Z") cmd = "";
+    else i++;
+  }
+  return sp.toShapes(true);
+}
+const R = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias: false, preserveDrawingBuffer: true });
+R.setPixelRatio(1); R.setSize(W, H, false); R.setClearColor(0, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1920 / 1080, 0.05, 50); camera.position.set(0, 0, 4); camera.lookAt(0, 0, 0);
+// silhouette: the outer outline only (letter holes filled), as the reference masks are hole-filled
+const outer = shapes().map((s) => new THREE.Shape(s.getPoints(16)));
+const g = new THREE.ExtrudeGeometry(outer, { depth: 11, bevelEnabled: true, bevelThickness: 2.2, bevelSize: 1.5, bevelSegments: 2, curveSegments: 8 });
+g.computeBoundingBox();
+const bb = g.boundingBox, s = 1.88 / (bb.max.x - bb.min.x);
+g.translate(-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, -(bb.min.z + bb.max.z) / 2);
+g.scale(s, -s, s);
+const mesh = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+scene.add(mesh);
+const gl = R.getContext(), px = new Uint8Array(W * H * 4);
+function render(p) {
+  mesh.position.set(p[0], p[1], p[2]); mesh.rotation.set(p[3], p[4], p[5]);
+  R.render(scene, camera);
+  gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
+  const m = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) m[(H - 1 - y) * W + x] = px[(y * W + x) * 4] > 127 ? 1 : 0;
+  return m;
+}
+const stats = (m) => {
+  let x0 = W, x1 = -1, y0 = H, y1 = -1, a = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (m[y * W + x]) { a++; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  return { x0, x1, y0, y1, a };
+};
+let target = null, tstat = null;
+function loss(p) {
+  const m = render(p); let inter = 0, uni = 0;
+  for (let i = 0; i < m.length; i++) { const a = m[i], b = target[i]; inter += a & b; uni += a | b; }
+  const iou = uni ? inter / uni : 0, st = stats(m);
+  if (st.a === 0) return 5;
+  const bbErr = (Math.abs(st.x0 - tstat.x0) + Math.abs(st.x1 - tstat.x1) + Math.abs(st.y0 - tstat.y0) + Math.abs(st.y1 - tstat.y1)) / 40;
+  // the brand mark may not be stretched, so its tilt follows the reference's visible facing instead of the outline's aspect
+  const pr = window.PRIOR && window.PRIOR[curN];
+  const reg = pr ? 6 * (p[3] - pr[0]) ** 2 + 6 * (p[5] - pr[1]) ** 2 : 0;
+  // with height mismatched by design, weight the horizontal extent and the vertical centre, not the top/bottom edges
+  const bx = (Math.abs(st.x0 - tstat.x0) + Math.abs(st.x1 - tstat.x1)) / 40 + Math.abs((st.y0 + st.y1) - (tstat.y0 + tstat.y1)) / 80;
+  return pr ? 0.6 * (1 - iou) + 0.6 * bx + reg : (1 - iou) + 0.35 * bbErr;
+}
+let curN = 0;
+function nelderMead(f, x0, steps, iters) {
+  const n = x0.length; let pts = [x0.slice()];
+  for (let i = 0; i < n; i++) { const p = x0.slice(); p[i] += steps[i]; pts.push(p); }
+  let vals = pts.map(f);
+  for (let it = 0; it < iters; it++) {
+    const idx = vals.map((v, i) => i).sort((a, b) => vals[a] - vals[b]); pts = idx.map((i) => pts[i]); vals = idx.map((i) => vals[i]);
+    const c = new Array(n).fill(0); for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += pts[i][j] / n;
+    const w = pts[n], xr = c.map((v, j) => v + (v - w[j])), fr = f(xr);
+    if (fr < vals[0]) { const xe = c.map((v, j) => v + 2 * (v - w[j])), fe = f(xe); if (fe < fr) { pts[n] = xe; vals[n] = fe; } else { pts[n] = xr; vals[n] = fr; } }
+    else if (fr < vals[n - 1]) { pts[n] = xr; vals[n] = fr; }
+    else { const xc = c.map((v, j) => v + 0.5 * (w[j] - v)), fc = f(xc);
+      if (fc < vals[n]) { pts[n] = xc; vals[n] = fc; }
+      else { for (let i = 1; i <= n; i++) { pts[i] = pts[i].map((v, j) => pts[0][j] + 0.5 * (v - pts[0][j])); vals[i] = f(pts[i]); } } }
+  }
+  const b = vals.indexOf(Math.min(...vals)); return { x: pts[b], v: vals[b] };
+}
+async function loadMask(b64) {
+  const img = new Image(); img.src = "data:image/png;base64," + b64; await img.decode();
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H); for (let i = 0; i < m.length; i++) m[i] = d[i * 4] > 127 ? 1 : 0; return m;
+}
+window.solve = async function (targets, order, init, prior, seed) {
+  window.PRIOR = prior;
+  const out = {}; let prev = {};
+  for (const [n, from] of order) {
+    target = await loadMask(targets[n]); tstat = stats(target); curN = n;
+    let start = out[from] ? out[from].x : (seed && seed[n]) || init;
+    const steps = [0.08, 0.06, 0.25, 0.12, 0.12, 0.06];
+    let best = nelderMead(loss, start, steps, 220);
+    best = nelderMead(loss, best.x, steps.map((v) => v * 0.3), 160);
+    out[n] = best;
+  }
+  return out;
+};
+window.ready = true;
+</script></body></html>
