@@ -22,11 +22,11 @@
   };
 
   // pose keys fitted to the reference's measured centre / size per frame (camera at z = 4, fov 34)
-  const PX = key([[1, -1.6], [3, -1.26], [4, -0.45], [5, -0.03], [6, 0.1], [7, 0.1], [9, 0.04], [11, 0.06], [32, 0.06]]);
-  const PY = key([[1, -0.45], [3, -0.29], [4, -0.2], [5, -0.17], [6, -0.15], [7, -0.14], [9, -0.11], [11, -0.09], [14, -0.085], [26, -0.07], [32, -0.065]]);
-  const PZ = key([[1, -4.0], [3, -3.0], [4, -1.1], [5, -0.15], [6, 0.08], [7, 0.08], [9, 0.02], [12, 0.0], [32, -0.04]]);
+  const PX = key([[1, -1.6], [2.5, -1.35], [3.5, -1.0], [4.5, -0.52], [5.5, -0.12], [6.5, 0.12], [7.5, 0.16], [9, 0.13], [11, 0.15], [32, 0.17]]);
+  const PY = key([[1, -0.45], [2.5, -0.33], [3.5, -0.26], [4.5, -0.2], [5.5, -0.16], [6.5, -0.15], [7.5, -0.14], [9, -0.11], [11, -0.09], [14, -0.085], [26, -0.07], [32, -0.065]]);
+  const PZ = key([[1, -4.0], [2.5, -3.3], [3.5, -2.3], [4.5, -1.15], [5.5, -0.3], [6.5, 0.04], [7.5, 0.08], [9, 0.02], [12, 0.0], [32, -0.04]]);
   const PITCH = key([[1, 1.35], [3, 1.2], [4, 0.95], [5, 0.72], [6, 0.64], [7, 0.58], [9, 0.45], [11, 0.28], [14, 0.14], [20, 0.07], [32, 0.04]]);
-  const YAW = key([[1, -0.9], [3, -0.55], [5, 0.1], [7, 0.5], [10, 0.62], [12, 0.58], [32, 0.32]]);
+  const YAW = key([[1, -0.9], [3, -0.55], [5, 0.1], [7, 0.5], [10, 0.55], [12, 0.56], [20, 0.66], [32, 0.76]]);
   const ROLL = key([[1, 0.35], [4, 0.12], [7, 0.0], [32, 0.0]]);
   const FLARE = key([[3, 0], [4, 0.22], [5, 0.62], [6, 0.92], [7, 0.9], [8, 0.62], [9, 0.3], [10, 0.1], [11, 0.0], [32, 0.0]]);
   const WARM = key([[1, 1], [4, 1], [6, 0.4], [9, 0], [32, 0]]);
@@ -81,7 +81,7 @@
 
   const L = {}; let R, scene, camera, mesh, mat, built = false, glow, gctx, rtS, rtA, qScene, qCam, qMat;
   // true motion blur: every output frame averages SAMPLES renders spread over a SHUTTER-wide window of time
-  const SAMPLES = 24, SHUTTER = 0.4, LEAD = 1.3;
+  const SAMPLES = 24, SHUTTER = 0.5, LEAD = 1.0, FLEAD = 1.1; // pose and flare timing offsets fitted to the reference
   L.mount = (canvas, glowCanvas) => { L._c = canvas; glow = glowCanvas; gctx = glow.getContext("2d"); };
   function build() {
     built = true;
@@ -92,7 +92,7 @@
     // a deep extrusion: the reference shield is thick (its side reads at ~15% of its width)
     const g = new THREE.ExtrudeGeometry(shapes(), { depth: 11, bevelEnabled: true, bevelThickness: 2.2, bevelSize: 1.5, bevelSegments: 4, curveSegments: 16 });
     g.computeBoundingBox();
-    const bb = g.boundingBox, s = 1.7 / (bb.max.x - bb.min.x);
+    const bb = g.boundingBox, s = 1.88 / (bb.max.x - bb.min.x);
     g.translate(-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, -(bb.min.z + bb.max.z) / 2);
     g.scale(s, -s, s);
     mat = material();
@@ -125,6 +125,7 @@
     for (let i = 0; i < SAMPLES; i++) {
       const t = Math.max(1, Lf + LEAD + ((i + 0.5) / SAMPLES - 0.5) * SHUTTER);
       pose(t);
+      mat.uniforms.flare.value = clamp(FLARE(t - LEAD + FLEAD), 0, 1);
       R.setRenderTarget(rtS); R.setClearColor(0x000000, 0); R.clear(); R.render(scene, camera);
       qMat.uniforms.t.value = rtS.texture; R.setRenderTarget(rtA); R.autoClear = false; R.render(qScene, qCam); R.autoClear = true;
     }
@@ -138,6 +139,6 @@
     glow.style.filter = `blur(${(16 + 30 * L.flare(Lf)).toFixed(1)}px) brightness(${(1.1 + 1.4 * L.flare(Lf)).toFixed(2)})`;
     return true;
   };
-  L.flare = (Lf) => clamp(FLARE(Lf + LEAD), 0, 1);
+  L.flare = (Lf) => clamp(FLARE(Lf + FLEAD), 0, 1);
   window.LOGO = L;
 })();
