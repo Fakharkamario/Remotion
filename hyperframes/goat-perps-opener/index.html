@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=1920, height=1080" />
     <title>GOAT Funded Perps opener</title>
     <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/vendor/three.min.js"></script>
+    <script src="assets/logo.js"></script>
     <script src="assets/opener.js"></script>
     <style>
       @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400; font-display: block; }
@@ -49,6 +51,14 @@
       .copy .l2 span { background: linear-gradient(180deg, #EAC25C 0%, #F6D888 40%, #FFEBA8 76%, #F2D488 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
         text-shadow: none; filter: drop-shadow(0 0 16px rgba(240,214,140,0.38)); }
       #dark { background: #000; opacity: 0; }
+      /* the logo's room (measured on the reference: near black, a warm haze from the upper left, ~(40,28,12)) */
+      #room2 { opacity: 0; background: radial-gradient(ellipse 70% 80% at 18% 8%, rgba(52,34,12,1) 0%, rgba(26,17,7,1) 40%, rgba(8,6,4,1) 75%, #050403 100%); }
+      #room2::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 30% 34% at 50% 50%, rgba(236,139,27,0.10), rgba(0,0,0,0) 70%); }
+      #logo { width: 1920px; height: 1080px; }
+      #logoglow { width: 1920px; height: 1080px; mix-blend-mode: screen; filter: blur(18px); }
+      #lflash { background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(255,246,230,1), rgba(255,220,170,0.4) 50%, rgba(0,0,0,0) 80%); mix-blend-mode: screen; opacity: 0; }
+      #vig2 { background: radial-gradient(ellipse 80% 82% at 50% 48%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); pointer-events: none; }
+      #grain2 { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.14; display: none; }
       #vig { background: radial-gradient(ellipse 78% 82% at 52% 48%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.72) 100%); }
       #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.16; }
       .bar { position: absolute; left: 0; right: 0; height: 62px; background: #000; }
@@ -56,7 +66,7 @@
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="2.266667" data-width="1920" data-height="1080">
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="3.333333" data-width="1920" data-height="1080">
       <div class="fontwarm"><span style="font-family:Altform;font-weight:400">Aa</span><span style="font-family:Altform;font-weight:600">Aa</span></div>
       <div id="stage" class="layer"></div>
     </div>

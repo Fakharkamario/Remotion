@@ -8,7 +8,7 @@
 //   57-67  the screen light dies, the room falls to black, the copy dims last
 // render(f) is a pure function of the frame number.
 (function () {
-  const FPS = 30, FRAMES = 68;
+  const FPS = 30, FRAMES = 100; // 0-67 the opener, 67-99 the logo reveal (logo.js)
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const span = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
   const mix = (a, b, k) => a + (b - a) * k;
@@ -101,6 +101,12 @@
       <div id="dark" class="layer"></div>
       <div id="vig" class="layer"></div>
       <div id="grain" class="layer"></div>
+      <div id="room2" class="layer"></div>
+      <canvas id="logo" class="layer" width="1920" height="1080"></canvas>
+      <canvas id="logoglow" class="layer" width="480" height="270"></canvas>
+      <div id="lflash" class="layer"></div>
+      <div id="vig2" class="layer"></div>
+      <div id="grain2" class="layer"></div>
       <div class="bar top"></div><div class="bar bot"></div>`;
     const $ = (s) => stage.querySelector(s);
     const chart = $("#chart"), draw = makeChart(chart), bloom = $("#bloom"), bctx = bloom.getContext("2d");
@@ -116,11 +122,21 @@
       for (let i = 0; i < img.data.length; i += 4) { const v = 128 + (r() + r() + r() - 1.5) * 110; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
       g.putImageData(img, 0, 0); return `url(${c.toDataURL("image/png")})`;
     });
-    const crane = (x) => 1 - easeOut(x / 9, 3.4);
+    LOGO.mount($("#logo"), $("#logoglow"));
+    const room2 = $("#room2"), lflash = $("#lflash"), grain2 = $("#grain2");
 
     function render(fr) {
-      let f = clamp(fr, 0, FRAMES - 1);
-      if (Math.abs(f - Math.round(f)) < 0.02) f = Math.round(f);
+      let F = clamp(fr, 0, FRAMES - 1);
+      if (Math.abs(F - Math.round(F)) < 0.02) F = Math.round(F);
+      // the logo reveal starts on the opener's last frame; the opener holds that frame underneath it
+      const Lf = F - 67, f = Math.min(F, 67);
+      LOGO.render(Lf);
+      const fl = Lf > 0 ? LOGO.flare(Lf) : 0;
+      // the room behind the logo: the opener scene drops away under the flare, leaving dark with warm light
+      room2.style.opacity = (Lf > 0 ? clamp((Lf - 3) / 5, 0, 1) : 0).toFixed(3);
+      lflash.style.opacity = (0.32 * fl).toFixed(3);
+      grain2.style.display = Lf > 0 ? "" : "none";
+      grain2.style.backgroundImage = tiles[Math.round(F) % tiles.length];
       draw(f);
       // screen bloom: the chart downsampled and blurred, added back over itself
       bctx.clearRect(0, 0, 350, 215); bctx.filter = "blur(5px)"; bctx.drawImage(chart, 0, 0, 350, 215); bctx.filter = "none";

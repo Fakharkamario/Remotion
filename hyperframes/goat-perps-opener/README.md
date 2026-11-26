@@ -1,6 +1,6 @@
 # GOAT Funded Perps opener: "Markets don't sleep." (HyperFrames)
 
-A 2.27 s, 1920x1080 / 30 fps clip (68 frames), rebuilt beat for beat from the supplied reference clip
+A 3.33 s, 1920x1080 / 30 fps clip (100 frames), rebuilt beat for beat from the supplied reference clip
 ("Every Trade tells a story"), with the GOAT copy, Altform and Perps orange:
 
 | frames | beat |
@@ -8,6 +8,7 @@ A 2.27 s, 1920x1080 / 30 fps clip (68 frames), rebuilt beat for beat from the su
 | 0–40   | the camera settles upward in one long exponential ease (measured on the reference: half-life ~6 frames), then holds still; the copy rides with it |
 | 9–35   | "Markets", "don't", "sleep." each resolve from soft and dim where they stand; "sleep." in a gold gradient with a soft glow |
 | 57–67  | the screen light dies first, then the room falls to black; the copy dims last |
+| 67–99  | logo reveal (`assets/logo.js`, from the second reference clip, pose fitted to its measured centre and size per frame): the extruded GOAT shield enters small and almost edge-on from the lower left, swings to centre and flares white-hot (peak at +7), cools to brushed chrome by +12, then keeps turning slowly while a highlight sweeps the face |
 
 - `assets/trader.png`: the supplied clean cutout of the back-view photo. It is
   graded into the scene and relit with `shade.png` (shadow side), `rim-warm.png` (the amber key catching the
@@ -22,3 +23,5 @@ A 2.27 s, 1920x1080 / 30 fps clip (68 frames), rebuilt beat for beat from the su
 ```
 
 Colours are measured from the reference: wall ~#241709 at its brightest, warm white copy #FFFAF4, gold #EAC25C to #FFEBA8.
+
+The mark stays monochrome per the brand rules (the reference's logo is gold): the flare is white light, the finish is chrome, and Perps orange only lights the room behind it.
