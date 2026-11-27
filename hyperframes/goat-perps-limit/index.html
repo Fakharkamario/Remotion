@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps: daily loss limit</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "MD Nichrome"; src: url("assets/fonts/MDNichrome-Black.woff2") format("woff2"); font-weight: 900; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400 500; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #050607; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #050607; font-family: Altform, sans-serif; color: #EDEFF2; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+
+      /* ---------- shots 1 and 3: the terminal, in perspective ---------- */
+      .bg13 { background:
+        radial-gradient(ellipse 70% 45% at 50% 108%, rgba(140,96,22,0.42), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 50% 40% at 18% 10%, rgba(40,46,58,0.35), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #06070A 0%, #07080A 60%, #0C0A06 100%); }
+      .persp { position: absolute; inset: 0; perspective: 2300px; perspective-origin: 50% 46%; }
+      .rig { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+      .win { position: absolute; border-radius: 18px; background: linear-gradient(180deg, #121417, #0D0F12); border: 1.5px solid rgba(230,236,245,0.09);
+        box-shadow: 0 50px 120px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.05); overflow: hidden; }
+      .win .bar { height: 46px; display: flex; align-items: center; gap: 16px; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 16px; color: #8E949C; }
+      .win .bar b { color: #EDEFF2; font-weight: 600; }
+      .win .bar .up { color: #3FCB7E; } .win .bar .tag { margin-left: auto; padding: 4px 10px; border-radius: 8px; background: rgba(236,139,27,0.14); color: #F6A03A; font-weight: 600; font-size: 14px; }
+      .win svg { display: block; }
+      .ax { font-family: Altform, sans-serif; font-size: 14px; fill: #6F757E; }
+      .side { position: absolute; border-radius: 18px; background: linear-gradient(180deg, rgba(22,24,28,0.98), rgba(15,16,19,0.98)); border: 1.5px solid rgba(230,236,245,0.09);
+        box-shadow: 0 50px 120px rgba(0,0,0,0.6); padding: 30px 30px; }
+      .side h3 { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 34px; letter-spacing: 0.01em; color: #F4F1EA; }
+      .side .u { width: 64px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #D7B72B, #F6A03A); margin: 12px 0 26px; }
+      .kv { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 19px; color: #8E949C; }
+      .kv b { color: #EDEFF2; font-weight: 600; font-size: 22px; }
+      .basis { position: relative; margin: 22px 0 8px; padding: 18px; border-radius: 14px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); }
+      .basis small { display: block; font-size: 15px; letter-spacing: 0.14em; color: #7D838B; font-weight: 600; margin-bottom: 12px; }
+      .seg { display: flex; gap: 8px; padding: 5px; border-radius: 12px; background: rgba(0,0,0,0.35); }
+      .seg span { flex: 1; text-align: center; padding: 12px 0; border-radius: 9px; font-size: 19px; font-weight: 600; color: #7D838B; }
+      .seg .on { --k: 0; color: rgb(calc(125 + 105 * var(--k)), calc(131 + 52 * var(--k)), calc(139 - 96 * var(--k)));
+        background: rgba(215,183,43, calc(0.16 * var(--k))); box-shadow: inset 0 0 0 1.5px rgba(215,183,43, calc(0.7 * var(--k))); }
+      .trace { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); overflow: visible; pointer-events: none; }
+      .trace rect { fill: none; stroke: #FFD98A; stroke-width: 2.5; filter: drop-shadow(0 0 6px rgba(246,190,80,0.9)) drop-shadow(0 0 16px rgba(215,160,43,0.6)); }
+      .brk { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-radius: 12px; background: rgba(236,139,27,0.08); border: 1px solid rgba(236,139,27,0.28); font-size: 18px; color: #C9A77A; }
+      .brk b { font-size: 24px; color: #FFB65C; font-weight: 600; }
+      .pricepill { position: absolute; right: 0; padding: 5px 10px; border-radius: 7px 0 0 7px; font-size: 15px; font-weight: 600; transform: translateY(-50%); white-space: nowrap; }
+      .lim-label { position: absolute; left: 22px; transform: translateY(-120%); display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 10px;
+        background: rgba(30,20,8,0.92); border: 1.5px solid rgba(246,160,58,0.55); color: #FFC27A; font-size: 17px; font-weight: 600; white-space: nowrap; box-shadow: 0 0 24px rgba(236,139,27,0.25); }
+      .lim-label i { font-style: normal; color: #8E7A62; font-weight: 400; }
+      .lock { width: 18px; height: 20px; }
+
+      /* ---------- shot 2: the word wheel on slanted copy ---------- */
+      .bg2 { background:
+        radial-gradient(ellipse 60% 60% at 88% 96%, rgba(150,112,24,0.5), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 55% 50% at 6% 4%, rgba(34,44,66,0.55), rgba(0,0,0,0) 70%),
+        linear-gradient(160deg, #0A0D13 0%, #07080B 55%, #0D0B06 100%); }
+      .slant { position: absolute; left: -400px; top: -300px; width: 2900px; height: 1800px; transform-origin: 50% 50%; }
+      .slant p { position: absolute; font-size: 30px; line-height: 1.35; color: rgba(225,230,240,0.075); width: 640px; }
+      .slant p.big { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 86px; line-height: 0.95; color: rgba(225,230,240,0.07); width: 900px; }
+      .slant .btn { position: absolute; padding: 16px 30px; border-radius: 14px; font-size: 24px; font-weight: 600; color: rgba(255,215,130,0.32); background: rgba(215,183,43,0.10); border: 1.5px solid rgba(215,183,43,0.22); filter: blur(1px); }
+      .slant .num { position: absolute; font-family: "MD Nichrome", sans-serif; font-size: 40px; color: rgba(215,183,43,0.28); filter: blur(0.6px); }
+      .wheel { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+      .wline { position: absolute; left: 1000px; top: 0; width: 2px; height: 1080px; margin-left: -1px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.12) 70%, rgba(255,255,255,0)); }
+      .marker { position: absolute; left: 790px; top: 540px; width: 0; height: 0; border-style: solid; border-width: 19px 0 19px 32px; border-color: transparent transparent transparent #F7F4EE; transform: translate(-50%, -50%);
+        filter: drop-shadow(0 0 10px rgba(255,255,255,0.35)); }
+      .pillw { position: absolute; left: 862px; top: 540px; transform-origin: 0 50%; }
+      .pill { --f: 1; position: relative; transform: translateY(-50%); padding: 12px 26px 14px; border-radius: 14px; font-size: 54px; font-weight: 600; white-space: nowrap; letter-spacing: -0.005em; }
+      .pill.gold { background: linear-gradient(180deg, #F6DE7E, #D7B72B); color: #1C1604; box-shadow: 0 0 calc(50px * var(--f)) rgba(215,183,43, calc(0.55 * var(--f))); }
+      .pill.white { background: linear-gradient(180deg, #FFFFFF, #DADDE2); color: #15171B; box-shadow: 0 0 calc(46px * var(--f)) rgba(255,255,255, calc(0.35 * var(--f))); }
+      .pill.green { background: linear-gradient(180deg, #7CF0AE, #34C878); color: #062114; box-shadow: 0 0 calc(50px * var(--f)) rgba(60,210,130, calc(0.5 * var(--f))); }
+      .pill .strike { position: absolute; left: 14px; right: 14px; top: 50%; height: 5px; margin-top: -1px; border-radius: 3px; background: #1C1E22; transform-origin: 0 50%; transform: scaleX(0); }
+      .cap { position: absolute; left: 790px; top: 380px; transform: translateX(-50%); font-size: 18px; letter-spacing: 0.24em; font-weight: 600; color: rgba(237,239,242,0.5); white-space: nowrap; }
+
+      #vig { background: radial-gradient(ellipse 80% 82% at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.66) 100%); pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.12; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="6.933333" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:'MD Nichrome';font-weight:900">Aa</span><span style="font-weight:400">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.m4a" data-start="0" data-duration="6.933333" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
