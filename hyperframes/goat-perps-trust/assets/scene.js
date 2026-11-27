@@ -41,7 +41,7 @@
         <div class="rod silver" id="rodB"><div class="bd"></div><div class="tp"></div></div>
         <div class="rod" id="rodC"><div class="bd"></div><div class="tp"></div></div>
         <div id="line1"><div class="w" id="w1">${[...LINE].map((c) => `<span>${c === " " ? "&nbsp;" : c}</span>`).join("")}</div>
-          <div id="logoW"><img src="assets/goat-logo-white.svg" alt=""/><b>GOAT FUNDED</b></div></div>
+          <div id="logoW"><img src="assets/gft-logo-white.png" alt=""/><b>GOAT FUNDED</b></div></div>
       </div>
       <div class="shot bgw" id="s2" style="display:none"><div class="persp">
         <div id="card2"><small>TRUSTED SINCE 2023</small><h2><em>3+ YEARS</em> IN BUSINESS</h2>
@@ -68,7 +68,7 @@
         </div>
         <div class="tg" id="tg5" style="top:700px"><i class="knob g" id="k5"></i>
           <span id="a5"><span class="stars">${[0, 1, 2, 3, 4].map((i) => `<i>${star.replace("<path", '<path fill="rgba(255,255,255,0.14)"')}<b id="st${i}" style="position:absolute;inset:0;overflow:hidden;width:0">${star.replace("<path", '<path fill="#F2C14E"')}</b></i>`).join("")}</span><b id="r5">4.7</b></span>
-          <span id="b5"><b id="n5">17,000+</b> TRADERS</span></div>
+          <span id="b5"><b id="n5">17,000+</b>&nbsp;TRADERS</span></div>
       </div>
       <div id="flash" class="layer"></div>
       <div id="vig" class="layer"></div>
@@ -89,7 +89,7 @@
     const geo = (id) => { const e = $(id); return [e.offsetLeft, e.offsetWidth]; };
     const layout = () => {
       const keep = shots.map((s) => s.style.display); shots.forEach((s) => (s.style.display = ""));
-      ["#b3", "#n5", "#r5"].forEach((id) => { const e = $(id); e.style.minWidth = ""; e.style.display = "inline-block"; e.style.textAlign = "center"; e.style.minWidth = `${e.offsetWidth + 2}px`; });
+      ["#b3", "#n5", "#r5"].forEach((id) => { const e = $(id); e.style.minWidth = ""; if (id === "#b3") e.style.justifyContent = "center"; else { e.style.display = "inline-block"; e.style.textAlign = id === "#r5" ? "left" : "right"; } e.style.minWidth = `${e.offsetWidth + 2}px`; });
       ["#a3", "#b3", "#a4", "#b4", "#a5", "#b5"].forEach((id) => (G[id] = geo(id)));
       const t = $("#tabs").children; G.tab = [t[1].offsetLeft, t[1].offsetWidth, t[2].offsetLeft - t[1].offsetLeft];
       shots.forEach((s, i) => (s.style.display = keep[i]));
@@ -190,7 +190,7 @@
         $("#a5").style.color = sw < 0.5 ? "#1C1604" : "#C9CDD3"; $("#b5").style.color = sw > 0.5 ? "#1C1604" : "#C9CDD3";
         const F = 4.7 * gCount(span(f, T_RATED, T_RATED + 30));
         $("#r5").textContent = F.toFixed(1);
-        for (let i = 0; i < 5; i++) $(`#st${i}`).style.width = `${(34 * clamp(F - i, 0, 1)).toFixed(1)}px`;
+        for (let i = 0; i < 5; i++) $(`#st${i}`).style.width = `${(38 * clamp(F - i, 0, 1)).toFixed(1)}px`;
         $("#n5").style.opacity = span(f, T_17K - 14, T_17K - 6).toFixed(3);
         for (let i = 0; i < 5; i++) $(`#st${i} path`).setAttribute("fill", sw < 0.5 ? "#1C1604" : "#F2C14E");
         $("#n5").textContent = `${Math.round(17000 * gCount(span(f, T_17K - 10, T_17K + 40))).toLocaleString("en-US")}+`;
