@@ -23,27 +23,22 @@
         linear-gradient(180deg, #0A0908 0%, #060606 100%); }
       #chartbg { position: absolute; left: -200px; top: 0; width: 2400px; height: 1080px; filter: blur(9px); opacity: 0.32; }
 
-      #car { position: absolute; left: 960px; top: 520px; width: 0; height: 0; }
-      .card { position: absolute; left: 0; top: 0; width: 400px; height: 430px; margin: -215px 0 0 -200px; border-radius: 30px; padding: 46px 34px 0; text-align: center;
-        background: linear-gradient(180deg, #2A2A2D 0%, #1C1C1F 55%, #161618 100%); border: 1.5px solid rgba(255,255,255,0.10);
-        box-shadow: 0 40px 90px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08); transform-origin: 50% 50%; }
-      .card .ic { width: 56px; height: 56px; margin: 0 auto; }
-      .card .ic svg { width: 56px; height: 56px; fill: none; stroke: #F4F2EE; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-      .card h3 { margin-top: 18px; font-size: 44px; font-weight: 600; color: #F6F5F2; letter-spacing: -0.005em; }
-      .card .sp { display: block; width: 300px; height: 64px; margin: 22px auto 0; overflow: visible; }
-      .card .sp .base { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 3; }
-      .card .sp .ln { fill: none; stroke: url(#spg); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
-      .card .tk { margin-top: 16px; font-size: 26px; color: #B9BCC2; letter-spacing: 0.01em; }
-      .card .st { position: absolute; left: 0; right: 0; bottom: 40px; font-size: 28px; font-weight: 600; color: #4CD98A; }
-      .card .st i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: #4CD98A; margin-right: 10px; vertical-align: 3px; box-shadow: 0 0 10px rgba(76,217,138,0.8); }
-
-      #frame { position: absolute; left: 0; top: 0; overflow: visible; }
-      #frame rect { fill: none; stroke: rgba(242,200,110,0.75); stroke-width: 2; }
-      #flabel { position: absolute; display: flex; align-items: center; gap: 12px; font-size: 20px; letter-spacing: 0.24em; font-weight: 600; color: #EDE6D6; white-space: nowrap; }
-      #flabel img { height: 30px; }
+      #car { position: absolute; left: 960px; top: 500px; width: 0; height: 0; }
+      /* the reference's cards: matte grey, crisp, a thin bar, a value, a status line; no glow */
+      .card { --hl: 0; position: absolute; left: 0; top: 0; width: 470px; height: 530px; margin: -265px 0 0 -235px; border-radius: 26px; padding: 50px 40px 0; text-align: center;
+        background: linear-gradient(180deg, rgb(calc(44 + 22 * var(--hl)), calc(44 + 22 * var(--hl)), calc(46 + 22 * var(--hl))) 0%, rgb(calc(30 + 18 * var(--hl)), calc(30 + 18 * var(--hl)), calc(32 + 18 * var(--hl))) 100%);
+        border: 2px solid rgba(255,255,255,0.09); box-shadow: 0 30px 70px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10); transform-origin: 50% 50%; }
+      .card .ic { width: 58px; height: 58px; margin: 0 auto; }
+      .card .ic svg { width: 58px; height: 58px; fill: none; stroke: #F2F2F2; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+      .card h3 { margin-top: 20px; font-size: 47px; font-weight: 600; color: #F4F4F4; letter-spacing: -0.005em; white-space: nowrap; }
+      .card .bar { position: relative; width: 370px; height: 10px; margin: 30px auto 0; border-radius: 6px; background: #3B3B3D; overflow: hidden; }
+      .card .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+      .card .val { margin-top: 22px; font-size: 37px; color: #C8C8CA; white-space: nowrap; }
+      .card .chk { width: 74px; height: 74px; margin: 26px auto 0; }
+      .card .st { position: absolute; left: 0; right: 0; bottom: 62px; font-size: 40px; font-weight: 500; color: #3FD07F; }
 
       #vig { background: radial-gradient(ellipse 80% 82% at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
-      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.12; pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.17; pointer-events: none; }
     </style>
   </head>
   <body>

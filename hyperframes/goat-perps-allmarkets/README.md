@@ -8,10 +8,10 @@ VO: "including crypto, forex, indices, commodities and stocks, all in one place.
 
 | frames  | beat |
 |---------|------|
-| 0–14    | the carousel glides in on Crypto (BTC · ETH · SOL, live 24/7) |
-| 29 / 51 / 70 / 92 | Forex, Indices, Commodities, Stocks glide into focus on their names; each card's line draws as it lands |
-| 108–134 | the set pulls back into one row on "all in one place" |
-| 120–146 | a fine gold frame draws round the row, a highlight runs across the cards, "ONE ACCOUNT · EVERY MARKET" with the GFT mark |
+| 0–30    | the carousel opens right of centre on Crypto and drifts to centre
+| 30 / 52 / 71 / 93 | Forex (its bar runs to full and its border turns Perps orange, "Boosted"), Indices, Commodities, Stocks glide into focus on their names while the camera pushes in slowly |
+| 106–132 | the set shrinks into one row on "all in one place"
+| 124–146 | a lighter highlight passes along the row |
 
 ```bash
 npx --yes hyperframes@0.8.114 render -f 30 -q high -o renders/goat-perps-allmarkets.mp4
