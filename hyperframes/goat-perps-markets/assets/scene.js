@@ -240,9 +240,9 @@
         if (f >= starts[k]) { q = targets[k + 1]; const e = ease(span(f, starts[k], LAND[k])); p = targets[k].map((v, j) => mix(v, q[j], e)); i = k + 1; }
       }
       // the slow drift (reference: the settled card keeps sliding right and up a little)
-      const since = i ? f - LAND[i - 1] : 0;
-      p[0] -= 0.006 * since; p[1] += 0.003 * since;
-      if (!i) p[0] += 0.0015 * f; // the headline shot only creeps
+      // continuous drift over the whole clip (resetting it at each move made the card jump a few pixels)
+      const since = Math.max(0, f - LAND[0]);
+      p[0] += 0.0015 * Math.min(f, starts[0]) - 0.006 * since; p[1] += 0.003 * since;
       return p;
     };
     function camAt(f) {
