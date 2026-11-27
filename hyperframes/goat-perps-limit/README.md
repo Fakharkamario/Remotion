@@ -9,9 +9,9 @@ overnight won't tighten your limit."
 
 | frames  | beat |
 |---------|------|
-| 0–74    | the terminal swings in; the orange limit line draws on "loss limit"; "Balance" lights and a gold trace runs round it on "balance" |
-| 74–140  | the word wheel: Balance → Open profits (struck out on "profits") → Winning trades |
-| 140–208 | the long prints through an overnight session, P&L climbing, while the limit line holds; the lock glints and "unchanged" appears on "won't tighten" |
+| 0–74    | the terminal, leaning back with ghost layers stacked behind, swings in; panels float forward joined by a gold connector; the orange limit line draws on "loss limit" and the loss room fills; on "balance" the Balance row selects, a gold trace runs round it and the card lights |
+| 74–140  | the word wheel over slanted, out-of-focus product UI: Balance → Open profits (struck out on "profits") → Winning trades |
+| 140–208 | the stack from the other side: the long prints through an overnight session, P&L climbing on the chart and on a floating YOUR LIMIT card; on "won't tighten" the limit row traces gold, the lock glints and "Unchanged by open profit" appears |
 
 Every camera move uses a glide whose speed builds then bleeds off on a long tail (measured on the reference),
 and moves overlap so nothing snaps or sits dead.
