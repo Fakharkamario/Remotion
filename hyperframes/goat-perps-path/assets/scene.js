@@ -10,6 +10,7 @@
   const span = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
   const mix = (a, b, k) => a + (b - a) * k;
   const smooth = (x) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
+  const expoOut = (x) => { const t = clamp(x, 0, 1); return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); };
   const easeOut = (x, p) => 1 - Math.pow(1 - clamp(x, 0, 1), p || 3);
   const ease = (x) => { const t = clamp(x, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
   const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -29,20 +30,25 @@
   // ---------------- timing (frames), from the voiceover's word times ----------------
   // legacy 1.16 s, blitz 1.96, GOAT 2.46, "three one-step challenges" 3.08-4.38, flip 4.70, toggles 5.06,
   // build 5.70, challenge 6.10, "your way" 6.50-7.08
-  const CARDS = [ // world y of each card's branch (world y grows downward; the path climbs toward negative y)
-    { id: "legacy", name: "LEGACY", tag: "CHALLENGE 01", letter: "L", side: -1, y: 0, at: 33, col: "silver" },
-    { id: "blitz", name: "BLITZ", tag: "CHALLENGE 02", letter: "B", side: 1, y: -250, at: 57, col: "orange" },
-    { id: "goat", name: "GOAT", tag: "CHALLENGE 03", letter: "G", side: -1, y: -500, at: 72, col: "gold" },
-  ];
-  const HERO_Y = -860, HERO_AT = 92;            // the line reaches the hero card on "three"
   const CUT = 138;                               // cut to the builder on "flip"
   const CLICKS = [154, 166, 178];                // toggles flipped on "toggles", between, "build"
-  const START = 196;                             // the start button, on "your way"
-
-  // the line tip climbs through the branches, never stopping (it eases between them, as in the reference)
-  const TIP = key([[0, 520], [6, 470], [33, 0], [57, -250], [72, -500], [HERO_AT, HERO_Y + 160], [HERO_AT + 10, HERO_Y + 120], [CUT, HERO_Y + 110]]);
-  // the camera follows the tip with a soft lag, keeping it around 62% of the frame height
-  const CAM = key([[0, 300], [10, 260], [36, 20], [60, -220], [76, -440], [96, -720], [CUT, -760]]);
+  const START = 194;                             // the start button, on "your way"
+  const WHIP_T = 92, WHIP_W = 420, WHIP_TAU = 2.6, LEAD = 150; // whip on "three"; the tip rides LEAD px ahead
+  const vSlow = (f) => 11 * smooth(f / 36) * (1 - smooth((f - 82) / 8)); // world px per frame
+  const whipC = (f) => WHIP_W * (0.5 + Math.atan((f - WHIP_T) / WHIP_TAU) / Math.PI);
+  const CAMS = [300];
+  for (let k = 1; k <= CUT + 2; k++) CAMS.push(CAMS[k - 1] - vSlow(k - 0.5));
+  const CAM = (f) => { const i = clamp(Math.floor(f), 0, CAMS.length - 2), u = f - i; return mix(CAMS[i], CAMS[i + 1], u) - (whipC(f) - whipC(0)); };
+  const HERO_C = CAM(CUT) - 121;                 // the hero card ends centred in frame
+  const HERO_Y = HERO_C + 175;                   // world y of the hero card's bottom edge (where the line meets it)
+  // (with LEAD = 150 the tip meets it at the centre of the whip)
+  const TIP = (f) => Math.max(HERO_Y, mix(CAM(f) + 420, CAM(f) - LEAD, easeOut(f / 8, 2)));
+  let HERO_AT = 0; while (HERO_AT < CUT && TIP(HERO_AT) > HERO_Y + 2) HERO_AT++;
+  const CARDS = [
+    { id: "legacy", name: "LEGACY", tag: "CHALLENGE 01", letter: "L", side: -1, at: 33, col: "silver" },
+    { id: "blitz", name: "BLITZ", tag: "CHALLENGE 02", letter: "B", side: 1, at: 57, col: "orange" },
+    { id: "goat", name: "GOAT", tag: "CHALLENGE 03", letter: "G", side: -1, at: 72, col: "gold" },
+  ].map((c) => Object.assign(c, { y: Math.round(TIP(c.at)) }));
 
   const hex = (letter, cls) => `<svg class="hex ${cls}" viewBox="0 0 100 100"><path d="M50 6 L88 28 L88 72 L50 94 L12 72 L12 28 Z"/><text x="50" y="62" text-anchor="middle">${letter}</text></svg>`;
 
@@ -63,7 +69,7 @@
               <div class="tx"><small>${c.tag}</small><b>${c.name}</b></div>
               <span class="pill">LOCKED</span>
             </div>`).join("")}
-          <div id="hero" class="hero" style="top:${HERO_Y - 175}px">
+          <div id="hero" class="hero" style="top:${HERO_Y - 350}px">
             <div class="hbadge">${hex("1", "big")}</div>
             <div class="htitle">ONE STEP</div>
             <div class="hsub">Three challenges. One step each.</div>
@@ -93,9 +99,15 @@
               </div>
             </div>
           </div>
+          <div class="rip" id="rip0"></div><div class="rip" id="rip1"></div><div class="rip" id="rip2"></div><div class="rip" id="rip3"></div>
           <div id="cursor" class="cursor"><svg viewBox="0 0 24 24"><path d="M3 2 L3 19 L8 14.5 L11.5 22 L14.5 20.6 L11 13.4 L18 13.4 Z"/></svg></div>
         </div>
         <div id="flash" class="layer"></div>
+        <div id="result" class="result" style="display:none"><div class="rc-in">
+          <small>YOUR CHALLENGE</small><h2>GOAT · $50K</h2>
+          <div class="rc-tags"><span>1-Step</span><span>Daily payouts</span><span>90% split</span><span>Weekend holding</span><span>Boosted leverage</span></div>
+          <div class="rc-f"><div><small>Price</small><b>$319</b></div><div class="rc-go">Ready to trade</div></div>
+        </div><div class="rc-heat"></div></div>
       </div>
       <div id="vig" class="layer"></div>
       <div id="grain" class="layer"></div>`;
@@ -110,14 +122,30 @@
 
     // part B camera: the panel arrives, then the camera pushes in on the toggles and follows the cursor down,
     // then eases back toward the start button
-    const CX = key([[CUT, 0], [146, 0], [156, 40], [180, 40], [194, -260], [220, -290]]);
-    const CY = key([[CUT, 30], [146, 0], [156, 110], [166, 20], [180, -80], [194, -170], [220, -185]]);
-    const CS = key([[CUT, 0.88], [146, 0.97], [156, 1.3], [180, 1.34], [194, 1.24], [220, 1.28]]);
-    // cursor path in panel coordinates (panel is 1400 x 780, centred)
-    const toggleXY = (i) => [-18, -122 + i * 92];   // offsets from the panel centre
+    // part B camera, as measured on the reference: every move is a quick whip that settles on a long decaying tail
+    // (expo-out), and between moves the camera holds still while the cursor works.
+    const MOVES = [ // [start frame, frames, x, y, scale] reached at the end of each move
+      [CUT, 22, 0, 0, 1.0], [146, 12, 40, 110, 1.3], [183, 12, -250, -150, 1.26],
+    ];
+    const camB = (f) => {
+      let x = 0, y = 230, sc = 0.97;
+      MOVES.forEach(([t0, d, tx, ty, ts]) => { const k = expoOut(span(f, t0, t0 + d)); x = mix(x, tx, k); y = mix(y, ty, k); sc = mix(sc, ts, k); });
+      return { x, y, sc };
+    };
+    const toggleXY = (i) => [-18, -122 + i * 92];
     const GO = [362, 204];
-    const CUX = key([[CUT + 6, -160], [CLICKS[0] - 2, toggleXY(0)[0]], [CLICKS[1] - 1, toggleXY(1)[0]], [CLICKS[2] + 1, toggleXY(2)[0]], [START - 2, GO[0]], [220, GO[0] + 4]]);
-    const CUY = key([[CUT + 6, 160], [CLICKS[0] - 2, toggleXY(0)[1]], [CLICKS[1] - 1, toggleXY(1)[1]], [CLICKS[2] + 1, toggleXY(2)[1]], [START - 2, GO[1]], [220, GO[1] + 2]]);
+    const STOPS = [[CUT + 6, -170, 170], [CLICKS[0] - 4, ...toggleXY(0)], [CLICKS[1] - 4, ...toggleXY(1)], [CLICKS[2] - 4, ...toggleXY(2)], [START - 4, ...GO]];
+    const cursorAt = (f) => {
+      let x = STOPS[0][1], y = STOPS[0][2];
+      for (let i = 1; i < STOPS.length; i++) {
+        const [t1, tx, ty] = STOPS[i], k = easeOut(span(f, t1 - 9, t1), 3.2);
+        const bow = Math.sin(Math.PI * k) * 14;   // a slight arc, as a hand moves
+        x = mix(x, tx, k) + bow * 0.5; y = mix(y, ty, k) - bow;
+      }
+      return [x, y];
+    };
+    const PRESSES = [...CLICKS, START];
+    const pressAt = (f) => PRESSES.reduce((a, c) => a + (f >= c - 1 && f <= c + 3 ? Math.sin(Math.PI * (f - c + 1) / 4) : 0), 0);
 
     function render(fr) {
       let f = clamp(fr, 0, FRAMES - 1);
@@ -156,32 +184,41 @@
         hero.querySelector(".hsub").style.opacity = easeOut(span(f, HERO_AT + 10, HERO_AT + 20), 2).toFixed(3);
         $("#aBg").style.transform = `translateY(${(-cam * 0.12).toFixed(1)}px)`;
       } else {
-        const cam = $("#cam");
-        const s = CS(f), x = CX(f), y = CY(f);
-        cam.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) perspective(2200px) rotateX(${mix(10, 4, span(f, CUT, CUT + 30)).toFixed(2)}deg) scale(${s.toFixed(4)})`;
-        cam.style.opacity = (0.35 + 0.65 * easeOut(span(f, CUT, CUT + 6), 2)).toFixed(3);
-        cam.style.filter = f < CUT + 8 ? `blur(${((1 - easeOut(span(f, CUT, CUT + 8), 2)) * 10).toFixed(1)}px)` : "none";
-        // the cursor glides between the toggles and presses them
-        const cur = $("#cursor"), cx = CUX(f), cy = CUY(f);
-        const press = [...CLICKS, START].reduce((a, c) => a + Math.max(0, 1 - Math.abs(f - c) / 2.5), 0);
-        cur.style.transform = `translate(${cx.toFixed(1)}px, ${cy.toFixed(1)}px) scale(${(1 - 0.18 * Math.min(1, press)).toFixed(3)})`;
-        cur.style.opacity = easeOut(span(f, CUT + 6, CUT + 12), 2).toFixed(3);
+        const cam = $("#cam"), C = camB(f);
+        cam.style.transform = `translate(-50%, -50%) translate(${C.x.toFixed(1)}px, ${C.y.toFixed(1)}px) perspective(2200px) rotateX(${mix(9, 4, expoOut(span(f, CUT, CUT + 22))).toFixed(2)}deg) scale(${C.sc.toFixed(4)})`;
+        cam.style.opacity = (0.35 + 0.65 * easeOut(span(f, CUT, CUT + 5), 2)).toFixed(3);
+        // after the start click the page behind softens and dims under the result card, as in the reference
+        const modal = easeOut(span(f, START + 2, START + 10), 2);
+        cam.style.filter = f < CUT + 6 ? `blur(${((1 - easeOut(span(f, CUT, CUT + 6), 2)) * 10).toFixed(1)}px)` : modal > 0 ? `blur(${(modal * 7).toFixed(1)}px) brightness(${(1 - modal * 0.4).toFixed(3)})` : "none";
+        // cursor: quick settling moves with a press dip on every click
+        const cur = $("#cursor"), [cx, cy] = cursorAt(f), pr = Math.min(1, pressAt(f));
+        cur.style.transform = `translate(${cx.toFixed(1)}px, ${(cy + pr * 3).toFixed(1)}px) scale(${(1 - 0.16 * pr).toFixed(3)})`;
+        cur.style.opacity = (easeOut(span(f, CUT + 6, CUT + 11), 2) * (1 - span(f, START + 4, START + 8))).toFixed(3);
+        PRESSES.forEach((c, i) => {
+          const rp = $(`#rip${i}`), k = span(f, c, c + 10);
+          const [x, y] = i < 3 ? [toggleXY(i)[0] + 22, toggleXY(i)[1] + 50] : [GO[0] + 7, GO[1] + 70];
+          rp.style.transform = `translate(${x}px, ${y}px) scale(${(0.3 + 1.3 * easeOut(k, 2.4)).toFixed(3)})`;
+          rp.style.opacity = (k > 0 && k < 1 ? Math.pow(1 - k, 1.5) * 0.85 : 0).toFixed(3);
+        });
         let price = 249;
         CLICKS.forEach((c, i) => {
-          const k = easeOut(span(f, c, c + 6), 2.6), t = $(`#tog${i}`);
+          const k = easeOut(span(f, c, c + 5), 2.6), t = $(`#tog${i}`);
           t.style.setProperty("--k", k.toFixed(3)); t.classList.toggle("on", k > 0.5);
-          $(`#row${i}`).style.setProperty("--hl", Math.max(0, 1 - Math.abs(f - c - 3) / 8).toFixed(3));
+          $(`#row${i}`).style.setProperty("--hl", Math.max(0, 1 - Math.abs(f - c - 2) / 9).toFixed(3));
           if (f >= c + 2) price += [20, 30, 20][i];
         });
         $("#price").textContent = `$${price}`;
-        $("#price").style.transform = `scale(${(1 + 0.08 * CLICKS.reduce((a, c) => a + Math.max(0, 1 - Math.abs(f - c - 3) / 4), 0)).toFixed(3)})`;
-        // the start button: pressed on "your way", with a warm flash sweeping the panel (the reference's golden flash)
-        const go = $("#go"), gk = span(f, START, START + 4);
-        go.style.transform = `scale(${(1 - 0.05 * Math.max(0, 1 - Math.abs(f - START) / 3)).toFixed(3)})`;
-        go.style.boxShadow = `0 0 ${(20 + 60 * gk).toFixed(1)}px rgba(246,160,58,${(0.35 + 0.45 * gk).toFixed(2)})`;
-        const fl = $("#flash"), fk = span(f, START + 1, START + 16);
-        fl.style.opacity = (Math.sin(Math.PI * fk) * 0.85).toFixed(3);
-        fl.style.backgroundPosition = `${mix(-60, 160, fk).toFixed(1)}% 0`;
+        $("#price").style.transform = `scale(${(1 + 0.1 * CLICKS.reduce((a, c) => a + Math.max(0, 1 - Math.abs(f - c - 3) / 4), 0)).toFixed(3)})`;
+        const go = $("#go"), gp = Math.max(0, 1 - Math.abs(f - START - 1) / 3);
+        go.style.transform = `scale(${(1 - 0.06 * gp).toFixed(3)})`;
+        go.style.filter = `brightness(${(1 - 0.18 * gp).toFixed(3)})`;
+        go.style.boxShadow = `0 0 ${(20 + 50 * gp).toFixed(1)}px rgba(246,160,58,${(0.35 + 0.4 * gp).toFixed(2)})`;
+        $("#flash").style.opacity = 0;
+        // the result: a card slides in from the right white-hot and cools to its colours (the reference's modal)
+        const rc = $("#result"), rk = expoOut(span(f, START + 2, START + 16)), heat = 1 - easeOut(span(f, START + 3, START + 13), 2);
+        rc.style.display = f >= START + 2 ? "" : "none";
+        rc.style.transform = `translate(-50%, -50%) translate(${mix(760, 0, rk).toFixed(1)}px, ${mix(70, 0, rk).toFixed(1)}px) rotate(${mix(5, 0, rk).toFixed(2)}deg) scale(${mix(0.92, 1, rk).toFixed(4)})`;
+        rc.style.setProperty("--heat", heat.toFixed(3));
       }
       $("#grain").style.backgroundImage = tiles[Math.round(f) % tiles.length];
     }
