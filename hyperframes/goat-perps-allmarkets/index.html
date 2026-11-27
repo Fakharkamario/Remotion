@@ -25,9 +25,18 @@
 
       #car { position: absolute; left: 960px; top: 500px; width: 0; height: 0; }
       /* the reference's cards: matte grey, crisp, a thin bar, a value, a status line; no glow */
-      .card { --hl: 0; position: absolute; left: 0; top: 0; width: 470px; height: 530px; margin: -265px 0 0 -235px; border-radius: 26px; padding: 50px 40px 0; text-align: center;
-        background: linear-gradient(180deg, rgb(calc(44 + 22 * var(--hl)), calc(44 + 22 * var(--hl)), calc(46 + 22 * var(--hl))) 0%, rgb(calc(30 + 18 * var(--hl)), calc(30 + 18 * var(--hl)), calc(32 + 18 * var(--hl))) 100%);
-        border: 2px solid rgba(255,255,255,0.09); box-shadow: 0 30px 70px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10); transform-origin: 50% 50%; }
+      .card { --hl: 0; position: absolute; left: 0; top: 0; width: 470px; height: 530px; margin: -265px 0 0 -235px; border-radius: 26px; padding: 50px 40px 0; text-align: center; overflow: hidden;
+        background: linear-gradient(180deg, rgb(calc(40 + 22 * var(--hl)), calc(40 + 22 * var(--hl)), calc(42 + 22 * var(--hl))) 0%, rgb(calc(27 + 18 * var(--hl)), calc(27 + 18 * var(--hl)), calc(29 + 18 * var(--hl))) 45%, rgb(calc(19 + 14 * var(--hl)), calc(19 + 14 * var(--hl)), calc(21 + 14 * var(--hl))) 100%);
+        border: 1.5px solid rgba(255,255,255,0.07);
+        box-shadow: 0 34px 80px rgba(0,0,0,0.7), 0 8px 18px rgba(0,0,0,0.45), inset 0 1.5px 0 rgba(255,255,255,0.20), inset 0 -40px 60px rgba(0,0,0,0.28); transform-origin: 50% 50%; }
+      /* the panel surface: frosted grain, a soft sheen from the upper left, a specular line along the top edge */
+      .card .tex { position: absolute; inset: 0; border-radius: inherit; background-size: 180px 180px; mix-blend-mode: overlay; opacity: 0.55; pointer-events: none; }
+      .card .sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+        background: radial-gradient(ellipse 90% 55% at 22% 0%, rgba(255,255,255,0.10), rgba(255,255,255,0) 70%),
+                    linear-gradient(158deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 38%); background-size: 140% 100%; }
+      .card .edge { position: absolute; left: 22px; right: 22px; top: 0; height: 1.5px; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.45) 30%, rgba(255,255,255,0.25) 70%, rgba(255,255,255,0)); pointer-events: none; }
+      .card .ic, .card h3, .card .bar, .card .val, .card .chk { position: relative; z-index: 1; }
+      .card .st { z-index: 1; }
       .card .ic { width: 58px; height: 58px; margin: 0 auto; }
       .card .ic svg { width: 58px; height: 58px; fill: none; stroke: #F2F2F2; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
       .card h3 { margin-top: 20px; font-size: 47px; font-weight: 600; color: #F4F4F4; letter-spacing: -0.005em; white-space: nowrap; }

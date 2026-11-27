@@ -50,11 +50,14 @@
       bars += `<line x1="${x}" x2="${x}" y1="${Math.min(o, p) - 30 - r() * 40}" y2="${Math.max(o, p) + 30 + r() * 40}" stroke="${col}" stroke-width="3"/><rect x="${x - 10}" width="20" y="${Math.min(o, p)}" height="${Math.max(5, Math.abs(o - p))}" fill="${col}"/>`;
       if (i % 5 === 0) bars += `<rect x="2240" width="120" y="${120 + i * 20}" height="26" rx="4" fill="rgba(255,255,255,0.10)"/>`;
     }
+    for (let y = 80; y < 1080; y += 96) bars = `<line x1="0" x2="2400" y1="${y}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="2"/>` + bars;
+    for (let x = 140; x < 2400; x += 220) bars = `<line x1="${x}" x2="${x}" y1="0" y2="1080" stroke="rgba(255,255,255,0.04)" stroke-width="2"/>` + bars;
+    for (let y = 60; y < 1040; y += 70) bars += `<rect x="2250" width="${90 + (y % 3) * 14}" y="${y}" height="24" rx="4" fill="rgba(255,255,255,${y % 140 ? 0.09 : 0.14})"/>`;
     stage.innerHTML = `
       <div id="bg" class="layer"></div>
       <svg id="chartbg" viewBox="0 0 2400 1080">${bars}</svg>
       <div id="car">${CARDS.map(([t, ic, kind, fill, col, val, st], i) => `
-        <div class="card" id="c${i}"><div class="ic"><svg viewBox="0 0 58 58">${ICONS[ic]}</svg></div><h3>${t}</h3>
+        <div class="card" id="c${i}"><i class="tex"></i><i class="sheen"></i><i class="edge"></i><div class="ic"><svg viewBox="0 0 58 58">${ICONS[ic]}</svg></div><h3>${t}</h3>
           ${kind === "bar" ? `<div class="bar"><i id="b${i}" style="width:${fill * 100}%;background:${col}"></i></div><div class="val" id="v${i}">${val}</div>`
             : `<svg class="chk" viewBox="0 0 74 74"><circle cx="37" cy="37" r="30" fill="${GREEN}"/><path d="M24 38 L33 47 L51 28" fill="none" stroke="#1a1a1a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
           <div class="st" id="t${i}">${st}</div></div>`).join("")}</div>
@@ -67,7 +70,12 @@
       for (let i = 0; i < img.data.length; i += 4) { const v = 128 + (rr() + rr() + rr() - 1.5) * 110; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
       g.putImageData(img, 0, 0); return `url(${c.toDataURL("image/png")})`;
     });
-    $("#chartbg").style.filter = "blur(14px)"; $("#chartbg").style.opacity = "0.5";
+    $("#chartbg").style.filter = "blur(12px)"; $("#chartbg").style.opacity = "0.55";
+    // a fine monochrome grain for the panel surfaces
+    const fine = (() => { const c = document.createElement("canvas"); c.width = c.height = 180; const g = c.getContext("2d"), img = g.createImageData(180, 180), rr = rng(555);
+      for (let i = 0; i < img.data.length; i += 4) { const v = 128 + (rr() + rr() - 1) * 150; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
+      g.putImageData(img, 0, 0); return `url(${c.toDataURL("image/png")})`; })();
+    stage.querySelectorAll(".tex").forEach((e) => (e.style.backgroundImage = fine));
     const cards = CARDS.map((_, i) => $(`#c${i}`));
 
     // geometry, in the reference's proportions: neighbours at 0.74, the next out at 0.68, ~18 px between edges
@@ -102,6 +110,7 @@
         el.style.filter = `brightness(${mix(br, 1, q).toFixed(3)}) blur(${mix(bl, 0, q).toFixed(2)}px)`;
         const hl = Math.sin(Math.PI * span(f, 124 + i * 4.5, 140 + i * 4.5));
         el.style.setProperty("--hl", hl.toFixed(3));
+        el.querySelector(".sheen").style.backgroundPosition = `${(50 - x * 0.02).toFixed(1)}% 0`;
       });
       // Forex: its bar runs to full and turns Perps orange, the border lights orange, the status changes
       const bk = gHand(span(f, BOOST[0], BOOST[1]));
