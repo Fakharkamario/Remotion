@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps: pick your path</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "MD Nichrome"; src: url("assets/fonts/MDNichrome-Black.woff2") format("woff2"); font-weight: 900; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400 500; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #090C10; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #090C10; font-family: Altform, sans-serif; color: #EFF4FA; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+
+      /* ---------- part A: the path ---------- */
+      #aBg { inset: -400px 0; background:
+        radial-gradient(ellipse 40% 45% at 8% 92%, rgba(170,100,24,0.42), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 34% 40% at 50% 45%, rgba(60,40,18,0.30), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #07090d 0%, #0b0c0f 60%, #0e0b08 100%); }
+      .world { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+      .rail { position: absolute; left: -1px; top: -1400px; width: 2px; height: 2600px; background: linear-gradient(180deg, rgba(239,244,250,0) 0%, rgba(239,244,250,0.08) 20%, rgba(239,244,250,0.08) 80%, rgba(239,244,250,0) 100%); }
+      .line { position: absolute; left: -2px; width: 4px; border-radius: 4px; background: linear-gradient(180deg, #FFE7C2 0%, #F6A03A 6%, #D98613 100%);
+        box-shadow: 0 0 10px rgba(246,160,58,0.85), 0 0 34px rgba(236,139,27,0.45); }
+      .tip { position: absolute; left: -9px; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%; background: #FFF6E6;
+        box-shadow: 0 0 14px 4px rgba(255,230,190,0.95), 0 0 50px 14px rgba(246,160,58,0.6); }
+      .node { position: absolute; left: -8px; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: #F6A03A; border: 3px solid #2a1c0a; opacity: 0.35; }
+      .arm { position: absolute; height: 3px; width: 170px; margin-top: -1.5px; background: linear-gradient(90deg, #F6A03A, #D98613); box-shadow: 0 0 10px rgba(246,160,58,0.7); transform: scaleX(0); }
+      .arm.l { right: 0; transform-origin: 100% 50%; } .arm.r { left: 0; transform-origin: 0 50%; }
+      .tier { --lit: 0; position: absolute; width: 560px; height: 124px; display: flex; align-items: center; gap: 22px; padding: 0 28px; border-radius: 18px;
+        background: linear-gradient(160deg, rgba(36,38,44,0.92), rgba(16,17,21,0.92)); border: 1.5px solid rgba(239,244,250,0.08); opacity: calc(0.38 + 0.62 * var(--lit)); }
+      .tier.l { right: 170px; } .tier.r { left: 170px; }
+      .tier .hex { width: 70px; height: 70px; flex: none; }
+      .hex path { fill: rgba(239,244,250,0.04); stroke: rgba(239,244,250,0.35); stroke-width: 5; }
+      .hex text { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 40px; fill: rgba(239,244,250,0.6); }
+      .tier .tx small { display: block; font-size: 17px; letter-spacing: 0.22em; color: rgba(239,244,250,0.5); font-weight: 600; }
+      .tier .tx b { display: block; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 52px; line-height: 1; margin-top: 6px; color: rgba(239,244,250,0.55); letter-spacing: 0.01em; }
+      .tier .pill { margin-left: auto; align-self: flex-start; margin-top: 22px; font-size: 14px; font-weight: 600; letter-spacing: 0.14em; padding: 5px 12px; border-radius: 99px; border: 1.5px solid rgba(239,244,250,0.15); color: rgba(239,244,250,0.45); }
+      /* lit states, one light per card (the reference gives each tier its own colour) */
+      .tier.lit .tx b { color: #F4F7FA; }
+      .tier.silver.lit { border-color: rgba(220,228,238,0.55); box-shadow: 0 0 28px rgba(200,212,228,0.25), inset 0 0 30px rgba(200,212,228,0.08); background: linear-gradient(160deg, rgba(52,56,64,0.95), rgba(20,22,27,0.95)); }
+      .tier.silver.lit .hex path { stroke: #E8EDF3; fill: rgba(232,237,243,0.10); } .tier.silver.lit .hex text { fill: #F4F7FA; }
+      .tier.silver.lit .pill { color: #E8EDF3; border-color: rgba(232,237,243,0.5); }
+      .tier.orange.lit { border-color: rgba(246,160,58,0.75); box-shadow: 0 0 34px rgba(236,139,27,0.35), inset 0 0 30px rgba(236,139,27,0.12); background: linear-gradient(160deg, rgba(70,42,16,0.95), rgba(26,16,8,0.95)); }
+      .tier.orange.lit .hex path { stroke: #F6A03A; fill: rgba(236,139,27,0.16); } .tier.orange.lit .hex text { fill: #FFC27A; }
+      .tier.orange.lit .pill { color: #FFC27A; border-color: rgba(246,160,58,0.6); }
+      .tier.gold.lit { border-color: rgba(255,214,120,0.8); box-shadow: 0 0 40px rgba(255,196,90,0.38), inset 0 0 30px rgba(255,196,90,0.14); background: linear-gradient(160deg, rgba(78,58,20,0.96), rgba(30,22,8,0.96)); }
+      .tier.gold.lit .hex path { stroke: #FFD27A; fill: rgba(255,210,122,0.16); } .tier.gold.lit .hex text { fill: #FFE2A6; }
+      .tier.gold.lit .pill { color: #FFE2A6; border-color: rgba(255,214,120,0.65); }
+
+      .hero { --glow: 0.35; position: absolute; left: 0; width: 720px; height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 46px;
+        background: linear-gradient(170deg, rgba(64,44,22,0.92), rgba(22,16,10,0.94)); border: 2px solid rgba(255,210,150,0.35);
+        box-shadow: 0 0 calc(160px * var(--glow)) rgba(236,139,27, var(--glow)), inset 0 0 60px rgba(236,139,27,0.12), inset 0 2px 0 rgba(255,255,255,0.08); }
+      .hero .hbadge .hex { width: 112px; height: 112px; }
+      .hero .hex path { stroke: #FFC27A; stroke-width: 5; fill: rgba(236,139,27,0.18); }
+      .hero .hex text { fill: #FFE2A6; font-size: 46px; }
+      .htitle { margin-top: 10px; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 120px; line-height: 0.95; letter-spacing: 0.02em;
+        background: linear-gradient(180deg, #FFE7BF 0%, #FFC46E 42%, #E8890F 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .hsub { margin-top: 12px; font-size: 28px; color: rgba(239,244,250,0.75); }
+
+      /* ---------- part B: the challenge builder ---------- */
+      #bBg { background: radial-gradient(ellipse 60% 55% at 50% 45%, rgba(60,40,18,0.42), rgba(0,0,0,0) 72%), radial-gradient(ellipse 40% 40% at 90% 100%, rgba(170,96,20,0.30), rgba(0,0,0,0) 70%), #08090c; }
+      .cam { position: absolute; left: 50%; top: 50%; width: 1400px; height: 780px; transform-origin: 50% 50%; }
+      .panel { position: absolute; inset: 0; border-radius: 30px; background: linear-gradient(165deg, rgba(30,30,33,0.98), rgba(16,16,19,0.98)); border: 1.5px solid rgba(239,244,250,0.09);
+        box-shadow: 0 50px 120px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06); padding: 44px 50px; }
+      .ph { display: flex; justify-content: space-between; align-items: flex-end; }
+      .ph small { font-size: 17px; letter-spacing: 0.22em; color: #8D9197; font-weight: 600; }
+      .ph h1 { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 64px; line-height: 1; margin-top: 8px; letter-spacing: 0.01em; }
+      .seg { display: flex; gap: 6px; padding: 6px; border-radius: 16px; background: rgba(239,244,250,0.05); border: 1.5px solid rgba(239,244,250,0.08); }
+      .seg span { padding: 12px 26px; border-radius: 12px; font-size: 21px; font-weight: 600; color: #8D9197; }
+      .seg span.on { background: linear-gradient(180deg, #F8B14E, #E8890F); color: #1a1006; }
+      .pb { display: flex; gap: 40px; margin-top: 36px; }
+      .opts { flex: 1.45; }
+      .sizes small { font-size: 18px; color: #8D9197; }
+      .sizes div { display: flex; gap: 10px; margin: 10px 0 18px; }
+      .sizes span { padding: 10px 18px; border-radius: 12px; border: 1.5px solid rgba(239,244,250,0.1); font-size: 20px; font-weight: 600; color: #B9BDC3; }
+      .sizes span.on { border-color: rgba(246,160,58,0.8); color: #FFC27A; background: rgba(236,139,27,0.12); }
+      .row { --hl: 0; display: flex; justify-content: space-between; align-items: center; height: 82px; margin-bottom: 10px; padding: 0 22px; border-radius: 16px;
+        background: rgba(239,244,250, calc(0.03 + 0.05 * var(--hl))); border: 1.5px solid rgba(246,160,58, calc(0.06 + 0.5 * var(--hl))); }
+      .row b { display: block; font-size: 24px; font-weight: 600; } .row small { display: block; font-size: 17px; color: #8D9197; margin-top: 4px; }
+      .tog { --k: 0; position: relative; width: 76px; height: 42px; border-radius: 42px; flex: none;
+        background: rgb(calc(52 + 184 * var(--k)), calc(54 + 85 * var(--k)), calc(58 - 31 * var(--k))); box-shadow: 0 0 calc(22px * var(--k)) rgba(236,139,27,0.6); }
+      .tog i { position: absolute; top: 4px; left: calc(4px + 34px * var(--k)); width: 34px; height: 34px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+      #tog3 { --k: 1; }
+      .sum { flex: 1; border-radius: 22px; padding: 30px 32px; background: linear-gradient(170deg, rgba(56,38,18,0.9), rgba(24,17,10,0.9)); border: 1.5px solid rgba(246,160,58,0.28); }
+      .sum > small { font-size: 18px; color: #C9B49A; }
+      .sname { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 54px; margin: 6px 0 18px; }
+      .sline { display: flex; justify-content: space-between; font-size: 21px; padding: 11px 0; border-bottom: 1px solid rgba(239,244,250,0.07); color: #B9BDC3; }
+      .sline b { color: #F4F0EA; font-weight: 600; }
+      .price { display: flex; justify-content: space-between; align-items: baseline; margin: 20px 0 22px; }
+      .price small { font-size: 20px; color: #C9B49A; }
+      .price b { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 64px; color: #FFC27A; display: inline-block; transform-origin: 100% 70%; }
+      .go { text-align: center; padding: 20px; border-radius: 16px; background: linear-gradient(180deg, #F8B14E, #E8890F); color: #1a1006; font-size: 24px; font-weight: 700; }
+      .cursor { position: absolute; left: 700px; top: 390px; width: 46px; height: 46px; margin: -4px 0 0 -6px; transform-origin: 6px 4px; }
+      .cursor path { fill: #fff; stroke: #111; stroke-width: 1.4; } .cursor svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+      #flash { mix-blend-mode: screen; opacity: 0; background: linear-gradient(105deg, rgba(0,0,0,0) 30%, rgba(255,214,150,0.55) 46%, rgba(255,246,228,0.9) 50%, rgba(255,214,150,0.55) 54%, rgba(0,0,0,0) 70%); background-size: 260% 100%; }
+
+      #vig { background: radial-gradient(ellipse 80% 82% at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.65) 100%); pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.11; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="7.333333" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:'MD Nichrome';font-weight:900">Aa</span><span style="font-weight:400">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.m4a" data-start="0" data-duration="7.333333" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
