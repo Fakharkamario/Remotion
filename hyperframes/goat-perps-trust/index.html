@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps: trust</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "MD Nichrome"; src: url("assets/fonts/MDNichrome-Black.woff2") format("woff2"); font-weight: 900; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400 500; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #050608; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #050608; font-family: Altform, sans-serif; color: #EDEFF2; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+      .shot { position: absolute; inset: 0; overflow: hidden; }
+      /* reference grade: warm gold from the upper left, a cool steel lift low right, deep black between */
+      .bgw { background:
+        radial-gradient(ellipse 55% 50% at 18% 8%, rgba(150,110,30,0.40), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 50% 45% at 98% 100%, rgba(28,58,92,0.50), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #07080A 0%, #050608 100%); }
+      .bgw2 { background:
+        radial-gradient(ellipse 60% 50% at 30% 110%, rgba(150,104,24,0.45), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 45% 40% at 80% 0%, rgba(60,46,18,0.40), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #08070A 0%, #060505 100%); }
+
+      /* ---- shot 1: gold rods and a typed line ---- */
+      .rod { position: absolute; left: 0; top: 0; width: 56px; height: 360px; transform-origin: 50% 50%; }
+      .rod .bd { position: absolute; inset: 40px 0 0 0; border-radius: 4px;
+        background: linear-gradient(90deg, #6d4c0c 0%, #F6D77A 30%, #FFF2C4 42%, #D7A82B 62%, #7a560f 100%); box-shadow: 0 0 30px rgba(246,200,90,0.25); }
+      .rod .tp { position: absolute; left: 0; top: 0; width: 56px; height: 44px; clip-path: polygon(50% 0, 100% 100%, 0 100%);
+        background: linear-gradient(90deg, #8a6a2a, #F1E2B8 45%, #9a7a3a); }
+      .rod.silver .bd { background: linear-gradient(90deg, #4c5157 0%, #DDE1E6 32%, #FFFFFF 44%, #A7ADB5 64%, #4a4f56 100%); box-shadow: 0 0 24px rgba(220,230,245,0.18); }
+      .dust { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: rgba(255,226,160,0.6); }
+      #line1 { position: absolute; left: 50%; top: 50%; display: flex; align-items: center; gap: 26px; transform: translate(-50%, -50%); white-space: nowrap; }
+      #line1 .w { font-size: 66px; font-weight: 400; letter-spacing: 0.005em; }
+      #line1 .w span { display: inline-block; }
+      #logoW { display: flex; align-items: center; gap: 20px; }
+      #logoW img { height: 78px; }
+      #logoW b { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 70px; color: #F7F5F0; letter-spacing: 0.01em; line-height: 1; }
+      #flash { background: radial-gradient(ellipse 70% 70% at 50% 50%, rgba(255,248,228,1), rgba(246,212,130,0.85) 60%, rgba(200,150,50,0.6)); opacity: 0; pointer-events: none; }
+
+      /* ---- shot 2: the product card ---- */
+      .persp { position: absolute; inset: 0; perspective: 1700px; }
+      #card2 { position: absolute; left: 50%; top: 50%; width: 880px; margin: -260px 0 0 -440px; padding: 40px 46px 44px; border-radius: 26px; transform-style: preserve-3d;
+        background: linear-gradient(170deg, rgba(42,44,50,0.96), rgba(22,23,27,0.97)); border: 1.5px solid rgba(220,230,245,0.14);
+        box-shadow: 0 60px 140px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08); }
+      #card2 small { font-size: 18px; letter-spacing: 0.24em; color: #A9AFB7; font-weight: 600; }
+      #card2 h2 { font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 74px; line-height: 1; margin: 12px 0 30px; color: #F6F3EC; }
+      #card2 h2 em { font-style: normal; background: linear-gradient(180deg, #FFE9A8, #F2C14E 55%, #C9921E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .tabs { position: relative; display: flex; padding: 6px; border-radius: 14px; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.06); }
+      .tabs span { position: relative; z-index: 1; flex: 1; text-align: center; padding: 14px 0; font-size: 22px; font-weight: 600; color: #A9AFB7; }
+      .tabs .knob { position: absolute; top: 6px; bottom: 6px; border-radius: 10px; background: linear-gradient(180deg, #F8D873, #E0B53A); box-shadow: 0 6px 20px rgba(215,170,43,0.35), inset 0 1px 0 rgba(255,255,255,0.6); }
+      .val { position: relative; height: 130px; margin-top: 26px; }
+      .val div { position: absolute; left: 0; right: 0; text-align: center; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 108px; line-height: 130px;
+        background: linear-gradient(180deg, #FFE9A8, #F2C14E 55%, #C9921E); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .btn2 { display: block; width: 300px; margin: 22px auto 0; text-align: center; padding: 18px 0; border-radius: 14px; font-size: 22px; font-weight: 600; color: #1C1604;
+        background: linear-gradient(180deg, #F8D873, #E0B53A); box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 10px 30px rgba(215,170,43,0.25); }
+
+      /* ---- shot 3: people cards that arrive white-hot and cool ---- */
+      .pc { position: absolute; left: 50%; top: 50%; width: 330px; height: 440px; margin: -250px 0 0 -165px; }
+      .pc .fr { position: absolute; inset: 0; clip-path: polygon(0 0, 78% 0, 100% 13%, 100% 100%, 16% 100%, 0 89%); background: #101114; }
+      .pc img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+      .pc .tint { position: absolute; inset: 0; mix-blend-mode: color; }
+      .pc .rim { position: absolute; inset: -2px; clip-path: polygon(0 0, 78% 0, 100% 13%, 100% 100%, 16% 100%, 0 89%); }
+      .pc small { position: absolute; left: 18px; top: 16px; font-size: 15px; letter-spacing: 0.2em; font-weight: 600; color: rgba(255,255,255,0.75); z-index: 2; }
+
+      /* ---- the stat toggle (the reference's PRIVATE / OPEN switch) ---- */
+      .tg { position: absolute; left: 50%; display: flex; padding: 8px; border-radius: 99px; transform: translateX(-50%); white-space: nowrap;
+        background: linear-gradient(180deg, rgba(48,50,56,0.95), rgba(24,25,29,0.95)); border: 1.5px solid rgba(220,230,245,0.16); box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08); }
+      .tg span { position: relative; z-index: 1; padding: 16px 40px; font-size: 40px; font-weight: 600; letter-spacing: 0.02em; color: #C9CDD3; line-height: 1; }
+      .tg .knob { position: absolute; top: 8px; bottom: 8px; border-radius: 99px; }
+      .tg .knob.w { background: linear-gradient(180deg, #FFFFFF, #D9DCE1); box-shadow: inset 0 1px 0 #fff, 0 6px 18px rgba(0,0,0,0.4); }
+      .tg .knob.g { background: linear-gradient(180deg, #FBDD7E, #E2B43A); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 0 36px rgba(242,193,78,0.55); }
+      .tg .stars { display: inline-flex; gap: 6px; margin-right: 14px; vertical-align: -3px; }
+      .tg .stars i { position: relative; width: 34px; height: 34px; display: inline-block; }
+      .tg .stars svg { position: absolute; inset: 0; width: 34px; height: 34px; }
+
+      /* ---- shot 4: a heavy dark figure that dissolves to gold ---- */
+      #big4, #gold4 { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 380px; line-height: 1; white-space: nowrap; letter-spacing: 0.005em; }
+      #big4 { color: #1A1C21; background: linear-gradient(180deg, #3A3E46 0%, #1B1D22 45%, #0E0F12 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 2px 0 #2b2e35) drop-shadow(0 4px 0 #202227) drop-shadow(0 6px 0 #17181c) drop-shadow(0 10px 0 #111215) drop-shadow(0 40px 60px rgba(0,0,0,0.8)); }
+      #gold4 { background: linear-gradient(180deg, #FFF3CC 0%, #F6D06A 35%, #E0A92E 65%, #8F5F10 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 0 30px rgba(242,193,78,0.55)) drop-shadow(0 6px 0 #6b4609); }
+      #cap4 { position: absolute; left: 50%; top: 232px; transform: translateX(-50%); font-size: 26px; letter-spacing: 0.32em; font-weight: 600; color: rgba(237,239,242,0.6); white-space: nowrap; }
+
+      /* ---- shot 5: the crowd ---- */
+      .ppl { position: absolute; left: 50%; bottom: -40px; transform-origin: 50% 100%; }
+      .ppl { isolation: isolate; -webkit-mask-image: radial-gradient(ellipse 52% 62% at 50% 36%, #000 40%, transparent 78%); mask-image: radial-gradient(ellipse 52% 62% at 50% 36%, #000 40%, transparent 78%); }
+      .ppl img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+      .ppl .heat { position: absolute; inset: 0; mix-blend-mode: color-dodge; background: radial-gradient(ellipse 70% 70% at 50% 40%, #FFE2A0, #F2B640 70%); opacity: 0; }
+
+      #vig { background: radial-gradient(ellipse 80% 82% at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.13; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="12.1" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:'MD Nichrome';font-weight:900">Aa</span><span style="font-weight:400">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.m4a" data-start="0" data-duration="12.1" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
