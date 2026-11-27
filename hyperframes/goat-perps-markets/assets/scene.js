@@ -87,8 +87,10 @@
   // the finished line holds, and flares toward white as the camera starts to move off it.
   const HW = 1500, HH = 380;
   function makeHeadline() {
-    const c = document.createElement("canvas"); c.width = HW; c.height = HH; const g = c.getContext("2d");
-    const final = document.createElement("canvas"); final.width = HW; final.height = HH; const fg = final.getContext("2d");
+    // drawn at twice the size so the finished type stays crisp on screen
+    const SS = 2;
+    const c = document.createElement("canvas"); c.width = HW * SS; c.height = HH * SS; const g = c.getContext("2d"); g.scale(SS, SS);
+    const final = document.createElement("canvas"); final.width = HW * SS; final.height = HH * SS; const fg = final.getContext("2d"); fg.scale(SS, SS);
     const lines = [{ y: 150, size: 128, w: 500, segs: [["100+", ORANGE], [" perpetual", "#F4EEE6"]] },
                    { y: 300, size: 92, w: 400, segs: [["markets in ", "#F4EEE6"], ["one place", ORANGE]] }];
     const words = [];
@@ -104,16 +106,16 @@
         x += fg.measureText(txt).width;
       });
     });
-    const img = fg.getImageData(0, 0, HW, HH).data;
+    const img = fg.getImageData(0, 0, HW * SS, HH * SS).data;
     const cell = 6, cells = [];
     for (let y = 0; y < HH; y += cell) for (let x = 0; x < HW; x += cell) {
-      let a = 0; for (let k = 0; k < 4; k++) a += img[((y + (k >> 1) * 3) * HW + x + (k & 1) * 3) * 4 + 3];
+      let a = 0; for (let k = 0; k < 4; k++) a += img[(((y + (k >> 1) * 3) * SS) * HW * SS + (x + (k & 1) * 3) * SS) * 4 + 3];
       if (a > 80) cells.push([x, y]);
     }
     words.forEach((w, i) => { w.t0 = HEAD_IN + i * 4.2; w.t1 = w.t0 + 13; });
     // glow: the frame blurred and added back under itself, as the reference's pixels and type bloom
-    const gc = document.createElement("canvas"); gc.width = HW; gc.height = HH; const gg = gc.getContext("2d");
-    const tex = new THREE.CanvasTexture(gc);
+    const gc = document.createElement("canvas"); gc.width = HW * SS; gc.height = HH * SS; const gg = gc.getContext("2d");
+    const tex = new THREE.CanvasTexture(gc); tex.anisotropy = 8;
     const wordOf = (x, y) => words.find((w) => x >= w.x0 - 2 && x <= w.x1 + 2 && y >= w.y0 - 4 && y <= w.y1 + 4);
     const cellWord = cells.map(([x, y]) => wordOf(x, y));
     function draw(f) {
@@ -125,10 +127,17 @@
         const w = cellWord[i]; if (!w) return;
         const u = (x - w.x0) / (w.x1 - w.x0 + 1), n = ((x * 73856093) ^ (y * 19349663)) >>> 0, jitter = ((n % 1000) / 1000 - 0.5) * 0.35;
         const p = (f - w.t0) / (w.t1 - w.t0) - u - jitter;
-        if (p > 0.25) g.drawImage(final, x, y, cell, cell, x, y, cell, cell);
+        if ((f - w.t0) / (w.t1 - w.t0) > 1.5) return; // finished words are drawn whole below, as smooth type
+        if (p > 0.25) g.drawImage(final, x * SS, y * SS, cell * SS, cell * SS, x, y, cell, cell);
         else if (p > -0.35) { // the build front: hot orange pixels, flickering
           if (r() < 0.85) { g.fillStyle = r() < 0.35 ? "#FFE9CC" : HOT; g.fillRect(x, y, cell - 1, cell - 1); }
         } else if (p > -0.9 && r() < 0.1) { g.fillStyle = "rgba(246,160,58,0.8)"; g.fillRect(x, y, cell - 1, cell - 1); }
+      });
+      // finished words: the type itself, whole and anti-aliased (no pixel blocks left on the edges)
+      words.forEach((w) => {
+        if ((f - w.t0) / (w.t1 - w.t0) <= 1.5) return;
+        const x0 = w.x0 - 14, y0 = w.y0 - 14, ww = w.x1 - w.x0 + 28, hh = (w.y1 - w.y0) + 50;
+        g.drawImage(final, x0 * SS, y0 * SS, ww * SS, hh * SS, x0, y0, ww, hh);
       });
       g.restore();
       // dashed selection boxes around words while they build
@@ -141,10 +150,10 @@
         g.strokeRect(w.x0 - 10, w.y0 - 8, (w.x1 - w.x0 + 20) * Math.max(0.25, grow), w.y1 - w.y0 + 16);
       });
       g.restore();
-      gg.clearRect(0, 0, HW, HH);
+      gg.clearRect(0, 0, HW * SS, HH * SS);
       gg.globalCompositeOperation = "lighter";
-      gg.filter = "blur(14px)"; gg.globalAlpha = 0.75; gg.drawImage(c, 0, 0);
-      gg.filter = "blur(4px)"; gg.globalAlpha = 0.6; gg.drawImage(c, 0, 0);
+      gg.filter = "blur(28px)"; gg.globalAlpha = 0.75; gg.drawImage(c, 0, 0);
+      gg.filter = "blur(8px)"; gg.globalAlpha = 0.6; gg.drawImage(c, 0, 0);
       gg.filter = "none"; gg.globalAlpha = 1; gg.globalCompositeOperation = "source-over"; gg.drawImage(c, 0, 0);
       tex.needsUpdate = true;
     }
@@ -213,7 +222,7 @@
       for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.6), new THREE.MeshBasicMaterial({ map: dt, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
         const a = -1 + r() * 12; m.position.set(a, a * 0.43 + (r() - 0.5) * 5, -2.5 - r() * 4); scene.add(m); }
       head = makeHeadline();
-      headMesh = new THREE.Mesh(new THREE.PlaneGeometry(HW / 560, HH / 560), new THREE.MeshBasicMaterial({ map: head.tex, transparent: true, depthWrite: true, alphaTest: 0.04 }));
+      headMesh = new THREE.Mesh(new THREE.PlaneGeometry(HW / 560, HH / 560), new THREE.MeshBasicMaterial({ map: head.tex, transparent: true, depthWrite: true, alphaTest: 0.005 }));
       headMesh.position.set(...HEADP); scene.add(headMesh);
 
       const mk = () => { const t = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType }); t.depthTexture = new THREE.DepthTexture(W, H); t.depthTexture.type = THREE.UnsignedIntType; return t; };
