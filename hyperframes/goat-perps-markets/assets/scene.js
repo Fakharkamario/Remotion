@@ -19,9 +19,9 @@
 
   // ---------------- timing (frames), from the voiceover's word times ----------------
   // crypto 3.00 s, forex 3.80, indices 4.46, commodities 5.08, stocks 5.82, "all in one place" 6.64
-  const HEAD_IN = 9, HEAD_DONE = 40, HEAD_FLARE = 66;
-  const LAND = [88, 112, 131, 150, 172]; // each card is settled just before its word (as in the reference)
-  const MOVE = 11;                        // frames a camera move between cards takes
+  const HEAD_IN = 9, HEAD_DONE = 40, HEAD_FLARE = 72;
+  const LAND = [90, 114, 134, 152, 175]; // the camera whips onto each card on its spoken word (as in the reference)
+  const MOVE = 6;                         // half-width of a switch, for the card brightness ramps
   const PULL = [192, 222];                // "all in one place": the camera draws back over the whole set
 
   // ---------------- textures ----------------
@@ -233,22 +233,23 @@
     // ease-in-out; between moves the camera keeps drifting slowly up and to the right, as in the reference.
     const DIST = 3.8;
     const targets = [[HEADP[0] + 0.15, HEADP[1] - 0.1, HEADP[2]], ...CP];
+    // Measured on the reference: the camera never stops. It slides slowly, speeds up sharply into each switch,
+    // whips across on the spoken word, then decelerates along a long tail that is already the slow slide toward
+    // the next card. A Cauchy-shaped speed profile per switch (speed ~ 1 / (1 + (t/tau)^2)) gives exactly that:
+    // summed over the switches it is one continuous move with a sharp peak on each word.
+    const TAU = 1.3;
+    const step = (x) => 0.5 + Math.atan(x / TAU) / Math.PI;
+    const u0 = LAND.reduce((a, T) => a + step(-T), 0);
     const tAt = (f) => {
-      let i = 0; const starts = LAND.map((l) => l - MOVE);
-      let p = targets[0].slice(), q;
-      for (let k = 0; k < LAND.length; k++) {
-        if (f >= starts[k]) { q = targets[k + 1]; const e = ease(span(f, starts[k], LAND[k])); p = targets[k].map((v, j) => mix(v, q[j], e)); i = k + 1; }
-      }
-      // the slow drift (reference: the settled card keeps sliding right and up a little)
-      // continuous drift over the whole clip (resetting it at each move made the card jump a few pixels)
-      const since = Math.max(0, f - LAND[0]);
-      p[0] += 0.0015 * Math.min(f, starts[0]) - 0.006 * since; p[1] += 0.003 * since;
-      return p;
+      let u = LAND.reduce((a, T) => a + step(f - T), 0) - u0;
+      u = clamp(u, 0, targets.length - 1);
+      const i = Math.min(Math.floor(u), targets.length - 2), k = u - i;
+      return targets[i].map((v, j) => mix(v, targets[i + 1][j], k));
     };
     function camAt(f) {
       let t = tAt(f), d = DIST;
       // the headline shot pushes in gently while it builds
-      d -= 0.35 * span(f, 0, LAND[0] - MOVE);
+      d -= 0.35 * span(f, 0, LAND[0]);
       // "all in one place": draw back over the whole set
       const k = ease(span(f, PULL[0], PULL[1]));
       if (k > 0) { const mid = [5.4, 0.9, 0]; t = t.map((v, j) => mix(v, mid[j], k)); d = mix(d, 9.6, k); }
@@ -265,7 +266,7 @@
       headMesh.material.color.setScalar(1 + 1.4 * fl);
       // the main cards: the one being shown is bright; earlier ones dim as they slide away
       mainCards.forEach((c, i) => {
-        const on = span(f, LAND[i] - MOVE - 2, LAND[i] - 2), off = i < LAND.length - 1 ? span(f, LAND[i + 1] - MOVE, LAND[i + 1]) : 0;
+        const on = span(f, LAND[i] - MOVE, LAND[i] + 2), off = i < LAND.length - 1 ? span(f, LAND[i + 1] - 2, LAND[i + 1] + MOVE) : 0;
         const all = span(f, PULL[0], PULL[1]);
         c.userData.body.material.color.setScalar(mix(0.55, 1.0, Math.max(on * (1 - off * 0.55), all)));
         c.position.y = CP[i][1] + Math.sin(f * 0.045 + i) * 0.015;
@@ -274,7 +275,7 @@
 
       // motion blur: sample the camera over a 180-degree shutter; more samples while it is moving fast
       const c0 = camAt(f), c1 = camAt(f + 0.5), speed = Math.hypot(c1.pos[0] - c0.pos[0], c1.pos[1] - c0.pos[1], c1.pos[2] - c0.pos[2]);
-      const N = speed > 0.02 ? 12 : speed > 0.004 ? 5 : 1;
+      const N = clamp(Math.ceil(speed / 0.0025), 1, 16); // enough sub-frames that the blur never steps
       R.setRenderTarget(rtA); R.setClearColor(0, 1); R.clear();
       accMat.uniforms.k.value = 1 / N;
       for (let s = 0; s < N; s++) {
