@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps: leverage</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "MD Nichrome"; src: url("assets/fonts/MDNichrome-Black.woff2") format("woff2"); font-weight: 900; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400 500; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #050403; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #050403; font-family: Altform, sans-serif; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+
+      /* ---------- section A: the counter (reference: near black, gold haze from the upper left) ---------- */
+      #aWorld { transform-origin: 50% 45%; }
+      #aBg { inset: -1600px -200px -200px -200px; background:
+        radial-gradient(ellipse 34% 30% at 22% 62%, rgba(92,58,16,0.55), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 30% 24% at 50% 64%, rgba(70,44,12,0.35), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #060503 0%, #0a0805 70%, #050403 100%); }
+      .ghosttext { position: absolute; left: 820px; top: 690px; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 120px; color: rgba(255,200,140,0.04); white-space: nowrap; filter: blur(1.5px); }
+      .dots { position: absolute; left: 0; top: 0; mix-blend-mode: screen; filter: blur(0.5px) drop-shadow(0 0 8px rgba(246,160,58,0.7)); }
+      #dots2 { opacity: 0.55; filter: blur(2px); } #dots3 { opacity: 0.4; filter: blur(3px); }
+      .card3d { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; }
+      .card3d.far { filter: blur(1.2px); opacity: 0.85; }
+      .tk { width: 600px; padding: 26px 28px 24px; border-radius: 26px; background: linear-gradient(160deg, rgba(40,36,30,0.96), rgba(18,16,13,0.96)); border: 1.5px solid rgba(255,220,180,0.10);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06); color: #EFE9E1; font-family: Altform, sans-serif; }
+      .tk-h { display: flex; align-items: center; gap: 12px; font-size: 22px; }
+      .tk-h b { font-weight: 600; }
+      .tk-ic { width: 34px; height: 34px; border-radius: 10px; background: rgba(236,139,27,0.2); color: #F6A03A; display: grid; place-items: center; font-weight: 600; font-size: 18px; }
+      .tk-pill { font-size: 15px; font-weight: 600; padding: 4px 12px; border-radius: 99px; }
+      .tk-pill.up { background: rgba(54,196,110,0.18); color: #5BE08F; } .tk-pill.dn { background: rgba(255,117,106,0.16); color: #FF8A80; }
+      .tk-live { margin-left: auto; font-size: 15px; font-weight: 600; padding: 5px 14px; border-radius: 99px; background: #E5312A; color: #fff; }
+      .tk-r { display: flex; gap: 46px; margin-top: 24px; }
+      .tk-r small { display: block; font-size: 16px; color: #8F8A83; margin-bottom: 6px; }
+      .tk-r b { font-size: 26px; font-weight: 600; } .tk-r b.or { color: #F6A03A; }
+      .tk-slider { position: relative; height: 6px; margin: 26px 4px 6px; border-radius: 6px; background: rgba(255,255,255,0.08); }
+      .tk-slider i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, #8a4a0a, #F6A03A); }
+      .tk-slider em { position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: #FFE3BF; box-shadow: 0 0 14px rgba(246,160,58,0.8); }
+      .tk-b { display: flex; gap: 12px; margin-top: 24px; font-size: 17px; }
+      .tk-b span { padding: 10px 18px; border-radius: 99px; }
+      .tk-b .ghost { border: 1.5px solid rgba(255,255,255,0.12); color: #CFC8BF; }
+      .tk-b .go { margin-left: auto; background: linear-gradient(180deg, #F8B14E, #E8890F); color: #1a1006; font-weight: 600; }
+      .tk.sm { transform: scale(0.9); }
+
+      .counter { position: absolute; left: 0; right: 0; top: 250px; display: flex; flex-direction: column; align-items: center; }
+      .counter .num { display: flex; align-items: flex-start; font-family: Altform, sans-serif; font-weight: 600; font-size: 330px; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; transform-origin: 50% 60%;
+        filter: drop-shadow(0 0 26px rgba(246,160,58,0.28)); }
+      .counter .num span { background: linear-gradient(180deg, #FFF1D6 0%, #FFD28A 26%, #F6A03A 52%, #B9650F 74%, #FFD79A 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .counter .num .x { font-size: 150px; margin: 60px 0 0 8px; letter-spacing: 0; }
+      .chip { margin-top: 26px; padding: 12px 24px; border-radius: 99px; background: rgba(28,22,15,0.92); border: 1.5px solid rgba(255,220,180,0.10);
+        font-family: Altform, sans-serif; font-weight: 600; font-size: 24px; letter-spacing: 0.06em; color: #F2ECE4; }
+      .chip span { color: #F6A03A; margin: 0 4px; }
+
+      /* ---------- section B: dark room, Perps orange pooling up from the floor ---------- */
+      #bBg { background:
+        radial-gradient(ellipse 80% 30% at 50% 106%, rgba(255,150,40,1) 0%, rgba(236,120,20,0.85) 30%, rgba(150,60,8,0.4) 60%, rgba(0,0,0,0) 85%),
+        radial-gradient(ellipse 50% 50% at 50% 62%, rgba(110,52,8,0.32), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #050302 0%, #0b0603 55%, #160a03 100%); }
+      #bars { mix-blend-mode: screen; filter: blur(2px); }
+      .candle { position: absolute; left: 0; top: 0; width: 120px; height: 300px; transform-style: preserve-3d; transform-origin: 50% 50%; }
+      .candle .wick { position: absolute; left: 56px; top: -90px; width: 8px; height: 480px; border-radius: 4px; }
+      .candle .body { position: absolute; left: 0; top: 0; width: 120px; height: 300px; transform-style: preserve-3d; }
+      .candle .body s { position: absolute; display: block; }
+      .candle .f { inset: 0; transform: translateZ(30px); border-radius: 4px; }
+      .candle .s { left: 0; top: 0; width: 60px; height: 300px; transform-origin: 0 50%; transform: rotateY(-90deg) translateX(-30px); }
+      .candle .t { left: 0; top: 0; width: 120px; height: 60px; transform-origin: 50% 0; transform: rotateX(90deg) translateY(-30px); }
+      .candle.orange .wick { background: linear-gradient(90deg, #7a3a06, #F6A03A, #7a3a06); }
+      .candle.orange .f { background: linear-gradient(120deg, #FFB858 0%, #EC8B1B 45%, #9A4E08 100%); }
+      .candle.orange .s { background: linear-gradient(90deg, #6a3205, #B8650F); } .candle.orange .t { background: #FFC97E; }
+      .candle.white .wick { background: linear-gradient(90deg, #6d7178, #F4F6F8, #6d7178); }
+      .candle.white .f { background: linear-gradient(120deg, #FFFFFF 0%, #D7DBE0 45%, #858B93 100%); }
+      .candle.white .s { background: linear-gradient(90deg, #5d626a, #A8AEB6); } .candle.white .t { background: #F7F8FA; }
+      .pillwrap { position: absolute; left: 50%; top: 47%; display: flex; flex-direction: column; align-items: center; }
+      .pill { padding: 8px 30px 4px; border-radius: 18px; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 86px; line-height: 1.05; color: #fff; letter-spacing: 0.01em;
+        background: linear-gradient(180deg, #FFB64E 0%, #EC8B1B 48%, #C0650A 100%); box-shadow: 0 0 60px rgba(236,139,27,0.45), inset 0 2px 0 rgba(255,255,255,0.45), inset 0 -3px 0 rgba(0,0,0,0.25);
+        text-shadow: 0 2px 0 rgba(120,50,0,0.45); }
+      .sub { margin-top: 16px; font-family: Altform, sans-serif; font-weight: 600; font-size: 46px; letter-spacing: 0.04em; color: #F4EEE6; text-shadow: 0 0 24px rgba(255,200,140,0.25); }
+      .wipe { position: absolute; left: 50%; top: 47%; width: 46px; height: 460px; margin-left: -23px; border-radius: 30px; mix-blend-mode: screen;
+        background: linear-gradient(90deg, rgba(255,240,220,0), rgba(255,246,236,0.95) 50%, rgba(255,240,220,0)); filter: blur(6px); box-shadow: 0 0 60px rgba(255,220,180,0.6); opacity: 0; }
+      .tumble { position: absolute; left: 50%; top: 52%; white-space: nowrap; perspective: 1100px; font-family: "MD Nichrome", sans-serif; font-weight: 900; font-size: 220px; line-height: 1; transform-origin: 50% 50%; }
+      .tumble span { display: inline-block; transform-origin: 50% 70%; }
+      .tumble .sp { width: 0.2em; }
+      .tumble .acc { background: linear-gradient(180deg, #FFD9A6 0%, #F6A03A 46%, #B8650F 80%, #FFC27A 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 18px rgba(236,139,27,0.35)); }
+      .tumble .chrome { background: linear-gradient(180deg, #FFFFFF 0%, #E9ECEF 40%, #9BA1A9 70%, #E2E5E9 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+      #vig { background: radial-gradient(ellipse 80% 82% at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.12; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="4.966667" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:'MD Nichrome';font-weight:900">Aa</span><span style="font-weight:400">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.m4a" data-start="0" data-duration="4.966667" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
