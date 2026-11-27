@@ -1,6 +1,9 @@
 # GOAT Funded Perps logo reveal (HyperFrames)
 
-A 1.1 s, 1920x1080 / 30 fps clip (33 frames), copied frame by frame from the supplied reference logo reveal.
+A 1.8 s, 1920x1080 / 30 fps clip (54 frames) built on the supplied reference logo reveal, played slower and smoother:
+the shield swings in on one continuous ease-out (output frames 2-22) between its entry and settled poses, the
+white-hot flare swells and fades over frames 5-23, and the reference's settle (its frames 7-32) glides out over
+frames 22-53. The poses themselves are solved from the reference, as below.
 
 The shield's position and rotation are solved per frame from the reference (`tools/`): the reference logo's
 silhouette is extracted on every frame (plate-subtracted, holes filled), and our extruded shield's silhouette is

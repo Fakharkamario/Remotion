@@ -1,7 +1,7 @@
-// GOAT Funded Perps logo reveal, standalone (33 frames @ 30 fps = 1.1 s), rebuilt from the supplied reference clip.
+// GOAT Funded Perps logo reveal, standalone (54 frames @ 30 fps = 1.8 s), rebuilt from the supplied reference clip.
 // The shield and its motion live in logo.js; this file runs the timeline and the room around it.
 (function () {
-  const FPS = 30, FRAMES = 33;
+  const FPS = 30, FRAMES = 54;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   const SCENE = {};
