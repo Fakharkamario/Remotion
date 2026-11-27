@@ -10,7 +10,7 @@ rewards paid out, rated 4.7 by over 17,000 traders."
 
 | frames  | beat |
 |---------|------|
-| 0–48    | "Backed by" types on through gold, the GFT mark and GOAT FUNDED wordmark wipe in; gold and silver rods drift; a warm flash cuts |
+| 0–48    | "Backed by" types on through gold, the GOAT shield mark and GOAT FUNDED wordmark wipe in; gold and silver rods drift; a warm flash cuts |
 | 48–98   | the "3+ YEARS IN BUSINESS" card tumbles in and steps its tabs 2023 → 2026 |
 | 98–166  | three people cards (from the brand guide's photography) arrive white-hot and cool; TRADERS 1.1M+ counts up |
 | 166–256 | a heavy dark $33M+ counts up; on "paid out" the switch flips PENDING → PAID OUT and the figure dissolves to gold |

@@ -41,7 +41,7 @@
         <div class="rod silver" id="rodB"><div class="bd"></div><div class="tp"></div></div>
         <div class="rod" id="rodC"><div class="bd"></div><div class="tp"></div></div>
         <div id="line1"><div class="w" id="w1">${[...LINE].map((c) => `<span>${c === " " ? "&nbsp;" : c}</span>`).join("")}</div>
-          <div id="logoW"><img src="assets/gft-logo-white.png" alt=""/><b>GOAT FUNDED</b></div></div>
+          <div id="logoW"><img src="assets/gf-shield.svg" alt=""/><b>GOAT FUNDED</b></div></div>
       </div>
       <div class="shot bgw" id="s2" style="display:none"><div class="persp">
         <div id="card2"><small>TRUSTED SINCE 2023</small><h2><em>3+ YEARS</em> IN BUSINESS</h2>
