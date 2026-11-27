@@ -19,11 +19,11 @@
   // "up to 25x" 0.36-1.10 s, "boosted leverage on Forex" 1.10-2.56, "10x" 2.80-3.32, "on Bitcoin and Ethereum" 3.32-4.50
   const COUNT = [2, 46];      // 1x -> 25x
   const CHIP = 33;            // the label chip on "boosted leverage"
-  const WHIP = [72, 80];      // the camera whips up out of the counter
+  const WHIP = [62, 80];      // the camera whips up out of the counter (accelerating, as measured)
   const B = 80;               // cut to the second section
-  const PILL = 84, SUB = 82;  // "10X LEVERAGE" pill and the line under it
-  const WIPE = [100, 108];    // a bar of light wipes the pill away
-  const TUMBLE = 104;         // "BTC & ETH" tumbles in on "Bitcoin and Ethereum"
+  const PILL = 85, SUB = 85;  // "10X LEVERAGE" pill and the line under it
+  const WIPE = [101, 108];    // a bar of light wipes the pill away
+  const TUMBLE = 106;         // "BTC & ETH" tumbles in on "Bitcoin and Ethereum"
 
   // ---------------- order-ticket cards (section A's floating UI, the reference's account cards) ----------------
   const ticket = (pair, side, lev, margin, size) => `
@@ -100,9 +100,10 @@
     // section A camera: a slow rise + push (measured on the reference: the number drifts up ~35 px over 2 s), then
     // the whip: an accelerating rise that throws everything up out of frame
     const aCam = (f) => {
-      const drift = -38 * smooth(span(f, 0, 70)) - 0.15 * f;
-      const whip = -1500 * easeIn(span(f, WHIP[0], WHIP[1]), 3.2);
-      return { y: drift + whip, s: mix(1.0, 1.07, span(f, 0, WHIP[0])) };
+      const rise = 100 * (1 - easeOut(f / 5, 2.5));                 // the opening frames settle up into place
+      const hold = 10 * smooth(span(f, 10, 60));                    // then a barely-there sink
+      const whip = -1500 * easeIn(span(f, WHIP[0], WHIP[1]), 3.4);  // and the whip up out of frame
+      return { y: rise + hold + whip, s: mix(1.47, 1.0, easeOut(span(f, 0, 48), 2.6)) };
     };
     // the candles: drift in from the lower corners and settle at the frame edges, slowly turning
     const candle = (el, side, f) => {
@@ -148,16 +149,20 @@
         $("#bBg").style.opacity = (0.55 + 0.45 * expoOut(span(f, B, B + 12))).toFixed(3);
         candle($("#cL"), -1, f); candle($("#cR"), 1, f);
         // pill: focuses in at its place; the line under it rises from below into place under the pill
-        const pk = easeOut(span(f, PILL, PILL + 12), 2.4), pill = $("#pill");
+        // the whip's motion carries through the cut and settles (reference: ~30 px/frame decaying over 6 frames)
+        const carry = 150 * (1 - easeOut(span(f, B, B + 7), 2.4)), vCarry = 150 * (easeOut(span(f, B, B + 7), 2.4) - easeOut(span(f - 1, B, B + 7), 2.4));
+        $("#B").style.transform = `translateY(${carry.toFixed(1)}px)`;
+        const pk = f < PILL - 1 ? 1 : easeOut(span(f, PILL, PILL + 6), 2.2), pill = $("#pill");
+        const dip = f >= PILL - 1 && f < PILL ? 0.15 : 1;
         const wipe = span(f, WIPE[0], WIPE[1]), gone = easeIn(span(f, WIPE[0] + 2, WIPE[0] + 7), 2);
-        pill.style.opacity = (pk * (1 - gone)).toFixed(3);
-        pill.style.filter = `blur(${((1 - pk) * 10 + gone * 14).toFixed(1)}px)`;
-        pill.style.transform = `scale(${mix(0.94, 1, pk).toFixed(4)})`;
-        const sk = easeOut(span(f, SUB, SUB + 16), 3), sub = $("#sub");
+        pill.style.opacity = (Math.max(0.15, pk) * dip * (1 - gone)).toFixed(3);
+        pill.style.filter = f < PILL - 1 ? `blur(${(vCarry * 0.25).toFixed(1)}px)` : `blur(${((1 - pk) * 9 + gone * 14).toFixed(1)}px)`;
+        pill.style.transform = "none";
+        const sk = easeOut(span(f, SUB + 1, SUB + 8), 2.6), sub = $("#sub");
         sub.style.transform = `translateY(${mix(90, 0, sk).toFixed(1)}px)`;
         sub.style.opacity = (Math.min(1, sk * 1.6) * (1 - gone)).toFixed(3);
         sub.style.filter = `blur(${((1 - sk) * 6 + gone * 12).toFixed(1)}px)`;
-        $("#pillWrap").style.transform = `translate(-50%, -50%) scale(${mix(1, 1.04, span(f, PILL, WIPE[0])).toFixed(4)})`;
+        $("#pillWrap").style.transform = `translate(-50%, -50%) scale(${mix(1, 1.07, span(f, PILL, WIPE[0] + 4)).toFixed(4)})`;
         // the wipe: a vertical bar of hot light sweeping across the pill as it goes
         const wp = $("#wipe");
         wp.style.opacity = (Math.sin(Math.PI * wipe)).toFixed(3);
@@ -165,12 +170,16 @@
         // the tumble
         tum.style.display = f >= TUMBLE - 1 ? "" : "none";
         letters.forEach((s, i) => {
-          const [dl, rx, dy, rz] = LR[i], k = expoOut(span(f, TUMBLE + dl, TUMBLE + dl + 10)), u = 1 - k;
-          s.style.opacity = clamp(span(f, TUMBLE + dl - 1, TUMBLE + dl + 2), 0, 1).toFixed(3);
-          s.style.transform = `translateY(${(u * dy).toFixed(1)}px) rotateX(${(u * rx).toFixed(1)}deg) rotateZ(${(u * rz * 0.2).toFixed(1)}deg)`;
-          s.style.filter = u > 0.02 ? `blur(${(u * 7).toFixed(1)}px)` : "none";
+          const [, , dy, rz] = LR[i], d = i * 0.35;
+          const k = easeOut(span(f, TUMBLE + d, TUMBLE + d + 15), 2.4), u = 1 - k;
+          const prev = easeOut(span(f - 1, TUMBLE + d, TUMBLE + d + 15), 2.4);
+          s.style.opacity = clamp(span(f, TUMBLE - 1, TUMBLE + 1), 0, 1).toFixed(3);
+          s.style.transform = `translateY(${(u * dy * 0.6).toFixed(1)}px) rotateX(${(-200 * u).toFixed(1)}deg) rotateZ(${(u * rz * 0.15).toFixed(1)}deg)`;
+          const spin = Math.abs(200 * (k - prev));
+          s.style.filter = spin > 3 ? `blur(${Math.min(8, spin * 0.12).toFixed(1)}px)` : "none";
         });
-        tum.style.transform = `translate(-50%, -50%) scale(${mix(1.0, 1.06, span(f, TUMBLE, FRAMES)).toFixed(4)})`;
+        const tk = easeOut(span(f, TUMBLE, TUMBLE + 16), 2.6);
+        tum.style.transform = `translate(-50%, -50%) scale(${(mix(1.55, 1.0, tk) * mix(1.0, 1.06, span(f, TUMBLE + 16, FRAMES))).toFixed(4)})`;
         $("#bars").style.transform = `translateX(${(-t * 0.8).toFixed(1)}px)`;
       }
       $("#grain").style.backgroundImage = tiles[Math.round(f) % tiles.length];
