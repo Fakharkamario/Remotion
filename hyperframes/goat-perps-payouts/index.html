@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>GOAT Funded Perps: payouts</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/scene.js"></script>
+    <style>
+      @font-face { font-family: "MD Nichrome"; src: url("assets/fonts/MDNichrome-Black.woff2") format("woff2"); font-weight: 900; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-regular.woff2") format("woff2"); font-weight: 400 500; font-display: block; }
+      @font-face { font-family: "Altform"; src: url("assets/fonts/altform-semibold.woff2") format("woff2"); font-weight: 600 700; font-display: block; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #07090D; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #07090D; font-family: Altform, sans-serif; color: #EDEFF2; }
+      .layer { position: absolute; inset: 0; }
+      .fontwarm { position: absolute; left: -9999px; top: 0; font-size: 20px; }
+
+      /* reference: near-black with a cool lift low left and a dim gold bloom behind the words */
+      #bg { background:
+        radial-gradient(ellipse 50% 45% at 50% 52%, rgba(120,92,30,0.20), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 60% 55% at 8% 95%, rgba(22,40,62,0.55), rgba(0,0,0,0) 70%),
+        radial-gradient(ellipse 50% 40% at 95% 0%, rgba(20,30,48,0.45), rgba(0,0,0,0) 70%),
+        linear-gradient(180deg, #06080C 0%, #080B10 60%, #070A0F 100%); }
+      #field { perspective: 1500px; perspective-origin: 50% 50%; }
+      #world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+      .acc { position: absolute; left: 0; top: 0; width: 560px; padding: 22px 24px 20px; border-radius: 20px; margin: -130px 0 0 -280px;
+        background: linear-gradient(180deg, #171A20, #121419); border: 1.5px solid rgba(220,230,245,0.08); box-shadow: 0 30px 70px rgba(0,0,0,0.55); font-size: 17px; color: #9BA1AA; }
+      .acc .in { position: relative; }
+      .acc .h { display: flex; align-items: center; gap: 10px; color: #EDEFF2; font-weight: 600; font-size: 19px; }
+      .acc .h .ic { width: 26px; height: 26px; border-radius: 8px; background: rgba(255,255,255,0.06); display: grid; place-items: center; font-size: 14px; color: #C9CDD3; }
+      .acc .bd { margin-left: auto; display: flex; gap: 6px; }
+      .acc .bd span { padding: 3px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+      .b-live { background: #EC8B1B; color: #1a1006; } .b-ok { background: rgba(63,203,126,0.18); color: #5BE08F; } .b-mut { background: rgba(255,255,255,0.07); color: #A9AFB7; }
+      .acc .meta { margin-top: 14px; line-height: 1.6; font-size: 15px; }
+      .acc .meta i { font-style: normal; color: #D7B72B; margin-right: 8px; }
+      .acc .st { display: flex; gap: 46px; margin-top: 16px; }
+      .acc .st small { display: block; font-size: 13px; color: #6F757E; margin-bottom: 3px; }
+      .acc .st b { color: #EDEFF2; font-size: 20px; font-weight: 600; }
+      .acc .st b.g { color: #5BE08F; }
+      .acc .bt { display: flex; gap: 8px; margin-top: 18px; font-size: 14px; }
+      .acc .bt span { padding: 9px 16px; border-radius: 99px; background: rgba(255,255,255,0.06); color: #C9CDD3; }
+      .acc .bt span.gold { background: linear-gradient(180deg, #F6D56A, #D7B72B); color: #1C1604; font-weight: 600; }
+      .acc .dd { height: 8px; border-radius: 6px; background: rgba(255,255,255,0.07); margin-top: 16px; overflow: hidden; }
+      .acc .dd i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #D7B72B, #F6A03A); }
+      /* the gold halftone band that sweeps a card in */
+      .acc .ht { position: absolute; inset: -2px; border-radius: 20px; pointer-events: none;
+        background-image: radial-gradient(circle, rgba(242,200,90,0.95) 0 2.6px, rgba(0,0,0,0) 3.4px); background-size: 11px 11px; mix-blend-mode: screen; }
+
+      #txt { position: absolute; left: 0; top: 390px; width: 1920px; height: 300px; }
+      /* last line: typed in inside a dashed selection box, like the reference */
+      #p4 { position: absolute; left: 50%; top: 540px; display: flex; align-items: center; gap: 30px; transform: translate(-50%, -50%); }
+      #p4 .icon { width: 64px; height: 64px; }
+      #p4 .box { position: relative; padding: 10px 18px 12px; }
+      #p4 .frame { position: absolute; left: 0; top: 0; bottom: 0; border: 1.5px dashed rgba(240,215,150,0.55); }
+      #p4 .frame b { position: absolute; width: 9px; height: 9px; background: #F2D58A; }
+      #p4 .t { position: relative; font-family: Altform, sans-serif; font-weight: 400; font-size: 92px; letter-spacing: 0.03em; white-space: nowrap; line-height: 1.05; }
+      #p4 .t span { display: inline-block; }
+      #p4 .t .gl { color: #F2C14E; text-shadow: 0 0 14px rgba(242,193,78,0.9); }
+      #p4 .spark { position: absolute; font-family: Altform, sans-serif; font-size: 26px; color: #F6CF6A; text-shadow: 0 0 10px rgba(246,200,90,0.9); }
+
+      #vig { background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%); pointer-events: none; }
+      #grain { background-size: 320px 320px; mix-blend-mode: overlay; opacity: 0.13; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-fps="30" data-duration="5.7" data-width="1920" data-height="1080">
+      <div class="fontwarm"><span style="font-family:'MD Nichrome';font-weight:900">Aa</span><span style="font-weight:400">Aa</span><span style="font-weight:600">Aa</span></div>
+      <div id="stage" class="layer"></div>
+      <audio id="voiceover" src="assets/voiceover.m4a" data-start="0" data-duration="5.7" data-track-index="30" data-volume="1"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = SCENE.mount(document.getElementById("stage"));
+    </script>
+  </body>
+</html>
